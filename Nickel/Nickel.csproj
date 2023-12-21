@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\Configuration.props" />
+  <PropertyGroup>
+    <RootNamespace>Nickel</RootNamespace>
+    <Version>0.1.0</Version>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PluginManager\PluginManager.csproj" />
+  </ItemGroup>
+</Project>
