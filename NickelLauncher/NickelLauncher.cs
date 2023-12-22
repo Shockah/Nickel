@@ -1,8 +1,8 @@
 using System;
 
-namespace Nickel;
+namespace NickelLauncher;
 
-internal class Nickel
+internal class NickelLauncher
 {
     static void Main(string[] args)
     {

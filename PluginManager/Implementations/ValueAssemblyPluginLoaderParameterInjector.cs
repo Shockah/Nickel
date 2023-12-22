@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Shockah.PluginManager;
 
-public sealed class ValueAssemblyPluginLoaderParameterInjector<T> : IAssemblyPluginLoaderParameterInjector
+public sealed class ValueAssemblyPluginLoaderParameterInjector<TPluginManifest, T> : IAssemblyPluginLoaderParameterInjector<TPluginManifest>
 {
     private T Value { get; init; }
 
@@ -12,7 +12,7 @@ public sealed class ValueAssemblyPluginLoaderParameterInjector<T> : IAssemblyPlu
         this.Value = value;
     }
 
-    public bool TryToInjectParameter(Type type, [MaybeNullWhen(false)] out object? toInject)
+    public bool TryToInjectParameter(IPluginPackage<TPluginManifest> package, Type type, [MaybeNullWhen(false)] out object? toInject)
     {
         if (type.IsInstanceOfType(this.Value))
         {

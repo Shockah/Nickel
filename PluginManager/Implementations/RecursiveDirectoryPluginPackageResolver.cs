@@ -7,26 +7,23 @@ namespace Shockah.PluginManager;
 
 public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-    public DirectoryInfo Directory { get; private init; }
-    public string ManifestFileName { get; private init; }
+    private DirectoryInfo Directory { get; init; }
+    private string ManifestFileName { get; init; }
+    private bool IgnoreDotDirectories { get; init; }
     private IPluginManifestLoader<TPluginManifest> PluginManifestLoader { get; init; }
 
-    public RecursiveDirectoryPluginPackageResolver(DirectoryInfo directory, string manifestFileName, IPluginManifestLoader<TPluginManifest> pluginManifestLoader)
+    public RecursiveDirectoryPluginPackageResolver(DirectoryInfo directory, string manifestFileName, bool ignoreDotDirectories, IPluginManifestLoader<TPluginManifest> pluginManifestLoader)
     {
         this.Directory = directory;
         this.ManifestFileName = manifestFileName;
+        this.IgnoreDotDirectories = ignoreDotDirectories;
         this.PluginManifestLoader = pluginManifestLoader;
     }
 
     public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
-    {
-        // not resolving in the main folder on purpose, only in child folders
-        foreach (var childDirectory in this.Directory.GetDirectories())
-            foreach (var package in this.Resolve(childDirectory))
-                yield return package;
-    }
+        => ResolveChildDirectories(this.Directory);
 
-    private IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> Resolve(DirectoryInfo directory)
+    private IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePackagesAndThenResolveChildDirectories(DirectoryInfo directory)
     {
         foreach (var package in new DirectoryPluginPackageResolver<TPluginManifest>(directory, this.ManifestFileName, this.PluginManifestLoader).ResolvePluginPackages())
             yield return package;
@@ -36,8 +33,15 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
         if (manifestFile.Exists)
             yield break;
 
+        foreach (var package in this.ResolveChildDirectories(directory))
+            yield return package;
+    }
+
+    private IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolveChildDirectories(DirectoryInfo directory)
+    {
         foreach (var childDirectory in directory.GetDirectories())
-            foreach (var package in this.Resolve(childDirectory))
-                yield return package;
+            if (!this.IgnoreDotDirectories || !directory.Name.StartsWith("."))
+                foreach (var package in this.ResolvePackagesAndThenResolveChildDirectories(childDirectory))
+                    yield return package;
     }
 }

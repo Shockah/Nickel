@@ -14,9 +14,9 @@ public sealed class PluginDependencyResolver<TPluginManifest> : IPluginDependenc
         this.RequiredManifestDataProvider = requiredManifestDataProvider;
     }
 
-    public PluginDependencyResolveResult<TPluginManifest> ResolveDependencies(IEnumerable<TPluginManifest> toResolve, IReadOnlySet<TPluginManifest> resolved)
+    public PluginDependencyResolveResult<TPluginManifest> ResolveDependencies(IEnumerable<TPluginManifest> toResolve, IReadOnlySet<TPluginManifest>? resolved = null)
     {
-        Dictionary<TPluginManifest, ManifestEntry> manifestEntries = toResolve.Concat(resolved)
+        Dictionary<TPluginManifest, ManifestEntry> manifestEntries = toResolve.Concat(resolved ?? Enumerable.Empty<TPluginManifest>())
             .ToDictionary(m => m, m => new ManifestEntry { Manifest = m, Data = this.RequiredManifestDataProvider(m) });
         Dictionary<string, ManifestEntry> manifestEntriesByName = manifestEntries.Values
             .ToDictionary(m => m.Data.UniqueName, m => m);
@@ -24,7 +24,7 @@ public sealed class PluginDependencyResolver<TPluginManifest> : IPluginDependenc
         #region happy path
         List<IReadOnlySet<TPluginManifest>> loadSteps = new();
         Dictionary<TPluginManifest, PluginDependencyUnresolvableResult<TPluginManifest>> unresolvable = new();
-        List<TPluginManifest> allResolved = resolved.ToList();
+        List<TPluginManifest> allResolved = resolved?.ToList() ?? new();
         List<TPluginManifest> toResolveLeft = toResolve.ToList();
 
         bool MatchesDependency(TPluginManifest manifest, PluginDependency dependency)
@@ -40,22 +40,31 @@ public sealed class PluginDependencyResolver<TPluginManifest> : IPluginDependenc
         bool CanDependencyBeResolved(PluginDependency dependency)
             => ContainsDependency(allResolved, dependency);
 
-        bool CanManifestBeResolved(TPluginManifest manifest)
+        bool CanManifestBeResolved(TPluginManifest manifest, bool onlyRequiredDependencies)
         {
             if (!manifestEntries.TryGetValue(manifest, out var entry))
                 return false;
-            return entry.Data.Dependencies.All(d => CanDependencyBeResolved(d));
+            return entry.Data.Dependencies.Where(d => !onlyRequiredDependencies || d.IsRequired).All(CanDependencyBeResolved);
         }
 
         while (toResolveLeft.Count > 0)
         {
-            var loadStep = toResolveLeft.Where(CanManifestBeResolved).ToHashSet();
-            if (loadStep.Count == 0)
-                break;
+            void Loop(bool onlyRequiredDependencies)
+            {
+                while (toResolveLeft.Count > 0)
+                {
+                    var loadStep = toResolveLeft.Where(m => CanManifestBeResolved(m, onlyRequiredDependencies: onlyRequiredDependencies)).ToHashSet();
+                    if (loadStep.Count == 0)
+                        break;
 
-            loadSteps.Add(loadStep);
-            allResolved.AddRange(loadStep);
-            toResolveLeft.RemoveAll(loadStep.Contains);
+                    loadSteps.Add(loadStep);
+                    allResolved.AddRange(loadStep);
+                    toResolveLeft.RemoveAll(loadStep.Contains);
+                }
+            }
+
+            Loop(onlyRequiredDependencies: false);
+            Loop(onlyRequiredDependencies: true);
         }
 
         if (toResolveLeft.Count == 0)
@@ -143,9 +152,9 @@ public sealed class PluginDependencyResolver<TPluginManifest> : IPluginDependenc
 
     public readonly struct RequiredManifestData
     {
-        public string UniqueName { get; }
-        public SemanticVersion Version { get; }
-        public IReadOnlySet<PluginDependency> Dependencies { get; }
+        public string UniqueName { get; init; }
+        public SemanticVersion Version { get; init; }
+        public IReadOnlySet<PluginDependency> Dependencies { get; init; }
     }
 
     private readonly struct ManifestEntry

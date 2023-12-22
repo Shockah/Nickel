@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Shockah.PluginManager;
 
-public interface IAssemblyPluginLoaderParameterInjector
+public interface IAssemblyPluginLoaderParameterInjector<in TPluginManifest>
 {
-    bool TryToInjectParameter(Type type, [MaybeNullWhen(false)] out object? toInject);
+    bool TryToInjectParameter(IPluginPackage<TPluginManifest> package, Type type, [MaybeNullWhen(false)] out object? toInject);
 }

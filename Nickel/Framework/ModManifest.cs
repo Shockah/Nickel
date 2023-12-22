@@ -4,7 +4,7 @@ using Shockah.PluginManager;
 
 namespace Nickel;
 
-public sealed class ModManifest : IModManifest
+internal sealed class ModManifest : IModManifest
 {
     [JsonProperty]
     [JsonRequired]

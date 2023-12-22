@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Shockah.PluginManager;
 
-public interface IPluginPackage<TPluginManifest>
+public interface IPluginPackage<out TPluginManifest>
 {
     TPluginManifest Manifest { get; }
     IReadOnlySet<string> DataEntries { get; }

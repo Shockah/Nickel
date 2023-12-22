@@ -3,9 +3,9 @@ using OneOf.Types;
 
 namespace Shockah.PluginManager;
 
-public interface IPluginLoader<TPluginManifest, TPlugin>
+public interface IPluginLoader<in TPluginManifest, TPlugin>
 {
     bool CanLoadPlugin(IPluginPackage<TPluginManifest> package);
 
-    OneOf<LoadedPluginInfo<TPluginManifest, TPlugin>, Error<string>> LoadPlugin(IPluginPackage<TPluginManifest> package);
+    OneOf<TPlugin, Error<string>> LoadPlugin(IPluginPackage<TPluginManifest> package);
 }
