@@ -9,6 +9,7 @@
     <ProjectReference Include="..\PluginManager\PluginManager.csproj" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="SingleFileExtractor.Core" Version="2.2.0" />
     <PackageReference Include="Pintail" Version="2.4.0" />
   </ItemGroup>
 </Project>

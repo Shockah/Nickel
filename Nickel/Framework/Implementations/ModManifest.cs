@@ -21,6 +21,12 @@ internal sealed class ModManifest : IModManifest
     [JsonProperty]
     public IReadOnlySet<PluginDependency> Dependencies { get; private set; } = new HashSet<PluginDependency>();
 
+    [JsonProperty]
+    public string? DisplayName { get; private set; } = null;
+
+    [JsonProperty]
+    public string? Author { get; private set; } = null;
+
     [JsonExtensionData]
     public IReadOnlyDictionary<string, object> ExtensionData { get; private set; } = new Dictionary<string, object>();
 }

@@ -13,5 +13,9 @@ public interface IModManifest
 
     IReadOnlySet<PluginDependency> Dependencies { get; }
 
+    string? DisplayName { get; }
+
+    string? Author { get; }
+
     IReadOnlyDictionary<string, object> ExtensionData { get; }
 }

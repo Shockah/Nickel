@@ -34,7 +34,7 @@ internal sealed class ModManager
         var pluginManifestLoader = new JsonPluginManifestLoader<ModManifest>();
         var pluginPackageResolver = new RecursiveDirectoryPluginPackageResolver<IModManifest>(
             directory: this.ModsPath,
-            manifestFileName: "modManifest.json",
+            manifestFileName: "nickel.json",
             ignoreDotDirectories: true,
             pluginManifestLoader: new SpecializedPluginManifestLoader<ModManifest, IModManifest>(pluginManifestLoader)
         );
@@ -61,6 +61,8 @@ internal sealed class ModManager
             .Select(r => r.AsT0)
             .ToList();
 
+        this.Logger.LogInformation("Resolving mod load order...");
+
         var dependencyResolverResult = pluginDependencyResolver.ResolveDependencies(toLoad.Select(p => p.Manifest));
         foreach (var (unresolvableManifest, reason) in dependencyResolverResult.Unresolvable)
             reason.Switch(
@@ -68,6 +70,8 @@ internal sealed class ModManager
                 dependencyCycle => this.Logger.LogError("Could not load {UniqueName}: dependency cycle: {Cycle}", unresolvableManifest.UniqueName, string.Join(" -> ", dependencyCycle.Cycle.Values.Append(dependencyCycle.Cycle.Values[0]).Select(m => m.UniqueName))),
                 unknown => this.Logger.LogError("Could not load {UniqueName}: unknown reason.", unresolvableManifest.UniqueName)
             );
+
+        this.Logger.LogInformation("Loading mods...");
 
         List<IModManifest> failedMods = new();
         foreach (var step in dependencyResolverResult.LoadSteps)
