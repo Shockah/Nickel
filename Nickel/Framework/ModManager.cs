@@ -94,7 +94,7 @@ internal sealed class ModManager
                     mod =>
                     {
                         this.UniqueNameToInstance[manifest.UniqueName] = mod;
-                        mod.Manifest = manifest;
+                        mod.Package = package;
                         mod.Logger = this.ObtainLogger(manifest);
                         mod.Helper = this.ObtainModHelper(manifest);
                         this.Logger.LogInformation("Loaded mod {UniqueName}.", manifest.UniqueName);

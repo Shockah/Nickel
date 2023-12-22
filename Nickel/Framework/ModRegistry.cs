@@ -12,7 +12,7 @@ internal sealed class ModRegistry : IModRegistry
 {
     public IReadOnlyDictionary<string, IModManifest> LoadedMods
         => this.ModUniqueNameToInstance
-            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Manifest);
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Package.Manifest);
 
     private IModManifest ModManifest { get; init; }
     private IReadOnlyDictionary<string, Mod> ModUniqueNameToInstance { get; init; }
@@ -38,7 +38,7 @@ internal sealed class ModRegistry : IModRegistry
             throw new ArgumentException($"The requested API type {typeof(TApi)} is not an interface.");
         if (!this.ModUniqueNameToInstance.TryGetValue(uniqueName, out var mod))
             return null;
-        if (minimumVersion is not null && minimumVersion > mod.Manifest.Version)
+        if (minimumVersion is not null && minimumVersion > mod.Package.Manifest.Version)
             return null;
 
         if (!this.ApiCache.TryGetValue(uniqueName, out object? apiObject))
