@@ -10,6 +10,7 @@ internal static class StreamExt
         stream.CopyTo(memoryStream);
         if (closeStream)
             stream.Close();
+        memoryStream.Position = 0;
         return memoryStream;
     }
 }

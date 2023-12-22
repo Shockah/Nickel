@@ -15,7 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginManager", "PluginMana
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nickel", "Nickel\Nickel.csproj", "{B11A6D4A-E91B-48BF-BA1E-18AC40EFFA0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NickelLauncher", "NickelLauncher\NickelLauncher.csproj", "{067179C4-512A-4602-BD10-ADDC8F86AA0A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NickelLauncher", "NickelLauncher\NickelLauncher.csproj", "{067179C4-512A-4602-BD10-ADDC8F86AA0A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtractSingleFileApplicationResourceTask", "ExtractSingleFileApplicationResourceTask\ExtractSingleFileApplicationResourceTask.csproj", "{3849FA4F-B4B9-419C-8756-9931F2733D78}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +37,10 @@ Global
 		{067179C4-512A-4602-BD10-ADDC8F86AA0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{067179C4-512A-4602-BD10-ADDC8F86AA0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{067179C4-512A-4602-BD10-ADDC8F86AA0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3849FA4F-B4B9-419C-8756-9931F2733D78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3849FA4F-B4B9-419C-8756-9931F2733D78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3849FA4F-B4B9-419C-8756-9931F2733D78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3849FA4F-B4B9-419C-8756-9931F2733D78}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

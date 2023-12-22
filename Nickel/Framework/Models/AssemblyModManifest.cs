@@ -17,6 +17,12 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
     public IReadOnlySet<PluginDependency> Dependencies
         => this.ModManifest.Dependencies;
 
+    public string? DisplayName
+        => this.ModManifest.DisplayName;
+
+    public string? Author
+        => this.ModManifest.Author;
+
     public IReadOnlyDictionary<string, object> ExtensionData
         => this.ModManifest.ExtensionData;
 

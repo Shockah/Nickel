@@ -1,15 +1,63 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <UsingTask TaskName="ExtractSingleFileApplicationResourceTask" AssemblyFile="$(MSBuildProjectDirectory)\..\ExtractSingleFileApplicationResourceTask\.bin\$(Configuration)\netstandard2.0\ExtractSingleFileApplicationResourceTask.dll" />
+  
   <Import Project="..\Configuration.props" />
+  
   <PropertyGroup>
     <RootNamespace>Nickel</RootNamespace>
     <Version>0.1.0</Version>
     <OutputType>Exe</OutputType>
+    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <EnableGameDllExtract Condition="'$(EnableGameDllExtract)' == ''">true</EnableGameDllExtract>
+  </PropertyGroup>
+  
   <ItemGroup>
+    <ProjectReference Include="..\ExtractSingleFileApplicationResourceTask\ExtractSingleFileApplicationResourceTask.csproj" />
     <ProjectReference Include="..\PluginManager\PluginManager.csproj" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="SingleFileExtractor.Core" Version="2.2.0" />
     <PackageReference Include="Pintail" Version="2.4.0" />
+    <Reference Include="CobaltCore" HintPath="$(GameDllPath)" />
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(EnableGameDllExtract)' And '$(GameExePath)' == '' And ($(OS) == 'Unix' Or $(OS) == 'OSX')">
+    <!-- Linux -->
+    <_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.steam/steam/steamapps/common/Cobalt Core</_GamePath>
+    <_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.local/share/Steam/steamapps/common/Cobalt Core</_GamePath>
+    <_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/common/Cobalt Core</_GamePath>
+
+    <!-- macOS (may be 'Unix' or 'OSX') -->
+    <_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/Library/Application Support/Steam/steamapps/common/Cobalt Core/Contents/MacOS</_GamePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(EnableGameDllExtract)' And '$(GameExePath)' == '' And '$(OS)' == 'Windows_NT'">
+    <!-- registry path -->
+    <_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 2179850', 'InstallLocation', null, RegistryView.Registry64, RegistryView.Registry32))</_GamePath>
+
+    <!-- derive from Steam library path -->
+    <_SteamLibraryPath>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\SOFTWARE\Valve\Steam', 'SteamPath', null, RegistryView.Registry32))</_SteamLibraryPath>
+    <_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(_SteamLibraryPath)\steamapps\common\Cobalt Core</_GamePath>
+
+    <!-- Steam paths -->
+    <_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">C:\Program Files\Steam\steamapps\common\Cobalt Core</_GamePath>
+    <_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">C:\Program Files (x86)\Steam\steamapps\common\Cobalt Core</_GamePath>
+  </PropertyGroup>
+
+  <!-- trying to set ModLoaderPath, GameDllPath and GameExePath based on the found game path -->
+  <PropertyGroup Condition="Exists('$(_GamePath)')">
+    <GameExePath Condition="!Exists('$(GameExePath)')">$(_GamePath)\CobaltCore.exe</GameExePath>
+    <GameDllPath Condition="!Exists('$(GameDllPath)')">$(MSBuildProjectDirectory)\..\CobaltCore.dll</GameDllPath>
+  </PropertyGroup>
+
+  <Target Name="ExtractGameDll" BeforeTargets="Build">
+    <Message Importance="high" Text="Nickel: _SteamLibraryPath = '$(_SteamLibraryPath)'" />
+    <Message Importance="high" Text="Nickel: _GamePath = '$(_GamePath)'" />
+    <Message Importance="high" Text="Nickel: GameExePath = '$(GameExePath)'" />
+    <Message Importance="high" Text="Nickel: GameDllPath = '$(GameDllPath)'" />
+
+    <ExtractSingleFileApplicationResourceTask Condition="'$(EnableGameDllExtract)'" ExeInputPath="$(GameExePath)" ResourceName="CobaltCore.dll" ResourceOutputPath="$(GameDllPath)" />
+  </Target>
 </Project>
