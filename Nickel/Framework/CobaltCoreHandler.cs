@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using Microsoft.Extensions.Logging;
@@ -31,8 +30,6 @@ internal sealed class CobaltCoreHandler
             assemblyStream: resolveResult.GameAssemblyDataStream,
             symbolsStream: resolveResult.GamePdbDataStream
         );
-
-        AppDomain.CurrentDomain.AssemblyResolve += (_, e) => AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.FullName == e.Name);
 
         this.Logger.LogInformation("Loading other assemblies...");
         foreach (var (name, stream) in resolveResult.OtherDllDataStreams)

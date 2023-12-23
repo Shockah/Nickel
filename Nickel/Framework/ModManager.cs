@@ -11,6 +11,7 @@ internal sealed class ModManager
 {
     private DirectoryInfo ModsDirectory { get; }
     private ILogger Logger { get; init; }
+    internal ModEventManager EventManager { get; private init; }
 
     private Dictionary<string, ILogger> UniqueNameToLogger { get; init; } = new();
     private Dictionary<string, IModHelper> UniqueNameToHelper { get; init; } = new();
@@ -20,6 +21,7 @@ internal sealed class ModManager
     {
         this.ModsDirectory = modsDirectory;
         this.Logger = logger;
+        this.EventManager = new(ObtainLogger);
     }
 
     public void LoadMods()
@@ -117,6 +119,7 @@ internal sealed class ModManager
         }
 
         this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
+        this.EventManager.OnAllModsLoadedManagedEvent.Raise(null, Nothing.AtAll);
     }
 
     private ILogger ObtainLogger(IModManifest manifest)
@@ -135,7 +138,8 @@ internal sealed class ModManager
         if (!this.UniqueNameToHelper.TryGetValue(manifest.UniqueName, out var helper))
         {
             ModRegistry modRegistry = new(manifest, this.UniqueNameToInstance);
-            helper = new ModHelper(modRegistry);
+            ModEvents modEvents = new(manifest, this.EventManager);
+            helper = new ModHelper(modRegistry, modEvents);
             this.UniqueNameToHelper[manifest.UniqueName] = helper;
         }
         return helper;
