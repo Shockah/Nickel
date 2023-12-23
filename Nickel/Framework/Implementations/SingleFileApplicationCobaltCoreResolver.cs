@@ -38,6 +38,15 @@ internal sealed class SingleFileApplicationCobaltCoreResolver : ICobaltCoreResol
         var gameAssemblyDataStream = cobaltCoreEntry.AsStream().ToMemoryStream();
         var gamePdbDataStream = this.PdbPath?.Exists == true ? this.PdbPath.OpenRead().ToMemoryStream() : null;
         var otherDllDataStreams = otherDlls.ToDictionary(e => e.RelativePath, e => (Stream)e.AsStream().ToMemoryStream());
-        return new CobaltCoreResolveResult { GameAssemblyDataStream = gameAssemblyDataStream, GamePdbDataStream = gamePdbDataStream, OtherDllDataStreams = otherDllDataStreams };
+        foreach (var file in this.ExePath.Directory!.GetFiles("*.dll", SearchOption.TopDirectoryOnly))
+            otherDllDataStreams[file.Name] = file.OpenRead().ToMemoryStream();
+
+        return new CobaltCoreResolveResult
+        {
+            GameAssemblyDataStream = gameAssemblyDataStream,
+            GamePdbDataStream = gamePdbDataStream,
+            OtherDllDataStreams = otherDllDataStreams,
+            WorkingDirectory = this.ExePath.Directory!
+        };
     }
 }

@@ -10,9 +10,9 @@ namespace Nickel;
 
 internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 {
-    private Func<FileInfo, ICobaltCoreResolver> ResolverFactory { get; init; }
+    private Func<FileInfo, FileInfo?, ICobaltCoreResolver> ResolverFactory { get; init; }
 
-    public SteamCobaltCoreResolver(Func<FileInfo, ICobaltCoreResolver> resolverFactory)
+    public SteamCobaltCoreResolver(Func<FileInfo, FileInfo?, ICobaltCoreResolver> resolverFactory)
     {
         this.ResolverFactory = resolverFactory;
     }
@@ -59,7 +59,11 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
             if (!singleFileApplicationPath.Exists)
                 continue;
 
-            var resolver = this.ResolverFactory(singleFileApplicationPath);
+            FileInfo? pdbPath = new(Path.Combine(directory.FullName, "CobaltCore.pdb"));
+            if (pdbPath.Exists != true)
+                pdbPath = null;
+
+            var resolver = this.ResolverFactory(singleFileApplicationPath, pdbPath);
             return resolver.ResolveCobaltCore();
         }
 

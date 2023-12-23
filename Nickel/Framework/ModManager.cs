@@ -9,16 +9,16 @@ namespace Nickel;
 
 internal sealed class ModManager
 {
-    private DirectoryInfo ModsPath { get; }
+    private DirectoryInfo ModsDirectory { get; }
     private ILogger Logger { get; init; }
 
     private Dictionary<string, ILogger> UniqueNameToLogger { get; init; } = new();
     private Dictionary<string, IModHelper> UniqueNameToHelper { get; init; } = new();
     private Dictionary<string, Mod> UniqueNameToInstance { get; init; } = new();
 
-    public ModManager(DirectoryInfo modsPath, ILogger logger)
+    public ModManager(DirectoryInfo modsDirectory, ILogger logger)
     {
-        this.ModsPath = modsPath;
+        this.ModsDirectory = modsDirectory;
         this.Logger = logger;
     }
 
@@ -33,7 +33,7 @@ internal sealed class ModManager
         );
         var pluginManifestLoader = new JsonPluginManifestLoader<ModManifest>();
         var pluginPackageResolver = new RecursiveDirectoryPluginPackageResolver<IModManifest>(
-            directory: this.ModsPath,
+            directory: this.ModsDirectory,
             manifestFileName: "nickel.json",
             ignoreDotDirectories: true,
             pluginManifestLoader: new SpecializedPluginManifestLoader<ModManifest, IModManifest>(pluginManifestLoader)
