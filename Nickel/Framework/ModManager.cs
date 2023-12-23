@@ -73,11 +73,14 @@ internal sealed class ModManager
 
         this.Logger.LogInformation("Loading mods...");
 
+        List<IModManifest> successfulMods = new();
         List<IModManifest> failedMods = new();
         foreach (var step in dependencyResolverResult.LoadSteps)
         {
             foreach (var manifest in step)
             {
+                this.Logger.LogDebug("Loading mod {UniqueName}...", manifest.UniqueName);
+
                 var failedRequiredDependencies = manifest.Dependencies.Where(d => d.IsRequired && failedMods.Any(m => m.UniqueName == d.UniqueName)).ToList();
                 if (failedRequiredDependencies.Count > 0)
                 {
@@ -101,6 +104,7 @@ internal sealed class ModManager
                         mod.Package = package;
                         mod.Logger = this.ObtainLogger(manifest);
                         mod.Helper = this.ObtainModHelper(manifest);
+                        successfulMods.Add(manifest);
                         this.Logger.LogInformation("Loaded mod {UniqueName}.", manifest.UniqueName);
                     },
                     error =>
@@ -111,6 +115,8 @@ internal sealed class ModManager
                 );
             }
         }
+
+        this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
     }
 
     private ILogger ObtainLogger(IModManifest manifest)

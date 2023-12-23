@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Nickel.Framework;
 
@@ -11,6 +13,10 @@ internal sealed class Nickel
 {
     internal static int Main(string[] args)
     {
+        Option<bool?> debugOption = new(
+            name: "--debug",
+            description: "Whether the game should be ran in debug mode."
+        );
         Option<FileInfo?> gamePathOption = new(
             name: "--gamePath",
             description: "The path to CobaltCore.exe."
@@ -31,9 +37,11 @@ internal sealed class Nickel
         {
             LaunchArguments launchArguments = new()
             {
+                Debug = context.ParseResult.GetValueForOption(debugOption),
                 GamePath = context.ParseResult.GetValueForOption(gamePathOption),
                 ModsPath = context.ParseResult.GetValueForOption(modsPathOption),
                 SavePath = context.ParseResult.GetValueForOption(savePathOption),
+                UnmatchedParameters = context.ParseResult.UnmatchedTokens
             };
             CreateAndStartInstance(launchArguments);
         });
@@ -69,6 +77,9 @@ internal sealed class Nickel
             return;
         }
 
+        bool debug = launchArguments.Debug ?? true;
+        logger.LogInformation("Debug: {Value}", debug);
+
         var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? handlerResult.WorkingDirectory;
         logger.LogInformation("GameWorkingDirectory: {Path}", gameWorkingDirectory.FullName);
 
@@ -78,9 +89,13 @@ internal sealed class Nickel
         string savePath = launchArguments.SavePath?.FullName ?? Path.Combine(Directory.GetCurrentDirectory(), "ModSaves");
         logger.LogInformation("SavePath: {Path}", savePath);
 
+        Harmony harmony = new(typeof(Nickel).Namespace!);
+        HarmonyPatches.Apply(harmony, logger);
+
         // game assembly loaded by now
 
         ModManager modManager = new(modsDirectory: modsDirectory, logger: logger);
+        modManager.LoadMods();
 
         string oldWorkingDirectory = Directory.GetCurrentDirectory();
         Directory.SetCurrentDirectory(gameWorkingDirectory.FullName);
@@ -90,7 +105,12 @@ internal sealed class Nickel
         FeatureFlags.OverrideSaveLocation = savePath;
         try
         {
-            object? result = handlerResult.EntryPoint.Invoke(null, new object[] { new string[] { "--debug" } });
+            List<string> gameArguments = new();
+            if (debug)
+                gameArguments.Add("--debug");
+            gameArguments.AddRange(launchArguments.UnmatchedParameters);
+
+            object? result = handlerResult.EntryPoint.Invoke(null, new object[] { gameArguments.ToArray() });
             if (result is not null)
                 logger.LogInformation("Cobalt Core closed with result: {Result}", result);
         }
