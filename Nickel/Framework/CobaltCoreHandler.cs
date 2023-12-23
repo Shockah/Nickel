@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using OneOf.Types;
@@ -26,9 +27,9 @@ internal sealed class CobaltCoreHandler
             return new Error<string>($"Could not resolve Cobalt Core: {error.Value}");
 
         this.Logger.LogInformation("Loading game assembly...");
-        var gameAssembly = Assembly.Load(
-            rawAssembly: resolveResult.GameAssemblyDataStream.ToMemoryStream().ToArray(),
-            rawSymbolStore: resolveResult.GamePdbDataStream?.ToMemoryStream().ToArray()
+        var gameAssembly = LoadAssembly(
+            assemblyStream: resolveResult.GameAssemblyDataStream,
+            symbolsStream: resolveResult.GamePdbDataStream
         );
 
         AppDomain.CurrentDomain.AssemblyResolve += (_, e) => AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.FullName == e.Name);
@@ -39,7 +40,7 @@ internal sealed class CobaltCoreHandler
             this.Logger.LogDebug("Trying to load (potential) assembly {AssemblyName}...", name);
             try
             {
-                Assembly.Load(stream.ToMemoryStream().ToArray());
+                LoadAssembly(stream);
             }
             catch (BadImageFormatException e)
             {
@@ -59,5 +60,13 @@ internal sealed class CobaltCoreHandler
             EntryPoint = entryPoint,
             WorkingDirectory = resolveResult.WorkingDirectory
         };
+    }
+
+    private Assembly LoadAssembly(Stream assemblyStream, Stream? symbolsStream = null)
+    {
+        AssemblyLoadContext context = AssemblyLoadContext.GetLoadContext(GetType().Assembly)
+            ?? AssemblyLoadContext.CurrentContextualReflectionContext
+            ?? AssemblyLoadContext.Default;
+        return context.LoadFromStream(assemblyStream, symbolsStream);
     }
 }
