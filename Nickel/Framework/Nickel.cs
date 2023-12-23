@@ -94,7 +94,7 @@ internal sealed class Nickel
 
         // game assembly loaded by now
 
-        ModManager modManager = new(modsDirectory: modsDirectory, logger: logger);
+        ModManager modManager = new(modsDirectory, loggerFactory, logger);
         modManager.LoadMods();
 
         string oldWorkingDirectory = Directory.GetCurrentDirectory();

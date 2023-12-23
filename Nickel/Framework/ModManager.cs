@@ -9,7 +9,8 @@ namespace Nickel;
 
 internal sealed class ModManager
 {
-    private DirectoryInfo ModsDirectory { get; }
+    private DirectoryInfo ModsDirectory { get; init; }
+    private ILoggerFactory LoggerFactory { get; init; }
     private ILogger Logger { get; init; }
     internal ModEventManager EventManager { get; private init; }
 
@@ -17,9 +18,10 @@ internal sealed class ModManager
     private Dictionary<string, IModHelper> UniqueNameToHelper { get; init; } = new();
     private Dictionary<string, Mod> UniqueNameToInstance { get; init; } = new();
 
-    public ModManager(DirectoryInfo modsDirectory, ILogger logger)
+    public ModManager(DirectoryInfo modsDirectory, ILoggerFactory loggerFactory, ILogger logger)
     {
         this.ModsDirectory = modsDirectory;
+        this.LoggerFactory = loggerFactory;
         this.Logger = logger;
         this.EventManager = new(ObtainLogger);
     }
@@ -126,8 +128,7 @@ internal sealed class ModManager
     {
         if (!this.UniqueNameToLogger.TryGetValue(manifest.UniqueName, out var logger))
         {
-            // TODO: cache LoggerFactory
-            logger = LoggerFactory.Create(b => { }).CreateLogger(manifest.UniqueName);
+            logger = this.LoggerFactory.CreateLogger(manifest.UniqueName);
             this.UniqueNameToLogger[manifest.UniqueName] = logger;
         }
         return logger;
