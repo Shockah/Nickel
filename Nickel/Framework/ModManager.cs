@@ -52,12 +52,19 @@ internal sealed class ModManager
         );
     }
 
+    private static ModLoadPhase GetModLoadPhaseForManifest(IModManifest manifest)
+        => (manifest as IAssemblyModManifest)?.LoadPhase ?? ModLoadPhase.AfterGameAssembly;
+
     public void ResolveMods()
     {
         this.Logger.LogInformation("Resolving mods...");
 
-        var pluginDependencyResolver = new PluginDependencyResolver<IModManifest>(
-            requiredManifestDataProvider: p => new PluginDependencyResolver<IModManifest>.RequiredManifestData { UniqueName = p.UniqueName, Version = p.Version, Dependencies = p.Dependencies }
+        var pluginDependencyResolver = new MultiPhasePluginDependencyResolver<IModManifest, ModLoadPhase>(
+            new PluginDependencyResolver<IModManifest>(
+                requiredManifestDataProvider: p => new PluginDependencyResolver<IModManifest>.RequiredManifestData { UniqueName = p.UniqueName, Version = p.Version, Dependencies = p.Dependencies }
+            ),
+            GetModLoadPhaseForManifest,
+            Enum.GetValues<ModLoadPhase>()
         );
         var pluginManifestLoader = new JsonPluginManifestLoader<ModManifest>();
         var pluginPackageResolver = new RecursiveDirectoryPluginPackageResolver<IModManifest>(
@@ -107,14 +114,9 @@ internal sealed class ModManager
                 continue;
             if (this.FailedMods.Contains(manifest))
                 continue;
-
-            var manifestPhase = (manifest as IAssemblyModManifest)?.LoadPhase ?? ModLoadPhase.AfterGameAssembly;
-            if (manifestPhase < phase)
+            if (GetModLoadPhaseForManifest(manifest) != phase)
                 continue;
-
             this.Logger.LogDebug("Loading mod {UniqueName}...", manifest.UniqueName);
-            if (manifestPhase != phase)
-                this.Logger.LogWarning("Mod {UniqueName} requested to be loaded in the {RequestedPhase} phase, but was loaded in the {ActualPhase} phase due to dependencies.", manifest.UniqueName, manifestPhase, phase);
 
             var failedRequiredDependencies = manifest.Dependencies.Where(d => d.IsRequired && this.FailedMods.Any(m => m.UniqueName == d.UniqueName)).ToList();
             if (failedRequiredDependencies.Count > 0)
