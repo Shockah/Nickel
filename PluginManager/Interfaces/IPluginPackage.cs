@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public interface IPluginPackage<out TPluginManifest>
 {

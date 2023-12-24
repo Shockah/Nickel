@@ -63,6 +63,16 @@ internal sealed class Nickel
         Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, Console.Out));
         Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));
 
+        Harmony harmony = new(typeof(Nickel).Namespace!);
+        HarmonyPatches.Apply(harmony, logger);
+
+        var modsDirectory = launchArguments.ModsPath ?? new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "ModLibrary"));
+        logger.LogInformation("ModsPath: {Path}", modsDirectory.FullName);
+
+        ModManager modManager = new(modsDirectory, loggerFactory, logger);
+        modManager.ResolveMods();
+        modManager.LoadMods(ModLoadPhase.BeforeGameAssembly);
+
         CobaltCoreHandler handler = new(
             logger,
             launchArguments.GamePath is { } gamePath
@@ -77,25 +87,18 @@ internal sealed class Nickel
             return;
         }
 
+        // game assembly loaded by now
+
         bool debug = launchArguments.Debug ?? true;
         logger.LogInformation("Debug: {Value}", debug);
 
         var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? handlerResult.WorkingDirectory;
         logger.LogInformation("GameWorkingDirectory: {Path}", gameWorkingDirectory.FullName);
 
-        var modsDirectory = launchArguments.ModsPath ?? new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "ModLibrary"));
-        logger.LogInformation("ModsPath: {Path}", modsDirectory.FullName);
-
         string savePath = launchArguments.SavePath?.FullName ?? Path.Combine(Directory.GetCurrentDirectory(), "ModSaves");
         logger.LogInformation("SavePath: {Path}", savePath);
 
-        Harmony harmony = new(typeof(Nickel).Namespace!);
-        HarmonyPatches.Apply(harmony, logger);
-
-        // game assembly loaded by now
-
-        ModManager modManager = new(modsDirectory, loggerFactory, logger);
-        modManager.LoadMods();
+        modManager.LoadMods(ModLoadPhase.AfterGameAssembly);
 
         string oldWorkingDirectory = Directory.GetCurrentDirectory();
         Directory.SetCurrentDirectory(gameWorkingDirectory.FullName);

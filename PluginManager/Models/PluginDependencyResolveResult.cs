@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using OneOf;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public readonly struct PluginDependencyResolveResult<TPluginManifest>
     where TPluginManifest : notnull

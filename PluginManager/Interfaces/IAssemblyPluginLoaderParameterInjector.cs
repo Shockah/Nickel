@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public interface IAssemblyPluginLoaderParameterInjector<in TPluginManifest>
 {

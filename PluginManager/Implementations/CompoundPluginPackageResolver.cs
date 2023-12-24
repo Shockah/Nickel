@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using OneOf.Types;
 using OneOf;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public sealed class CompoundPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {

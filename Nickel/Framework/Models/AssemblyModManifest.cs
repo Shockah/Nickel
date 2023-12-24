@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Shockah.PluginManager;
+using Nanoray.PluginManager;
 
 namespace Nickel;
 
@@ -23,10 +23,15 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
     public string? Author
         => this.ModManifest.Author;
 
+    public IReadOnlyList<IModManifest> Submods
+        => this.ModManifest.Submods;
+
     public IReadOnlyDictionary<string, object> ExtensionData
         => this.ModManifest.ExtensionData;
 
     public string EntryPointAssemblyFileName { get; internal set; } = null!;
+
+    public ModLoadPhase LoadPhase { get; internal set; } = ModLoadPhase.AfterGameAssembly;
 
     private IModManifest ModManifest { get; init; }
 

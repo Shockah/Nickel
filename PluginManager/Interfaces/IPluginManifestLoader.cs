@@ -2,7 +2,7 @@ using System.IO;
 using OneOf;
 using OneOf.Types;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public interface IPluginManifestLoader<TPluginManifest>
 {

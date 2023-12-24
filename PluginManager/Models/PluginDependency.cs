@@ -1,4 +1,4 @@
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public record struct PluginDependency(
     string UniqueName,

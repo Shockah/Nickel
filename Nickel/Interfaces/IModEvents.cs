@@ -4,5 +4,5 @@ namespace Nickel;
 
 public interface IModEvents
 {
-    event EventHandler<Nothing> OnAllModsLoaded;
+    event EventHandler<ModLoadPhase> OnModLoadPhaseFinished;
 }

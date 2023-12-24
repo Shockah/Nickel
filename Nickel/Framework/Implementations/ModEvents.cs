@@ -13,9 +13,9 @@ internal sealed class ModEvents : IModEvents
         this.EventManager = eventManager;
     }
 
-    public event EventHandler<Nothing> OnAllModsLoaded
+    public event EventHandler<ModLoadPhase> OnModLoadPhaseFinished
     {
-        add => this.EventManager.OnAllModsLoadedManagedEvent.Add(value, this.ModManifest);
-        remove => this.EventManager.OnAllModsLoadedManagedEvent.Remove(value, this.ModManifest);
+        add => this.EventManager.OnModLoadPhaseFinishedEvent.Add(value, this.ModManifest);
+        remove => this.EventManager.OnModLoadPhaseFinishedEvent.Remove(value, this.ModManifest);
     }
 }

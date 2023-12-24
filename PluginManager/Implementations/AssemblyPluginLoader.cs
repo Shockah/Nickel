@@ -5,7 +5,7 @@ using System.Runtime.Loader;
 using OneOf;
 using OneOf.Types;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public sealed class AssemblyPluginLoader<TPluginManifest, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 {

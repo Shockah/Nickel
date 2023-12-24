@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using Shockah.PluginManager;
+using Nanoray.PluginManager;
 
 namespace Nickel;
 
@@ -26,6 +26,9 @@ internal sealed class ModManifest : IModManifest
 
     [JsonProperty]
     public string? Author { get; private set; } = null;
+
+    [JsonProperty]
+    public IReadOnlyList<IModManifest> Submods { get; private set; } = new List<IModManifest>();
 
     [JsonExtensionData]
     public IReadOnlyDictionary<string, object> ExtensionData { get; private set; } = new Dictionary<string, object>();

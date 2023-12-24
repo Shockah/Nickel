@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using Shockah.PluginManager;
+using Nanoray.PluginManager;
 
 namespace Nickel;
 

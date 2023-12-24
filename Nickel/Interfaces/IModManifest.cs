@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Shockah.PluginManager;
+using Nanoray.PluginManager;
 
 namespace Nickel;
 
@@ -16,6 +16,8 @@ public interface IModManifest
     string? DisplayName { get; }
 
     string? Author { get; }
+
+    IReadOnlyList<IModManifest> Submods { get; }
 
     IReadOnlyDictionary<string, object> ExtensionData { get; }
 }

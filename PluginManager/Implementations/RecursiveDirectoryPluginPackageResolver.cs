@@ -3,7 +3,7 @@ using System.IO;
 using OneOf.Types;
 using OneOf;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {

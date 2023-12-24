@@ -4,7 +4,7 @@ using System.IO.Compression;
 using OneOf;
 using OneOf.Types;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public sealed class ZipPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {

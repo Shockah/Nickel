@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using Shockah.PluginManager;
+using Nanoray.PluginManager;
 
 namespace Nickel;
 
@@ -13,6 +13,10 @@ internal sealed class ModManager
     private ILoggerFactory LoggerFactory { get; init; }
     private ILogger Logger { get; init; }
     internal ModEventManager EventManager { get; private init; }
+
+    private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; init; } = new();
+    private List<IPluginPackage<IModManifest>> ResolvedMods { get; init; } = new();
+    private List<IModManifest> FailedMods { get; init; } = new();
 
     private Dictionary<string, ILogger> UniqueNameToLogger { get; init; } = new();
     private Dictionary<string, IModHelper> UniqueNameToHelper { get; init; } = new();
@@ -24,13 +28,33 @@ internal sealed class ModManager
         this.LoggerFactory = loggerFactory;
         this.Logger = logger;
         this.EventManager = new(ObtainLogger);
+
+        var assemblyPluginLoaderParameterInjector = new CompoundAssemblyPluginLoaderParameterInjector<IModManifest>(
+            new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, ILogger>(package => ObtainLogger(package.Manifest)),
+            new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, IModHelper>(package => ObtainModHelper(package.Manifest)),
+            new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendablePluginLoader<IModManifest, Mod>>(this.ExtendablePluginLoader)
+        );
+
+        var assemblyPluginLoader = new AssemblyPluginLoader<IAssemblyModManifest, Mod>(
+            requiredPluginDataProvider: p => new AssemblyPluginLoader<IAssemblyModManifest, Mod>.RequiredPluginData
+            {
+                UniqueName = p.Manifest.UniqueName,
+                EntryPointAssemblyFileName = p.Manifest.EntryPointAssemblyFileName
+            },
+            parameterInjector: assemblyPluginLoaderParameterInjector
+        );
+
+        this.ExtendablePluginLoader.RegisterPluginLoader(
+            new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
+                assemblyPluginLoader,
+                m => m.AsAssemblyModManifest()
+            )
+        );
     }
 
-    public void LoadMods()
+    public void ResolveMods()
     {
         this.Logger.LogInformation("Resolving mods...");
-
-        var extendablePluginLoader = new ExtendablePluginLoader<IModManifest, Mod>();
 
         var pluginDependencyResolver = new PluginDependencyResolver<IModManifest>(
             requiredManifestDataProvider: p => new PluginDependencyResolver<IModManifest>.RequiredManifestData { UniqueName = p.UniqueName, Version = p.Version, Dependencies = p.Dependencies }
@@ -42,17 +66,6 @@ internal sealed class ModManager
             ignoreDotDirectories: true,
             pluginManifestLoader: new SpecializedPluginManifestLoader<ModManifest, IModManifest>(pluginManifestLoader)
         );
-        var assemblyPluginLoaderParameterInjector = new CompoundAssemblyPluginLoaderParameterInjector<IModManifest>(
-            new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, ILogger>(package => ObtainLogger(package.Manifest)),
-            new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, IModHelper>(package => ObtainModHelper(package.Manifest)),
-            new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendablePluginLoader<IModManifest, Mod>>(extendablePluginLoader)
-        );
-        var assemblyPluginLoader = new AssemblyPluginLoader<IAssemblyModManifest, Mod>(
-            requiredPluginDataProvider: p => new AssemblyPluginLoader<IAssemblyModManifest, Mod>.RequiredPluginData { UniqueName = p.Manifest.UniqueName, EntryPointAssemblyFileName = p.Manifest.EntryPointAssemblyFileName },
-            parameterInjector: assemblyPluginLoaderParameterInjector
-        );
-
-        extendablePluginLoader.RegisterPluginLoader(new SpecializedManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(assemblyPluginLoader));
 
         var toLoadResults = pluginPackageResolver.ResolvePluginPackages().ToList();
         foreach (var toLoadResult in toLoadResults)
@@ -75,53 +88,69 @@ internal sealed class ModManager
                 unknown => this.Logger.LogError("Could not load {UniqueName}: unknown reason.", unresolvableManifest.UniqueName)
             );
 
-        this.Logger.LogInformation("Loading mods...");
+        this.ResolvedMods.AddRange(
+            dependencyResolverResult.LoadSteps
+                .SelectMany(step => step)
+                .Select(m => toLoad.FirstOrDefault(p => p.Manifest.UniqueName == m.UniqueName) ?? throw new InvalidOperationException())
+        );
+    }
+
+    public void LoadMods(ModLoadPhase phase)
+    {
+        this.Logger.LogInformation("Loading {Phase} phase mods...", phase);
 
         List<IModManifest> successfulMods = new();
-        List<IModManifest> failedMods = new();
-        foreach (var step in dependencyResolverResult.LoadSteps)
+        foreach (var package in this.ResolvedMods)
         {
-            foreach (var manifest in step)
+            var manifest = package.Manifest;
+            if (this.UniqueNameToInstance.ContainsKey(manifest.UniqueName))
+                continue;
+            if (this.FailedMods.Contains(manifest))
+                continue;
+
+            var manifestPhase = (manifest as IAssemblyModManifest)?.LoadPhase ?? ModLoadPhase.AfterGameAssembly;
+            if (manifestPhase < phase)
+                continue;
+
+            this.Logger.LogDebug("Loading mod {UniqueName}...", manifest.UniqueName);
+            if (manifestPhase != phase)
+                this.Logger.LogWarning("Mod {UniqueName} requested to be loaded in the {RequestedPhase} phase, but was loaded in the {ActualPhase} phase due to dependencies.", manifest.UniqueName, manifestPhase, phase);
+
+            var failedRequiredDependencies = manifest.Dependencies.Where(d => d.IsRequired && this.FailedMods.Any(m => m.UniqueName == d.UniqueName)).ToList();
+            if (failedRequiredDependencies.Count > 0)
             {
-                this.Logger.LogDebug("Loading mod {UniqueName}...", manifest.UniqueName);
-
-                var failedRequiredDependencies = manifest.Dependencies.Where(d => d.IsRequired && failedMods.Any(m => m.UniqueName == d.UniqueName)).ToList();
-                if (failedRequiredDependencies.Count > 0)
-                {
-                    failedMods.Add(manifest);
-                    this.Logger.LogError("Could not load {UniqueName}: Required dependencies failed to load: {Dependencies}", manifest.UniqueName, string.Join(", ", failedRequiredDependencies.Select(d => d.UniqueName)));
-                    continue;
-                }
-
-                var package = toLoad.FirstOrDefault(p => p.Manifest.UniqueName == manifest.UniqueName) ?? throw new InvalidOperationException();
-                if (!extendablePluginLoader.CanLoadPlugin(package))
-                {
-                    failedMods.Add(manifest);
-                    this.Logger.LogError("Could not load {UniqueName}: no registered loader for this kind of mod.", manifest.UniqueName);
-                    continue;
-                }
-
-                extendablePluginLoader.LoadPlugin(package).Switch(
-                    mod =>
-                    {
-                        this.UniqueNameToInstance[manifest.UniqueName] = mod;
-                        mod.Package = package;
-                        mod.Logger = this.ObtainLogger(manifest);
-                        mod.Helper = this.ObtainModHelper(manifest);
-                        successfulMods.Add(manifest);
-                        this.Logger.LogInformation("Loaded mod {UniqueName}.", manifest.UniqueName);
-                    },
-                    error =>
-                    {
-                        failedMods.Add(manifest);
-                        this.Logger.LogError("Could not load {UniqueName}: {Error}", manifest.UniqueName, error.Value);
-                    }
-                );
+                this.FailedMods.Add(manifest);
+                this.Logger.LogError("Could not load {UniqueName}: Required dependencies failed to load: {Dependencies}", manifest.UniqueName, string.Join(", ", failedRequiredDependencies.Select(d => d.UniqueName)));
+                continue;
             }
+
+            if (!this.ExtendablePluginLoader.CanLoadPlugin(package))
+            {
+                this.FailedMods.Add(manifest);
+                this.Logger.LogError("Could not load {UniqueName}: no registered loader for this kind of mod.", manifest.UniqueName);
+                continue;
+            }
+
+            this.ExtendablePluginLoader.LoadPlugin(package).Switch(
+                mod =>
+                {
+                    this.UniqueNameToInstance[manifest.UniqueName] = mod;
+                    mod.Package = package;
+                    mod.Logger = this.ObtainLogger(manifest);
+                    mod.Helper = this.ObtainModHelper(manifest);
+                    successfulMods.Add(manifest);
+                    this.Logger.LogInformation("Loaded mod {UniqueName}.", manifest.UniqueName);
+                },
+                error =>
+                {
+                    this.FailedMods.Add(manifest);
+                    this.Logger.LogError("Could not load {UniqueName}: {Error}", manifest.UniqueName, error.Value);
+                }
+            );
         }
 
         this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
-        this.EventManager.OnAllModsLoadedManagedEvent.Raise(null, Nothing.AtAll);
+        this.EventManager.OnModLoadPhaseFinishedEvent.Raise(null, phase);
     }
 
     private ILogger ObtainLogger(IModManifest manifest)

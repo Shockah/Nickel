@@ -3,7 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public sealed class ZipPluginPackage<TPluginManifest> : IPluginPackage<TPluginManifest>
 {

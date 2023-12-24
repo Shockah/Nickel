@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public sealed class PluginDependencyResolver<TPluginManifest> : IPluginDependencyResolver<TPluginManifest>
     where TPluginManifest : notnull

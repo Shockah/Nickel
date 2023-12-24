@@ -2,7 +2,7 @@ using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Shockah.PluginManager.Utilities;
+namespace Nanoray.PluginManager.Utilities;
 
 public sealed class SemanticVersionConverter : JsonConverter<SemanticVersion>
 {

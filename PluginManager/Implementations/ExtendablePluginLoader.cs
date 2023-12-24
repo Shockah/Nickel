@@ -4,7 +4,7 @@ using System.Linq;
 using OneOf;
 using OneOf.Types;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public sealed class ExtendablePluginLoader<TPluginManifest, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 {

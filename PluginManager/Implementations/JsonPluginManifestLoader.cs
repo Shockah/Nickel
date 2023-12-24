@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using OneOf;
 using OneOf.Types;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public sealed class JsonPluginManifestLoader<TPluginManifest> : IPluginManifestLoader<TPluginManifest>
 {

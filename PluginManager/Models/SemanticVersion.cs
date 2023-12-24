@@ -1,8 +1,8 @@
 using System;
 using Newtonsoft.Json;
-using Shockah.PluginManager.Utilities;
+using Nanoray.PluginManager.Utilities;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 [JsonConverter(typeof(SemanticVersionConverter))]
 public readonly struct SemanticVersion : IEquatable<SemanticVersion>, IComparable<SemanticVersion>

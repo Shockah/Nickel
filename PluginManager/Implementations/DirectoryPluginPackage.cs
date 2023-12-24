@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public sealed class DirectoryPluginPackage<TPluginManifest> : IPluginPackage<TPluginManifest>
 {

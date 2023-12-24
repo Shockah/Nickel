@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Shockah.PluginManager;
+using Nanoray.PluginManager;
 
 namespace Nickel;
 

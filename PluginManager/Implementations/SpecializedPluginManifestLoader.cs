@@ -2,7 +2,7 @@ using System.IO;
 using OneOf;
 using OneOf.Types;
 
-namespace Shockah.PluginManager;
+namespace Nanoray.PluginManager;
 
 public sealed class SpecializedPluginManifestLoader<TSpecializedPluginManifest, TPluginManifest> : IPluginManifestLoader<TPluginManifest>
     where TSpecializedPluginManifest : TPluginManifest
