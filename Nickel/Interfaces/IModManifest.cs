@@ -17,7 +17,7 @@ public interface IModManifest
 
     string? Author { get; }
 
-    IReadOnlyList<IModManifest> Submods { get; }
+    IReadOnlyList<ISubmodEntry> Submods { get; }
 
     IReadOnlyDictionary<string, object> ExtensionData { get; }
 }

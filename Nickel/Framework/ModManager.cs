@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
+using Nanoray.PluginManager.Implementations;
 
 namespace Nickel;
 
@@ -18,6 +19,7 @@ internal sealed class ModManager
     private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; init; } = new();
     private List<IPluginPackage<IModManifest>> ResolvedMods { get; init; } = new();
     private List<IModManifest> FailedMods { get; init; } = new();
+    private HashSet<IModManifest> OptionalSubmods { get; init; } = new();
 
     private Dictionary<string, ILogger> UniqueNameToLogger { get; init; } = new();
     private Dictionary<string, IModHelper> UniqueNameToHelper { get; init; } = new();
@@ -70,11 +72,19 @@ internal sealed class ModManager
             Enum.GetValues<ModLoadPhase>()
         );
         var pluginManifestLoader = new JsonPluginManifestLoader<ModManifest>();
-        var pluginPackageResolver = new RecursiveDirectoryPluginPackageResolver<IModManifest>(
-            directory: this.ModsDirectory,
-            manifestFileName: "nickel.json",
-            ignoreDotDirectories: true,
-            pluginManifestLoader: new SpecializedPluginManifestLoader<ModManifest, IModManifest>(pluginManifestLoader)
+        var pluginPackageResolver = new SubpluginPluginPackageResolver<IModManifest>(
+            baseResolver: new RecursiveDirectoryPluginPackageResolver<IModManifest>(
+                directory: this.ModsDirectory,
+                manifestFileName: "nickel.json",
+                ignoreDotDirectories: true,
+                pluginManifestLoader: new SpecializedPluginManifestLoader<ModManifest, IModManifest>(pluginManifestLoader)
+            ),
+            subpluginResolverFactory: p =>
+            {
+                foreach (var optionalSubmod in p.Manifest.Submods.Where(submod => submod.IsOptional))
+                    this.OptionalSubmods.Add(optionalSubmod.Manifest);
+                return p.Manifest.Submods.Select(submod => new InnerPluginPackageResolver<IModManifest>(p, submod.Manifest));
+            }
         );
 
         var toLoadResults = pluginPackageResolver.ResolvePluginPackages().ToList();
@@ -92,11 +102,15 @@ internal sealed class ModManager
 
         var dependencyResolverResult = pluginDependencyResolver.ResolveDependencies(toLoad.Select(p => p.Manifest));
         foreach (var (unresolvableManifest, reason) in dependencyResolverResult.Unresolvable)
+        {
+            if (this.OptionalSubmods.Contains(unresolvableManifest))
+                continue;
             reason.Switch(
                 missingDependencies => this.Logger.LogError("Could not load {UniqueName}: missing dependencies: {Dependencies}", unresolvableManifest.UniqueName, string.Join(", ", missingDependencies.Dependencies.Select(d => d.UniqueName))),
                 dependencyCycle => this.Logger.LogError("Could not load {UniqueName}: dependency cycle: {Cycle}", unresolvableManifest.UniqueName, string.Join(" -> ", dependencyCycle.Cycle.Values.Append(dependencyCycle.Cycle.Values[0]).Select(m => m.UniqueName))),
                 unknown => this.Logger.LogError("Could not load {UniqueName}: unknown reason.", unresolvableManifest.UniqueName)
             );
+        }
 
         this.ResolvedMods.AddRange(
             dependencyResolverResult.LoadSteps

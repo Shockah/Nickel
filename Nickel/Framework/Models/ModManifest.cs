@@ -28,7 +28,8 @@ internal sealed class ModManifest : IModManifest
     public string? Author { get; private set; } = null;
 
     [JsonProperty]
-    public IReadOnlyList<IModManifest> Submods { get; private set; } = new List<IModManifest>();
+    [JsonConverter(typeof(ConcreteTypeConverter<IReadOnlyList<SubmodEntry>>))]
+    public IReadOnlyList<ISubmodEntry> Submods { get; private set; } = new List<ISubmodEntry>();
 
     [JsonExtensionData]
     public IReadOnlyDictionary<string, object> ExtensionData { get; private set; } = new Dictionary<string, object>();

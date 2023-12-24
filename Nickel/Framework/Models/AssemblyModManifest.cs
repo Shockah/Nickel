@@ -23,7 +23,7 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
     public string? Author
         => this.ModManifest.Author;
 
-    public IReadOnlyList<IModManifest> Submods
+    public IReadOnlyList<ISubmodEntry> Submods
         => this.ModManifest.Submods;
 
     public IReadOnlyDictionary<string, object> ExtensionData
