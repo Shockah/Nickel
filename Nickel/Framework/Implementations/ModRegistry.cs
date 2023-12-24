@@ -15,7 +15,7 @@ internal sealed class ModRegistry : IModRegistry
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Package.Manifest);
 
     private IModManifest ModManifest { get; init; }
-    private IReadOnlyDictionary<string, Mod> ModUniqueNameToInstance { get; init; }
+    internal IReadOnlyDictionary<string, Mod> ModUniqueNameToInstance { get; private init; }
     private Dictionary<string, object?> ApiCache { get; init; } = new();
     private IProxyManager<string> ProxyManager { get; init; }
 
