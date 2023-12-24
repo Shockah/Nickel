@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
 using Microsoft.Extensions.Logging;
+using Nanoray.PluginManager;
 using OneOf;
 using OneOf.Types;
 
@@ -12,11 +13,13 @@ internal sealed class CobaltCoreHandler
 {
     private ILogger Logger { get; init; }
     private ICobaltCoreResolver Resolver { get; init; }
+    private IAssemblyEditor? AssemblyEditor { get; init; }
 
-    public CobaltCoreHandler(ILogger logger, ICobaltCoreResolver resolver)
+    public CobaltCoreHandler(ILogger logger, ICobaltCoreResolver resolver, IAssemblyEditor? assemblyEditor)
     {
         this.Logger = logger;
         this.Resolver = resolver;
+        this.AssemblyEditor = assemblyEditor;
     }
 
     public OneOf<CobaltCoreHandlerResult, Error<string>> SetupGame()
@@ -27,6 +30,7 @@ internal sealed class CobaltCoreHandler
 
         this.Logger.LogInformation("Loading game assembly...");
         var gameAssembly = LoadAssembly(
+            name: "CobaltCore.dll",
             assemblyStream: resolveResult.GameAssemblyDataStream,
             symbolsStream: resolveResult.GamePdbDataStream
         );
@@ -37,7 +41,7 @@ internal sealed class CobaltCoreHandler
             this.Logger.LogDebug("Trying to load (potential) assembly {AssemblyName}...", name);
             try
             {
-                LoadAssembly(stream);
+                LoadAssembly(name, stream);
             }
             catch (BadImageFormatException e)
             {
@@ -59,11 +63,13 @@ internal sealed class CobaltCoreHandler
         };
     }
 
-    private Assembly LoadAssembly(Stream assemblyStream, Stream? symbolsStream = null)
+    private Assembly LoadAssembly(string name, Stream assemblyStream, Stream? symbolsStream = null)
     {
         AssemblyLoadContext context = AssemblyLoadContext.GetLoadContext(GetType().Assembly)
             ?? AssemblyLoadContext.CurrentContextualReflectionContext
             ?? AssemblyLoadContext.Default;
+        if (this.AssemblyEditor is { } assemblyEditor)
+            assemblyStream = assemblyEditor.EditAssemblyStream(name, assemblyStream);
         return context.LoadFromStream(assemblyStream, symbolsStream);
     }
 }

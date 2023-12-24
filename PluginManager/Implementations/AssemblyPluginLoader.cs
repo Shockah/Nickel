@@ -11,11 +11,17 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPlugin> : IPluginLoad
 {
     private Func<IPluginPackage<TPluginManifest>, RequiredPluginData?> RequiredPluginDataProvider { get; init; }
     private IAssemblyPluginLoaderParameterInjector<TPluginManifest>? ParameterInjector { get; init; }
+    private IAssemblyEditor? AssemblyEditor { get; init; }
 
-    public AssemblyPluginLoader(Func<IPluginPackage<TPluginManifest>, RequiredPluginData?> requiredPluginDataProvider, IAssemblyPluginLoaderParameterInjector<TPluginManifest>? parameterInjector)
+    public AssemblyPluginLoader(
+        Func<IPluginPackage<TPluginManifest>, RequiredPluginData?> requiredPluginDataProvider,
+        IAssemblyPluginLoaderParameterInjector<TPluginManifest>? parameterInjector,
+        IAssemblyEditor? assemblyEditor
+    )
     {
         this.RequiredPluginDataProvider = requiredPluginDataProvider;
         this.ParameterInjector = parameterInjector;
+        this.AssemblyEditor = assemblyEditor;
     }
 
     public bool CanLoadPlugin(IPluginPackage<TPluginManifest> package)
@@ -25,7 +31,9 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPlugin> : IPluginLoad
     {
         if (this.RequiredPluginDataProvider(package) is not { } requiredPluginData)
             throw new ArgumentException($"This plugin loader cannot load the plugin package {package}.");
-        using var stream = package.GetDataStream(requiredPluginData.EntryPointAssemblyFileName);
+
+        using var originalStream = package.GetDataStream(requiredPluginData.EntryPointAssemblyFileName);
+        using var stream = this.AssemblyEditor?.EditAssemblyStream(requiredPluginData.EntryPointAssemblyFileName, originalStream) ?? originalStream;
 
         AssemblyLoadContext context = new(requiredPluginData.UniqueName);
         var assembly = context.LoadFromStream(stream);

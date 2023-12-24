@@ -42,6 +42,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PluginManager\PluginManager.csproj" />
+    <ProjectReference Include="..\PluginManager.Cecil\PluginManager.Cecil.csproj" />
     <PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />

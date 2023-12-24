@@ -5,6 +5,7 @@ using System.CommandLine.Invocation;
 using System.IO;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
+using Nanoray.PluginManager.Cecil;
 using Nickel.Framework;
 
 namespace Nickel;
@@ -69,7 +70,8 @@ internal sealed class Nickel
         var modsDirectory = launchArguments.ModsPath ?? new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "ModLibrary"));
         logger.LogInformation("ModsPath: {Path}", modsDirectory.FullName);
 
-        ModManager modManager = new(modsDirectory, loggerFactory, logger);
+        ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor = new();
+        ModManager modManager = new(modsDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
         modManager.ResolveMods();
         modManager.LoadMods(ModLoadPhase.BeforeGameAssembly);
 
@@ -77,7 +79,8 @@ internal sealed class Nickel
             logger,
             launchArguments.GamePath is { } gamePath
                 ? new SingleFileApplicationCobaltCoreResolver(gamePath, new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb")))
-                : new SteamCobaltCoreResolver((exe, pdb) => new SingleFileApplicationCobaltCoreResolver(exe, pdb))
+                : new SteamCobaltCoreResolver((exe, pdb) => new SingleFileApplicationCobaltCoreResolver(exe, pdb)),
+            extendableAssemblyDefinitionEditor
         );
 
         var handlerResultOrError = handler.SetupGame();

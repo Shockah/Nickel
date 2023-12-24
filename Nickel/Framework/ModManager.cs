@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
+using Nanoray.PluginManager.Cecil;
 
 namespace Nickel;
 
@@ -22,7 +23,7 @@ internal sealed class ModManager
     private Dictionary<string, IModHelper> UniqueNameToHelper { get; init; } = new();
     private Dictionary<string, Mod> UniqueNameToInstance { get; init; } = new();
 
-    public ModManager(DirectoryInfo modsDirectory, ILoggerFactory loggerFactory, ILogger logger)
+    public ModManager(DirectoryInfo modsDirectory, ILoggerFactory loggerFactory, ILogger logger, ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor)
     {
         this.ModsDirectory = modsDirectory;
         this.LoggerFactory = loggerFactory;
@@ -32,7 +33,8 @@ internal sealed class ModManager
         var assemblyPluginLoaderParameterInjector = new CompoundAssemblyPluginLoaderParameterInjector<IModManifest>(
             new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, ILogger>(package => ObtainLogger(package.Manifest)),
             new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, IModHelper>(package => ObtainModHelper(package.Manifest)),
-            new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendablePluginLoader<IModManifest, Mod>>(this.ExtendablePluginLoader)
+            new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendablePluginLoader<IModManifest, Mod>>(this.ExtendablePluginLoader),
+            new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendableAssemblyDefinitionEditor>(extendableAssemblyDefinitionEditor)
         );
 
         var assemblyPluginLoader = new AssemblyPluginLoader<IAssemblyModManifest, Mod>(
@@ -41,7 +43,8 @@ internal sealed class ModManager
                 UniqueName = p.Manifest.UniqueName,
                 EntryPointAssemblyFileName = p.Manifest.EntryPointAssemblyFileName
             },
-            parameterInjector: assemblyPluginLoaderParameterInjector
+            parameterInjector: assemblyPluginLoaderParameterInjector,
+            assemblyEditor: extendableAssemblyDefinitionEditor
         );
 
         this.ExtendablePluginLoader.RegisterPluginLoader(
