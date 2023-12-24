@@ -35,7 +35,10 @@ internal sealed class Nickel
         );
 
         RootCommand rootCommand = new("Nickel -- A modding API / modloader for the game Cobalt Core.");
+        rootCommand.AddOption(debugOption);
+        rootCommand.AddOption(gamePathOption);
         rootCommand.AddOption(modsPathOption);
+        rootCommand.AddOption(savePathOption);
 
         rootCommand.SetHandler((InvocationContext context) =>
         {
