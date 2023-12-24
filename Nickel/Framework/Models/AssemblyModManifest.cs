@@ -23,6 +23,9 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
     public string? Author
         => this.ModManifest.Author;
 
+    public string ModType
+        => this.ModManifest.ModType;
+
     public IReadOnlyList<ISubmodEntry> Submods
         => this.ModManifest.Submods;
 

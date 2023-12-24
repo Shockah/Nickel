@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using Nanoray.PluginManager.Implementations;
+using ILegacyModManifest = CobaltCoreModding.Definitions.ModManifests.IModManifest;
 
 namespace Nickel;
 
@@ -16,6 +18,8 @@ internal sealed class ModManager
     private ILogger Logger { get; init; }
     internal ModEventManager EventManager { get; private init; }
 
+    internal Assembly? CobaltCoreAssembly { get; set; }
+
     private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; init; } = new();
     private List<IPluginPackage<IModManifest>> ResolvedMods { get; init; } = new();
     private List<IModManifest> FailedMods { get; init; } = new();
@@ -25,7 +29,12 @@ internal sealed class ModManager
     private Dictionary<string, IModHelper> UniqueNameToHelper { get; init; } = new();
     private Dictionary<string, Mod> UniqueNameToInstance { get; init; } = new();
 
-    public ModManager(DirectoryInfo modsDirectory, ILoggerFactory loggerFactory, ILogger logger, ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor)
+    public ModManager(
+        DirectoryInfo modsDirectory,
+        ILoggerFactory loggerFactory,
+        ILogger logger,
+        ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor
+    )
     {
         this.ModsDirectory = modsDirectory;
         this.LoggerFactory = loggerFactory;
@@ -39,19 +48,45 @@ internal sealed class ModManager
             new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendableAssemblyDefinitionEditor>(extendableAssemblyDefinitionEditor)
         );
 
-        var assemblyPluginLoader = new AssemblyPluginLoader<IAssemblyModManifest, Mod>(
-            requiredPluginDataProvider: p => new AssemblyPluginLoader<IAssemblyModManifest, Mod>.RequiredPluginData
-            {
-                UniqueName = p.Manifest.UniqueName,
-                EntryPointAssemblyFileName = p.Manifest.EntryPointAssemblyFileName
-            },
-            parameterInjector: assemblyPluginLoaderParameterInjector,
-            assemblyEditor: extendableAssemblyDefinitionEditor
+        var assemblyPluginLoader = new ConditionalPluginLoader<IAssemblyModManifest, Mod>(
+            loader: new AssemblyPluginLoader<IAssemblyModManifest, Mod>(
+                requiredPluginDataProvider: p => new AssemblyPluginLoader<IAssemblyModManifest, Mod>.RequiredPluginData
+                {
+                    UniqueName = p.Manifest.UniqueName,
+                    EntryPointAssemblyFileName = p.Manifest.EntryPointAssemblyFileName
+                },
+                parameterInjector: assemblyPluginLoaderParameterInjector,
+                assemblyEditor: extendableAssemblyDefinitionEditor
+            ),
+            condition: package => package.Manifest.ModType == $"{GetType().Namespace!}.Assembly"
+        );
+
+        var legacyAssemblyPluginLoader = new ConditionalPluginLoader<IAssemblyModManifest, Mod>(
+            loader: new LegacyAssemblyPluginLoader(
+                loader: new AssemblyPluginLoader<IAssemblyModManifest, ILegacyModManifest>(
+                    requiredPluginDataProvider: p => new AssemblyPluginLoader<IAssemblyModManifest, ILegacyModManifest>.RequiredPluginData
+                    {
+                        UniqueName = p.Manifest.UniqueName,
+                        EntryPointAssemblyFileName = p.Manifest.EntryPointAssemblyFileName
+                    },
+                    parameterInjector: assemblyPluginLoaderParameterInjector,
+                    assemblyEditor: extendableAssemblyDefinitionEditor
+                ),
+                helperProvider: this.ObtainModHelper,
+                cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!
+            ),
+            condition: package => package.Manifest.ModType == $"{GetType().Namespace!}.Legacy" && this.CobaltCoreAssembly is not null
         );
 
         this.ExtendablePluginLoader.RegisterPluginLoader(
             new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
                 assemblyPluginLoader,
+                m => m.AsAssemblyModManifest()
+            )
+        );
+        this.ExtendablePluginLoader.RegisterPluginLoader(
+            new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
+                legacyAssemblyPluginLoader,
                 m => m.AsAssemblyModManifest()
             )
         );

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
@@ -12,18 +13,21 @@ using ILegacyModManifest = CobaltCoreModding.Definitions.ModManifests.IModManife
 
 namespace Nickel;
 
-internal sealed class LegacyAssemblyPluginLoader<TContactPoint> : IPluginLoader<IAssemblyModManifest, Mod>
+internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModManifest, Mod>
 {
     private IPluginLoader<IAssemblyModManifest, ILegacyModManifest> Loader { get; init; }
     private Func<IModManifest, IModHelper> HelperProvider { get; init; }
+    private Func<Assembly> CobaltCoreAssemblyProvider { get; init; }
 
     public LegacyAssemblyPluginLoader(
         IPluginLoader<IAssemblyModManifest, ILegacyModManifest> loader,
-        Func<IModManifest, IModHelper> helperProvider
+        Func<IModManifest, IModHelper> helperProvider,
+        Func<Assembly> cobaltCoreAssemblyProvider
     )
     {
         this.Loader = loader;
         this.HelperProvider = helperProvider;
+        this.CobaltCoreAssemblyProvider = cobaltCoreAssemblyProvider;
     }
 
     public bool CanLoadPlugin(IPluginPackage<IAssemblyModManifest> package)
@@ -31,21 +35,32 @@ internal sealed class LegacyAssemblyPluginLoader<TContactPoint> : IPluginLoader<
 
     public OneOf<Mod, Error<string>> LoadPlugin(IPluginPackage<IAssemblyModManifest> package)
         => this.Loader.LoadPlugin(package).Match<OneOf<Mod, Error<string>>>(
-            mod => new LegacyModWrapper(mod, this.HelperProvider(package.Manifest)),
+            mod => new LegacyModWrapper(mod, this.HelperProvider(package.Manifest), this.CobaltCoreAssemblyProvider()),
             error => error
         );
 
     private sealed class LegacyModWrapper : Mod, IModLoaderContact, IPrelaunchContactPoint
     {
+        public IEnumerable<ILegacyManifest> LoadedManifests
+        {
+            get
+            {
+                if (this.Helper.ModRegistry is not ModRegistry modRegistry)
+                    return Enumerable.Empty<ILegacyManifest>();
+                return modRegistry.ModUniqueNameToInstance.Values
+                    .OfType<LegacyModWrapper>()
+                    .Select(mod => mod.LegacyManifest);
+            }
+        }
+
+        public Assembly CobaltCoreAssembly { get; init; }
+
         private ILegacyModManifest LegacyManifest { get; init; }
 
-        public IEnumerable<ILegacyManifest> LoadedManifests => throw new NotImplementedException();
-
-        public Assembly CobaltCoreAssembly => throw new NotImplementedException();
-
-        public LegacyModWrapper(ILegacyModManifest legacyManifest, IModHelper helper)
+        public LegacyModWrapper(ILegacyModManifest legacyManifest, IModHelper helper, Assembly cobaltCoreAssembly)
         {
             this.LegacyManifest = legacyManifest;
+            this.CobaltCoreAssembly = cobaltCoreAssembly;
             helper.Events.OnModLoadPhaseFinished += OnEarlyModLoadPhaseFinished;
             helper.Events.OnModLoadPhaseFinished += OnLateModLoadPhaseFinished;
         }
@@ -59,10 +74,7 @@ internal sealed class LegacyAssemblyPluginLoader<TContactPoint> : IPluginLoader<
             => (this.LegacyManifest as IPrelaunchManifest)?.FinalizePreperations(this);
 
         public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
-        {
-            // TODO: implement or keep as throwing
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
 
         public TApi? GetApi<TApi>(string modName) where TApi : class
             => this.Helper.ModRegistry.GetApi<TApi>(modName);

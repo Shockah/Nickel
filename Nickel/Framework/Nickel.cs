@@ -101,6 +101,8 @@ internal sealed class Nickel
 
         // game assembly loaded by now
 
+        instance.ModManager.CobaltCoreAssembly = handlerResult.GameAssembly;
+
         MGPatches.Apply(harmony, logger);
 
         bool debug = launchArguments.Debug ?? true;
