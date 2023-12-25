@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NickelLauncher", "NickelLau
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginManager.Cecil", "PluginManager.Cecil\PluginManager.Cecil.csproj", "{0267A231-613F-45B5-8171-6FBB242F30AC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LegacyModLoader.Definitions", "LegacyModLoader\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj", "{C27B6030-7813-4B04-8398-E8C7347E01AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModding.Definitions", "LegacyModLoader\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj", "{C27B6030-7813-4B04-8398-E8C7347E01AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
