@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -8,7 +9,8 @@ namespace Nickel;
 internal sealed class SpriteManager
 {
     private int NextSpriteId { get; set; } = 10_000_001;
-    private Dictionary<Spr, SpriteEntry> Entries { get; init; } = new();
+    private Dictionary<Spr, SpriteEntry> SpriteToEntry { get; init; } = new();
+    private Dictionary<string, SpriteEntry> UniqueNameToEntry { get; init; } = new();
 
     public SpriteManager()
     {
@@ -16,9 +18,13 @@ internal sealed class SpriteManager
     }
 
     public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Stream> streamProvider)
+        => this.RegisterSpriteWithUniqueName(owner, $"{owner.UniqueName}::{name}", streamProvider);
+
+    internal ISpriteEntry RegisterSpriteWithUniqueName(IModManifest owner, string uniqueName, Func<Stream> streamProvider)
     {
-        SpriteEntry entry = new(owner, name, (Spr)NextSpriteId++, streamProvider);
-        this.Entries[entry.Sprite] = entry;
+        SpriteEntry entry = new(owner, uniqueName, (Spr)NextSpriteId++, streamProvider);
+        this.SpriteToEntry[entry.Sprite] = entry;
+        this.UniqueNameToEntry[entry.UniqueName] = entry;
 
         string path = $"{GetType().Namespace!}-managed/{entry.UniqueName}";
         SpriteMapping.mapping[entry.Sprite] = new SpritePath(path);
@@ -26,11 +32,25 @@ internal sealed class SpriteManager
         return entry;
     }
 
+    internal bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out ISpriteEntry entry)
+    {
+        if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry))
+        {
+            entry = typedEntry;
+            return true;
+        }
+        else
+        {
+            entry = default;
+            return false;
+        }
+    }
+
     private void OnGetTexture(object? sender, SpriteLoaderPatches.GetTextureEventArgs e)
     {
         if (e.Texture is not null)
             return;
-        if (!this.Entries.TryGetValue(e.Sprite, out var entry))
+        if (!this.SpriteToEntry.TryGetValue(e.Sprite, out var entry))
             return;
         e.Texture = entry.ObtainTexture();
     }
@@ -44,10 +64,10 @@ internal sealed class SpriteManager
         private Func<Stream>? StreamProvider { get; set; }
         private Texture2D? TextureStorage { get; set; }
 
-        public SpriteEntry(IModManifest modOwner, string name, Spr sprite, Func<Stream> streamProvider)
+        public SpriteEntry(IModManifest modOwner, string uniqueName, Spr sprite, Func<Stream> streamProvider)
         {
             this.ModOwner = modOwner;
-            this.UniqueName = $"{modOwner.UniqueName}::{name}";
+            this.UniqueName = uniqueName;
             this.Sprite = sprite;
             this.StreamProvider = streamProvider;
         }

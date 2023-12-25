@@ -48,45 +48,73 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         return this.Loader.LoadPlugin(package).Match<OneOf<Mod, Error<string>>>(
             mod =>
             {
-                LegacyRegistry registry = new(package.Manifest, this.CobaltCoreAssemblyProvider, this.SpriteManagerProvider);
-                return new LegacyModWrapper(mod, registry, directoryPackage.Directory, this.HelperProvider(package.Manifest), this.LoggerProvider(package.Manifest), this.CobaltCoreAssemblyProvider());
+                var helper = this.HelperProvider(package.Manifest);
+                LegacyRegistry registry = new(package.Manifest, helper, this.CobaltCoreAssemblyProvider(), this.SpriteManagerProvider);
+                return new LegacyModWrapper(mod, registry, directoryPackage.Directory, helper, this.LoggerProvider(package.Manifest));
             },
             error => error
         );
     }
 
-    private sealed class LegacyRegistry : ISpriteRegistry
+    private sealed class LegacyRegistry : IModLoaderContact, IPrelaunchContactPoint, ISpriteRegistry
     {
-        private IModManifest ModManifest { get; init; }
+        public Assembly CobaltCoreAssembly { get; init; }
 
-        public Assembly CobaltCoreAssembly
-            => this.CobaltCoreAssemblyProvider();
+        private IModManifest ModManifest { get; init; }
+        private IModHelper Helper { get; init; }
+
+        public IEnumerable<ILegacyManifest> LoadedManifests
+        {
+            get
+            {
+                if (this.Helper.ModRegistry is not ModRegistry modRegistry)
+                    return Enumerable.Empty<ILegacyManifest>();
+                return modRegistry.ModUniqueNameToInstance.Values
+                    .OfType<LegacyModWrapper>()
+                    .Select(mod => mod.LegacyManifest);
+            }
+        }
 
         public Func<object> GetCobaltCoreGraphicsDeviceFunc
             => () => MG.inst.GraphicsDevice;
 
-        private Func<Assembly> CobaltCoreAssemblyProvider { get; init; }
         private Func<SpriteManager> SpriteManagerProvider { get; init; }
 
         public LegacyRegistry(
             IModManifest modManifest,
-            Func<Assembly> cobaltCoreAssemblyProvider,
+            IModHelper helper,
+            Assembly cobaltCoreAssembly,
             Func<SpriteManager> spriteManagerProvider
         )
         {
             this.ModManifest = modManifest;
-            this.CobaltCoreAssemblyProvider = cobaltCoreAssemblyProvider;
+            this.Helper = helper;
+            this.CobaltCoreAssembly = cobaltCoreAssembly;
             this.SpriteManagerProvider = spriteManagerProvider;
         }
 
+        public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
+            => throw new NotImplementedException($"This method is not supported in {typeof(Nickel).Namespace!}");
+
+        public TApi? GetApi<TApi>(string modName) where TApi : class
+            => this.Helper.ModRegistry.GetApi<TApi>(modName);
+
         public ILegacyManifest LookupManifest(string globalName)
         {
-            throw new NotImplementedException();
+            if (this.Helper.ModRegistry is not ModRegistry modRegistry)
+                throw new KeyNotFoundException();
+            if (!modRegistry.ModUniqueNameToInstance.TryGetValue(globalName, out var mod))
+                throw new KeyNotFoundException();
+            if (mod is not LegacyModWrapper legacyModWrapper)
+                throw new KeyNotFoundException();
+            return legacyModWrapper.LegacyManifest;
         }
 
         public ExternalSprite LookupSprite(string globalName)
         {
-            throw new NotImplementedException();
+            if (!this.SpriteManagerProvider().TryGetByUniqueName(globalName, out var entry))
+                throw new KeyNotFoundException();
+            return new ExternalSprite(globalName, new FileInfo("")) { physical_location = null, GlobalName = globalName, Id = (int)entry.Sprite };
         }
 
         public bool RegisterArt(ExternalSprite sprite_data, int? overwrite_value = null)
@@ -106,30 +134,15 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         }
     }
 
-    private sealed class LegacyModWrapper : Mod, IModLoaderContact, IPrelaunchContactPoint
+    private sealed class LegacyModWrapper : Mod
     {
-        public IEnumerable<ILegacyManifest> LoadedManifests
-        {
-            get
-            {
-                if (this.Helper.ModRegistry is not ModRegistry modRegistry)
-                    return Enumerable.Empty<ILegacyManifest>();
-                return modRegistry.ModUniqueNameToInstance.Values
-                    .OfType<LegacyModWrapper>()
-                    .Select(mod => mod.LegacyManifest);
-            }
-        }
-
-        public Assembly CobaltCoreAssembly { get; init; }
-
-        private ILegacyModManifest LegacyManifest { get; init; }
+        internal ILegacyModManifest LegacyManifest { get; init; }
         private LegacyRegistry LegacyRegistry { get; init; }
 
-        public LegacyModWrapper(ILegacyModManifest legacyManifest, LegacyRegistry legacyRegistry, DirectoryInfo directory, IModHelper helper, ILogger logger, Assembly cobaltCoreAssembly)
+        public LegacyModWrapper(ILegacyModManifest legacyManifest, LegacyRegistry legacyRegistry, DirectoryInfo directory, IModHelper helper, ILogger logger)
         {
             this.LegacyManifest = legacyManifest;
             this.LegacyRegistry = legacyRegistry;
-            this.CobaltCoreAssembly = cobaltCoreAssembly;
             helper.Events.OnModLoadPhaseFinished += BootMod;
             helper.Events.OnModLoadPhaseFinished += LoadSpriteManifest;
             helper.Events.OnModLoadPhaseFinished += FinalizePreparations;
@@ -144,7 +157,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         {
             if (phase != ModLoadPhase.AfterGameAssembly)
                 return;
-            this.LegacyManifest.BootMod(this);
+            this.LegacyManifest.BootMod(this.LegacyRegistry);
         }
 
         [EventPriority(-100)]
@@ -160,24 +173,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         {
             if (phase != ModLoadPhase.AfterGameAssembly)
                 return;
-            (this.LegacyManifest as IPrelaunchManifest)?.FinalizePreperations(this);
-        }
-
-        public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
-            => throw new NotImplementedException();
-
-        public TApi? GetApi<TApi>(string modName) where TApi : class
-            => this.Helper.ModRegistry.GetApi<TApi>(modName);
-
-        public ILegacyManifest LookupManifest(string globalName)
-        {
-            if (this.Helper.ModRegistry is not ModRegistry modRegistry)
-                throw new KeyNotFoundException();
-            if (!modRegistry.ModUniqueNameToInstance.TryGetValue(globalName, out var mod))
-                throw new KeyNotFoundException();
-            if (mod is not LegacyModWrapper legacyModWrapper)
-                throw new KeyNotFoundException();
-            return legacyModWrapper.LegacyManifest;
+            (this.LegacyManifest as IPrelaunchManifest)?.FinalizePreperations(this.LegacyRegistry);
         }
     }
 }
