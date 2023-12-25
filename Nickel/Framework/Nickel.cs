@@ -99,11 +99,16 @@ internal sealed class Nickel
             return;
         }
 
-        // game assembly loaded by now
+        ContinueAfterLoadingGameAssembly(instance, launchArguments, harmony, logger, handlerResult);
+    }
 
+    private static void ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony harmony, ILogger logger, CobaltCoreHandlerResult handlerResult)
+    {
         instance.ModManager.CobaltCoreAssembly = handlerResult.GameAssembly;
+        instance.ModManager.SpriteManager = new();
 
         MGPatches.Apply(harmony, logger);
+        SpriteLoaderPatches.Apply(harmony, logger);
 
         bool debug = launchArguments.Debug ?? true;
         logger.LogInformation("Debug: {Value}", debug);

@@ -19,12 +19,14 @@ internal sealed class ModManager
     internal ModEventManager EventManager { get; private init; }
 
     internal Assembly? CobaltCoreAssembly { get; set; }
+    internal SpriteManager? SpriteManager { get; set; }
 
     private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; init; } = new();
     private List<IPluginPackage<IModManifest>> ResolvedMods { get; init; } = new();
     private List<IModManifest> FailedMods { get; init; } = new();
     private HashSet<IModManifest> OptionalSubmods { get; init; } = new();
 
+    private ModLoadPhase CurrentModLoadPhase { get; set; } = ModLoadPhase.BeforeGameAssembly;
     private Dictionary<string, ILogger> UniqueNameToLogger { get; init; } = new();
     private Dictionary<string, IModHelper> UniqueNameToHelper { get; init; } = new();
     private Dictionary<string, Mod> UniqueNameToInstance { get; init; } = new();
@@ -74,7 +76,8 @@ internal sealed class ModManager
                 ),
                 helperProvider: this.ObtainModHelper,
                 loggerProvider: this.ObtainLogger,
-                cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!
+                cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!,
+                spriteManagerProvider: () => this.SpriteManager!
             ),
             condition: package => package.Manifest.ModType == $"{GetType().Namespace!}.Legacy" && this.CobaltCoreAssembly is not null
         );
@@ -158,6 +161,7 @@ internal sealed class ModManager
     public void LoadMods(ModLoadPhase phase)
     {
         this.Logger.LogInformation("Loading {Phase} phase mods...", phase);
+        this.CurrentModLoadPhase = phase;
 
         List<IModManifest> successfulMods = new();
         foreach (var package in this.ResolvedMods)
@@ -224,7 +228,8 @@ internal sealed class ModManager
         {
             ModRegistry modRegistry = new(manifest, this.UniqueNameToInstance);
             ModEvents modEvents = new(manifest, this.EventManager);
-            helper = new ModHelper(modRegistry, modEvents);
+            ModSprites modSprites = new(manifest, () => this.SpriteManager!);
+            helper = new ModHelper(modRegistry, modEvents, modSprites, () => this.CurrentModLoadPhase);
             this.UniqueNameToHelper[manifest.UniqueName] = helper;
         }
         return helper;

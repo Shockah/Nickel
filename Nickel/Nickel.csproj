@@ -34,7 +34,7 @@
     <_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">C:\Program Files (x86)\Steam\steamapps\common\Cobalt Core</_GamePath>
   </PropertyGroup>
 
-  <!-- trying to set ModLoaderPath, GameDllPath and GameExePath based on the found game path -->
+  <!-- trying to set GameDllPath and GameExePath based on the found game path -->
   <PropertyGroup Condition="Exists('$(_GamePath)')">
     <GameExePath Condition="!Exists('$(GameExePath)')">$(_GamePath)\CobaltCore.exe</GameExePath>
     <GameDllPath Condition="!Exists('$(GameDllPath)')">$(MSBuildProjectDirectory)\..\CobaltCore.dll</GameDllPath>
@@ -51,6 +51,9 @@
     <PackageReference Include="SingleFileExtractor.Core" Version="2.2.0" />
     <PackageReference Include="Pintail" Version="2.4.0" />
     <PackageReference Include="Lib.Harmony" Version="2.2.2" />
+    <PackageReference Include="Shrike" Version="3.0.0" />
+    <PackageReference Include="Shrike.Harmony" Version="3.0.0" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" PrivateAssets="all" />
     <Reference Include="CobaltCore" HintPath="$(GameDllPath)" Private="False" />
   </ItemGroup>
 
