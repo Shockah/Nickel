@@ -50,7 +50,7 @@
     <PackageReference Include="SingleFileExtractor.Core" Version="2.2.0" />
     <PackageReference Include="Pintail" Version="2.4.0" />
     <PackageReference Include="Lib.Harmony" Version="2.2.2" />
-    <Reference Include="CobaltCore" HintPath="$(GameDllPath)" />
+    <Reference Include="CobaltCore" HintPath="$(GameDllPath)" Private="False" />
   </ItemGroup>
 
   <Target Name="ExtractGameDll" BeforeTargets="Build">
