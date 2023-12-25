@@ -79,11 +79,19 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 
         [EventPriority(0)]
         private void OnEarlyModLoadPhaseFinished(object? sender, ModLoadPhase phase)
-            => this.LegacyManifest.BootMod(this);
+        {
+            if (phase != ModLoadPhase.AfterGameAssembly)
+                return;
+            this.LegacyManifest.BootMod(this);
+        }
 
         [EventPriority(-1000)]
         private void OnLateModLoadPhaseFinished(object? sender, ModLoadPhase phase)
-            => (this.LegacyManifest as IPrelaunchManifest)?.FinalizePreperations(this);
+        {
+            if (phase != ModLoadPhase.AfterGameAssembly)
+                return;
+            (this.LegacyManifest as IPrelaunchManifest)?.FinalizePreperations(this);
+        }
 
         public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
             => throw new NotImplementedException();
