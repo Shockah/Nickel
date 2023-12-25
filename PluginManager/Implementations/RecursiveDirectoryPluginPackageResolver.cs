@@ -29,7 +29,7 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
             yield return package;
 
         // stop recursing if there is a manifest file
-        FileInfo manifestFile = new(Path.Combine(this.Directory.FullName, this.ManifestFileName));
+        FileInfo manifestFile = new(Path.Combine(directory.FullName, this.ManifestFileName));
         if (manifestFile.Exists)
             yield break;
 
