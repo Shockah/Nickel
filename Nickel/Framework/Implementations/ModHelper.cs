@@ -7,24 +7,24 @@ internal sealed class ModHelper : IModHelper
     public IModRegistry ModRegistry { get; init; }
     public IModEvents Events { get; init; }
 
-    public IModSprites Sprites
+    public IModContent Content
     {
         get
         {
             if (this.CurrentModLoadPhaseProvider() < ModLoadPhase.AfterGameAssembly)
-                throw new InvalidOperationException("Cannot access sprites before the game assembly is loaded.");
-            return this.SpritesStorage;
+                throw new InvalidOperationException("Cannot access content before the game assembly is loaded.");
+            return this.ContentStorage;
         }
     }
 
-    private IModSprites SpritesStorage { get; init; }
+    private IModContent ContentStorage { get; init; }
     private Func<ModLoadPhase> CurrentModLoadPhaseProvider { get; init; }
 
-    public ModHelper(IModRegistry modRegistry, IModEvents events, IModSprites sprites, Func<ModLoadPhase> currentModLoadPhaseProvider)
+    public ModHelper(IModRegistry modRegistry, IModEvents events, IModContent content, Func<ModLoadPhase> currentModLoadPhaseProvider)
     {
         this.ModRegistry = modRegistry;
         this.Events = events;
-        this.SpritesStorage = sprites;
+        this.ContentStorage = content;
         this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
     }
 }

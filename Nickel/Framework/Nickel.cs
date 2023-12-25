@@ -106,6 +106,9 @@ internal sealed class Nickel
     {
         instance.ModManager.CobaltCoreAssembly = handlerResult.GameAssembly;
         instance.ModManager.SpriteManager = new();
+        instance.ModManager.DeckManager = new(() => instance.ModManager.CurrentModLoadPhase);
+
+        instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.AfterDbInit, instance.ModManager.ModLoaderModManifest);
 
         MGPatches.Apply(harmony, logger);
         SpriteLoaderPatches.Apply(harmony, logger);
@@ -143,5 +146,13 @@ internal sealed class Nickel
             logger.LogCritical("Cobalt Core threw an exception: {e}", e);
         }
         Directory.SetCurrentDirectory(oldWorkingDirectory);
+    }
+
+    [EventPriority(double.MaxValue)]
+    private void AfterDbInit(object? sender, ModLoadPhase phase)
+    {
+        if (phase != ModLoadPhase.AfterDbInit)
+            return;
+        this.ModManager.DeckManager?.InjectQueuedEntries();
     }
 }

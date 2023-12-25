@@ -18,15 +18,18 @@ internal sealed class ModManager
     private ILogger Logger { get; init; }
     internal ModEventManager EventManager { get; private init; }
 
+    internal IModManifest ModLoaderModManifest { get; private init; }
+    internal ModLoadPhase CurrentModLoadPhase { get; private set; } = ModLoadPhase.BeforeGameAssembly;
+
     internal Assembly? CobaltCoreAssembly { get; set; }
     internal SpriteManager? SpriteManager { get; set; }
+    internal DeckManager? DeckManager { get; set; }
 
     private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; init; } = new();
     private List<IPluginPackage<IModManifest>> ResolvedMods { get; init; } = new();
     private List<IModManifest> FailedMods { get; init; } = new();
     private HashSet<IModManifest> OptionalSubmods { get; init; } = new();
 
-    private ModLoadPhase CurrentModLoadPhase { get; set; } = ModLoadPhase.BeforeGameAssembly;
     private Dictionary<string, ILogger> UniqueNameToLogger { get; init; } = new();
     private Dictionary<string, IModHelper> UniqueNameToHelper { get; init; } = new();
     private Dictionary<string, Mod> UniqueNameToInstance { get; init; } = new();
@@ -42,6 +45,13 @@ internal sealed class ModManager
         this.LoggerFactory = loggerFactory;
         this.Logger = logger;
         this.EventManager = new(ObtainLogger);
+
+        this.ModLoaderModManifest = new ModManifest()
+        {
+            UniqueName = typeof(Nickel).Namespace!,
+            Version = new SemanticVersion { MajorVersion = 0, MinorVersion = 1, PatchVersion = 0 }, // TODO: move to constants
+            RequiredApiVersion = new SemanticVersion { MajorVersion = 0, MinorVersion = 1, PatchVersion = 0 }, // TODO: move to constants
+        };
 
         var assemblyPluginLoaderParameterInjector = new CompoundAssemblyPluginLoaderParameterInjector<IModManifest>(
             new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, ILogger>(package => ObtainLogger(package.Manifest)),
@@ -77,7 +87,8 @@ internal sealed class ModManager
                 helperProvider: this.ObtainModHelper,
                 loggerProvider: this.ObtainLogger,
                 cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!,
-                spriteManagerProvider: () => this.SpriteManager!
+                spriteManagerProvider: () => this.SpriteManager!,
+                deckManagerProvider: () => this.DeckManager!
             ),
             condition: package => package.Manifest.ModType == $"{GetType().Namespace!}.Legacy" && this.CobaltCoreAssembly is not null
         );
@@ -229,7 +240,9 @@ internal sealed class ModManager
             ModRegistry modRegistry = new(manifest, this.UniqueNameToInstance);
             ModEvents modEvents = new(manifest, this.EventManager);
             ModSprites modSprites = new(manifest, () => this.SpriteManager!);
-            helper = new ModHelper(modRegistry, modEvents, modSprites, () => this.CurrentModLoadPhase);
+            ModDecks modDecks = new(manifest, () => this.DeckManager!);
+            ModContent modContent = new(modSprites, modDecks);
+            helper = new ModHelper(modRegistry, modEvents, modContent, () => this.CurrentModLoadPhase);
             this.UniqueNameToHelper[manifest.UniqueName] = helper;
         }
         return helper;

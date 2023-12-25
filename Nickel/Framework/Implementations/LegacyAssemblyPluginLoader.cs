@@ -22,13 +22,15 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
     private Func<IModManifest, ILogger> LoggerProvider { get; init; }
     private Func<Assembly> CobaltCoreAssemblyProvider { get; init; }
     private Func<SpriteManager> SpriteManagerProvider { get; init; }
+    private Func<DeckManager> DeckManagerProvider { get; init; }
 
     public LegacyAssemblyPluginLoader(
         IPluginLoader<IAssemblyModManifest, ILegacyModManifest> loader,
         Func<IModManifest, IModHelper> helperProvider,
         Func<IModManifest, ILogger> loggerProvider,
         Func<Assembly> cobaltCoreAssemblyProvider,
-        Func<SpriteManager> spriteManagerProvider
+        Func<SpriteManager> spriteManagerProvider,
+        Func<DeckManager> deckManagerProvider
     )
     {
         this.Loader = loader;
@@ -36,6 +38,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         this.LoggerProvider = loggerProvider;
         this.CobaltCoreAssemblyProvider = cobaltCoreAssemblyProvider;
         this.SpriteManagerProvider = spriteManagerProvider;
+        this.DeckManagerProvider = deckManagerProvider;
     }
 
     public bool CanLoadPlugin(IPluginPackage<IAssemblyModManifest> package)
@@ -49,14 +52,14 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             mod =>
             {
                 var helper = this.HelperProvider(package.Manifest);
-                LegacyRegistry registry = new(package.Manifest, helper, this.CobaltCoreAssemblyProvider(), this.SpriteManagerProvider);
+                LegacyRegistry registry = new(package.Manifest, helper, this.CobaltCoreAssemblyProvider(), this.SpriteManagerProvider, this.DeckManagerProvider);
                 return new LegacyModWrapper(mod, registry, directoryPackage.Directory, helper, this.LoggerProvider(package.Manifest));
             },
             error => error
         );
     }
 
-    private sealed class LegacyRegistry : IModLoaderContact, IPrelaunchContactPoint, ISpriteRegistry
+    private sealed class LegacyRegistry : IModLoaderContact, IPrelaunchContactPoint, ISpriteRegistry, IDeckRegistry
     {
         public Assembly CobaltCoreAssembly { get; init; }
 
@@ -79,18 +82,21 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             => () => MG.inst.GraphicsDevice;
 
         private Func<SpriteManager> SpriteManagerProvider { get; init; }
+        private Func<DeckManager> DeckManagerProvider { get; init; }
 
         public LegacyRegistry(
             IModManifest modManifest,
             IModHelper helper,
             Assembly cobaltCoreAssembly,
-            Func<SpriteManager> spriteManagerProvider
+            Func<SpriteManager> spriteManagerProvider,
+            Func<DeckManager> deckManagerProvider
         )
         {
             this.ModManifest = modManifest;
             this.Helper = helper;
             this.CobaltCoreAssembly = cobaltCoreAssembly;
             this.SpriteManagerProvider = spriteManagerProvider;
+            this.DeckManagerProvider = deckManagerProvider;
         }
 
         public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
@@ -112,9 +118,9 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 
         public ExternalSprite LookupSprite(string globalName)
         {
-            if (!this.SpriteManagerProvider().TryGetByUniqueName(globalName, out var entry))
+            if (!this.SpriteManagerProvider().TryGetByUniqueName(globalName, out var entry) || entry.Legacy is not { } legacy)
                 throw new KeyNotFoundException();
-            return new ExternalSprite(globalName, new FileInfo("")) { physical_location = null, GlobalName = globalName, Id = (int)entry.Sprite };
+            return legacy;
         }
 
         public bool RegisterArt(ExternalSprite sprite_data, int? overwrite_value = null)
@@ -128,8 +134,23 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
                 throw new ArgumentException("Unsupported ExternalSprite");
             }
 
-            var entry = this.SpriteManagerProvider().RegisterSprite(this.ModManifest, sprite_data.GlobalName, GetStreamProvider());
+            var entry = this.SpriteManagerProvider().RegisterSpriteWithUniqueName(this.ModManifest, sprite_data, sprite_data.GlobalName, GetStreamProvider());
             sprite_data.Id = (int)entry.Sprite;
+            return true;
+        }
+
+        public ExternalDeck LookupDeck(string globalName)
+        {
+            if (!this.DeckManagerProvider().TryGetByUniqueName(globalName, out var entry) || entry.Legacy is not { } legacy)
+                throw new KeyNotFoundException();
+            return legacy;
+        }
+
+        public bool RegisterDeck(ExternalDeck deck, int? overwrite = null)
+        {
+            DeckDef definition = new() { color = new((uint)deck.DeckColor.ToArgb()), titleColor = new((uint)deck.TitleColor.ToArgb()) };
+            var entry = this.DeckManagerProvider().RegisterDeckWithUniqueName(this.ModManifest, deck, deck.GlobalName, definition);
+            deck.Id = (int)entry.Deck;
             return true;
         }
     }
@@ -145,6 +166,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             this.LegacyRegistry = legacyRegistry;
             helper.Events.OnModLoadPhaseFinished += BootMod;
             helper.Events.OnModLoadPhaseFinished += LoadSpriteManifest;
+            helper.Events.OnModLoadPhaseFinished += LoadDeckManifest;
             helper.Events.OnModLoadPhaseFinished += FinalizePreparations;
 
             legacyManifest.GameRootFolder = new DirectoryInfo(Directory.GetCurrentDirectory());
@@ -166,6 +188,14 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             if (phase != ModLoadPhase.AfterGameAssembly)
                 return;
             (this.LegacyManifest as ISpriteManifest)?.LoadManifest(this.LegacyRegistry);
+        }
+
+        [EventPriority(-300)]
+        private void LoadDeckManifest(object? sender, ModLoadPhase phase)
+        {
+            if (phase != ModLoadPhase.AfterGameAssembly)
+                return;
+            (this.LegacyManifest as IDeckManifest)?.LoadManifest(this.LegacyRegistry);
         }
 
         [EventPriority(-1000)]
