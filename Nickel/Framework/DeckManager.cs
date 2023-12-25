@@ -20,12 +20,12 @@ internal sealed class DeckManager
         this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
     }
 
-    public IDeckEntry RegisterDeck(IModManifest owner, string name, DeckDef definition)
-        => this.RegisterDeckWithUniqueName(owner, null, $"{owner.UniqueName}::{name}", definition);
+    public IDeckEntry RegisterDeck(IModManifest owner, string name, DeckConfiguration configuration)
+        => this.RegisterDeckWithUniqueName(owner, null, $"{owner.UniqueName}::{name}", configuration);
 
-    internal IDeckEntry RegisterDeckWithUniqueName(IModManifest owner, ExternalDeck? legacy, string uniqueName, DeckDef definition)
+    internal IDeckEntry RegisterDeckWithUniqueName(IModManifest owner, ExternalDeck? legacy, string uniqueName, DeckConfiguration configuration)
     {
-        Entry entry = new(owner, legacy, uniqueName, (Deck)this.NextId++, definition);
+        Entry entry = new(owner, legacy, uniqueName, (Deck)this.NextId++, configuration);
         this.DeckToEntry[entry.Deck] = entry;
         this.UniqueNameToEntry[entry.UniqueName] = entry;
         this.QueueOrInject(entry);
@@ -64,7 +64,11 @@ internal sealed class DeckManager
 
     private static void Inject(Entry entry)
     {
-        DB.decks[entry.Deck] = entry.Definition;
+        DB.decks[entry.Deck] = entry.Configuration.Definition;
+        DB.cardArtDeckDefault[entry.Deck] = entry.Configuration.DefaultCardArt;
+        DB.deckBorders[entry.Deck] = entry.Configuration.BorderSprite;
+        if (entry.Configuration.OverBordersSprite is { } overBordersSprite)
+            DB.deckBordersOver[entry.Deck] = overBordersSprite;
     }
 
     internal sealed class Entry : IDeckEntry
@@ -72,17 +76,17 @@ internal sealed class DeckManager
         public IModManifest ModOwner { get; init; }
         public string UniqueName { get; init; }
         public Deck Deck { get; init; }
-        public DeckDef Definition { get; init; }
+        public DeckConfiguration Configuration { get; init; }
 
         internal ExternalDeck? Legacy { get; init; }
 
-        public Entry(IModManifest modOwner, ExternalDeck? legacy, string uniqueName, Deck deck, DeckDef definition)
+        public Entry(IModManifest modOwner, ExternalDeck? legacy, string uniqueName, Deck deck, DeckConfiguration configuration)
         {
             this.ModOwner = modOwner;
             this.Legacy = legacy;
             this.UniqueName = uniqueName;
             this.Deck = deck;
-            this.Definition = definition;
+            this.Configuration = configuration;
         }
     }
 }

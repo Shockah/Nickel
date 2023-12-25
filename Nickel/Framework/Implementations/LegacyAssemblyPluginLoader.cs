@@ -148,8 +148,14 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 
         public bool RegisterDeck(ExternalDeck deck, int? overwrite = null)
         {
-            DeckDef definition = new() { color = new((uint)deck.DeckColor.ToArgb()), titleColor = new((uint)deck.TitleColor.ToArgb()) };
-            var entry = this.DeckManagerProvider().RegisterDeckWithUniqueName(this.ModManifest, deck, deck.GlobalName, definition);
+            DeckConfiguration configuration = new()
+            {
+                Definition = new() { color = new((uint)deck.DeckColor.ToArgb()), titleColor = new((uint)deck.TitleColor.ToArgb()) },
+                DefaultCardArt = (Spr)deck.CardArtDefault.Id!.Value,
+                BorderSprite = (Spr)deck.BorderSprite.Id!.Value,
+                OverBordersSprite = deck.BordersOverSprite is null ? null : (Spr)deck.BordersOverSprite.Id!.Value
+            };
+            var entry = this.DeckManagerProvider().RegisterDeckWithUniqueName(this.ModManifest, deck, deck.GlobalName, configuration);
             deck.Id = (int)entry.Deck;
             return true;
         }

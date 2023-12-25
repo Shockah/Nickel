@@ -13,6 +13,6 @@ internal sealed class ModDecks : IModDecks
         this.DeckManagerProvider = deckManagerProvider;
     }
 
-    public IDeckEntry RegisterDeck(string name, DeckDef definition)
-        => this.DeckManagerProvider().RegisterDeck(this.ModManifest, name, definition);
+    public IDeckEntry RegisterDeck(string name, DeckConfiguration configuration)
+        => this.DeckManagerProvider().RegisterDeck(this.ModManifest, name, configuration);
 }
