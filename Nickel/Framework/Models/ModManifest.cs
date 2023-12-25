@@ -35,5 +35,8 @@ internal sealed class ModManifest : IModManifest
     public IReadOnlyList<ISubmodEntry> Submods { get; private set; } = new List<ISubmodEntry>();
 
     [JsonExtensionData]
-    public IReadOnlyDictionary<string, object> ExtensionData { get; private set; } = new Dictionary<string, object>();
+    public IDictionary<string, object> ExtensionData { get; private set; } = new Dictionary<string, object>();
+
+    IReadOnlyDictionary<string, object> IModManifest.ExtensionData
+        => (IReadOnlyDictionary<string, object>)ExtensionData;
 }

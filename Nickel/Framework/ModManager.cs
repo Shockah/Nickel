@@ -73,6 +73,7 @@ internal sealed class ModManager
                     assemblyEditor: extendableAssemblyDefinitionEditor
                 ),
                 helperProvider: this.ObtainModHelper,
+                loggerProvider: this.ObtainLogger,
                 cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!
             ),
             condition: package => package.Manifest.ModType == $"{GetType().Namespace!}.Legacy" && this.CobaltCoreAssembly is not null

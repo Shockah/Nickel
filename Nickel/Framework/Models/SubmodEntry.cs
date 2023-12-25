@@ -14,5 +14,8 @@ internal sealed class SubmodEntry : ISubmodEntry
     public bool IsOptional { get; private set; } = true;
 
     [JsonExtensionData]
-    public IReadOnlyDictionary<string, object> ExtensionData { get; private set; } = new Dictionary<string, object>();
+    public IDictionary<string, object> ExtensionData { get; private set; } = new Dictionary<string, object>();
+
+    IReadOnlyDictionary<string, object> ISubmodEntry.ExtensionData
+        => (IReadOnlyDictionary<string, object>)ExtensionData;
 }

@@ -5,12 +5,12 @@ using System.Linq;
 
 namespace Nanoray.PluginManager;
 
-public sealed class DirectoryPluginPackage<TPluginManifest> : IPluginPackage<TPluginManifest>
+public sealed class DirectoryPluginPackage<TPluginManifest> : IDirectoryPluginPackage<TPluginManifest>
 {
     public TPluginManifest Manifest { get; init; }
+    public DirectoryInfo Directory { get; init; }
     public IReadOnlySet<string> DataEntries { get; init; }
 
-    private DirectoryInfo Directory { get; init; }
     private IReadOnlySet<FileInfo> Files { get; init; }
 
     public DirectoryPluginPackage(TPluginManifest manifest, DirectoryInfo directory, IReadOnlySet<FileInfo> files)

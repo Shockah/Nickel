@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
+using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using OneOf;
 using OneOf.Types;
@@ -17,27 +18,34 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 {
     private IPluginLoader<IAssemblyModManifest, ILegacyModManifest> Loader { get; init; }
     private Func<IModManifest, IModHelper> HelperProvider { get; init; }
+    private Func<IModManifest, ILogger> LoggerProvider { get; init; }
     private Func<Assembly> CobaltCoreAssemblyProvider { get; init; }
 
     public LegacyAssemblyPluginLoader(
         IPluginLoader<IAssemblyModManifest, ILegacyModManifest> loader,
         Func<IModManifest, IModHelper> helperProvider,
+        Func<IModManifest, ILogger> loggerProvider,
         Func<Assembly> cobaltCoreAssemblyProvider
     )
     {
         this.Loader = loader;
         this.HelperProvider = helperProvider;
+        this.LoggerProvider = loggerProvider;
         this.CobaltCoreAssemblyProvider = cobaltCoreAssemblyProvider;
     }
 
     public bool CanLoadPlugin(IPluginPackage<IAssemblyModManifest> package)
-        => Loader.CanLoadPlugin(package);
+        => package is IDirectoryPluginPackage<IAssemblyModManifest> && Loader.CanLoadPlugin(package);
 
     public OneOf<Mod, Error<string>> LoadPlugin(IPluginPackage<IAssemblyModManifest> package)
-        => this.Loader.LoadPlugin(package).Match<OneOf<Mod, Error<string>>>(
-            mod => new LegacyModWrapper(mod, this.HelperProvider(package.Manifest), this.CobaltCoreAssemblyProvider()),
+    {
+        if (package is not IDirectoryPluginPackage<IAssemblyModManifest> directoryPackage)
+            throw new ArgumentException($"This plugin loader cannot load the plugin package {package}.");
+        return this.Loader.LoadPlugin(package).Match<OneOf<Mod, Error<string>>>(
+            mod => new LegacyModWrapper(mod, directoryPackage.Directory, this.HelperProvider(package.Manifest), this.LoggerProvider(package.Manifest), this.CobaltCoreAssemblyProvider()),
             error => error
         );
+    }
 
     private sealed class LegacyModWrapper : Mod, IModLoaderContact, IPrelaunchContactPoint
     {
@@ -57,12 +65,16 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 
         private ILegacyModManifest LegacyManifest { get; init; }
 
-        public LegacyModWrapper(ILegacyModManifest legacyManifest, IModHelper helper, Assembly cobaltCoreAssembly)
+        public LegacyModWrapper(ILegacyModManifest legacyManifest, DirectoryInfo directory, IModHelper helper, ILogger logger, Assembly cobaltCoreAssembly)
         {
             this.LegacyManifest = legacyManifest;
             this.CobaltCoreAssembly = cobaltCoreAssembly;
             helper.Events.OnModLoadPhaseFinished += OnEarlyModLoadPhaseFinished;
             helper.Events.OnModLoadPhaseFinished += OnLateModLoadPhaseFinished;
+
+            legacyManifest.GameRootFolder = new DirectoryInfo(Directory.GetCurrentDirectory());
+            legacyManifest.ModRootFolder = directory;
+            legacyManifest.Logger = logger;
         }
 
         [EventPriority(0)]
