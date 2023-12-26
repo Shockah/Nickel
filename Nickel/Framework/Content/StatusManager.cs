@@ -45,7 +45,7 @@ internal sealed class StatusManager
     internal void InjectQueuedEntries()
     {
         var queued = this.QueuedEntries.ToList();
-        queued.Clear();
+        this.QueuedEntries.Clear();
         foreach (var entry in queued)
             this.QueueOrInject(entry);
     }

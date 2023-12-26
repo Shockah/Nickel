@@ -32,4 +32,12 @@ internal sealed class ContentManager
         new CardManager(currentModLoadPhaseProvider),
         new ArtifactManager(currentModLoadPhaseProvider)
     ) { }
+
+    internal void InjectQueuedEntries()
+    {
+        this.Decks.InjectQueuedEntries();
+        this.Statuses.InjectQueuedEntries();
+        this.Cards.InjectQueuedEntries();
+        this.Artifacts.InjectQueuedEntries();
+    }
 }

@@ -44,7 +44,7 @@ internal sealed class ArtifactManager
     internal void InjectQueuedEntries()
     {
         var queued = this.QueuedEntries.ToList();
-        queued.Clear();
+        this.QueuedEntries.Clear();
         foreach (var entry in queued)
             this.QueueOrInject(entry);
     }
@@ -64,6 +64,8 @@ internal sealed class ArtifactManager
         DB.artifactMetas[key] = entry.Configuration.Meta;
         if (entry.Configuration.Sprite is { } sprite)
             DB.artifactSprites[key] = sprite;
+        if (!entry.Configuration.Meta.pools.Contains(ArtifactPool.Unreleased))
+            DB.releasedArtifacts.Add(key);
     }
 
     private sealed class Entry : IArtifactEntry

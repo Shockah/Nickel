@@ -154,7 +154,6 @@ internal sealed class Nickel
     {
         if (phase != ModLoadPhase.AfterDbInit)
             return;
-        this.ModManager.ContentManager?.Decks.InjectQueuedEntries();
-        this.ModManager.ContentManager?.Cards.InjectQueuedEntries();
+        this.ModManager.ContentManager?.InjectQueuedEntries();
     }
 }

@@ -44,7 +44,7 @@ internal sealed class CardManager
     internal void InjectQueuedEntries()
     {
         var queued = this.QueuedEntries.ToList();
-        queued.Clear();
+        this.QueuedEntries.Clear();
         foreach (var entry in queued)
             this.QueueOrInject(entry);
     }
@@ -64,6 +64,8 @@ internal sealed class CardManager
         DB.cardMetas[key] = entry.Configuration.Meta;
         if (entry.Configuration.Art is { } art)
             DB.cardArt[key] = art;
+        if (!entry.Configuration.Meta.unreleased)
+            DB.releasedCards.Add((Card)Activator.CreateInstance(entry.Configuration.CardType)!);
     }
 
     private sealed class Entry : ICardEntry

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using CobaltCoreModding.Definitions;
 using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
@@ -302,6 +303,18 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             legacyManifest.Logger = logger;
         }
 
+        public override object? GetApi(IModManifest requestingMod)
+        {
+            if (this.LegacyManifest is not IApiProviderManifest apiProvider)
+                return null;
+
+            var legacyRequestingManifest = this.LegacyRegistry.LoadedManifests.FirstOrDefault(m => m.Name == requestingMod.UniqueName);
+            if (legacyRequestingManifest is not null)
+                return apiProvider.GetApi(legacyRequestingManifest);
+
+            return new NewToLegacyManifestStub(requestingMod);
+        }
+
         [EventPriority(0)]
         private void BootMod(object? sender, ModLoadPhase phase)
         {
@@ -356,6 +369,40 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             if (phase != ModLoadPhase.AfterGameAssembly)
                 return;
             (this.LegacyManifest as IPrelaunchManifest)?.FinalizePreperations(this.LegacyRegistry);
+        }
+    }
+
+    private sealed class NewToLegacyManifestStub : ILegacyManifest
+    {
+        public string Name
+            => this.ModManifest.UniqueName;
+
+        public IEnumerable<DependencyEntry> Dependencies
+            => Enumerable.Empty<DependencyEntry>();
+
+        public DirectoryInfo? GameRootFolder
+        {
+            get => null;
+            set { }
+        }
+
+        public DirectoryInfo? ModRootFolder
+        {
+            get => null;
+            set { }
+        }
+
+        public ILogger? Logger
+        {
+            get => null;
+            set { }
+        }
+
+        private IModManifest ModManifest { get; init; }
+
+        public NewToLegacyManifestStub(IModManifest modManifest)
+        {
+            this.ModManifest = modManifest;
         }
     }
 }
