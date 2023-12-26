@@ -1,30 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace Nickel;
 
 internal sealed class StatusManager
 {
-    private Func<ModLoadPhase> CurrentModLoadPhaseProvider { get; init; }
-
     private int NextId { get; set; } = 10_000_001;
+    private AfterDbInitManager<Entry> Manager { get; init; }
     private Dictionary<Status, Entry> StatusToEntry { get; init; } = new();
     private Dictionary<string, Entry> UniqueNameToEntry { get; init; } = new();
-    private List<Entry> QueuedEntries { get; init; } = new();
 
     public StatusManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
     {
-        this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
+        this.Manager = new(currentModLoadPhaseProvider, Inject);
     }
+
+    internal void InjectQueuedEntries()
+        => this.Manager.InjectQueuedEntries();
 
     public IStatusEntry RegisterStatus(IModManifest owner, string name, StatusConfiguration configuration)
     {
         Entry entry = new(owner, $"{owner.UniqueName}::{name}", (Status)this.NextId++, configuration);
         this.StatusToEntry[entry.Status] = entry;
         this.UniqueNameToEntry[entry.UniqueName] = entry;
-        this.QueueOrInject(entry);
+        this.Manager.QueueOrInject(entry);
         return entry;
     }
 
@@ -40,22 +40,6 @@ internal sealed class StatusManager
             entry = default;
             return false;
         }
-    }
-
-    internal void InjectQueuedEntries()
-    {
-        var queued = this.QueuedEntries.ToList();
-        this.QueuedEntries.Clear();
-        foreach (var entry in queued)
-            this.QueueOrInject(entry);
-    }
-
-    private void QueueOrInject(Entry entry)
-    {
-        if (this.CurrentModLoadPhaseProvider() < ModLoadPhase.AfterDbInit)
-            this.QueuedEntries.Add(entry);
-        else
-            Inject(entry);
     }
 
     private static void Inject(Entry entry)

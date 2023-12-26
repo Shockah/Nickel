@@ -7,23 +7,24 @@ namespace Nickel;
 
 internal sealed class ArtifactManager
 {
-    private Func<ModLoadPhase> CurrentModLoadPhaseProvider { get; init; }
-
+    private AfterDbInitManager<Entry> Manager { get; init; }
     private Dictionary<Type, Entry> ArtifactTypeToEntry { get; init; } = new();
     private Dictionary<string, Entry> UniqueNameToEntry { get; init; } = new();
-    private List<Entry> QueuedEntries { get; init; } = new();
 
     public ArtifactManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
     {
-        this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
+        this.Manager = new(currentModLoadPhaseProvider, Inject);
     }
+
+    internal void InjectQueuedEntries()
+        => this.Manager.InjectQueuedEntries();
 
     public IArtifactEntry RegisterArtifact(IModManifest owner, string name, ArtifactConfiguration configuration)
     {
         Entry entry = new(owner, $"{owner.UniqueName}::{name}", configuration);
         this.ArtifactTypeToEntry[entry.Configuration.ArtifactType] = entry;
         this.UniqueNameToEntry[entry.UniqueName] = entry;
-        this.QueueOrInject(entry);
+        this.Manager.QueueOrInject(entry);
         return entry;
     }
 
@@ -39,22 +40,6 @@ internal sealed class ArtifactManager
             entry = default;
             return false;
         }
-    }
-
-    internal void InjectQueuedEntries()
-    {
-        var queued = this.QueuedEntries.ToList();
-        this.QueuedEntries.Clear();
-        foreach (var entry in queued)
-            this.QueueOrInject(entry);
-    }
-
-    private void QueueOrInject(Entry entry)
-    {
-        if (this.CurrentModLoadPhaseProvider() < ModLoadPhase.AfterDbInit)
-            this.QueuedEntries.Add(entry);
-        else
-            Inject(entry);
     }
 
     private static void Inject(Entry entry)

@@ -1,29 +1,29 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace Nickel;
 
 internal sealed class CardManager
 {
-    private Func<ModLoadPhase> CurrentModLoadPhaseProvider { get; init; }
-
+    private AfterDbInitManager<Entry> Manager { get; init; }
     private Dictionary<Type, Entry> CardTypeToEntry { get; init; } = new();
     private Dictionary<string, Entry> UniqueNameToEntry { get; init; } = new();
-    private List<Entry> QueuedEntries { get; init; } = new();
 
     public CardManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
     {
-        this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
+        this.Manager = new(currentModLoadPhaseProvider, Inject);
     }
+
+    internal void InjectQueuedEntries()
+        => this.Manager.InjectQueuedEntries();
 
     public ICardEntry RegisterCard(IModManifest owner, string name, CardConfiguration configuration)
     {
         Entry entry = new(owner, $"{owner.UniqueName}::{name}", configuration);
         this.CardTypeToEntry[entry.Configuration.CardType] = entry;
         this.UniqueNameToEntry[entry.UniqueName] = entry;
-        this.QueueOrInject(entry);
+        this.Manager.QueueOrInject(entry);
         return entry;
     }
 
@@ -39,22 +39,6 @@ internal sealed class CardManager
             entry = default;
             return false;
         }
-    }
-
-    internal void InjectQueuedEntries()
-    {
-        var queued = this.QueuedEntries.ToList();
-        this.QueuedEntries.Clear();
-        foreach (var entry in queued)
-            this.QueueOrInject(entry);
-    }
-
-    private void QueueOrInject(Entry entry)
-    {
-        if (this.CurrentModLoadPhaseProvider() < ModLoadPhase.AfterDbInit)
-            this.QueuedEntries.Add(entry);
-        else
-            Inject(entry);
     }
 
     private static void Inject(Entry entry)
