@@ -88,3 +88,10 @@ dotnet_diagnostic.CS1591.severity = none
 
 [*.md]
 guidelines = 100
+
+
+# Shut up errors in the legacy mod loader code
+[LegacyModLoader/**]
+dotnet_style_predefined_type_for_locals_parameters_members = false:suggestion
+dotnet_style_predefined_type_for_member_access = false:suggestion
+csharp_style_var_for_built_in_types = true:suggestion
