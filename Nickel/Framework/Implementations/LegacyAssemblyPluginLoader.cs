@@ -63,6 +63,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         private Dictionary<string, ExternalSprite> GlobalNameToSprite { get; init; } = new();
         private Dictionary<string, ExternalDeck> GlobalNameToDeck { get; init; } = new();
         private Dictionary<string, ExternalCard> GlobalNameToCard { get; init; } = new();
+        private Dictionary<string, ExternalArtifact> GlobalNameToArtifact { get; init; } = new();
 
         public LegacyDatabase(Func<ContentManager> contentManagerProvider)
         {
@@ -101,14 +102,36 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 
         public void RegisterCard(IModManifest mod, ExternalCard value)
         {
+            var meta = value.CardType.GetCustomAttribute<CardMeta>() ?? new();
+            if (value.ActualDeck is { } deck)
+                meta.deck = (Deck)deck.Id!.Value;
+
             CardConfiguration configuration = new()
             {
                 CardType = value.CardType,
-                Meta = new CardMeta() { deck = value.ActualDeck?.Id is int deckId ? (Deck)deckId : Deck.colorless },
+                Meta = meta,
                 Art = (Spr)value.CardArt.Id!.Value
             };
+
             this.ContentManagerProvider().Cards.RegisterCard(mod, value.GlobalName, configuration);
             this.GlobalNameToCard[value.GlobalName] = value;
+        }
+
+        public void RegisterArtifact(IModManifest mod, ExternalArtifact value)
+        {
+            var meta = value.ArtifactType.GetCustomAttribute<ArtifactMeta>() ?? new();
+            if (value.OwnerDeck is { } deck)
+                meta.owner = (Deck)deck.Id!.Value;
+
+            ArtifactConfiguration configuration = new()
+            {
+                ArtifactType = value.ArtifactType,
+                Meta = meta,
+                Sprite = (Spr)value.Sprite.Id!.Value
+            };
+
+            this.ContentManagerProvider().Artifacts.RegisterArtifact(mod, value.GlobalName, configuration);
+            this.GlobalNameToArtifact[value.GlobalName] = value;
         }
 
         public ExternalSprite GetSprite(string globalName)
@@ -119,9 +142,12 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 
         public ExternalCard GetCard(string globalName)
             => this.GlobalNameToCard.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
+
+        public ExternalArtifact GetArtifact(string globalName)
+            => this.GlobalNameToArtifact.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
     }
 
-    private sealed class LegacyRegistry : IModLoaderContact, IPrelaunchContactPoint, ISpriteRegistry, IDeckRegistry, ICardRegistry
+    private sealed class LegacyRegistry : IModLoaderContact, IPrelaunchContactPoint, ISpriteRegistry, IDeckRegistry, ICardRegistry, IArtifactRegistry
     {
         public Assembly CobaltCoreAssembly { get; init; }
 
@@ -175,6 +201,9 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             return legacyModWrapper.LegacyManifest;
         }
 
+        public ExternalGlossary LookupGlossary(string globalName)
+            => throw new NotImplementedException(); // TODO: implement
+
         public ExternalSprite LookupSprite(string globalName)
             => this.Database.GetSprite(globalName);
 
@@ -207,6 +236,14 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             this.Database.RegisterCard(this.ModManifest, card);
             return true;
         }
+
+        public ExternalArtifact LookupArtifact(string globalName)
+            => this.Database.GetArtifact(globalName);
+
+        public bool RegisterArtifact(ExternalArtifact artifact, string? overwrite = null)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     private sealed class LegacyModWrapper : Mod
@@ -222,6 +259,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             helper.Events.OnModLoadPhaseFinished += LoadSpriteManifest;
             helper.Events.OnModLoadPhaseFinished += LoadDeckManifest;
             helper.Events.OnModLoadPhaseFinished += LoadCardManifest;
+            helper.Events.OnModLoadPhaseFinished += LoadArtifactManifest;
             helper.Events.OnModLoadPhaseFinished += FinalizePreparations;
 
             legacyManifest.GameRootFolder = new DirectoryInfo(Directory.GetCurrentDirectory());
@@ -259,6 +297,14 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             if (phase != ModLoadPhase.AfterGameAssembly)
                 return;
             (this.LegacyManifest as ICardManifest)?.LoadManifest(this.LegacyRegistry);
+        }
+
+        [EventPriority(-500)]
+        private void LoadArtifactManifest(object? sender, ModLoadPhase phase)
+        {
+            if (phase != ModLoadPhase.AfterGameAssembly)
+                return;
+            (this.LegacyManifest as IArtifactManifest)?.LoadManifest(this.LegacyRegistry);
         }
 
         [EventPriority(-1000)]

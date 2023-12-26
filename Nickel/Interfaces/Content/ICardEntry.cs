@@ -1,5 +1,3 @@
-using System;
-
 namespace Nickel;
 
 public interface ICardEntry : IModOwned
