@@ -1,5 +1,5 @@
 # topmost editorconfig
-root: true
+root = true
 
 ##########
 ## General formatting
