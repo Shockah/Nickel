@@ -21,8 +21,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
     private Func<IModManifest, IModHelper> HelperProvider { get; init; }
     private Func<IModManifest, ILogger> LoggerProvider { get; init; }
     private Func<Assembly> CobaltCoreAssemblyProvider { get; init; }
-    private Func<SpriteManager> SpriteManagerProvider { get; init; }
-    private Func<DeckManager> DeckManagerProvider { get; init; }
+    private LegacyDatabase Database { get; init; }
 
     public LegacyAssemblyPluginLoader(
         IPluginLoader<IAssemblyModManifest, ILegacyModManifest> loader,
@@ -37,8 +36,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         this.HelperProvider = helperProvider;
         this.LoggerProvider = loggerProvider;
         this.CobaltCoreAssemblyProvider = cobaltCoreAssemblyProvider;
-        this.SpriteManagerProvider = spriteManagerProvider;
-        this.DeckManagerProvider = deckManagerProvider;
+        this.Database = new(spriteManagerProvider, deckManagerProvider);
     }
 
     public bool CanLoadPlugin(IPluginPackage<IAssemblyModManifest> package)
@@ -52,11 +50,65 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             mod =>
             {
                 var helper = this.HelperProvider(package.Manifest);
-                LegacyRegistry registry = new(package.Manifest, helper, this.CobaltCoreAssemblyProvider(), this.SpriteManagerProvider, this.DeckManagerProvider);
+                LegacyRegistry registry = new(package.Manifest, helper, this.CobaltCoreAssemblyProvider(), this.Database);
                 return new LegacyModWrapper(mod, registry, directoryPackage.Directory, helper, this.LoggerProvider(package.Manifest));
             },
             error => error
         );
+    }
+
+    private sealed class LegacyDatabase
+    {
+        private Func<SpriteManager> SpriteManagerProvider { get; init; }
+        private Func<DeckManager> DeckManagerProvider { get; init; }
+
+        private Dictionary<string, ExternalSprite> GlobalNameToSprite { get; init; } = new();
+        private Dictionary<string, ExternalDeck> GlobalNameToDeck { get; init; } = new();
+
+        public LegacyDatabase(
+            Func<SpriteManager> spriteManagerProvider,
+            Func<DeckManager> deckManagerProvider
+        )
+        {
+            this.SpriteManagerProvider = spriteManagerProvider;
+            this.DeckManagerProvider = deckManagerProvider;
+        }
+
+        public void RegisterSprite(IModManifest mod, ExternalSprite value)
+        {
+            Func<Stream> GetStreamProvider()
+            {
+                if (value.virtual_location is { } provider)
+                    return provider;
+                if (value.physical_location is { } path)
+                    return () => path.OpenRead().ToMemoryStream();
+                throw new ArgumentException("Unsupported ExternalSprite");
+            }
+
+            var entry = this.SpriteManagerProvider().RegisterSprite(mod, value.GlobalName, GetStreamProvider());
+            value.Id = (int)entry.Sprite;
+            this.GlobalNameToSprite[value.GlobalName] = value;
+        }
+
+        public void RegisterDeck(IModManifest mod, ExternalDeck value)
+        {
+            DeckConfiguration configuration = new()
+            {
+                Definition = new() { color = new((uint)value.DeckColor.ToArgb()), titleColor = new((uint)value.TitleColor.ToArgb()) },
+                DefaultCardArt = (Spr)value.CardArtDefault.Id!.Value,
+                BorderSprite = (Spr)value.BorderSprite.Id!.Value,
+                OverBordersSprite = value.BordersOverSprite is null ? null : (Spr)value.BordersOverSprite.Id!.Value
+            };
+            var entry = this.DeckManagerProvider().RegisterDeck(mod, value.GlobalName, configuration);
+            value.Id = (int)entry.Deck;
+            this.GlobalNameToDeck[value.GlobalName] = value;
+        }
+
+        public ExternalSprite GetSprite(string globalName)
+            => this.GlobalNameToSprite.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
+
+        public ExternalDeck GetDeck(string globalName)
+            => this.GlobalNameToDeck.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
     }
 
     private sealed class LegacyRegistry : IModLoaderContact, IPrelaunchContactPoint, ISpriteRegistry, IDeckRegistry
@@ -81,22 +133,19 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         public Func<object> GetCobaltCoreGraphicsDeviceFunc
             => () => MG.inst.GraphicsDevice;
 
-        private Func<SpriteManager> SpriteManagerProvider { get; init; }
-        private Func<DeckManager> DeckManagerProvider { get; init; }
+        private LegacyDatabase Database { get; init; }
 
         public LegacyRegistry(
             IModManifest modManifest,
             IModHelper helper,
             Assembly cobaltCoreAssembly,
-            Func<SpriteManager> spriteManagerProvider,
-            Func<DeckManager> deckManagerProvider
+            LegacyDatabase database
         )
         {
             this.ModManifest = modManifest;
             this.Helper = helper;
             this.CobaltCoreAssembly = cobaltCoreAssembly;
-            this.SpriteManagerProvider = spriteManagerProvider;
-            this.DeckManagerProvider = deckManagerProvider;
+            this.Database = database;
         }
 
         public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
@@ -117,46 +166,24 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         }
 
         public ExternalSprite LookupSprite(string globalName)
-        {
-            if (!this.SpriteManagerProvider().TryGetByUniqueName(globalName, out var entry) || entry.Legacy is not { } legacy)
-                throw new KeyNotFoundException();
-            return legacy;
-        }
+            => this.Database.GetSprite(globalName);
 
         public bool RegisterArt(ExternalSprite sprite_data, int? overwrite_value = null)
         {
-            Func<Stream> GetStreamProvider()
-            {
-                if (sprite_data.virtual_location is { } provider)
-                    return provider;
-                if (sprite_data.physical_location is { } path)
-                    return () => path.OpenRead().ToMemoryStream();
-                throw new ArgumentException("Unsupported ExternalSprite");
-            }
-
-            var entry = this.SpriteManagerProvider().RegisterSpriteWithUniqueName(this.ModManifest, sprite_data, sprite_data.GlobalName, GetStreamProvider());
-            sprite_data.Id = (int)entry.Sprite;
+            if (overwrite_value is not null)
+                throw new NotImplementedException($"This method is not supported in {typeof(Nickel).Namespace!}");
+            this.Database.RegisterSprite(this.ModManifest, sprite_data);
             return true;
         }
 
         public ExternalDeck LookupDeck(string globalName)
-        {
-            if (!this.DeckManagerProvider().TryGetByUniqueName(globalName, out var entry) || entry.Legacy is not { } legacy)
-                throw new KeyNotFoundException();
-            return legacy;
-        }
+            => this.Database.GetDeck(globalName);
 
         public bool RegisterDeck(ExternalDeck deck, int? overwrite = null)
         {
-            DeckConfiguration configuration = new()
-            {
-                Definition = new() { color = new((uint)deck.DeckColor.ToArgb()), titleColor = new((uint)deck.TitleColor.ToArgb()) },
-                DefaultCardArt = (Spr)deck.CardArtDefault.Id!.Value,
-                BorderSprite = (Spr)deck.BorderSprite.Id!.Value,
-                OverBordersSprite = deck.BordersOverSprite is null ? null : (Spr)deck.BordersOverSprite.Id!.Value
-            };
-            var entry = this.DeckManagerProvider().RegisterDeckWithUniqueName(this.ModManifest, deck, deck.GlobalName, configuration);
-            deck.Id = (int)entry.Deck;
+            if (overwrite is not null)
+                throw new NotImplementedException($"This method is not supported in {typeof(Nickel).Namespace!}");
+            this.Database.RegisterDeck(this.ModManifest, deck);
             return true;
         }
     }

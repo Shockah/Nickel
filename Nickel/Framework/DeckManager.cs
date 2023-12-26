@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using CobaltCoreModding.Definitions.ExternalItems;
 
 namespace Nickel;
 
@@ -21,26 +20,15 @@ internal sealed class DeckManager
     }
 
     public IDeckEntry RegisterDeck(IModManifest owner, string name, DeckConfiguration configuration)
-        => this.RegisterDeckWithUniqueName(owner, null, $"{owner.UniqueName}::{name}", configuration);
-
-    internal IDeckEntry RegisterDeckWithUniqueName(IModManifest owner, ExternalDeck? legacy, string uniqueName, DeckConfiguration configuration)
     {
-        Entry entry = new(owner, legacy, uniqueName, (Deck)this.NextId++, configuration);
+        Entry entry = new(owner, $"{owner.UniqueName}::{name}", (Deck)this.NextId++, configuration);
         this.DeckToEntry[entry.Deck] = entry;
         this.UniqueNameToEntry[entry.UniqueName] = entry;
         this.QueueOrInject(entry);
         return entry;
     }
 
-    internal void InjectQueuedEntries()
-    {
-        var queued = this.QueuedEntries.ToList();
-        queued.Clear();
-        foreach (var entry in queued)
-            this.QueueOrInject(entry);
-    }
-
-    internal bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out Entry entry)
+    public bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IDeckEntry entry)
     {
         if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry))
         {
@@ -52,6 +40,14 @@ internal sealed class DeckManager
             entry = default;
             return false;
         }
+    }
+
+    internal void InjectQueuedEntries()
+    {
+        var queued = this.QueuedEntries.ToList();
+        queued.Clear();
+        foreach (var entry in queued)
+            this.QueueOrInject(entry);
     }
 
     private void QueueOrInject(Entry entry)
@@ -71,19 +67,16 @@ internal sealed class DeckManager
             DB.deckBordersOver[entry.Deck] = overBordersSprite;
     }
 
-    internal sealed class Entry : IDeckEntry
+    private sealed class Entry : IDeckEntry
     {
         public IModManifest ModOwner { get; init; }
         public string UniqueName { get; init; }
         public Deck Deck { get; init; }
         public DeckConfiguration Configuration { get; init; }
 
-        internal ExternalDeck? Legacy { get; init; }
-
-        public Entry(IModManifest modOwner, ExternalDeck? legacy, string uniqueName, Deck deck, DeckConfiguration configuration)
+        public Entry(IModManifest modOwner, string uniqueName, Deck deck, DeckConfiguration configuration)
         {
             this.ModOwner = modOwner;
-            this.Legacy = legacy;
             this.UniqueName = uniqueName;
             this.Deck = deck;
             this.Configuration = configuration;

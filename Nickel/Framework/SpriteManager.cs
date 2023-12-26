@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using CobaltCoreModding.Definitions.ExternalItems;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Nickel;
@@ -19,11 +18,8 @@ internal sealed class SpriteManager
     }
 
     public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Stream> streamProvider)
-        => this.RegisterSpriteWithUniqueName(owner, null, $"{owner.UniqueName}::{name}", streamProvider);
-
-    internal ISpriteEntry RegisterSpriteWithUniqueName(IModManifest owner, ExternalSprite? legacy, string uniqueName, Func<Stream> streamProvider)
     {
-        Entry entry = new(owner, legacy, uniqueName, (Spr)this.NextId++, streamProvider);
+        Entry entry = new(owner, $"{owner.UniqueName}::{name}", (Spr)this.NextId++, streamProvider);
         this.SpriteToEntry[entry.Sprite] = entry;
         this.UniqueNameToEntry[entry.UniqueName] = entry;
 
@@ -33,7 +29,7 @@ internal sealed class SpriteManager
         return entry;
     }
 
-    internal bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out Entry entry)
+    public bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out ISpriteEntry entry)
     {
         if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry))
         {
@@ -56,23 +52,20 @@ internal sealed class SpriteManager
         e.Texture = entry.ObtainTexture();
     }
 
-    internal sealed class Entry : ISpriteEntry
+    private sealed class Entry : ISpriteEntry
     {
         public IModManifest ModOwner { get; init; }
         public string UniqueName { get; init; }
         public Spr Sprite { get; init; }
 
-        internal ExternalSprite? Legacy { get; init; }
-
         private Func<Stream>? StreamProvider { get; set; }
         private Texture2D? TextureStorage { get; set; }
 
-        public Entry(IModManifest modOwner, ExternalSprite? legacy, string uniqueName, Spr sprite, Func<Stream> streamProvider)
+        public Entry(IModManifest modOwner, string uniqueName, Spr sprite, Func<Stream> streamProvider)
         {
             this.ModOwner = modOwner;
             this.UniqueName = uniqueName;
             this.Sprite = sprite;
-            this.Legacy = legacy;
             this.StreamProvider = streamProvider;
         }
 
