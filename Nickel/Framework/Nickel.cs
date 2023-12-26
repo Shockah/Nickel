@@ -105,8 +105,7 @@ internal sealed class Nickel
     private static void ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony harmony, ILogger logger, CobaltCoreHandlerResult handlerResult)
     {
         instance.ModManager.CobaltCoreAssembly = handlerResult.GameAssembly;
-        instance.ModManager.SpriteManager = new();
-        instance.ModManager.DeckManager = new(() => instance.ModManager.CurrentModLoadPhase);
+        instance.ModManager.ContentManager = new(() => instance.ModManager.CurrentModLoadPhase);
 
         instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.AfterDbInit, instance.ModManager.ModLoaderModManifest);
 
@@ -153,6 +152,7 @@ internal sealed class Nickel
     {
         if (phase != ModLoadPhase.AfterDbInit)
             return;
-        this.ModManager.DeckManager?.InjectQueuedEntries();
+        this.ModManager.ContentManager?.Decks.InjectQueuedEntries();
+        this.ModManager.ContentManager?.Cards.InjectQueuedEntries();
     }
 }

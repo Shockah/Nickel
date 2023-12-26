@@ -22,8 +22,7 @@ internal sealed class ModManager
     internal ModLoadPhase CurrentModLoadPhase { get; private set; } = ModLoadPhase.BeforeGameAssembly;
 
     internal Assembly? CobaltCoreAssembly { get; set; }
-    internal SpriteManager? SpriteManager { get; set; }
-    internal DeckManager? DeckManager { get; set; }
+    internal ContentManager? ContentManager { get; set; }
 
     private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; init; } = new();
     private List<IPluginPackage<IModManifest>> ResolvedMods { get; init; } = new();
@@ -87,8 +86,7 @@ internal sealed class ModManager
                 helperProvider: this.ObtainModHelper,
                 loggerProvider: this.ObtainLogger,
                 cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!,
-                spriteManagerProvider: () => this.SpriteManager!,
-                deckManagerProvider: () => this.DeckManager!
+                contentManagerProvider: () => this.ContentManager!
             ),
             condition: package => package.Manifest.ModType == $"{GetType().Namespace!}.Legacy" && this.CobaltCoreAssembly is not null
         );
@@ -239,9 +237,10 @@ internal sealed class ModManager
         {
             ModRegistry modRegistry = new(manifest, this.UniqueNameToInstance);
             ModEvents modEvents = new(manifest, this.EventManager);
-            ModSprites modSprites = new(manifest, () => this.SpriteManager!);
-            ModDecks modDecks = new(manifest, () => this.DeckManager!);
-            ModContent modContent = new(modSprites, modDecks);
+            ModSprites modSprites = new(manifest, () => this.ContentManager!.Sprites);
+            ModDecks modDecks = new(manifest, () => this.ContentManager!.Decks);
+            ModCards modCards = new(manifest, () => this.ContentManager!.Cards);
+            ModContent modContent = new(modSprites, modDecks, modCards);
             helper = new ModHelper(modRegistry, modEvents, modContent, () => this.CurrentModLoadPhase);
             this.UniqueNameToHelper[manifest.UniqueName] = helper;
         }
