@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -31,6 +32,12 @@ internal sealed class ModRegistry : IModRegistry
             accessLevelChecking: AccessLevelChecking.DisabledButOnlyAllowPublicMembers
         ));
     }
+
+    public bool TryProxy<TProxy>(object @object, [MaybeNullWhen(false)] out TProxy proxy) where TProxy : class
+        => this.ProxyManager.TryProxy(@object, "TryProxy", this.ModManifest.UniqueName, out proxy);
+
+    public TProxy? AsProxy<TProxy>(object? @object) where TProxy : class
+        => @object is not null && this.TryProxy<TProxy>(@object, out var proxy) ? proxy : null;
 
     public TApi? GetApi<TApi>(string uniqueName, SemanticVersion? minimumVersion = null) where TApi : class
     {
