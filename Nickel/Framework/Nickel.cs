@@ -4,7 +4,11 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using HarmonyLib;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Configuration;
+using Microsoft.Extensions.Logging.Console;
 using Nanoray.PluginManager.Cecil;
 using Nickel.Framework;
 
@@ -59,12 +63,10 @@ internal sealed class Nickel
     {
         var loggerFactory = LoggerFactory.Create(builder =>
         {
-            builder.AddSimpleConsole(options =>
-            {
-                options.IncludeScopes = true;
-                options.SingleLine = false;
-                options.TimestampFormat = "HH:mm:ss ";
-            });
+            builder.AddConfiguration();
+            builder.AddConsoleFormatter<CustomConsoleFormatter, ConsoleFormatterOptions>();
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, ConsoleLoggerProvider>());
+            LoggerProviderOptions.RegisterProviderOptions<ConsoleLoggerOptions, ConsoleLoggerProvider>(builder.Services);
         });
         var logger = loggerFactory.CreateLogger(typeof(Nickel).Namespace!);
         Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, Console.Out));
