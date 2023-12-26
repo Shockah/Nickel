@@ -4,6 +4,7 @@ public interface IModContent
 {
     IModSprites Sprites { get; }
     IModDecks Decks { get; }
+    IModStatuses Statuses { get; }
     IModCards Cards { get; }
     IModArtifacts Artifacts { get; }
 }

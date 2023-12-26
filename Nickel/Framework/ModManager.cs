@@ -239,9 +239,10 @@ internal sealed class ModManager
             ModEvents modEvents = new(manifest, this.EventManager);
             ModSprites modSprites = new(manifest, () => this.ContentManager!.Sprites);
             ModDecks modDecks = new(manifest, () => this.ContentManager!.Decks);
+            ModStatuses modStatuses = new(manifest, () => this.ContentManager!.Statuses);
             ModCards modCards = new(manifest, () => this.ContentManager!.Cards);
             ModArtifacts modArtifacts = new(manifest, () => this.ContentManager!.Artifacts);
-            ModContent modContent = new(modSprites, modDecks, modCards, modArtifacts);
+            ModContent modContent = new(modSprites, modDecks, modStatuses, modCards, modArtifacts);
             helper = new ModHelper(modRegistry, modEvents, modContent, () => this.CurrentModLoadPhase);
             this.UniqueNameToHelper[manifest.UniqueName] = helper;
         }

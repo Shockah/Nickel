@@ -62,6 +62,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 
         private Dictionary<string, ExternalSprite> GlobalNameToSprite { get; init; } = new();
         private Dictionary<string, ExternalDeck> GlobalNameToDeck { get; init; } = new();
+        private Dictionary<string, ExternalStatus> GlobalNameToStatus { get; init; } = new();
         private Dictionary<string, ExternalCard> GlobalNameToCard { get; init; } = new();
         private Dictionary<string, ExternalArtifact> GlobalNameToArtifact { get; init; } = new();
 
@@ -98,6 +99,24 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             var entry = this.ContentManagerProvider().Decks.RegisterDeck(mod, value.GlobalName, configuration);
             value.Id = (int)entry.Deck;
             this.GlobalNameToDeck[value.GlobalName] = value;
+        }
+
+        public void RegisterStatus(IModManifest mod, ExternalStatus value)
+        {
+            StatusConfiguration configuration = new()
+            {
+                Definition = new()
+                {
+                    icon = (Spr)value.Icon.Id!.Value,
+                    color = new((uint)value.MainColor.ToArgb()),
+                    border = value.BorderColor is { } borderColor ? new((uint)borderColor.ToArgb()) : null,
+                    affectedByTimestop = value.AffectedByTimestop,
+                    isGood = value.IsGood
+                }
+            };
+            var entry = this.ContentManagerProvider().Statuses.RegisterStatus(mod, value.GlobalName, configuration);
+            value.Id = (int)entry.Status;
+            this.GlobalNameToStatus[value.GlobalName] = value;
         }
 
         public void RegisterCard(IModManifest mod, ExternalCard value)
@@ -140,6 +159,9 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         public ExternalDeck GetDeck(string globalName)
             => this.GlobalNameToDeck.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
 
+        public ExternalStatus GetStatus(string globalName)
+            => this.GlobalNameToStatus.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
+
         public ExternalCard GetCard(string globalName)
             => this.GlobalNameToCard.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
 
@@ -147,7 +169,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             => this.GlobalNameToArtifact.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
     }
 
-    private sealed class LegacyRegistry : IModLoaderContact, IPrelaunchContactPoint, ISpriteRegistry, IDeckRegistry, ICardRegistry, IArtifactRegistry
+    private sealed class LegacyRegistry : IModLoaderContact, IPrelaunchContactPoint, ISpriteRegistry, IDeckRegistry, IStatusRegistry, ICardRegistry, IArtifactRegistry
     {
         public Assembly CobaltCoreAssembly { get; init; }
 
@@ -242,7 +264,19 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 
         public bool RegisterArtifact(ExternalArtifact artifact, string? overwrite = null)
         {
-            throw new NotImplementedException();
+            if (!string.IsNullOrEmpty(overwrite))
+                throw new NotImplementedException($"This method is not supported in {typeof(Nickel).Namespace!}");
+            this.Database.RegisterArtifact(this.ModManifest, artifact);
+            return true;
+        }
+
+        public ExternalStatus LookupStatus(string globalName)
+            => this.Database.GetStatus(globalName);
+
+        public bool RegisterStatus(ExternalStatus status)
+        {
+            this.Database.RegisterStatus(this.ModManifest, status);
+            return true;
         }
     }
 
@@ -258,6 +292,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             helper.Events.OnModLoadPhaseFinished += BootMod;
             helper.Events.OnModLoadPhaseFinished += LoadSpriteManifest;
             helper.Events.OnModLoadPhaseFinished += LoadDeckManifest;
+            helper.Events.OnModLoadPhaseFinished += LoadStatusManifest;
             helper.Events.OnModLoadPhaseFinished += LoadCardManifest;
             helper.Events.OnModLoadPhaseFinished += LoadArtifactManifest;
             helper.Events.OnModLoadPhaseFinished += FinalizePreparations;
@@ -292,6 +327,14 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         }
 
         [EventPriority(-400)]
+        private void LoadStatusManifest(object? sender, ModLoadPhase phase)
+        {
+            if (phase != ModLoadPhase.AfterGameAssembly)
+                return;
+            (this.LegacyManifest as IStatusManifest)?.LoadManifest(this.LegacyRegistry);
+        }
+
+        [EventPriority(-500)]
         private void LoadCardManifest(object? sender, ModLoadPhase phase)
         {
             if (phase != ModLoadPhase.AfterGameAssembly)
@@ -299,7 +342,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             (this.LegacyManifest as ICardManifest)?.LoadManifest(this.LegacyRegistry);
         }
 
-        [EventPriority(-500)]
+        [EventPriority(-600)]
         private void LoadArtifactManifest(object? sender, ModLoadPhase phase)
         {
             if (phase != ModLoadPhase.AfterGameAssembly)
