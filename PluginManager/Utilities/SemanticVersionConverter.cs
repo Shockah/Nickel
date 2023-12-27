@@ -2,7 +2,7 @@ using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Nanoray.PluginManager.Utilities;
+namespace Nanoray.PluginManager;
 
 public sealed class SemanticVersionConverter : JsonConverter<SemanticVersion>
 {

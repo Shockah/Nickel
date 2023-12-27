@@ -68,14 +68,14 @@ internal sealed class Nickel
             builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, ConsoleLoggerProvider>());
             LoggerProviderOptions.RegisterProviderOptions<ConsoleLoggerOptions, ConsoleLoggerProvider>(builder.Services);
         });
-        var logger = loggerFactory.CreateLogger(typeof(Nickel).Namespace!);
+        var logger = loggerFactory.CreateLogger(NickelConstants.Name);
         Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, Console.Out));
         Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));
 
         Nickel instance = new();
         Instance = instance;
 
-        Harmony harmony = new(typeof(Nickel).Namespace!);
+        Harmony harmony = new(NickelConstants.Name);
         HarmonyPatches.Apply(harmony, logger);
 
         var modsDirectory = launchArguments.ModsPath ?? new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "ModLibrary"));

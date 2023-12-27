@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace Nanoray.PluginManager.Utilities;
+namespace Nanoray.PluginManager;
 
 public static class SemanticVersionParser
 {

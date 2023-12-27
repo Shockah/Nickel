@@ -47,9 +47,9 @@ internal sealed class ModManager
 
         this.ModLoaderModManifest = new ModManifest()
         {
-            UniqueName = typeof(Nickel).Namespace!,
-            Version = new SemanticVersion { MajorVersion = 0, MinorVersion = 1, PatchVersion = 0 }, // TODO: move to constants
-            RequiredApiVersion = new SemanticVersion { MajorVersion = 0, MinorVersion = 1, PatchVersion = 0 }, // TODO: move to constants
+            UniqueName = NickelConstants.Name,
+            Version = NickelConstants.Version,
+            RequiredApiVersion = NickelConstants.Version
         };
 
         var assemblyPluginLoaderParameterInjector = new CompoundAssemblyPluginLoaderParameterInjector<IModManifest>(
@@ -69,7 +69,7 @@ internal sealed class ModManager
                 parameterInjector: assemblyPluginLoaderParameterInjector,
                 assemblyEditor: extendableAssemblyDefinitionEditor
             ),
-            condition: package => package.Manifest.ModType == $"{GetType().Namespace!}.Assembly"
+            condition: package => package.Manifest.ModType == NickelConstants.AssemblyModType
         );
 
         var legacyAssemblyPluginLoader = new ConditionalPluginLoader<IAssemblyModManifest, Mod>(
@@ -88,7 +88,7 @@ internal sealed class ModManager
                 cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!,
                 contentManagerProvider: () => this.ContentManager!
             ),
-            condition: package => package.Manifest.ModType == $"{GetType().Namespace!}.Legacy" && this.CobaltCoreAssembly is not null
+            condition: package => package.Manifest.ModType == NickelConstants.LegacyModType && this.CobaltCoreAssembly is not null
         );
 
         this.ExtendablePluginLoader.RegisterPluginLoader(

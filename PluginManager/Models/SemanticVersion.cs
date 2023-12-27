@@ -1,6 +1,5 @@
 using System;
 using Newtonsoft.Json;
-using Nanoray.PluginManager.Utilities;
 
 namespace Nanoray.PluginManager;
 

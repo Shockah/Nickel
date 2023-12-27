@@ -208,7 +208,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         }
 
         public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
-            => throw new NotImplementedException($"This method is not supported in {typeof(Nickel).Namespace!}");
+            => throw new NotImplementedException($"This method is not supported in {NickelConstants.Name}");
 
         public TApi? GetApi<TApi>(string modName) where TApi : class
             => this.Helper.ModRegistry.GetApi<TApi>(modName);
@@ -233,7 +233,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         public bool RegisterArt(ExternalSprite sprite_data, int? overwrite_value = null)
         {
             if (overwrite_value is not null)
-                throw new NotImplementedException($"This method is not supported in {typeof(Nickel).Namespace!}");
+                throw new NotImplementedException($"This method is not supported in {NickelConstants.Name}");
             this.Database.RegisterSprite(this.ModManifest, sprite_data);
             return true;
         }
@@ -244,7 +244,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         public bool RegisterDeck(ExternalDeck deck, int? overwrite = null)
         {
             if (overwrite is not null)
-                throw new NotImplementedException($"This method is not supported in {typeof(Nickel).Namespace!}");
+                throw new NotImplementedException($"This method is not supported in {NickelConstants.Name}");
             this.Database.RegisterDeck(this.ModManifest, deck);
             return true;
         }
@@ -255,7 +255,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         public bool RegisterCard(ExternalCard card, string? overwrite = null)
         {
             if (!string.IsNullOrEmpty(overwrite))
-                throw new NotImplementedException($"This method is not supported in {typeof(Nickel).Namespace!}");
+                throw new NotImplementedException($"This method is not supported in {NickelConstants.Name}");
             this.Database.RegisterCard(this.ModManifest, card);
             return true;
         }
@@ -266,7 +266,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         public bool RegisterArtifact(ExternalArtifact artifact, string? overwrite = null)
         {
             if (!string.IsNullOrEmpty(overwrite))
-                throw new NotImplementedException($"This method is not supported in {typeof(Nickel).Namespace!}");
+                throw new NotImplementedException($"This method is not supported in {NickelConstants.Name}");
             this.Database.RegisterArtifact(this.ModManifest, artifact);
             return true;
         }

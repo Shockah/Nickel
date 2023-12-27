@@ -28,7 +28,7 @@ internal sealed class ModManifest : IModManifest
     public string? Author { get; internal set; } = null;
 
     [JsonProperty]
-    public string ModType { get; internal set; } = $"{typeof(ModManifest).Namespace!}.Assembly";
+    public string ModType { get; internal set; } = NickelConstants.AssemblyModType;
 
     [JsonProperty]
     [JsonConverter(typeof(ConcreteTypeConverter<IReadOnlyList<SubmodEntry>>))]
