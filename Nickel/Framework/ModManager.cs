@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using Nanoray.PluginManager.Implementations;
+using OneOf.Types;
 using ILegacyModManifest = CobaltCoreModding.Definitions.ModManifests.IModManifest;
 
 namespace Nickel;
@@ -120,18 +121,26 @@ internal sealed class ModManager
             Enum.GetValues<ModLoadPhase>()
         );
         var pluginManifestLoader = new JsonPluginManifestLoader<ModManifest>();
-        var pluginPackageResolver = new SubpluginPluginPackageResolver<IModManifest>(
-            baseResolver: new RecursiveDirectoryPluginPackageResolver<IModManifest>(
-                directory: this.ModsDirectory,
-                manifestFileName: "nickel.json",
-                ignoreDotDirectories: true,
-                pluginManifestLoader: new SpecializedPluginManifestLoader<ModManifest, IModManifest>(pluginManifestLoader)
+        var pluginPackageResolver = new ValidatingPluginPackageResolver<IModManifest>(
+            resolver: new SubpluginPluginPackageResolver<IModManifest>(
+                baseResolver: new RecursiveDirectoryPluginPackageResolver<IModManifest>(
+                    directory: this.ModsDirectory,
+                    manifestFileName: "nickel.json",
+                    ignoreDotDirectories: true,
+                    pluginManifestLoader: new SpecializedPluginManifestLoader<ModManifest, IModManifest>(pluginManifestLoader)
+                ),
+                subpluginResolverFactory: p =>
+                {
+                    foreach (var optionalSubmod in p.Manifest.Submods.Where(submod => submod.IsOptional))
+                        this.OptionalSubmods.Add(optionalSubmod.Manifest);
+                    return p.Manifest.Submods.Select(submod => new InnerPluginPackageResolver<IModManifest>(p, submod.Manifest));
+                }
             ),
-            subpluginResolverFactory: p =>
+            validator: package =>
             {
-                foreach (var optionalSubmod in p.Manifest.Submods.Where(submod => submod.IsOptional))
-                    this.OptionalSubmods.Add(optionalSubmod.Manifest);
-                return p.Manifest.Submods.Select(submod => new InnerPluginPackageResolver<IModManifest>(p, submod.Manifest));
+                if (package.Manifest.RequiredApiVersion > NickelConstants.Version)
+                    return new Error<string>($"Mod {package.Manifest.UniqueName} requires API version {package.Manifest.RequiredApiVersion}, but {NickelConstants.Name} is currently {NickelConstants.Version}.");
+                return null;
             }
         );
 
