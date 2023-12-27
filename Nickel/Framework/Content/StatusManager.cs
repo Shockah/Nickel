@@ -14,6 +14,20 @@ internal sealed class StatusManager
     public StatusManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
     {
         this.Manager = new(currentModLoadPhaseProvider, Inject);
+
+        TTGlossaryPatches.OnTryGetIcon.Subscribe(this.OnTryGetIcon);
+    }
+
+    private void OnTryGetIcon(object? sender, TTGlossaryPatches.TryGetIconEventArgs e)
+    {
+        string[] keySplit = e.Glossary.key.Split(".");
+        if (keySplit.Length < 2)
+            return;
+        if (keySplit[0] != "status" || !int.TryParse(keySplit[1], out int statusId))
+            return;
+        if (!this.StatusToEntry.TryGetValue((Status)statusId, out var entry))
+            return;
+        e.Sprite = entry.Configuration.Definition.icon;
     }
 
     internal void InjectQueuedEntries()

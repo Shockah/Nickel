@@ -2,18 +2,13 @@ using System;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
+using WeakEvent;
 
 namespace Nickel;
 
 internal static class SpriteLoaderPatches
 {
-    private static readonly WeakEvent<GetTextureEventArgs> OnGetTextureWeakEvent = new();
-
-    internal static event EventHandler<GetTextureEventArgs> OnGetTexture
-    {
-        add => OnGetTextureWeakEvent.Add(value);
-        remove => OnGetTextureWeakEvent.Remove(value);
-    }
+    internal static WeakEventSource<GetTextureEventArgs> OnGetTexture { get; private set; } = new();
 
     internal static void Apply(Harmony harmony, ILogger logger)
     {
@@ -29,7 +24,7 @@ internal static class SpriteLoaderPatches
             return false;
 
         GetTextureEventArgs args = new(id);
-        OnGetTextureWeakEvent.Raise(null, args);
+        OnGetTexture.Raise(null, args);
         __result = args.Texture;
         return args.Texture is null;
     }

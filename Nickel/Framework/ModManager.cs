@@ -23,6 +23,7 @@ internal sealed class ModManager
     internal ModLoadPhase CurrentModLoadPhase { get; private set; } = ModLoadPhase.BeforeGameAssembly;
 
     internal Assembly? CobaltCoreAssembly { get; set; }
+    internal LegacyDatabase? LegacyDatabase { get; set; }
     internal ContentManager? ContentManager { get; set; }
 
     private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; init; } = new();
@@ -87,9 +88,9 @@ internal sealed class ModManager
                 helperProvider: this.ObtainModHelper,
                 loggerProvider: this.ObtainLogger,
                 cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!,
-                contentManagerProvider: () => this.ContentManager!
+                databaseProvider: () => this.LegacyDatabase!
             ),
-            condition: package => package.Manifest.ModType == NickelConstants.LegacyModType && this.CobaltCoreAssembly is not null
+            condition: package => package.Manifest.ModType == NickelConstants.LegacyModType && this.CobaltCoreAssembly is not null && this.LegacyDatabase is not null
         );
 
         this.ExtendablePluginLoader.RegisterPluginLoader(
@@ -104,7 +105,12 @@ internal sealed class ModManager
                 m => m.AsAssemblyModManifest()
             )
         );
+
+        DBPatches.OnLoadStringsForLocale.Subscribe(this.OnLoadStringsForLocale);
     }
+
+    private void OnLoadStringsForLocale(object? sender, LoadStringsForLocaleEventArgs e)
+        => this.EventManager.OnLoadStringsForLocaleEvent.Raise(sender, e);
 
     private static ModLoadPhase GetModLoadPhaseForManifest(IModManifest manifest)
         => (manifest as IAssemblyModManifest)?.LoadPhase ?? ModLoadPhase.AfterGameAssembly;

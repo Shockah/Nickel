@@ -14,7 +14,7 @@ internal sealed class SpriteManager
 
     public SpriteManager()
     {
-        SpriteLoaderPatches.OnGetTexture += this.OnGetTexture;
+        SpriteLoaderPatches.OnGetTexture.Subscribe(this.OnGetTexture);
     }
 
     public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Stream> streamProvider)
