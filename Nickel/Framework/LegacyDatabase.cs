@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using CobaltCoreModding.Definitions.ExternalItems;
 
@@ -15,6 +16,10 @@ internal sealed class LegacyDatabase
     private Dictionary<string, ExternalStatus> GlobalNameToStatus { get; init; } = new();
     private Dictionary<string, ExternalCard> GlobalNameToCard { get; init; } = new();
     private Dictionary<string, ExternalArtifact> GlobalNameToArtifact { get; init; } = new();
+    private Dictionary<string, ExternalAnimation> GlobalNameToAnimation { get; init; } = new();
+    private Dictionary<string, ExternalCharacter> GlobalNameToCharacter { get; init; } = new();
+
+    private Dictionary<string, ICharacterEntry> GlobalNameToCharacterEntry { get; init; } = new();
 
     public LegacyDatabase(Func<ContentManager> contentManagerProvider)
     {
@@ -25,7 +30,7 @@ internal sealed class LegacyDatabase
     {
         foreach (var status in this.GlobalNameToStatus.Values)
         {
-            string key = $"{status.Id!.Value}";
+            string key = ((Status)status.Id!.Value).Key();
             status.GetLocalisation(locale, out string? name, out string? description);
             if (name is not null)
                 localizations[$"status.{key}.name"] = name;
@@ -52,6 +57,17 @@ internal sealed class LegacyDatabase
             string key = artifact.ArtifactType.Name; // TODO: change this when Artifact.Key gets patched
             localizations[$"artifact.{key}.name"] = name;
             localizations[$"artifact.{key}.desc"] = description;
+        }
+        foreach (var character in this.GlobalNameToCharacter.Values)
+        {
+            string key = ((Deck)character.Deck.Id!.Value).Key();
+            if (character.GetCharacterName(locale) is { } name)
+            {
+                localizations[$"char.{key}"] = name;
+                localizations[$"char.{key}.name"] = name;
+            }
+            if (character.GetDesc(locale) is { } description)
+                localizations[$"char.{key}.desc"] = description;
         }
     }
 
@@ -137,6 +153,33 @@ internal sealed class LegacyDatabase
         this.GlobalNameToArtifact[value.GlobalName] = value;
     }
 
+    public void RegisterAnimation(IModManifest mod, ExternalAnimation value)
+    {
+        CharacterAnimationConfiguration configuration = new()
+        {
+            Deck = (Deck)value.Deck.Id!.Value,
+            LoopTag = value.Tag,
+            Frames = value.Frames.Select(s => (Spr)s.Id!.Value).ToList()
+        };
+
+        this.ContentManagerProvider().Characters.RegisterCharacterAnimation(mod, value.GlobalName, configuration);
+        this.GlobalNameToAnimation[value.GlobalName] = value;
+    }
+
+    public void RegisterCharacter(IModManifest mod, ExternalCharacter value)
+    {
+        CharacterConfiguration configuration = new()
+        {
+            Deck = (Deck)value.Deck.Id!.Value,
+            BorderSprite = (Spr)value.CharPanelSpr.Id!.Value,
+            StarterArtifactTypes = value.StarterArtifacts.ToList(),
+            StarterCardTypes = value.StarterDeck.ToList()
+        };
+
+        this.ContentManagerProvider().Characters.RegisterCharacter(mod, value.GlobalName, configuration);
+        this.GlobalNameToCharacter[value.GlobalName] = value;
+    }
+
     public ExternalSprite GetSprite(string globalName)
         => this.GlobalNameToSprite.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
 
@@ -151,4 +194,10 @@ internal sealed class LegacyDatabase
 
     public ExternalArtifact GetArtifact(string globalName)
         => this.GlobalNameToArtifact.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
+
+    public ExternalAnimation GetAnimation(string globalName)
+        => this.GlobalNameToAnimation.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
+
+    public ExternalCharacter GetCharacter(string globalName)
+        => this.GlobalNameToCharacter.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
 }

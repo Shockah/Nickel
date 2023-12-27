@@ -7,4 +7,5 @@ public interface IModContent
     IModStatuses Statuses { get; }
     IModCards Cards { get; }
     IModArtifacts Artifacts { get; }
+    IModCharacters Characters { get; }
 }

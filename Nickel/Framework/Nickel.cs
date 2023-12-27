@@ -106,16 +106,14 @@ internal sealed class Nickel
 
     private static void ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony harmony, ILogger logger, CobaltCoreHandlerResult handlerResult)
     {
-        instance.ModManager.CobaltCoreAssembly = handlerResult.GameAssembly;
-        instance.ModManager.ContentManager = new(() => instance.ModManager.CurrentModLoadPhase);
-        instance.ModManager.LegacyDatabase = new(() => instance.ModManager.ContentManager);
-
+        instance.ModManager.ContinueAfterLoadingGameAssembly(handlerResult.GameAssembly);
         instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderModManifest);
         instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderModManifest);
 
         DBPatches.Apply(harmony, logger);
         MGPatches.Apply(harmony, logger);
         SpriteLoaderPatches.Apply(harmony, logger);
+        StoryVarsPatches.Apply(harmony, logger);
         TTGlossaryPatches.Apply(harmony, logger);
 
         bool debug = launchArguments.Debug ?? true;

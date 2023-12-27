@@ -22,9 +22,9 @@ internal sealed class ModManager
     internal IModManifest ModLoaderModManifest { get; private init; }
     internal ModLoadPhase CurrentModLoadPhase { get; private set; } = ModLoadPhase.BeforeGameAssembly;
 
-    internal Assembly? CobaltCoreAssembly { get; set; }
-    internal LegacyDatabase? LegacyDatabase { get; set; }
-    internal ContentManager? ContentManager { get; set; }
+    private Assembly? CobaltCoreAssembly { get; set; }
+    internal LegacyDatabase? LegacyDatabase { get; private set; }
+    internal ContentManager? ContentManager { get; private set; }
 
     private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; init; } = new();
     private List<IPluginPackage<IModManifest>> ResolvedMods { get; init; } = new();
@@ -236,6 +236,13 @@ internal sealed class ModManager
         this.EventManager.OnModLoadPhaseFinishedEvent.Raise(null, phase);
     }
 
+    internal void ContinueAfterLoadingGameAssembly(Assembly cobaltCoreGameAssembly)
+    {
+        this.CobaltCoreAssembly = cobaltCoreGameAssembly;
+        this.ContentManager = new(() => this.CurrentModLoadPhase, this.ObtainLogger);
+        this.LegacyDatabase = new(() => this.ContentManager);
+    }
+
     private ILogger ObtainLogger(IModManifest manifest)
     {
         if (!this.UniqueNameToLogger.TryGetValue(manifest.UniqueName, out var logger))
@@ -257,7 +264,8 @@ internal sealed class ModManager
             ModStatuses modStatuses = new(manifest, () => this.ContentManager!.Statuses);
             ModCards modCards = new(manifest, () => this.ContentManager!.Cards);
             ModArtifacts modArtifacts = new(manifest, () => this.ContentManager!.Artifacts);
-            ModContent modContent = new(modSprites, modDecks, modStatuses, modCards, modArtifacts);
+            ModCharacters modCharacters = new(manifest, () => this.ContentManager!.Characters);
+            ModContent modContent = new(modSprites, modDecks, modStatuses, modCards, modArtifacts, modCharacters);
             helper = new ModHelper(modRegistry, modEvents, modContent, () => this.CurrentModLoadPhase);
             this.UniqueNameToHelper[manifest.UniqueName] = helper;
         }

@@ -57,7 +57,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
         );
     }
 
-    private sealed class LegacyRegistry : IModLoaderContact, IPrelaunchContactPoint, ISpriteRegistry, IDeckRegistry, IStatusRegistry, ICardRegistry, IArtifactRegistry
+    private sealed class LegacyRegistry : IModLoaderContact, IPrelaunchContactPoint, ISpriteRegistry, IDeckRegistry, IStatusRegistry, ICardRegistry, IArtifactRegistry, IAnimationRegistry, ICharacterRegistry
     {
         public Assembly CobaltCoreAssembly { get; init; }
 
@@ -166,6 +166,24 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             this.Database.RegisterStatus(this.ModManifest, status);
             return true;
         }
+
+        public ExternalAnimation LookupAnimation(string globalName)
+            => this.Database.GetAnimation(globalName);
+
+        public bool RegisterAnimation(ExternalAnimation animation)
+        {
+            this.Database.RegisterAnimation(this.ModManifest, animation);
+            return true;
+        }
+
+        public ExternalCharacter LookupCharacter(string globalName)
+            => this.Database.GetCharacter(globalName);
+
+        public bool RegisterCharacter(ExternalCharacter character)
+        {
+            this.Database.RegisterCharacter(this.ModManifest, character);
+            return true;
+        }
     }
 
     private sealed class LegacyModWrapper : Mod
@@ -183,6 +201,8 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             helper.Events.OnModLoadPhaseFinished += LoadStatusManifest;
             helper.Events.OnModLoadPhaseFinished += LoadCardManifest;
             helper.Events.OnModLoadPhaseFinished += LoadArtifactManifest;
+            helper.Events.OnModLoadPhaseFinished += LoadAnimationManifest;
+            helper.Events.OnModLoadPhaseFinished += LoadCharacterManifest;
             helper.Events.OnModLoadPhaseFinished += FinalizePreparations;
 
             legacyManifest.GameRootFolder = new DirectoryInfo(Directory.GetCurrentDirectory());
@@ -248,6 +268,22 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
             if (phase != ModLoadPhase.AfterGameAssembly)
                 return;
             (this.LegacyManifest as IArtifactManifest)?.LoadManifest(this.LegacyRegistry);
+        }
+
+        [EventPriority(-600)]
+        private void LoadAnimationManifest(object? sender, ModLoadPhase phase)
+        {
+            if (phase != ModLoadPhase.AfterGameAssembly)
+                return;
+            (this.LegacyManifest as IAnimationManifest)?.LoadManifest(this.LegacyRegistry);
+        }
+
+        [EventPriority(-700)]
+        private void LoadCharacterManifest(object? sender, ModLoadPhase phase)
+        {
+            if (phase != ModLoadPhase.AfterGameAssembly)
+                return;
+            (this.LegacyManifest as ICharacterManifest)?.LoadManifest(this.LegacyRegistry);
         }
 
         [EventPriority(-1000)]
