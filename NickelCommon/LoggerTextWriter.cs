@@ -2,9 +2,9 @@ using System.IO;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace Nickel.Framework;
+namespace Nickel.Common;
 
-internal sealed class LoggerTextWriter : TextWriter
+public sealed class LoggerTextWriter : TextWriter
 {
     public const char IgnoreChar = '\u200B';
 

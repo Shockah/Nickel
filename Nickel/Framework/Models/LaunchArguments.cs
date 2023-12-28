@@ -9,5 +9,6 @@ internal readonly struct LaunchArguments
     public FileInfo? GamePath { get; init; }
     public DirectoryInfo? ModsPath { get; init; }
     public DirectoryInfo? SavePath { get; init; }
-    public IReadOnlyList<string> UnmatchedParameters { get; init; }
+    public string? LogPipeName { get; init; }
+    public IReadOnlyList<string> UnmatchedArguments { get; init; }
 }

@@ -4,13 +4,14 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using HarmonyLib;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.Console;
 using Nanoray.PluginManager.Cecil;
-using Nickel.Framework;
+using Nickel.Common;
+using Nickel.Framework.Utilities;
 
 namespace Nickel;
 
@@ -37,12 +38,16 @@ internal sealed class Nickel
             name: "--savePath",
             description: "The path that will store the save data."
         );
+        Option<string?> logPipeNameOption = new(
+            name: "--logPipeName"
+        ) { IsHidden = true };
 
-        RootCommand rootCommand = new("Nickel -- A modding API / modloader for the game Cobalt Core.");
+        RootCommand rootCommand = new(NickelConstants.IntroMessage);
         rootCommand.AddOption(debugOption);
         rootCommand.AddOption(gamePathOption);
         rootCommand.AddOption(modsPathOption);
         rootCommand.AddOption(savePathOption);
+        rootCommand.AddOption(logPipeNameOption);
 
         rootCommand.SetHandler((InvocationContext context) =>
         {
@@ -52,7 +57,8 @@ internal sealed class Nickel
                 GamePath = context.ParseResult.GetValueForOption(gamePathOption),
                 ModsPath = context.ParseResult.GetValueForOption(modsPathOption),
                 SavePath = context.ParseResult.GetValueForOption(savePathOption),
-                UnmatchedParameters = context.ParseResult.UnmatchedTokens
+                LogPipeName = context.ParseResult.GetValueForOption(logPipeNameOption),
+                UnmatchedArguments = context.ParseResult.UnmatchedTokens
             };
             CreateAndStartInstance(launchArguments);
         });
@@ -64,13 +70,22 @@ internal sealed class Nickel
         var loggerFactory = LoggerFactory.Create(builder =>
         {
             builder.AddConfiguration();
-            builder.AddConsoleFormatter<CustomConsoleFormatter, ConsoleFormatterOptions>();
-            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, ConsoleLoggerProvider>());
-            LoggerProviderOptions.RegisterProviderOptions<ConsoleLoggerOptions, ConsoleLoggerProvider>(builder.Services);
+
+            if (string.IsNullOrEmpty(launchArguments.LogPipeName))
+            {
+                builder.AddConsoleFormatter<CustomConsoleFormatter, ConsoleFormatterOptions>();
+                builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, ConsoleLoggerProvider>());
+                LoggerProviderOptions.RegisterProviderOptions<ConsoleLoggerOptions, ConsoleLoggerProvider>(builder.Services);
+            }
+            else
+            {
+                builder.AddProvider(new NamedPipeClientLoggerProvider(launchArguments.LogPipeName));
+            }
         });
         var logger = loggerFactory.CreateLogger(NickelConstants.Name);
         Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, Console.Out));
         Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));
+        logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
 
         Nickel instance = new();
         Instance = instance;
@@ -138,7 +153,7 @@ internal sealed class Nickel
             List<string> gameArguments = new();
             if (debug)
                 gameArguments.Add("--debug");
-            gameArguments.AddRange(launchArguments.UnmatchedParameters);
+            gameArguments.AddRange(launchArguments.UnmatchedArguments);
 
             object? result = handlerResult.EntryPoint.Invoke(null, new object[] { gameArguments.ToArray() });
             if (result is not null)
