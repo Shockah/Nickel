@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "NickelLauncher": {
-      "commandName": "Project",
-      "workingDirectory": "C:\\git\\Nickel\\Nickel\\.bin\\Debug\\net6.0"
-    }
-  }
-}
