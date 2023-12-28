@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Nanoray.PluginManager;
+using Nickel.Common;
 
 namespace Nickel;
 
@@ -11,7 +11,7 @@ public interface IModManifest
 
     SemanticVersion RequiredApiVersion { get; }
 
-    IReadOnlySet<PluginDependency> Dependencies { get; }
+    IReadOnlySet<ModDependency> Dependencies { get; }
 
     string? DisplayName { get; }
 

@@ -4,8 +4,9 @@ using System.Linq;
 
 namespace Nanoray.PluginManager;
 
-public sealed class PluginDependencyResolver<TPluginManifest> : IPluginDependencyResolver<TPluginManifest>
+public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPluginDependencyResolver<TPluginManifest, TVersion>
     where TPluginManifest : notnull
+    where TVersion : struct, IEquatable<TVersion>, IComparable<TVersion>
 {
     private Func<TPluginManifest, RequiredManifestData> RequiredManifestDataProvider { get; init; }
 
@@ -14,7 +15,7 @@ public sealed class PluginDependencyResolver<TPluginManifest> : IPluginDependenc
         this.RequiredManifestDataProvider = requiredManifestDataProvider;
     }
 
-    public PluginDependencyResolveResult<TPluginManifest> ResolveDependencies(IEnumerable<TPluginManifest> toResolve, IReadOnlySet<TPluginManifest>? resolved = null)
+    public PluginDependencyResolveResult<TPluginManifest, TVersion> ResolveDependencies(IEnumerable<TPluginManifest> toResolve, IReadOnlySet<TPluginManifest>? resolved = null)
     {
         Dictionary<TPluginManifest, ManifestEntry> manifestEntries = toResolve.Concat(resolved ?? Enumerable.Empty<TPluginManifest>())
             .ToDictionary(m => m, m => new ManifestEntry { Manifest = m, Data = this.RequiredManifestDataProvider(m) });
@@ -23,21 +24,21 @@ public sealed class PluginDependencyResolver<TPluginManifest> : IPluginDependenc
 
         #region happy path
         List<IReadOnlySet<TPluginManifest>> loadSteps = new();
-        Dictionary<TPluginManifest, PluginDependencyUnresolvableResult<TPluginManifest>> unresolvable = new();
+        Dictionary<TPluginManifest, PluginDependencyUnresolvableResult<TPluginManifest, TVersion>> unresolvable = new();
         List<TPluginManifest> allResolved = resolved?.ToList() ?? new();
         List<TPluginManifest> toResolveLeft = toResolve.ToList();
 
-        bool MatchesDependency(TPluginManifest manifest, PluginDependency dependency)
+        bool MatchesDependency(TPluginManifest manifest, PluginDependency<TVersion> dependency)
         {
             if (!manifestEntries.TryGetValue(manifest, out var entry))
                 return false;
-            return entry.Data.UniqueName == dependency.UniqueName && (dependency.Version is null || dependency.Version <= entry.Data.Version);
+            return entry.Data.UniqueName == dependency.UniqueName && (dependency.Version is null || dependency.Version.Value.CompareTo(entry.Data.Version) <= 0);
         }
 
-        bool ContainsDependency(IEnumerable<TPluginManifest> enumerable, PluginDependency dependency)
+        bool ContainsDependency(IEnumerable<TPluginManifest> enumerable, PluginDependency<TVersion> dependency)
             => enumerable.Any(m => MatchesDependency(m, dependency));
 
-        bool CanDependencyBeResolved(PluginDependency dependency)
+        bool CanDependencyBeResolved(PluginDependency<TVersion> dependency)
             => ContainsDependency(allResolved, dependency);
 
         bool CanManifestBeResolved(TPluginManifest manifest, bool onlyRequiredDependencies)
@@ -68,11 +69,11 @@ public sealed class PluginDependencyResolver<TPluginManifest> : IPluginDependenc
         }
 
         if (toResolveLeft.Count == 0)
-            return new PluginDependencyResolveResult<TPluginManifest> { LoadSteps = loadSteps, Unresolvable = unresolvable };
+            return new PluginDependencyResolveResult<TPluginManifest, TVersion> { LoadSteps = loadSteps, Unresolvable = unresolvable };
         #endregion
 
         #region manifests unresolvable due to missing dependencies
-        HashSet<PluginDependency> GetMissingDependencies(TPluginManifest manifest)
+        HashSet<PluginDependency<TVersion>> GetMissingDependencies(TPluginManifest manifest)
         {
             if (!manifestEntries.TryGetValue(manifest, out var entry))
                 return new();
@@ -92,13 +93,13 @@ public sealed class PluginDependencyResolver<TPluginManifest> : IPluginDependenc
 
             foreach (var kvp in missingDependencyManifests)
             {
-                unresolvable[kvp.Key] = new PluginDependencyUnresolvableResult<TPluginManifest>.MissingDependencies { Dependencies = kvp.Value };
+                unresolvable[kvp.Key] = new PluginDependencyUnresolvableResult<TPluginManifest, TVersion>.MissingDependencies { Dependencies = kvp.Value };
                 toResolveLeft.Remove(kvp.Key);
             }
         }
 
         if (toResolveLeft.Count == 0)
-            return new PluginDependencyResolveResult<TPluginManifest> { LoadSteps = loadSteps, Unresolvable = unresolvable };
+            return new PluginDependencyResolveResult<TPluginManifest, TVersion> { LoadSteps = loadSteps, Unresolvable = unresolvable };
         #endregion
 
         #region manifests unresolvable due to dependency cycles
@@ -135,7 +136,7 @@ public sealed class PluginDependencyResolver<TPluginManifest> : IPluginDependenc
                     continue;
 
                 foreach (var cyclePart in cycle.Values)
-                    unresolvable[cyclePart] = new PluginDependencyUnresolvableResult<TPluginManifest>.DependencyCycle { Cycle = cycle };
+                    unresolvable[cyclePart] = new PluginDependencyUnresolvableResult<TPluginManifest, TVersion>.DependencyCycle { Cycle = cycle };
                 toRemove.AddRange(cycle.Values);
             }
 
@@ -146,15 +147,15 @@ public sealed class PluginDependencyResolver<TPluginManifest> : IPluginDependenc
         #endregion
 
         foreach (var manifest in toResolveLeft)
-            unresolvable[manifest] = new PluginDependencyUnresolvableResult<TPluginManifest>.UnknownReason();
-        return new PluginDependencyResolveResult<TPluginManifest> { LoadSteps = loadSteps, Unresolvable = unresolvable };
+            unresolvable[manifest] = new PluginDependencyUnresolvableResult<TPluginManifest, TVersion>.UnknownReason();
+        return new PluginDependencyResolveResult<TPluginManifest, TVersion> { LoadSteps = loadSteps, Unresolvable = unresolvable };
     }
 
     public readonly struct RequiredManifestData
     {
         public string UniqueName { get; init; }
-        public SemanticVersion Version { get; init; }
-        public IReadOnlySet<PluginDependency> Dependencies { get; init; }
+        public TVersion Version { get; init; }
+        public IReadOnlySet<PluginDependency<TVersion>> Dependencies { get; init; }
     }
 
     private readonly struct ManifestEntry

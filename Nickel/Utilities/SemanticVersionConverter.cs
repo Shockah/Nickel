@@ -1,8 +1,9 @@
 using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Nickel.Common;
 
-namespace Nanoray.PluginManager;
+namespace Nickel;
 
 public sealed class SemanticVersionConverter : JsonConverter<SemanticVersion>
 {

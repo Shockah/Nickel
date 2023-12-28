@@ -17,9 +17,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nickel", "Nickel\Nickel.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NickelLauncher", "NickelLauncher\NickelLauncher.csproj", "{067179C4-512A-4602-BD10-ADDC8F86AA0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginManager.Cecil", "PluginManager.Cecil\PluginManager.Cecil.csproj", "{0267A231-613F-45B5-8171-6FBB242F30AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginManager.Cecil", "PluginManager.Cecil\PluginManager.Cecil.csproj", "{0267A231-613F-45B5-8171-6FBB242F30AC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModding.Definitions", "LegacyModLoader\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj", "{C27B6030-7813-4B04-8398-E8C7347E01AB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NickelCommon", "NickelCommon\NickelCommon.csproj", "{5D7A8A7A-CE0A-49A3-A9B8-F09116C540DF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +49,10 @@ Global
 		{C27B6030-7813-4B04-8398-E8C7347E01AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C27B6030-7813-4B04-8398-E8C7347E01AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C27B6030-7813-4B04-8398-E8C7347E01AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D7A8A7A-CE0A-49A3-A9B8-F09116C540DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D7A8A7A-CE0A-49A3-A9B8-F09116C540DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D7A8A7A-CE0A-49A3-A9B8-F09116C540DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D7A8A7A-CE0A-49A3-A9B8-F09116C540DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

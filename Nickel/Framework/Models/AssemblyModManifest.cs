@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Nanoray.PluginManager;
+using Nickel.Common;
 
 namespace Nickel;
 
@@ -14,7 +14,7 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
     public SemanticVersion RequiredApiVersion
         => this.ModManifest.RequiredApiVersion;
 
-    public IReadOnlySet<PluginDependency> Dependencies
+    public IReadOnlySet<ModDependency> Dependencies
         => this.ModManifest.Dependencies;
 
     public string? DisplayName

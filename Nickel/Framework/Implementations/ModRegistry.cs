@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using Nanoray.Pintail;
-using Nanoray.PluginManager;
+using Nickel.Common;
 
 namespace Nickel;
 

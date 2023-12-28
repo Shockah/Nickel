@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Nanoray.PluginManager;
+using Nickel.Common;
 
 namespace Nickel;
 

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using Nanoray.PluginManager;
+using Nickel.Common;
 
 namespace Nickel;
 
@@ -12,14 +12,16 @@ internal sealed class ModManifest : IModManifest
 
     [JsonProperty]
     [JsonRequired]
+    [JsonConverter(typeof(SemanticVersionConverter))]
     public SemanticVersion Version { get; internal set; } = default;
 
     [JsonProperty]
     [JsonRequired]
+    [JsonConverter(typeof(SemanticVersionConverter))]
     public SemanticVersion RequiredApiVersion { get; internal set; } = default;
 
     [JsonProperty]
-    public IReadOnlySet<PluginDependency> Dependencies { get; internal set; } = new HashSet<PluginDependency>();
+    public IReadOnlySet<ModDependency> Dependencies { get; internal set; } = new HashSet<ModDependency>();
 
     [JsonProperty]
     public string? DisplayName { get; internal set; } = null;

@@ -1,9 +1,7 @@
 using System;
-using Newtonsoft.Json;
 
-namespace Nanoray.PluginManager;
+namespace Nickel.Common;
 
-[JsonConverter(typeof(SemanticVersionConverter))]
 public readonly struct SemanticVersion : IEquatable<SemanticVersion>, IComparable<SemanticVersion>
 {
     public int MajorVersion { get; init; }

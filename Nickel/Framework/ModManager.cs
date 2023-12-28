@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using Nanoray.PluginManager.Implementations;
+using Nickel.Common;
 using OneOf.Types;
 using ILegacyModManifest = CobaltCoreModding.Definitions.ModManifests.IModManifest;
 
@@ -119,9 +120,16 @@ internal sealed class ModManager
     {
         this.Logger.LogInformation("Resolving mods...");
 
-        var pluginDependencyResolver = new MultiPhasePluginDependencyResolver<IModManifest, ModLoadPhase>(
-            new PluginDependencyResolver<IModManifest>(
-                requiredManifestDataProvider: p => new PluginDependencyResolver<IModManifest>.RequiredManifestData { UniqueName = p.UniqueName, Version = p.Version, Dependencies = p.Dependencies }
+        var pluginDependencyResolver = new MultiPhasePluginDependencyResolver<IModManifest, SemanticVersion, ModLoadPhase>(
+            new PluginDependencyResolver<IModManifest, SemanticVersion>(
+                requiredManifestDataProvider: p => new PluginDependencyResolver<IModManifest, SemanticVersion>.RequiredManifestData
+                {
+                    UniqueName = p.UniqueName,
+                    Version = p.Version,
+                    Dependencies = p.Dependencies
+                        .Select(d => new PluginDependency<SemanticVersion>(d.UniqueName, d.Version, d.IsRequired))
+                        .ToHashSet()
+                }
             ),
             GetModLoadPhaseForManifest,
             Enum.GetValues<ModLoadPhase>()

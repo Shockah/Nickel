@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace Nanoray.PluginManager;
+namespace Nickel.Common;
 
 public static class SemanticVersionParser
 {
