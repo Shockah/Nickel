@@ -9,11 +9,11 @@ namespace Nanoray.PluginManager;
 
 public sealed class ZipPluginPackage<TPluginManifest> : IPluginPackage<TPluginManifest>
 {
-	public TPluginManifest Manifest { get; init; }
-	public IReadOnlySet<string> DataEntries { get; init; }
+	public TPluginManifest Manifest { get; }
+	public IReadOnlySet<string> DataEntries { get; }
 	private IReadOnlyDictionary<string, string> DataMapping { get; }
 
-	private ZipArchive Archive { get; init; }
+	private ZipArchive Archive { get; }
 
 	public ZipPluginPackage(TPluginManifest manifest, ZipArchive archive)
 	{
