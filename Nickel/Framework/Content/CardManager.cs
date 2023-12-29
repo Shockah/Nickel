@@ -6,9 +6,9 @@ namespace Nickel;
 
 internal sealed class CardManager
 {
-	private AfterDbInitManager<Entry> Manager { get; init; }
-	private Dictionary<Type, Entry> CardTypeToEntry { get; init; } = new();
-	private Dictionary<string, Entry> UniqueNameToEntry { get; init; } = new();
+	private AfterDbInitManager<Entry> Manager { get; }
+	private Dictionary<Type, Entry> CardTypeToEntry { get; } = new();
+	private Dictionary<string, Entry> UniqueNameToEntry { get; } = new();
 
 	public CardManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
@@ -54,9 +54,9 @@ internal sealed class CardManager
 
 	private sealed class Entry : ICardEntry
 	{
-		public IModManifest ModOwner { get; init; }
-		public string UniqueName { get; init; }
-		public CardConfiguration Configuration { get; init; }
+		public IModManifest ModOwner { get; }
+		public string UniqueName { get; }
+		public CardConfiguration Configuration { get; }
 
 		public Entry(IModManifest modOwner, string uniqueName, CardConfiguration configuration)
 		{

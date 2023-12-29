@@ -4,8 +4,8 @@ namespace Nickel;
 
 internal sealed class ModCards : IModCards
 {
-	private IModManifest ModManifest { get; init; }
-	private Func<CardManager> CardManagerProvider { get; init; }
+	private IModManifest ModManifest { get; }
+	private Func<CardManager> CardManagerProvider { get; }
 
 	public ModCards(IModManifest modManifest, Func<CardManager> cardManagerProvider)
 	{

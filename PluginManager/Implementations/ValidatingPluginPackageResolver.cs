@@ -8,8 +8,8 @@ namespace Nanoray.PluginManager.Implementations;
 
 public sealed class ValidatingPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-	private IPluginPackageResolver<TPluginManifest> Resolver { get; init; }
-	private Func<IPluginPackage<TPluginManifest>, Error<string>?> Validator { get; init; }
+	private IPluginPackageResolver<TPluginManifest> Resolver { get; }
+	private Func<IPluginPackage<TPluginManifest>, Error<string>?> Validator { get; }
 
 	public ValidatingPluginPackageResolver(IPluginPackageResolver<TPluginManifest> resolver, Func<IPluginPackage<TPluginManifest>, Error<string>?> validator)
 	{

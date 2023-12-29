@@ -5,7 +5,7 @@ namespace Nanoray.PluginManager;
 
 public sealed class ValueAssemblyPluginLoaderParameterInjector<TPluginManifest, T> : IAssemblyPluginLoaderParameterInjector<TPluginManifest>
 {
-	private T Value { get; init; }
+	private T Value { get; }
 
 	public ValueAssemblyPluginLoaderParameterInjector(T value)
 	{

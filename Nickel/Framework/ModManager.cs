@@ -15,10 +15,10 @@ namespace Nickel;
 
 internal sealed class ModManager
 {
-	private DirectoryInfo ModsDirectory { get; init; }
-	private ILoggerFactory LoggerFactory { get; init; }
-	private ILogger Logger { get; init; }
-	internal ModEventManager EventManager { get; private init; }
+	private DirectoryInfo ModsDirectory { get; }
+	private ILoggerFactory LoggerFactory { get; }
+	private ILogger Logger { get; }
+	internal ModEventManager EventManager { get; }
 
 	internal IModManifest ModLoaderModManifest { get; private init; }
 	internal ModLoadPhase CurrentModLoadPhase { get; private set; } = ModLoadPhase.BeforeGameAssembly;
@@ -27,14 +27,14 @@ internal sealed class ModManager
 	internal LegacyDatabase? LegacyDatabase { get; private set; }
 	internal ContentManager? ContentManager { get; private set; }
 
-	private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; init; } = new();
-	private List<IPluginPackage<IModManifest>> ResolvedMods { get; init; } = new();
-	private List<IModManifest> FailedMods { get; init; } = new();
-	private HashSet<IModManifest> OptionalSubmods { get; init; } = new();
+	private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; } = new();
+	private List<IPluginPackage<IModManifest>> ResolvedMods { get; } = new();
+	private List<IModManifest> FailedMods { get; } = new();
+	private HashSet<IModManifest> OptionalSubmods { get; } = new();
 
-	private Dictionary<string, ILogger> UniqueNameToLogger { get; init; } = new();
-	private Dictionary<string, IModHelper> UniqueNameToHelper { get; init; } = new();
-	private Dictionary<string, Mod> UniqueNameToInstance { get; init; } = new();
+	private Dictionary<string, ILogger> UniqueNameToLogger { get; } = new();
+	private Dictionary<string, IModHelper> UniqueNameToHelper { get; } = new();
+	private Dictionary<string, Mod> UniqueNameToInstance { get; } = new();
 
 	public ModManager(
 		DirectoryInfo modsDirectory,

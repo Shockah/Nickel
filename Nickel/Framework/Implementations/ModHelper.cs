@@ -17,8 +17,8 @@ internal sealed class ModHelper : IModHelper
 		}
 	}
 
-	private IModContent ContentStorage { get; init; }
-	private Func<ModLoadPhase> CurrentModLoadPhaseProvider { get; init; }
+	private IModContent ContentStorage { get; }
+	private Func<ModLoadPhase> CurrentModLoadPhaseProvider { get; }
 
 	public ModHelper(IModRegistry modRegistry, IModEvents events, IModContent content, Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{

@@ -4,8 +4,8 @@ namespace Nickel;
 
 internal sealed class ModCharacters : IModCharacters
 {
-	private IModManifest ModManifest { get; init; }
-	private Func<CharacterManager> CharacterManagerProvider { get; init; }
+	private IModManifest ModManifest { get; }
+	private Func<CharacterManager> CharacterManagerProvider { get; }
 
 	public ModCharacters(IModManifest modManifest, Func<CharacterManager> characterManagerProvider)
 	{

@@ -9,9 +9,9 @@ namespace Nanoray.PluginManager;
 
 public sealed class AssemblyPluginLoader<TPluginManifest, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 {
-	private Func<IPluginPackage<TPluginManifest>, RequiredPluginData?> RequiredPluginDataProvider { get; init; }
-	private IAssemblyPluginLoaderParameterInjector<TPluginManifest>? ParameterInjector { get; init; }
-	private IAssemblyEditor? AssemblyEditor { get; init; }
+	private Func<IPluginPackage<TPluginManifest>, RequiredPluginData?> RequiredPluginDataProvider { get; }
+	private IAssemblyPluginLoaderParameterInjector<TPluginManifest>? ParameterInjector { get; }
+	private IAssemblyEditor? AssemblyEditor { get; }
 
 	public AssemblyPluginLoader(
 		Func<IPluginPackage<TPluginManifest>, RequiredPluginData?> requiredPluginDataProvider,

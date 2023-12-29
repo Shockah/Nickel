@@ -4,8 +4,8 @@ namespace Nickel;
 
 internal sealed class ModEvents : IModEvents
 {
-	private IModManifest ModManifest { get; init; }
-	private ModEventManager EventManager { get; init; }
+	private IModManifest ModManifest { get; }
+	private ModEventManager EventManager { get; }
 
 	public ModEvents(IModManifest modManifest, ModEventManager eventManager)
 	{

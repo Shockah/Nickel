@@ -8,9 +8,9 @@ namespace Nanoray.PluginManager;
 
 public sealed class DirectoryPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-	private DirectoryInfo Directory { get; init; }
-	private string ManifestFileName { get; init; }
-	private IPluginManifestLoader<TPluginManifest> PluginManifestLoader { get; init; }
+	private DirectoryInfo Directory { get; }
+	private string ManifestFileName { get; }
+	private IPluginManifestLoader<TPluginManifest> PluginManifestLoader { get; }
 
 	public DirectoryPluginPackageResolver(DirectoryInfo directory, string manifestFileName, IPluginManifestLoader<TPluginManifest> pluginManifestLoader)
 	{

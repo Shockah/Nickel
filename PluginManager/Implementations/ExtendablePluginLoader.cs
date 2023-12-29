@@ -8,7 +8,7 @@ namespace Nanoray.PluginManager;
 
 public sealed class ExtendablePluginLoader<TPluginManifest, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 {
-	private List<IPluginLoader<TPluginManifest, TPlugin>> PluginLoaders { get; init; } = new();
+	private List<IPluginLoader<TPluginManifest, TPlugin>> PluginLoaders { get; } = new();
 
 	public bool CanLoadPlugin(IPluginPackage<TPluginManifest> package)
 		=> this.PluginLoaders.Any(loader => loader.CanLoadPlugin(package));

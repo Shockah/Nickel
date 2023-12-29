@@ -7,9 +7,9 @@ namespace Nickel;
 internal sealed class StatusManager
 {
 	private int NextId { get; set; } = 10_000_001;
-	private AfterDbInitManager<Entry> Manager { get; init; }
-	private Dictionary<Status, Entry> StatusToEntry { get; init; } = new();
-	private Dictionary<string, Entry> UniqueNameToEntry { get; init; } = new();
+	private AfterDbInitManager<Entry> Manager { get; }
+	private Dictionary<Status, Entry> StatusToEntry { get; } = new();
+	private Dictionary<string, Entry> UniqueNameToEntry { get; } = new();
 
 	public StatusManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
@@ -63,10 +63,10 @@ internal sealed class StatusManager
 
 	private sealed class Entry : IStatusEntry
 	{
-		public IModManifest ModOwner { get; init; }
-		public string UniqueName { get; init; }
-		public Status Status { get; init; }
-		public StatusConfiguration Configuration { get; init; }
+		public IModManifest ModOwner { get; }
+		public string UniqueName { get; }
+		public Status Status { get; }
+		public StatusConfiguration Configuration { get; }
 
 		public Entry(IModManifest modOwner, string uniqueName, Status status, StatusConfiguration configuration)
 		{

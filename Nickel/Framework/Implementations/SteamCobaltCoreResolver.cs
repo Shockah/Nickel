@@ -10,7 +10,7 @@ namespace Nickel;
 
 internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 {
-	private Func<FileInfo, FileInfo?, ICobaltCoreResolver> ResolverFactory { get; init; }
+	private Func<FileInfo, FileInfo?, ICobaltCoreResolver> ResolverFactory { get; }
 
 	public SteamCobaltCoreResolver(Func<FileInfo, FileInfo?, ICobaltCoreResolver> resolverFactory)
 	{

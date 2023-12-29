@@ -36,7 +36,7 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 
 	public ModLoadPhase LoadPhase { get; internal set; } = ModLoadPhase.AfterGameAssembly;
 
-	private IModManifest ModManifest { get; init; }
+	private IModManifest ModManifest { get; }
 
 	public AssemblyModManifest(IModManifest modManifest)
 	{

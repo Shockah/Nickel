@@ -6,7 +6,7 @@ namespace Nanoray.PluginManager;
 
 public sealed class CompoundAssemblyPluginLoaderParameterInjector<TPluginManifest> : IAssemblyPluginLoaderParameterInjector<TPluginManifest>
 {
-	private IReadOnlyList<IAssemblyPluginLoaderParameterInjector<TPluginManifest>> ParameterInjectors { get; init; }
+	private IReadOnlyList<IAssemblyPluginLoaderParameterInjector<TPluginManifest>> ParameterInjectors { get; }
 
 	public CompoundAssemblyPluginLoaderParameterInjector(IReadOnlyList<IAssemblyPluginLoaderParameterInjector<TPluginManifest>> parameterInjectors)
 	{

@@ -8,11 +8,11 @@ namespace Nickel;
 
 internal sealed class CharacterManager
 {
-	private Func<IModManifest, ILogger> LoggerProvider { get; init; }
-	private AfterDbInitManager<AnimationEntry> AnimationManager { get; init; }
-	private AfterDbInitManager<CharacterEntry> CharManager { get; init; }
-	private Dictionary<string, AnimationEntry> UniqueNameToAnimationEntry { get; init; } = new();
-	private Dictionary<string, CharacterEntry> UniqueNameToCharacterEntry { get; init; } = new();
+	private Func<IModManifest, ILogger> LoggerProvider { get; }
+	private AfterDbInitManager<AnimationEntry> AnimationManager { get; }
+	private AfterDbInitManager<CharacterEntry> CharManager { get; }
+	private Dictionary<string, AnimationEntry> UniqueNameToAnimationEntry { get; } = new();
+	private Dictionary<string, CharacterEntry> UniqueNameToCharacterEntry { get; } = new();
 
 	public CharacterManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider)
 	{
@@ -141,9 +141,9 @@ internal sealed class CharacterManager
 
 	private sealed class AnimationEntry : ICharacterAnimationEntry
 	{
-		public IModManifest ModOwner { get; init; }
-		public string UniqueName { get; init; }
-		public CharacterAnimationConfiguration Configuration { get; init; }
+		public IModManifest ModOwner { get; }
+		public string UniqueName { get; }
+		public CharacterAnimationConfiguration Configuration { get; }
 
 		public AnimationEntry(IModManifest modOwner, string uniqueName, CharacterAnimationConfiguration configuration)
 		{
@@ -155,9 +155,9 @@ internal sealed class CharacterManager
 
 	private sealed class CharacterEntry : ICharacterEntry
 	{
-		public IModManifest ModOwner { get; init; }
-		public string UniqueName { get; init; }
-		public CharacterConfiguration Configuration { get; init; }
+		public IModManifest ModOwner { get; }
+		public string UniqueName { get; }
+		public CharacterConfiguration Configuration { get; }
 
 		public CharacterEntry(IModManifest modOwner, string uniqueName, CharacterConfiguration configuration)
 		{

@@ -9,8 +9,8 @@ namespace Nickel;
 internal sealed class SpriteManager
 {
 	private int NextId { get; set; } = 10_000_001;
-	private Dictionary<Spr, Entry> SpriteToEntry { get; init; } = new();
-	private Dictionary<string, Entry> UniqueNameToEntry { get; init; } = new();
+	private Dictionary<Spr, Entry> SpriteToEntry { get; } = new();
+	private Dictionary<string, Entry> UniqueNameToEntry { get; } = new();
 
 	public SpriteManager()
 	{
@@ -54,9 +54,9 @@ internal sealed class SpriteManager
 
 	private sealed class Entry : ISpriteEntry
 	{
-		public IModManifest ModOwner { get; init; }
-		public string UniqueName { get; init; }
-		public Spr Sprite { get; init; }
+		public IModManifest ModOwner { get; }
+		public string UniqueName { get; }
+		public Spr Sprite { get; }
 
 		private Func<Stream>? StreamProvider { get; set; }
 		private Texture2D? TextureStorage { get; set; }

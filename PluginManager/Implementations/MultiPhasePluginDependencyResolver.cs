@@ -8,9 +8,9 @@ public sealed class MultiPhasePluginDependencyResolver<TPluginManifest, TVersion
 	where TPluginManifest : notnull
 	where TVersion : struct, IEquatable<TVersion>, IComparable<TVersion>
 {
-	private IPluginDependencyResolver<TPluginManifest, TVersion> Resolver { get; init; }
-	private Func<TPluginManifest, TLoadPhase> LoadPhaseFunction { get; init; }
-	private IEnumerable<TLoadPhase> LoadPhases { get; init; }
+	private IPluginDependencyResolver<TPluginManifest, TVersion> Resolver { get; }
+	private Func<TPluginManifest, TLoadPhase> LoadPhaseFunction { get; }
+	private IEnumerable<TLoadPhase> LoadPhases { get; }
 
 	public MultiPhasePluginDependencyResolver(
 		IPluginDependencyResolver<TPluginManifest, TVersion> resolver,

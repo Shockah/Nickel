@@ -4,8 +4,8 @@ namespace Nickel;
 
 internal sealed class ModDecks : IModDecks
 {
-	private IModManifest ModManifest { get; init; }
-	private Func<DeckManager> DeckManagerProvider { get; init; }
+	private IModManifest ModManifest { get; }
+	private Func<DeckManager> DeckManagerProvider { get; }
 
 	public ModDecks(IModManifest modManifest, Func<DeckManager> deckManagerProvider)
 	{

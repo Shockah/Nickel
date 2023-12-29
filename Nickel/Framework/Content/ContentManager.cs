@@ -6,11 +6,11 @@ namespace Nickel;
 internal sealed class ContentManager
 {
 	public SpriteManager Sprites { get; private init; }
-	public DeckManager Decks { get; private init; }
-	public StatusManager Statuses { get; private init; }
-	public CardManager Cards { get; private init; }
-	public ArtifactManager Artifacts { get; private init; }
-	public CharacterManager Characters { get; private init; }
+	public DeckManager Decks { get; }
+	public StatusManager Statuses { get; }
+	public CardManager Cards { get; }
+	public ArtifactManager Artifacts { get; }
+	public CharacterManager Characters { get; }
 
 	public ContentManager(
 		SpriteManager sprites,
