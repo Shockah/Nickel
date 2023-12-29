@@ -18,11 +18,11 @@ namespace Nickel;
 
 internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModManifest, Mod>
 {
-	private IPluginLoader<IAssemblyModManifest, ILegacyModManifest> Loader { get; init; }
-	private Func<IModManifest, IModHelper> HelperProvider { get; init; }
-	private Func<IModManifest, ILogger> LoggerProvider { get; init; }
-	private Func<Assembly> CobaltCoreAssemblyProvider { get; init; }
-	private Func<LegacyDatabase> DatabaseProvider { get; init; }
+	private IPluginLoader<IAssemblyModManifest, ILegacyModManifest> Loader { get; }
+	private Func<IModManifest, IModHelper> HelperProvider { get; }
+	private Func<IModManifest, ILogger> LoggerProvider { get; }
+	private Func<Assembly> CobaltCoreAssemblyProvider { get; }
+	private Func<LegacyDatabase> DatabaseProvider { get; }
 
 	public LegacyAssemblyPluginLoader(
 		IPluginLoader<IAssemblyModManifest, ILegacyModManifest> loader,
@@ -59,10 +59,10 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 
 	private sealed class LegacyRegistry : IModLoaderContact, IPrelaunchContactPoint, ISpriteRegistry, IDeckRegistry, IStatusRegistry, ICardRegistry, IArtifactRegistry, IAnimationRegistry, ICharacterRegistry
 	{
-		public Assembly CobaltCoreAssembly { get; init; }
+		public Assembly CobaltCoreAssembly { get; }
 
-		private IModManifest ModManifest { get; init; }
-		private IModHelper Helper { get; init; }
+		private IModManifest ModManifest { get; }
+		private IModHelper Helper { get; }
 
 		public IEnumerable<ILegacyManifest> LoadedManifests
 		{
@@ -79,7 +79,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 		public Func<object> GetCobaltCoreGraphicsDeviceFunc
 			=> () => MG.inst.GraphicsDevice;
 
-		private LegacyDatabase Database { get; init; }
+		private LegacyDatabase Database { get; }
 
 		public LegacyRegistry(
 			IModManifest modManifest,
@@ -188,8 +188,8 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 
 	private sealed class LegacyModWrapper : Mod
 	{
-		internal ILegacyModManifest LegacyManifest { get; init; }
-		private LegacyRegistry LegacyRegistry { get; init; }
+		internal ILegacyModManifest LegacyManifest { get; }
+		private LegacyRegistry LegacyRegistry { get; }
 
 		public LegacyModWrapper(ILegacyModManifest legacyManifest, LegacyRegistry legacyRegistry, DirectoryInfo directory, IModHelper helper, ILogger logger)
 		{
@@ -321,7 +321,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 			set { }
 		}
 
-		private IModManifest ModManifest { get; init; }
+		private IModManifest ModManifest { get; }
 
 		public NewToLegacyManifestStub(IModManifest modManifest)
 		{

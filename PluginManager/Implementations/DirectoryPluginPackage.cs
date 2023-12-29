@@ -11,7 +11,7 @@ public sealed class DirectoryPluginPackage<TPluginManifest> : IDirectoryPluginPa
 	public DirectoryInfo Directory { get; init; }
 	public IReadOnlySet<string> DataEntries { get; init; }
 
-	private IReadOnlySet<FileInfo> Files { get; init; }
+	private IReadOnlySet<FileInfo> Files { get; }
 
 	public DirectoryPluginPackage(TPluginManifest manifest, DirectoryInfo directory, IReadOnlySet<FileInfo> files)
 	{

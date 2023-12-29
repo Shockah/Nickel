@@ -7,8 +7,8 @@ namespace Nanoray.PluginManager;
 
 public sealed class SubpluginPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-	private IPluginPackageResolver<TPluginManifest> BaseResolver { get; init; }
-	private Func<IPluginPackage<TPluginManifest>, IEnumerable<IPluginPackageResolver<TPluginManifest>>> SubpluginResolverFactory { get; init; }
+	private IPluginPackageResolver<TPluginManifest> BaseResolver { get; }
+	private Func<IPluginPackage<TPluginManifest>, IEnumerable<IPluginPackageResolver<TPluginManifest>>> SubpluginResolverFactory { get; }
 
 	public SubpluginPluginPackageResolver(
 		IPluginPackageResolver<TPluginManifest> baseResolver,

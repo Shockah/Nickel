@@ -15,10 +15,10 @@ internal sealed class ModRegistry : IModRegistry
 		=> this.ModUniqueNameToInstance
 			.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Package.Manifest);
 
-	private IModManifest ModManifest { get; init; }
-	internal IReadOnlyDictionary<string, Mod> ModUniqueNameToInstance { get; private init; }
-	private Dictionary<string, object?> ApiCache { get; init; } = new();
-	private IProxyManager<string> ProxyManager { get; init; }
+	private IModManifest ModManifest { get; }
+	internal IReadOnlyDictionary<string, Mod> ModUniqueNameToInstance { get; }
+	private Dictionary<string, object?> ApiCache { get; } = new();
+	private IProxyManager<string> ProxyManager { get; }
 
 	public ModRegistry(IModManifest modManifest, IReadOnlyDictionary<string, Mod> modUniqueNameToInstance)
 	{

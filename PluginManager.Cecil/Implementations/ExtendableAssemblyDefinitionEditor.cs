@@ -6,7 +6,7 @@ namespace Nanoray.PluginManager.Cecil;
 
 public sealed class ExtendableAssemblyDefinitionEditor : IAssemblyEditor
 {
-	private List<IAssemblyDefinitionEditor> DefinitionEditors { get; init; } = new();
+	private List<IAssemblyDefinitionEditor> DefinitionEditors { get; } = new();
 
 	public Stream EditAssemblyStream(string name, Stream assemblyStream)
 	{

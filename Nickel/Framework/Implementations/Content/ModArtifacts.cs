@@ -4,8 +4,8 @@ namespace Nickel;
 
 internal sealed class ModArtifacts : IModArtifacts
 {
-	private IModManifest ModManifest { get; init; }
-	private Func<ArtifactManager> ArtifactManagerProvider { get; init; }
+	private IModManifest ModManifest { get; }
+	private Func<ArtifactManager> ArtifactManagerProvider { get; }
 
 	public ModArtifacts(IModManifest modManifest, Func<ArtifactManager> artifactManagerProvider)
 	{

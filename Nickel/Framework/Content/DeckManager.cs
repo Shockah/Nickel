@@ -7,9 +7,9 @@ namespace Nickel;
 internal sealed class DeckManager
 {
 	private int NextId { get; set; } = 10_000_001;
-	private AfterDbInitManager<Entry> Manager { get; init; }
-	private Dictionary<Deck, Entry> DeckToEntry { get; init; } = new();
-	private Dictionary<string, Entry> UniqueNameToEntry { get; init; } = new();
+	private AfterDbInitManager<Entry> Manager { get; }
+	private Dictionary<Deck, Entry> DeckToEntry { get; } = new();
+	private Dictionary<string, Entry> UniqueNameToEntry { get; } = new();
 
 	public DeckManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
@@ -53,10 +53,10 @@ internal sealed class DeckManager
 
 	private sealed class Entry : IDeckEntry
 	{
-		public IModManifest ModOwner { get; init; }
-		public string UniqueName { get; init; }
-		public Deck Deck { get; init; }
-		public DeckConfiguration Configuration { get; init; }
+		public IModManifest ModOwner { get; }
+		public string UniqueName { get; }
+		public Deck Deck { get; }
+		public DeckConfiguration Configuration { get; }
 
 		public Entry(IModManifest modOwner, string uniqueName, Deck deck, DeckConfiguration configuration)
 		{

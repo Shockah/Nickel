@@ -13,8 +13,8 @@ public sealed class LoggerTextWriter : TextWriter
 
 	public bool IgnoreNextIfNewline { get; set; }
 
-	private ILogger Logger { get; init; }
-	private LogLevel LogLevel { get; init; }
+	private ILogger Logger { get; }
+	private LogLevel LogLevel { get; }
 	private TextWriter Out { get; }
 
 	public LoggerTextWriter(ILogger logger, LogLevel logLevel, TextWriter @out)

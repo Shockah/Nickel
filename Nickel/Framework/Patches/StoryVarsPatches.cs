@@ -8,7 +8,7 @@ namespace Nickel;
 
 internal static class StoryVarsPatches
 {
-	internal static WeakEventSource<HashSet<Deck>> OnGetUnlockedChars { get; private set; } = new();
+	internal static WeakEventSource<HashSet<Deck>> OnGetUnlockedChars { get; } = new();
 
 	internal static void Apply(Harmony harmony, ILogger logger)
 	{

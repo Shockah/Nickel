@@ -6,7 +6,7 @@ namespace Nanoray.PluginManager;
 
 public sealed class CompoundPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-	private IReadOnlyList<IPluginPackageResolver<TPluginManifest>> PackageResolvers { get; init; }
+	private IReadOnlyList<IPluginPackageResolver<TPluginManifest>> PackageResolvers { get; }
 
 	public CompoundPluginPackageResolver(IReadOnlyList<IPluginPackageResolver<TPluginManifest>> packageResolvers)
 	{

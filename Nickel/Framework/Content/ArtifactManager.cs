@@ -7,9 +7,9 @@ namespace Nickel;
 
 internal sealed class ArtifactManager
 {
-	private AfterDbInitManager<Entry> Manager { get; init; }
-	private Dictionary<Type, Entry> ArtifactTypeToEntry { get; init; } = new();
-	private Dictionary<string, Entry> UniqueNameToEntry { get; init; } = new();
+	private AfterDbInitManager<Entry> Manager { get; }
+	private Dictionary<Type, Entry> ArtifactTypeToEntry { get; } = new();
+	private Dictionary<string, Entry> UniqueNameToEntry { get; } = new();
 
 	public ArtifactManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
@@ -55,9 +55,9 @@ internal sealed class ArtifactManager
 
 	private sealed class Entry : IArtifactEntry
 	{
-		public IModManifest ModOwner { get; init; }
-		public string UniqueName { get; init; }
-		public ArtifactConfiguration Configuration { get; init; }
+		public IModManifest ModOwner { get; }
+		public string UniqueName { get; }
+		public ArtifactConfiguration Configuration { get; }
 
 		public Entry(IModManifest modOwner, string uniqueName, ArtifactConfiguration configuration)
 		{

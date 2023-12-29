@@ -10,7 +10,7 @@ public sealed class ZipPluginPackage<TPluginManifest> : IPluginPackage<TPluginMa
 	public TPluginManifest Manifest { get; init; }
 	public IReadOnlySet<string> DataEntries { get; init; }
 
-	private ZipArchive Archive { get; init; }
+	private ZipArchive Archive { get; }
 
 	public ZipPluginPackage(TPluginManifest manifest, ZipArchive archive)
 	{

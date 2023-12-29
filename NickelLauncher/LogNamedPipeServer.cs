@@ -10,11 +10,11 @@ namespace Nickel.Launcher;
 
 internal sealed class LogNamedPipeServer : IDisposable
 {
-	private string PipeName { get; init; }
-	private ILogger Logger { get; init; }
-	private Action<LogEntry> LoggingFunction { get; init; }
+	private string PipeName { get; }
+	private ILogger Logger { get; }
+	private Action<LogEntry> LoggingFunction { get; }
 
-	private JsonSerializer Serializer { get; init; } = JsonSerializer.Create();
+	private JsonSerializer Serializer { get; } = JsonSerializer.Create();
 
 	private NamedPipeServerStream? LastServer { get; set; }
 	private bool IsServerRunning { get; set; } = true;

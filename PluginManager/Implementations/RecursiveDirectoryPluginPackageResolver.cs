@@ -7,10 +7,10 @@ namespace Nanoray.PluginManager;
 
 public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-	private DirectoryInfo Directory { get; init; }
-	private string ManifestFileName { get; init; }
-	private bool IgnoreDotDirectories { get; init; }
-	private IPluginManifestLoader<TPluginManifest> PluginManifestLoader { get; init; }
+	private DirectoryInfo Directory { get; }
+	private string ManifestFileName { get; }
+	private bool IgnoreDotDirectories { get; }
+	private IPluginManifestLoader<TPluginManifest> PluginManifestLoader { get; }
 
 	public RecursiveDirectoryPluginPackageResolver(DirectoryInfo directory, string manifestFileName, bool ignoreDotDirectories, IPluginManifestLoader<TPluginManifest> pluginManifestLoader)
 	{

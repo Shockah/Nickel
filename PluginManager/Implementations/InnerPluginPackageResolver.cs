@@ -7,8 +7,8 @@ namespace Nanoray.PluginManager.Implementations;
 
 public sealed class InnerPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-	private IPluginPackage<TPluginManifest> OuterPackage { get; init; }
-	private TPluginManifest InnerManifest { get; init; }
+	private IPluginPackage<TPluginManifest> OuterPackage { get; }
+	private TPluginManifest InnerManifest { get; }
 
 	public InnerPluginPackageResolver(IPluginPackage<TPluginManifest> outerPackage, TPluginManifest innerManifest)
 	{
@@ -23,12 +23,12 @@ public sealed class InnerPluginPackageResolver<TPluginManifest> : IPluginPackage
 
 	private sealed class InnerPluginPackage : IPluginPackage<TPluginManifest>
 	{
-		public TPluginManifest Manifest { get; init; }
+		public TPluginManifest Manifest { get; }
 
 		public IReadOnlySet<string> DataEntries
 			=> this.OuterPackage.DataEntries;
 
-		private IPluginPackage<TPluginManifest> OuterPackage { get; init; }
+		private IPluginPackage<TPluginManifest> OuterPackage { get; }
 
 		public InnerPluginPackage(IPluginPackage<TPluginManifest> outerPackage, TPluginManifest manifest)
 		{

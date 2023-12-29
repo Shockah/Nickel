@@ -6,9 +6,9 @@ namespace Nickel;
 
 internal sealed class AfterDbInitManager<TEntry>
 {
-	private Func<ModLoadPhase> CurrentModLoadPhaseProvider { get; init; }
-	private Action<TEntry> InjectMethod { get; init; }
-	private List<TEntry> QueuedEntries { get; init; } = new();
+	private Func<ModLoadPhase> CurrentModLoadPhaseProvider { get; }
+	private Action<TEntry> InjectMethod { get; }
+	private List<TEntry> QueuedEntries { get; } = new();
 
 	public AfterDbInitManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Action<TEntry> injectMethod)
 	{

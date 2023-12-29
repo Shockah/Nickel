@@ -6,10 +6,10 @@ namespace Nickel;
 
 public sealed class ManagedEvent<TEventArgs>
 {
-	private OrderedList<ManagedEventHandler, double> Handlers { get; init; } = new();
-	private Action<EventHandler<TEventArgs>, IModManifest, Exception>? ExceptionHandler { get; init; }
+	private OrderedList<ManagedEventHandler, double> Handlers { get; } = new();
+	private Action<EventHandler<TEventArgs>, IModManifest, Exception>? ExceptionHandler { get; }
 	private bool IsRaising { get; set; } = false;
-	private List<(ManagedEventsModification, ManagedEventHandler)> AwaitingModifications { get; init; } = new();
+	private List<(ManagedEventsModification, ManagedEventHandler)> AwaitingModifications { get; } = new();
 
 	public ManagedEvent(Action<EventHandler<TEventArgs>, IModManifest, Exception>? exceptionHandler)
 	{

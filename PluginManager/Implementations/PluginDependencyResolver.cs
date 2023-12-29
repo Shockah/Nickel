@@ -8,7 +8,7 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 	where TPluginManifest : notnull
 	where TVersion : struct, IEquatable<TVersion>, IComparable<TVersion>
 {
-	private Func<TPluginManifest, RequiredManifestData> RequiredManifestDataProvider { get; init; }
+	private Func<TPluginManifest, RequiredManifestData> RequiredManifestDataProvider { get; }
 
 	public PluginDependencyResolver(Func<TPluginManifest, RequiredManifestData> requiredManifestDataProvider)
 	{

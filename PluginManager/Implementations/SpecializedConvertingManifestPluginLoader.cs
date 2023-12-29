@@ -9,8 +9,8 @@ namespace Nanoray.PluginManager;
 public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPluginManifest, TPluginManifest, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 	where TSpecializedPluginManifest : TPluginManifest
 {
-	private IPluginLoader<TSpecializedPluginManifest, TPlugin> PluginLoader { get; init; }
-	private Func<TPluginManifest, TSpecializedPluginManifest?> Converter { get; init; }
+	private IPluginLoader<TSpecializedPluginManifest, TPlugin> PluginLoader { get; }
+	private Func<TPluginManifest, TSpecializedPluginManifest?> Converter { get; }
 
 	public SpecializedConvertingManifestPluginLoader(
 		IPluginLoader<TSpecializedPluginManifest, TPlugin> pluginLoader,
@@ -44,12 +44,12 @@ public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPlugin
 
 	private sealed class SpecializedPluginPackage : IPluginPackage<TSpecializedPluginManifest>
 	{
-		public TSpecializedPluginManifest Manifest { get; init; }
+		public TSpecializedPluginManifest Manifest { get; }
 
 		public IReadOnlySet<string> DataEntries
 			=> this.Package.DataEntries;
 
-		private IPluginPackage<TPluginManifest> Package { get; init; }
+		private IPluginPackage<TPluginManifest> Package { get; }
 
 		public SpecializedPluginPackage(IPluginPackage<TPluginManifest> package, TSpecializedPluginManifest manifest)
 		{
@@ -63,7 +63,7 @@ public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPlugin
 
 	private sealed class SpecializedDirectoryPluginPackage : IDirectoryPluginPackage<TSpecializedPluginManifest>
 	{
-		public TSpecializedPluginManifest Manifest { get; init; }
+		public TSpecializedPluginManifest Manifest { get; }
 
 		public DirectoryInfo Directory
 			=> this.Package.Directory;
@@ -71,7 +71,7 @@ public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPlugin
 		public IReadOnlySet<string> DataEntries
 			=> this.Package.DataEntries;
 
-		private IDirectoryPluginPackage<TPluginManifest> Package { get; init; }
+		private IDirectoryPluginPackage<TPluginManifest> Package { get; }
 
 		public SpecializedDirectoryPluginPackage(IDirectoryPluginPackage<TPluginManifest> package, TSpecializedPluginManifest manifest)
 		{

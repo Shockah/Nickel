@@ -6,7 +6,7 @@ namespace Nickel;
 
 internal sealed class CompoundCobaltCoreResolver : ICobaltCoreResolver
 {
-	private IReadOnlyList<ICobaltCoreResolver> Resolvers { get; init; }
+	private IReadOnlyList<ICobaltCoreResolver> Resolvers { get; }
 
 	public CompoundCobaltCoreResolver(IReadOnlyList<ICobaltCoreResolver> resolvers)
 	{

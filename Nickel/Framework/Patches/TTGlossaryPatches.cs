@@ -8,7 +8,7 @@ namespace Nickel;
 
 internal static class TTGlossaryPatches
 {
-	internal static WeakEventSource<TryGetIconEventArgs> OnTryGetIcon { get; private set; } = new();
+	internal static WeakEventSource<TryGetIconEventArgs> OnTryGetIcon { get; } = new();
 
 	private static readonly Stack<TTGlossary> GlossaryStack = new();
 

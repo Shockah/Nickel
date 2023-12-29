@@ -9,15 +9,15 @@ namespace Nickel;
 
 internal sealed class LegacyDatabase
 {
-	private Func<ContentManager> ContentManagerProvider { get; init; }
+	private Func<ContentManager> ContentManagerProvider { get; }
 
-	private Dictionary<string, ExternalSprite> GlobalNameToSprite { get; init; } = new();
-	private Dictionary<string, ExternalDeck> GlobalNameToDeck { get; init; } = new();
-	private Dictionary<string, ExternalStatus> GlobalNameToStatus { get; init; } = new();
-	private Dictionary<string, ExternalCard> GlobalNameToCard { get; init; } = new();
-	private Dictionary<string, ExternalArtifact> GlobalNameToArtifact { get; init; } = new();
-	private Dictionary<string, ExternalAnimation> GlobalNameToAnimation { get; init; } = new();
-	private Dictionary<string, ExternalCharacter> GlobalNameToCharacter { get; init; } = new();
+	private Dictionary<string, ExternalSprite> GlobalNameToSprite { get; } = new();
+	private Dictionary<string, ExternalDeck> GlobalNameToDeck { get; } = new();
+	private Dictionary<string, ExternalStatus> GlobalNameToStatus { get; } = new();
+	private Dictionary<string, ExternalCard> GlobalNameToCard { get; } = new();
+	private Dictionary<string, ExternalArtifact> GlobalNameToArtifact { get; } = new();
+	private Dictionary<string, ExternalAnimation> GlobalNameToAnimation { get; } = new();
+	private Dictionary<string, ExternalCharacter> GlobalNameToCharacter { get; } = new();
 
 	private Dictionary<string, ICharacterEntry> GlobalNameToCharacterEntry { get; init; } = new();
 
