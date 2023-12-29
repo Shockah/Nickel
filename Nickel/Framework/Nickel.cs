@@ -184,10 +184,7 @@ internal sealed class Nickel
 	{
 		var directoryInfo = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "ModLibrary"));
 		if (!directoryInfo.Exists)
-		{
 			directoryInfo.Create();
-		}
-
 		return directoryInfo;
 	}
 }
