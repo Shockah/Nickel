@@ -59,7 +59,7 @@
     <Reference Include="CobaltCore" HintPath="$(GameDllPath)" Private="False" />
   </ItemGroup>
 
-  <Target Name="ExtractGameDll" BeforeTargets="Build">
+  <Target Name="ExtractGameDll" BeforeTargets="BeforeBuild">
     <Message Importance="high" Text="Nickel: _SteamLibraryPath = '$(_SteamLibraryPath)'" />
     <Message Importance="high" Text="Nickel: _GamePath = '$(_GamePath)'" />
     <Message Importance="high" Text="Nickel: GameExePath = '$(GameExePath)'" />
