@@ -2,5 +2,5 @@ namespace Nickel;
 
 public interface IModCards
 {
-    ICardEntry RegisterCard(string name, CardConfiguration configuration);
+	ICardEntry RegisterCard(string name, CardConfiguration configuration);
 }

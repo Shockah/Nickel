@@ -5,21 +5,21 @@ namespace Nickel;
 
 public interface IModManifest
 {
-    string UniqueName { get; }
+	string UniqueName { get; }
 
-    SemanticVersion Version { get; }
+	SemanticVersion Version { get; }
 
-    SemanticVersion RequiredApiVersion { get; }
+	SemanticVersion RequiredApiVersion { get; }
 
-    IReadOnlySet<ModDependency> Dependencies { get; }
+	IReadOnlySet<ModDependency> Dependencies { get; }
 
-    string? DisplayName { get; }
+	string? DisplayName { get; }
 
-    string? Author { get; }
+	string? Author { get; }
 
-    string ModType { get; }
+	string ModType { get; }
 
-    IReadOnlyList<ISubmodEntry> Submods { get; }
+	IReadOnlyList<ISubmodEntry> Submods { get; }
 
-    IReadOnlyDictionary<string, object> ExtensionData { get; }
+	IReadOnlyDictionary<string, object> ExtensionData { get; }
 }

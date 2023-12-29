@@ -2,5 +2,5 @@ namespace Nickel;
 
 public enum ModLoadPhase
 {
-    BeforeGameAssembly, AfterGameAssembly, AfterDbInit
+	BeforeGameAssembly, AfterGameAssembly, AfterDbInit
 }

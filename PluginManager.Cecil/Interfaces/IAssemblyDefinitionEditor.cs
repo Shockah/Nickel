@@ -4,5 +4,5 @@ namespace Nanoray.PluginManager.Cecil;
 
 public interface IAssemblyDefinitionEditor
 {
-    void EditAssemblyDefinition(AssemblyDefinition definition);
+	void EditAssemblyDefinition(AssemblyDefinition definition);
 }

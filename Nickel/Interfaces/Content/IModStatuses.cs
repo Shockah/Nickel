@@ -2,5 +2,5 @@ namespace Nickel;
 
 public interface IModStatuses
 {
-    IStatusEntry RegisterStatus(string name, StatusConfiguration configuration);
+	IStatusEntry RegisterStatus(string name, StatusConfiguration configuration);
 }

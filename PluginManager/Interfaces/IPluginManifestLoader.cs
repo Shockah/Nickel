@@ -6,5 +6,5 @@ namespace Nanoray.PluginManager;
 
 public interface IPluginManifestLoader<TPluginManifest>
 {
-    OneOf<TPluginManifest, Error<string>> LoadPluginManifest(Stream stream);
+	OneOf<TPluginManifest, Error<string>> LoadPluginManifest(Stream stream);
 }

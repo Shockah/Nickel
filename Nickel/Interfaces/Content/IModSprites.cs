@@ -5,5 +5,5 @@ namespace Nickel;
 
 public interface IModSprites
 {
-    ISpriteEntry RegisterSprite(string name, Func<Stream> streamProvider);
+	ISpriteEntry RegisterSprite(string name, Func<Stream> streamProvider);
 }
