@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -9,6 +11,7 @@ public sealed class ZipPluginPackage<TPluginManifest> : IPluginPackage<TPluginMa
 {
 	public TPluginManifest Manifest { get; init; }
 	public IReadOnlySet<string> DataEntries { get; init; }
+	private IReadOnlyDictionary<string, string> DataMapping { get; }
 
 	private ZipArchive Archive { get; init; }
 
@@ -17,11 +20,19 @@ public sealed class ZipPluginPackage<TPluginManifest> : IPluginPackage<TPluginMa
 		this.Manifest = manifest;
 		this.Archive = archive;
 
-		this.DataEntries = archive.Entries
-			.Select(e => e.Name)
-			.ToHashSet();
+		this.DataMapping = archive.Entries
+			.Select(e => new KeyValuePair<string, string>(e.FullName.Replace('\\', '/'), e.FullName))
+			.ToImmutableDictionary();
+
+		this.DataEntries = this.DataMapping.Keys.ToHashSet();
 	}
 
-	public Stream GetDataStream(string entry)
-		=> this.Archive.GetEntry(entry)!.Open();
+	public Stream GetDataStream(string entry) {
+		if(!this.DataMapping.TryGetValue(entry, out string? realName)) {
+			/* TODO: Exception type! */
+			throw new ArgumentException("Entry does not exist.", nameof(entry));
+		}
+
+		return this.Archive.GetEntry(realName)!.Open();
+	}
 }
