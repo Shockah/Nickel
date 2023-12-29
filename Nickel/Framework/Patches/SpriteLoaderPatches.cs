@@ -8,7 +8,7 @@ namespace Nickel;
 
 internal static class SpriteLoaderPatches
 {
-	internal static WeakEventSource<GetTextureEventArgs> OnGetTexture { get; private set; } = new();
+	internal static WeakEventSource<GetTextureEventArgs> OnGetTexture { get; } = new();
 
 	internal static void Apply(Harmony harmony, ILogger logger)
 	{

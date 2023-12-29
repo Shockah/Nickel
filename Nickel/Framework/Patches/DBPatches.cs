@@ -8,7 +8,7 @@ namespace Nickel;
 
 internal static class DBPatches
 {
-	internal static WeakEventSource<LoadStringsForLocaleEventArgs> OnLoadStringsForLocale { get; private set; } = new();
+	internal static WeakEventSource<LoadStringsForLocaleEventArgs> OnLoadStringsForLocale { get; } = new();
 
 	internal static void Apply(Harmony harmony, ILogger logger)
 	{

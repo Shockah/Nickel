@@ -14,9 +14,9 @@ public static class NickelConstants
 		return version;
 	});
 
-	public static string Name { get; private set; } = "Nickel";
+	public static string Name { get; } = "Nickel";
 	public static SemanticVersion Version => LazyVersion.Value;
-	public static string IntroMessage { get; private set; } = $"{Name} {Version} -- A modding API / modloader for the game Cobalt Core.";
-	public static string AssemblyModType { get; private set; } = $"{typeof(Nickel).Namespace!}.Assembly";
-	public static string LegacyModType { get; private set; } = $"{typeof(Nickel).Namespace!}.Legacy";
+	public static string IntroMessage { get; } = $"{Name} {Version} -- A modding API / modloader for the game Cobalt Core.";
+	public static string AssemblyModType { get; } = $"{typeof(Nickel).Namespace!}.Assembly";
+	public static string LegacyModType { get; } = $"{typeof(Nickel).Namespace!}.Legacy";
 }
