@@ -7,15 +7,15 @@ namespace Nanoray.PluginManager;
 
 public sealed class JsonPluginManifestLoader<TPluginManifest> : IPluginManifestLoader<TPluginManifest>
 {
-    private JsonSerializer Serializer { get; init; } = new();
+	private JsonSerializer Serializer { get; init; } = new();
 
-    public OneOf<TPluginManifest, Error<string>> LoadPluginManifest(Stream stream)
-    {
-        using StreamReader reader = new(stream);
-        using JsonTextReader jsonReader = new(reader);
-        var manifest = Serializer.Deserialize<TPluginManifest>(jsonReader);
-        if (manifest is null)
-            return new Error<string>($"The provided data could not be deserialized as `{typeof(TPluginManifest)}`.");
-        return manifest;
-    }
+	public OneOf<TPluginManifest, Error<string>> LoadPluginManifest(Stream stream)
+	{
+		using StreamReader reader = new(stream);
+		using JsonTextReader jsonReader = new(reader);
+		var manifest = Serializer.Deserialize<TPluginManifest>(jsonReader);
+		if (manifest is null)
+			return new Error<string>($"The provided data could not be deserialized as `{typeof(TPluginManifest)}`.");
+		return manifest;
+	}
 }

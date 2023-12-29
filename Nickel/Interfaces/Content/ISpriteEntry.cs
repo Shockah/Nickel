@@ -4,7 +4,7 @@ namespace Nickel;
 
 public interface ISpriteEntry : IModOwned
 {
-    Spr Sprite { get; }
+	Spr Sprite { get; }
 
-    Texture2D ObtainTexture();
+	Texture2D ObtainTexture();
 }

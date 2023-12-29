@@ -7,36 +7,36 @@ namespace Nanoray.PluginManager.Implementations;
 
 public sealed class InnerPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-    private IPluginPackage<TPluginManifest> OuterPackage { get; init; }
-    private TPluginManifest InnerManifest { get; init; }
+	private IPluginPackage<TPluginManifest> OuterPackage { get; init; }
+	private TPluginManifest InnerManifest { get; init; }
 
-    public InnerPluginPackageResolver(IPluginPackage<TPluginManifest> outerPackage, TPluginManifest innerManifest)
-    {
-        this.OuterPackage = outerPackage;
-        this.InnerManifest = innerManifest;
-    }
+	public InnerPluginPackageResolver(IPluginPackage<TPluginManifest> outerPackage, TPluginManifest innerManifest)
+	{
+		this.OuterPackage = outerPackage;
+		this.InnerManifest = innerManifest;
+	}
 
-    public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
-    {
-        yield return new InnerPluginPackage(this.OuterPackage, this.InnerManifest);
-    }
+	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
+	{
+		yield return new InnerPluginPackage(this.OuterPackage, this.InnerManifest);
+	}
 
-    private sealed class InnerPluginPackage : IPluginPackage<TPluginManifest>
-    {
-        public TPluginManifest Manifest { get; init; }
+	private sealed class InnerPluginPackage : IPluginPackage<TPluginManifest>
+	{
+		public TPluginManifest Manifest { get; init; }
 
-        public IReadOnlySet<string> DataEntries
-            => this.OuterPackage.DataEntries;
+		public IReadOnlySet<string> DataEntries
+			=> this.OuterPackage.DataEntries;
 
-        private IPluginPackage<TPluginManifest> OuterPackage { get; init; }
+		private IPluginPackage<TPluginManifest> OuterPackage { get; init; }
 
-        public InnerPluginPackage(IPluginPackage<TPluginManifest> outerPackage, TPluginManifest manifest)
-        {
-            this.OuterPackage = outerPackage;
-            this.Manifest = manifest;
-        }
+		public InnerPluginPackage(IPluginPackage<TPluginManifest> outerPackage, TPluginManifest manifest)
+		{
+			this.OuterPackage = outerPackage;
+			this.Manifest = manifest;
+		}
 
-        public Stream GetDataStream(string entry)
-            => this.OuterPackage.GetDataStream(entry);
-    }
+		public Stream GetDataStream(string entry)
+			=> this.OuterPackage.GetDataStream(entry);
+	}
 }

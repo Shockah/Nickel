@@ -4,9 +4,9 @@ namespace Nickel;
 
 public interface ISubmodEntry
 {
-    IModManifest Manifest { get; }
+	IModManifest Manifest { get; }
 
-    bool IsOptional { get; }
+	bool IsOptional { get; }
 
-    IReadOnlyDictionary<string, object> ExtensionData { get; }
+	IReadOnlyDictionary<string, object> ExtensionData { get; }
 }

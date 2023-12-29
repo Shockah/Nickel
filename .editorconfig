@@ -6,7 +6,7 @@ root = true
 ## documentation: https://editorconfig.org
 ##########
 [*]
-indent_style = space
+indent_style = tab
 indent_size = 4
 insert_final_newline = true
 trim_trailing_whitespace = true
@@ -67,7 +67,7 @@ csharp_style_expression_bodied_accessors = true:suggestion
 csharp_style_inlined_variable_declaration = true:warning
 
 # avoid superfluous braces
-csharp_prefer_braces = false:hint
+csharp_prefer_braces = false:suggestion
 
 # IDE0160: Convert to block scoped namespace
 csharp_style_namespace_declarations = file_scoped

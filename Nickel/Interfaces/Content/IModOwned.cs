@@ -2,6 +2,6 @@ namespace Nickel;
 
 public interface IModOwned
 {
-    IModManifest ModOwner { get; }
-    string UniqueName { get; }
+	IModManifest ModOwner { get; }
+	string UniqueName { get; }
 }
