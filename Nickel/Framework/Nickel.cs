@@ -93,7 +93,7 @@ internal sealed class Nickel
         Harmony harmony = new(NickelConstants.Name);
         HarmonyPatches.Apply(harmony, logger);
 
-        var modsDirectory = launchArguments.ModsPath ?? new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "ModLibrary"));
+        var modsDirectory = launchArguments.ModsPath ?? GetOrCreateDefaultModLibraryDirectory();
         logger.LogInformation("ModsPath: {Path}", modsDirectory.FullName);
 
         ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor = new();
@@ -178,5 +178,16 @@ internal sealed class Nickel
     private void OnLoadStringsForLocale(object? sender, LoadStringsForLocaleEventArgs e)
     {
         this.ModManager.LegacyDatabase?.InjectLocalizations(e.Locale, e.Localizations);
+    }
+
+    private static DirectoryInfo GetOrCreateDefaultModLibraryDirectory()
+    {
+        var directoryInfo = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "ModLibrary"));
+        if (!directoryInfo.Exists)
+        {
+            directoryInfo.Create();
+        }
+
+        return directoryInfo;
     }
 }
