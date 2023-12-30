@@ -14,7 +14,10 @@ internal sealed record ContentManager(
 	PartManager Parts
 )
 {
-	public ContentManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider) : this(
+	public ContentManager(
+		Func<ModLoadPhase> currentModLoadPhaseProvider,
+		Func<IModManifest, ILogger> loggerProvider
+	) : this(
 		new SpriteManager(),
 		new DeckManager(currentModLoadPhaseProvider),
 		new StatusManager(currentModLoadPhaseProvider),
@@ -24,7 +27,8 @@ internal sealed record ContentManager(
 		new ShipManager(currentModLoadPhaseProvider),
 		new PartManager(currentModLoadPhaseProvider)
 	)
-	{ }
+	{
+	}
 
 	internal void InjectQueuedEntries()
 	{

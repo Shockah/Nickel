@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\Configuration.props" />
-	<PropertyGroup>
-		<RootNamespace>Nickel.Launcher</RootNamespace>
-		<Version>0.1.0</Version>
-		<OutputType>Exe</OutputType>
-	</PropertyGroup>
-	<ItemGroup>
-		<ProjectReference Include="..\NickelCommon\NickelCommon.csproj" />
-		<ProjectReference Include="..\Nickel\Nickel.csproj" ReferenceOutputAssembly="false" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
-		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-	</ItemGroup>
+    <Import Project="..\Configuration.props"/>
+    <PropertyGroup>
+        <RootNamespace>Nickel.Launcher</RootNamespace>
+        <Version>0.1.0</Version>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\NickelCommon\NickelCommon.csproj"/>
+        <ProjectReference Include="..\Nickel\Nickel.csproj" ReferenceOutputAssembly="false"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0"/>
+        <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1"/>
+    </ItemGroup>
 </Project>

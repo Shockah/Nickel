@@ -45,10 +45,8 @@ internal sealed class SpriteManager
 
 	private void OnGetTexture(object? sender, SpriteLoaderPatches.GetTextureEventArgs e)
 	{
-		if (e.Texture is not null)
-			return;
-		if (!this.SpriteToEntry.TryGetValue(e.Sprite, out var entry))
-			return;
+		if (e.Texture is not null) return;
+		if (!this.SpriteToEntry.TryGetValue(e.Sprite, out var entry)) return;
 		e.Texture = entry.ObtainTexture();
 	}
 
@@ -71,10 +69,8 @@ internal sealed class SpriteManager
 
 		public Texture2D ObtainTexture()
 		{
-			if (this.TextureStorage is { } texture)
-				return texture;
-			if (this.StreamProvider is not { } streamProvider)
-				throw new InvalidOperationException();
+			if (this.TextureStorage is { } texture) return texture;
+			if (this.StreamProvider is not { } streamProvider) throw new InvalidOperationException();
 
 			texture = Texture2D.FromStream(MG.inst.GraphicsDevice, streamProvider());
 			this.TextureStorage = texture;
