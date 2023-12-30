@@ -1,6 +1,6 @@
-using System.Linq;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace Nickel;
 

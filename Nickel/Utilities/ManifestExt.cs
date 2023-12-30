@@ -10,7 +10,7 @@ public static partial class ManifestExt
 		bool TryParseEntryPointAssemblyFileName([MaybeNullWhen(false)] out string result)
 		{
 			result = default;
-			if (!manifest.ExtensionData.TryGetValue(nameof(IAssemblyModManifest.EntryPointAssemblyFileName), out object? raw))
+			if (!manifest.ExtensionData.TryGetValue(nameof(IAssemblyModManifest.EntryPointAssemblyFileName), out var raw))
 				return false;
 			if (raw is not string value)
 				return false;
@@ -21,7 +21,7 @@ public static partial class ManifestExt
 		bool TryParseLoadPhase([MaybeNullWhen(false)] out ModLoadPhase result)
 		{
 			result = ModLoadPhase.AfterGameAssembly;
-			if (!manifest.ExtensionData.TryGetValue(nameof(IAssemblyModManifest.LoadPhase), out object? raw))
+			if (!manifest.ExtensionData.TryGetValue(nameof(IAssemblyModManifest.LoadPhase), out var raw))
 				return true;
 			if (raw is not string stringValue)
 				return false;
@@ -31,7 +31,7 @@ public static partial class ManifestExt
 			return true;
 		}
 
-		if (!TryParseEntryPointAssemblyFileName(out string? entryPointAssemblyFileName))
+		if (!TryParseEntryPointAssemblyFileName(out var entryPointAssemblyFileName))
 			return null;
 		if (!TryParseLoadPhase(out var loadPhase))
 			return null;

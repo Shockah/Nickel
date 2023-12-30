@@ -1,8 +1,8 @@
+using OneOf;
+using OneOf.Types;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using OneOf;
-using OneOf.Types;
 
 namespace Nanoray.PluginManager;
 

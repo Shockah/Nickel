@@ -1,9 +1,9 @@
-using System;
-using System.IO;
-using System.IO.Pipes;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Nickel.Common;
+using System;
+using System.IO;
+using System.IO.Pipes;
 
 namespace Nickel.Framework.Utilities;
 
@@ -20,7 +20,7 @@ internal sealed class NamedPipeClientLoggerProvider : ILoggerProvider
 	public NamedPipeClientLoggerProvider(string pipeName)
 	{
 		this.PipeName = pipeName;
-		Start(5000);
+		this.Start(5000);
 	}
 
 	private void Start(int timeout)
@@ -45,11 +45,11 @@ internal sealed class NamedPipeClientLoggerProvider : ILoggerProvider
 	{
 		if (!this.IsClientRunning)
 			return;
-		IsClientRunning = false;
-		JsonWriter?.Close();
-		JsonWriter = null;
-		Client?.Close();
-		Client = null;
+		this.IsClientRunning = false;
+		this.JsonWriter?.Close();
+		this.JsonWriter = null;
+		this.Client?.Close();
+		this.Client = null;
 	}
 
 	public ILogger CreateLogger(string categoryName)

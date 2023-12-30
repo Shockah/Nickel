@@ -1,8 +1,8 @@
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Microsoft.Extensions.Logging;
 
 namespace Nickel;
 
@@ -11,8 +11,8 @@ internal sealed class CharacterManager
 	private Func<IModManifest, ILogger> LoggerProvider { get; }
 	private AfterDbInitManager<AnimationEntry> AnimationManager { get; }
 	private AfterDbInitManager<CharacterEntry> CharManager { get; }
-	private Dictionary<string, AnimationEntry> UniqueNameToAnimationEntry { get; } = new();
-	private Dictionary<string, CharacterEntry> UniqueNameToCharacterEntry { get; } = new();
+	private Dictionary<string, AnimationEntry> UniqueNameToAnimationEntry { get; } = [];
+	private Dictionary<string, CharacterEntry> UniqueNameToCharacterEntry { get; } = [];
 
 	public CharacterManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider)
 	{
@@ -77,7 +77,7 @@ internal sealed class CharacterManager
 	{
 		if (!DB.charAnimations.TryGetValue(entry.Configuration.Deck.Key(), out var characterAnimations))
 		{
-			characterAnimations = new();
+			characterAnimations = [];
 			DB.charAnimations[entry.Configuration.Deck.Key()] = characterAnimations;
 		}
 		characterAnimations[entry.Configuration.LoopTag] = entry.Configuration.Frames.ToList();
@@ -92,7 +92,7 @@ internal sealed class CharacterManager
 				this.LoggerProvider(entry.ModOwner).LogError($"Could not inject character {{Character}}: `{nameof(CharacterConfiguration.NeutralAnimation)}` is not tagged `neutral`.", entry.UniqueName);
 				return;
 			}
-			RegisterCharacterAnimation(entry.ModOwner, $"{entry.UniqueName}::neutral", neutralAnimationConfiguration);
+			this.RegisterCharacterAnimation(entry.ModOwner, $"{entry.UniqueName}::neutral", neutralAnimationConfiguration);
 		}
 		if (entry.Configuration.MiniAnimation is { } miniAnimationConfiguration)
 		{
@@ -101,7 +101,7 @@ internal sealed class CharacterManager
 				this.LoggerProvider(entry.ModOwner).LogError($"Could not inject character {{Character}}: `{nameof(CharacterConfiguration.MiniAnimation)}` is not tagged `mini`.", entry.UniqueName);
 				return;
 			}
-			RegisterCharacterAnimation(entry.ModOwner, $"{entry.UniqueName}::mini", miniAnimationConfiguration);
+			this.RegisterCharacterAnimation(entry.ModOwner, $"{entry.UniqueName}::mini", miniAnimationConfiguration);
 		}
 
 		if (entry.Configuration.NeutralAnimation is null || entry.Configuration.MiniAnimation is null)

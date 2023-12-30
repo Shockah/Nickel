@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.IO;
 using HarmonyLib;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -12,6 +7,11 @@ using Microsoft.Extensions.Logging.Console;
 using Nanoray.PluginManager.Cecil;
 using Nickel.Common;
 using Nickel.Framework.Utilities;
+using System;
+using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+using System.IO;
 
 namespace Nickel;
 
@@ -132,18 +132,18 @@ internal sealed class Nickel
 		StoryVarsPatches.Apply(harmony, logger);
 		TTGlossaryPatches.Apply(harmony, logger);
 
-		bool debug = launchArguments.Debug ?? true;
+		var debug = launchArguments.Debug ?? true;
 		logger.LogInformation("Debug: {Value}", debug);
 
 		var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? handlerResult.WorkingDirectory;
 		logger.LogInformation("GameWorkingDirectory: {Path}", gameWorkingDirectory.FullName);
 
-		string savePath = launchArguments.SavePath?.FullName ?? Path.Combine(Directory.GetCurrentDirectory(), "ModSaves");
+		var savePath = launchArguments.SavePath?.FullName ?? Path.Combine(Directory.GetCurrentDirectory(), "ModSaves");
 		logger.LogInformation("SavePath: {Path}", savePath);
 
 		instance.ModManager.LoadMods(ModLoadPhase.AfterGameAssembly);
 
-		string oldWorkingDirectory = Directory.GetCurrentDirectory();
+		var oldWorkingDirectory = Directory.GetCurrentDirectory();
 		Directory.SetCurrentDirectory(gameWorkingDirectory.FullName);
 
 		logger.LogInformation("Starting the game...");
@@ -156,7 +156,7 @@ internal sealed class Nickel
 				gameArguments.Add("--debug");
 			gameArguments.AddRange(launchArguments.UnmatchedArguments);
 
-			object? result = handlerResult.EntryPoint.Invoke(null, new object[] { gameArguments.ToArray() });
+			var result = handlerResult.EntryPoint.Invoke(null, new object[] { gameArguments.ToArray() });
 			if (result is not null)
 				logger.LogInformation("Cobalt Core closed with result: {Result}", result);
 		}

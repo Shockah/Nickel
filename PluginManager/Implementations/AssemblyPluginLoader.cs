@@ -1,9 +1,9 @@
+using OneOf;
+using OneOf.Types;
 using System;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using OneOf;
-using OneOf.Types;
 
 namespace Nanoray.PluginManager;
 
@@ -60,8 +60,8 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPlugin> : IPluginLoad
 			{
 				var constructorParameters = c.GetParameters();
 				var injectedParameters = new InjectedParameter?[constructorParameters.Length];
-				for (int i = 0; i < constructorParameters.Length; i++)
-					injectedParameters[i] = parameterInjector.TryToInjectParameter(package, constructorParameters[i].ParameterType, out object? toInject) ? new InjectedParameter { Value = toInject } : null;
+				for (var i = 0; i < constructorParameters.Length; i++)
+					injectedParameters[i] = parameterInjector.TryToInjectParameter(package, constructorParameters[i].ParameterType, out var toInject) ? new InjectedParameter { Value = toInject } : null;
 				return new PotentialConstructor { Constructor = c, Parameters = injectedParameters };
 			})
 			.OrderByDescending(c => c.Parameters.Length)
@@ -71,7 +71,7 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPlugin> : IPluginLoad
 			return new Error<string>($"The type {pluginType} in assembly {assembly} in package {package} has a constructor with parameters which could not be injected: {string.Join(", ", potentialConstructors.First().Constructor.GetParameters().Select(p => p.Name))}.");
 		var constructor = potentialConstructors.Where(c => c.IsValid).First();
 
-		object? rawPlugin = constructor.Constructor.Invoke(constructor.Parameters.Select(p => (object)p!.Value).ToArray());
+		var rawPlugin = constructor.Constructor.Invoke(constructor.Parameters.Select(p => (object)p!.Value).ToArray());
 		if (rawPlugin is not TPlugin plugin)
 			return new Error<string>($"Could not construct a {typeof(TPlugin)} subclass from the type {pluginType} in assembly {assembly} in package {package}.");
 		return plugin;

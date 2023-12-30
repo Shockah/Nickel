@@ -1,10 +1,10 @@
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Nickel.Common;
 using System;
 using System.IO;
 using System.IO.Pipes;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Nickel.Common;
 
 namespace Nickel.Launcher;
 
@@ -24,12 +24,12 @@ internal sealed class LogNamedPipeServer : IDisposable
 		this.PipeName = pipeName;
 		this.Logger = logger;
 		this.LoggingFunction = loggingFunction;
-		Start();
+		this.Start();
 	}
 
 	private void Start()
 	{
-		if (!IsServerRunning)
+		if (!this.IsServerRunning)
 			return;
 
 		Task.Factory.StartNew(() =>
@@ -37,7 +37,7 @@ internal sealed class LogNamedPipeServer : IDisposable
 			try
 			{
 				using var server = new NamedPipeServerStream(this.PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-				LastServer = server;
+				this.LastServer = server;
 				server.WaitForConnection();
 
 				using var streamReader = new StreamReader(server);
@@ -57,7 +57,7 @@ internal sealed class LogNamedPipeServer : IDisposable
 			}
 			catch (Exception ex)
 			{
-				if (IsServerRunning)
+				if (this.IsServerRunning)
 					this.Logger.LogError("There was a problem with a log named pipe {PipeName} connection: {Exception}", this.PipeName, ex);
 			}
 		});
@@ -68,8 +68,8 @@ internal sealed class LogNamedPipeServer : IDisposable
 		if (!this.IsServerRunning)
 			return;
 		this.Logger.LogDebug("Stopping log named pipe {PipeName}.", this.PipeName);
-		IsServerRunning = false;
-		LastServer?.Close();
-		LastServer = null;
+		this.IsServerRunning = false;
+		this.LastServer?.Close();
+		this.LastServer = null;
 	}
 }

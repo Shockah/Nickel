@@ -1,8 +1,8 @@
-using System.IO;
-using System.Linq;
 using OneOf;
 using OneOf.Types;
 using SingleFileExtractor.Core;
+using System.IO;
+using System.Linq;
 
 namespace Nickel;
 

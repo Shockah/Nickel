@@ -13,19 +13,19 @@ public readonly struct PluginDependencyChain<TPluginManifest> : IEquatable<Plugi
 		if (this.Values.Count != other.Values.Count)
 			return false;
 
-		for (int offset = 0; offset < this.Values.Count; offset++)
+		for (var offset = 0; offset < this.Values.Count; offset++)
 		{
-			for (int i = 0; i < this.Values.Count; i++)
+			for (var i = 0; i < this.Values.Count; i++)
 				if (!Equals(this.Values[i], other.Values[i + offset]))
 					goto outerLoopEnd;
 			return true;
-		outerLoopEnd:;
+			outerLoopEnd:;
 		}
 		return false;
 	}
 
 	public override bool Equals(object? obj)
-		=> obj is PluginDependencyChain<TPluginManifest> chain && Equals(chain);
+		=> obj is PluginDependencyChain<TPluginManifest> chain && this.Equals(chain);
 
 	public override int GetHashCode()
 		=> this.Values.Sum(m => m?.GetHashCode() ?? 0);

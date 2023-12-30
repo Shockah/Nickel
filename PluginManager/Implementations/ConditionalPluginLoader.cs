@@ -1,6 +1,6 @@
-using System;
 using OneOf;
 using OneOf.Types;
+using System;
 
 namespace Nanoray.PluginManager;
 

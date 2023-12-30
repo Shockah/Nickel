@@ -8,8 +8,8 @@ internal sealed class StatusManager
 {
 	private int NextId { get; set; } = 10_000_001;
 	private AfterDbInitManager<Entry> Manager { get; }
-	private Dictionary<Status, Entry> StatusToEntry { get; } = new();
-	private Dictionary<string, Entry> UniqueNameToEntry { get; } = new();
+	private Dictionary<Status, Entry> StatusToEntry { get; } = [];
+	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 
 	public StatusManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
@@ -20,10 +20,10 @@ internal sealed class StatusManager
 
 	private void OnTryGetIcon(object? sender, TTGlossaryPatches.TryGetIconEventArgs e)
 	{
-		string[] keySplit = e.Glossary.key.Split(".");
+		var keySplit = e.Glossary.key.Split(".");
 		if (keySplit.Length < 2)
 			return;
-		if (keySplit[0] != "status" || !int.TryParse(keySplit[1], out int statusId))
+		if (keySplit[0] != "status" || !int.TryParse(keySplit[1], out var statusId))
 			return;
 		if (!this.StatusToEntry.TryGetValue((Status)statusId, out var entry))
 			return;

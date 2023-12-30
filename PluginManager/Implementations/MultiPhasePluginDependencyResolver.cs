@@ -25,9 +25,9 @@ public sealed class MultiPhasePluginDependencyResolver<TPluginManifest, TVersion
 
 	public PluginDependencyResolveResult<TPluginManifest, TVersion> ResolveDependencies(IEnumerable<TPluginManifest> toResolve, IReadOnlySet<TPluginManifest>? resolved = null)
 	{
-		HashSet<TPluginManifest> runtimeResolved = resolved?.ToHashSet() ?? new HashSet<TPluginManifest>();
-		List<IReadOnlySet<TPluginManifest>> loadSteps = new();
-		Dictionary<TPluginManifest, PluginDependencyUnresolvableResult<TPluginManifest, TVersion>> unresolvable = new();
+		var runtimeResolved = resolved?.ToHashSet() ?? [];
+		List<IReadOnlySet<TPluginManifest>> loadSteps = [];
+		Dictionary<TPluginManifest, PluginDependencyUnresolvableResult<TPluginManifest, TVersion>> unresolvable = [];
 
 		foreach (var loadPhase in this.LoadPhases)
 		{

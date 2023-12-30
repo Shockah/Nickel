@@ -1,12 +1,12 @@
+using Mono.Cecil;
 using System.Collections.Generic;
 using System.IO;
-using Mono.Cecil;
 
 namespace Nanoray.PluginManager.Cecil;
 
 public sealed class ExtendableAssemblyDefinitionEditor : IAssemblyEditor
 {
-	private List<IAssemblyDefinitionEditor> DefinitionEditors { get; } = new();
+	private List<IAssemblyDefinitionEditor> DefinitionEditors { get; } = [];
 
 	public Stream EditAssemblyStream(string name, Stream assemblyStream)
 	{

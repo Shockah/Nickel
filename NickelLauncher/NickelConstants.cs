@@ -1,6 +1,6 @@
+using Nickel.Common;
 using System;
 using System.Reflection;
-using Nickel.Common;
 
 namespace Nickel.Launcher;
 

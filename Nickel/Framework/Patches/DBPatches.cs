@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
 using WeakEvent;
 
 namespace Nickel;
@@ -20,7 +20,7 @@ internal static class DBPatches
 
 	private static void LoadStringsForLocale_Postfix(string locale, ref Dictionary<string, string>? __result)
 	{
-		__result ??= new();
+		__result ??= [];
 		OnLoadStringsForLocale.Raise(null, new LoadStringsForLocaleEventArgs { Locale = locale, Localizations = __result });
 	}
 }

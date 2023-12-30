@@ -8,8 +8,8 @@ namespace Nickel;
 internal sealed class ArtifactManager
 {
 	private AfterDbInitManager<Entry> Manager { get; }
-	private Dictionary<Type, Entry> ArtifactTypeToEntry { get; } = new();
-	private Dictionary<string, Entry> UniqueNameToEntry { get; } = new();
+	private Dictionary<Type, Entry> ArtifactTypeToEntry { get; } = [];
+	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 
 	public ArtifactManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
@@ -44,7 +44,7 @@ internal sealed class ArtifactManager
 
 	private static void Inject(Entry entry)
 	{
-		string key = entry.Configuration.ArtifactType.Name; // TODO: change this when Artifact.Key gets patched
+		var key = entry.Configuration.ArtifactType.Name; // TODO: change this when Artifact.Key gets patched
 		DB.artifacts[key] = entry.Configuration.ArtifactType;
 		DB.artifactMetas[key] = entry.Configuration.Meta;
 		if (entry.Configuration.Sprite is { } sprite)

@@ -1,9 +1,9 @@
-using System;
-using System.IO;
-using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
+using System;
+using System.IO;
+using System.Text;
 
 namespace Nickel.Common;
 

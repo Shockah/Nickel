@@ -1,11 +1,11 @@
+using Nanoray.Pintail;
+using Nickel.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using Nanoray.Pintail;
-using Nickel.Common;
 
 namespace Nickel;
 
@@ -17,7 +17,7 @@ internal sealed class ModRegistry : IModRegistry
 
 	private IModManifest ModManifest { get; }
 	internal IReadOnlyDictionary<string, Mod> ModUniqueNameToInstance { get; }
-	private Dictionary<string, object?> ApiCache { get; } = new();
+	private Dictionary<string, object?> ApiCache { get; } = [];
 	private IProxyManager<string> ProxyManager { get; }
 
 	public ModRegistry(IModManifest modManifest, IReadOnlyDictionary<string, Mod> modUniqueNameToInstance)
@@ -25,8 +25,8 @@ internal sealed class ModRegistry : IModRegistry
 		this.ModManifest = modManifest;
 		this.ModUniqueNameToInstance = modUniqueNameToInstance;
 
-		AssemblyBuilder assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"{GetType().Namespace}.Proxies, Version={this.GetType().Assembly.GetName().Version}, Culture=neutral"), AssemblyBuilderAccess.Run);
-		ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule($"{GetType().Namespace}.Proxies");
+		var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"{this.GetType().Namespace}.Proxies, Version={this.GetType().Assembly.GetName().Version}, Culture=neutral"), AssemblyBuilderAccess.Run);
+		var moduleBuilder = assemblyBuilder.DefineDynamicModule($"{this.GetType().Namespace}.Proxies");
 		this.ProxyManager = new ProxyManager<string>(moduleBuilder, new ProxyManagerConfiguration<string>(
 			proxyPrepareBehavior: ProxyManagerProxyPrepareBehavior.Eager,
 			accessLevelChecking: AccessLevelChecking.DisabledButOnlyAllowPublicMembers
@@ -48,7 +48,7 @@ internal sealed class ModRegistry : IModRegistry
 		if (minimumVersion is not null && minimumVersion > mod.Package.Manifest.Version)
 			return null;
 
-		if (!this.ApiCache.TryGetValue(uniqueName, out object? apiObject))
+		if (!this.ApiCache.TryGetValue(uniqueName, out var apiObject))
 		{
 			apiObject = mod.GetApi(this.ModManifest);
 			this.ApiCache[uniqueName] = apiObject;

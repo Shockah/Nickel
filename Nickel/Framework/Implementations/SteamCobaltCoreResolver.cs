@@ -1,10 +1,10 @@
+using Microsoft.Win32;
+using OneOf;
+using OneOf.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.Win32;
-using OneOf;
-using OneOf.Types;
 
 namespace Nickel;
 
@@ -19,7 +19,7 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 
 	public OneOf<CobaltCoreResolveResult, Error<string>> ResolveCobaltCore()
 	{
-		List<string> potentialPaths = new();
+		List<string> potentialPaths = [];
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 		{
 			potentialPaths.AddRange(new string[]
@@ -49,7 +49,7 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 			});
 		}
 
-		foreach (string potentialPath in potentialPaths)
+		foreach (var potentialPath in potentialPaths)
 		{
 			DirectoryInfo directory = new(potentialPath);
 			if (!directory.Exists)
