@@ -1,15 +1,17 @@
 # Remove the line below if you want to inherit .editorconfig settings from higher directories
 root = true
 
+# all files
+[*]
+charset = utf-8
+indent_size = 4
+indent_style = tab
+tab_width = 4
+
 # C# files
 [*.{cs,vb}]
 
 #### Core EditorConfig Options ####
-
-# Indentation and spacing
-indent_size = 4
-indent_style = tab
-tab_width = 4
 
 # New line preferences
 insert_final_newline = true
