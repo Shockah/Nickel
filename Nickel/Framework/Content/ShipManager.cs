@@ -12,6 +12,16 @@ internal sealed class ShipManager
 	public ShipManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		StoryVarsPatches.OnGetUnlockedShips.Subscribe(this.GetUnlockedShips);
+	}
+
+	private void GetUnlockedShips(object? sender, HashSet<string> unlockedShips)
+	{
+		foreach (var (uniqueName, entry) in this.UniqueNameToEntry)
+		{
+			if (entry.Configuration.StartLocked) continue;
+			unlockedShips.Add(uniqueName);
+		}
 	}
 
 	internal void InjectQueuedEntries()
@@ -35,11 +45,9 @@ internal sealed class ShipManager
 			entry = typedEntry;
 			return true;
 		}
-		else
-		{
-			entry = default;
-			return false;
-		}
+
+		entry = default;
+		return false;
 	}
 
 	private static void Inject(Entry entry) => StarterShip.ships[entry.UniqueName] = entry.Configuration.Ship;
