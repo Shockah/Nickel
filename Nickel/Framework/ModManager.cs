@@ -274,7 +274,8 @@ internal sealed class ModManager
 			ModArtifacts modArtifacts = new(manifest, () => this.ContentManager!.Artifacts);
 			ModCharacters modCharacters = new(manifest, () => this.ContentManager!.Characters);
 			ModStarterShips modStarterShips = new(manifest, () => this.ContentManager!.StarterShips);
-			ModContent modContent = new(modSprites, modDecks, modStatuses, modCards, modArtifacts, modCharacters, modStarterShips);
+			ModParts modParts = new(manifest, () => this.ContentManager!.Parts);
+			ModContent modContent = new(modSprites, modDecks, modStatuses, modCards, modArtifacts, modCharacters, modStarterShips, modParts);
 			helper = new ModHelper(modRegistry, modEvents, modContent, () => this.CurrentModLoadPhase);
 			this.UniqueNameToHelper[manifest.UniqueName] = helper;
 		}

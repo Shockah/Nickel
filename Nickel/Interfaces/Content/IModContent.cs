@@ -9,4 +9,5 @@ public interface IModContent
 	IModArtifacts Artifacts { get; }
 	IModCharacters Characters { get; }
 	IModStarterShips StarterShips { get; }
+	IModParts Parts { get; }
 }

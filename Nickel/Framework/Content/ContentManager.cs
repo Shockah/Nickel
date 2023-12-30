@@ -12,6 +12,7 @@ internal sealed class ContentManager
 	public ArtifactManager Artifacts { get; }
 	public CharacterManager Characters { get; }
 	public StarterShipManager StarterShips { get; }
+	public PartManager Parts { get; }
 
 	public ContentManager(
 		SpriteManager sprites,
@@ -20,7 +21,8 @@ internal sealed class ContentManager
 		CardManager cards,
 		ArtifactManager artifacts,
 		CharacterManager characters,
-		StarterShipManager starterShipManager
+		StarterShipManager starterShipManager,
+		PartManager parts
 	)
 	{
 		this.Sprites = sprites;
@@ -30,18 +32,24 @@ internal sealed class ContentManager
 		this.Artifacts = artifacts;
 		this.Characters = characters;
 		this.StarterShips = starterShipManager;
+		this.Parts = parts;
 	}
 
-	public ContentManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider) : this(
+	public ContentManager(
+		Func<ModLoadPhase> currentModLoadPhaseProvider,
+		Func<IModManifest, ILogger> loggerProvider
+	) : this(
 		new SpriteManager(),
 		new DeckManager(currentModLoadPhaseProvider),
 		new StatusManager(currentModLoadPhaseProvider),
 		new CardManager(currentModLoadPhaseProvider),
 		new ArtifactManager(currentModLoadPhaseProvider),
 		new CharacterManager(currentModLoadPhaseProvider, loggerProvider),
-		new StarterShipManager(currentModLoadPhaseProvider)
+		new StarterShipManager(currentModLoadPhaseProvider),
+		new PartManager(currentModLoadPhaseProvider)
 	)
-	{ }
+	{
+	}
 
 	internal void InjectQueuedEntries()
 	{
@@ -51,5 +59,6 @@ internal sealed class ContentManager
 		this.Artifacts.InjectQueuedEntries();
 		this.Characters.InjectQueuedEntries();
 		this.StarterShips.InjectQueuedEntries();
+		this.Parts.InjectQueuedEntries();
 	}
 }
