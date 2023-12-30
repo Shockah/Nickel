@@ -17,10 +17,10 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 
 	public PluginDependencyResolveResult<TPluginManifest, TVersion> ResolveDependencies(IEnumerable<TPluginManifest> toResolve, IReadOnlySet<TPluginManifest>? resolved = null)
 	{
-        var toResolveLeft = toResolve.ToList();
-        var allResolved = resolved?.ToList() ?? [];
+		var toResolveLeft = toResolve.ToList();
+		var allResolved = resolved?.ToList() ?? [];
 
-        Dictionary<TPluginManifest, ManifestEntry> manifestEntries = toResolveLeft.Concat(resolved ?? Enumerable.Empty<TPluginManifest>())
+		Dictionary<TPluginManifest, ManifestEntry> manifestEntries = toResolveLeft.Concat(resolved ?? Enumerable.Empty<TPluginManifest>())
 			.ToDictionary(m => m, m => new ManifestEntry { Manifest = m, Data = this.RequiredManifestDataProvider(m) });
 		var manifestEntriesByName = manifestEntries.Values
 			.ToDictionary(m => m.Data.UniqueName, m => m);
