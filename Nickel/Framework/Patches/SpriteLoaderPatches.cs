@@ -1,5 +1,4 @@
 using HarmonyLib;
-using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using WeakEvent;
@@ -10,7 +9,7 @@ internal static class SpriteLoaderPatches
 {
 	internal static WeakEventSource<GetTextureEventArgs> OnGetTexture { get; } = new();
 
-	internal static void Apply(Harmony harmony, ILogger logger)
+	internal static void Apply(Harmony harmony)
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(SpriteLoader), nameof(SpriteLoader.Get)) ?? throw new InvalidOperationException("Could not patch game methods: missing method `SpriteLoader.Get`"),

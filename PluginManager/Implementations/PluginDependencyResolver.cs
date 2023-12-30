@@ -17,7 +17,10 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 
 	public PluginDependencyResolveResult<TPluginManifest, TVersion> ResolveDependencies(IEnumerable<TPluginManifest> toResolve, IReadOnlySet<TPluginManifest>? resolved = null)
 	{
-		var manifestEntries = toResolve.Concat(resolved ?? Enumerable.Empty<TPluginManifest>())
+		var toResolveLeft = toResolve.ToList();
+		var allResolved = resolved?.ToList() ?? [];
+
+		Dictionary<TPluginManifest, ManifestEntry> manifestEntries = toResolveLeft.Concat(resolved ?? Enumerable.Empty<TPluginManifest>())
 			.ToDictionary(m => m, m => new ManifestEntry { Manifest = m, Data = this.RequiredManifestDataProvider(m) });
 		var manifestEntriesByName = manifestEntries.Values
 			.ToDictionary(m => m.Data.UniqueName, m => m);
@@ -25,8 +28,6 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 		#region happy path
 		List<IReadOnlySet<TPluginManifest>> loadSteps = [];
 		Dictionary<TPluginManifest, PluginDependencyUnresolvableResult<TPluginManifest, TVersion>> unresolvable = [];
-		var allResolved = resolved?.ToList() ?? [];
-		var toResolveLeft = toResolve.ToList();
 
 		bool MatchesDependency(TPluginManifest manifest, PluginDependency<TVersion> dependency)
 		{

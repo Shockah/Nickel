@@ -1,5 +1,4 @@
 using HarmonyLib;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using WeakEvent;
@@ -10,7 +9,7 @@ internal static class DBPatches
 {
 	internal static WeakEventSource<LoadStringsForLocaleEventArgs> OnLoadStringsForLocale { get; } = new();
 
-	internal static void Apply(Harmony harmony, ILogger logger)
+	internal static void Apply(Harmony harmony)
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(DB), nameof(DB.LoadStringsForLocale)) ?? throw new InvalidOperationException("Could not patch game methods: missing method `DB.LoadStringsForLocale`"),
