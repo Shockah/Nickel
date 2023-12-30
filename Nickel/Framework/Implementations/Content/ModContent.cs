@@ -8,8 +8,17 @@ internal sealed class ModContent : IModContent
 	public IModCards Cards { get; init; }
 	public IModArtifacts Artifacts { get; init; }
 	public IModCharacters Characters { get; init; }
+	public IModStarterShips StarterShips { get; init; }
 
-	public ModContent(IModSprites sprites, IModDecks decks, IModStatuses statuses, IModCards cards, IModArtifacts artifacts, IModCharacters characters)
+	public ModContent(
+		IModSprites sprites,
+		IModDecks decks,
+		IModStatuses statuses,
+		IModCards cards,
+		IModArtifacts artifacts,
+		IModCharacters characters,
+		IModStarterShips starterShipses
+	)
 	{
 		this.Sprites = sprites;
 		this.Decks = decks;
@@ -17,5 +26,6 @@ internal sealed class ModContent : IModContent
 		this.Cards = cards;
 		this.Artifacts = artifacts;
 		this.Characters = characters;
+		this.StarterShips = starterShipses;
 	}
 }
