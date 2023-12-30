@@ -72,7 +72,7 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPlugin> : IPluginLoad
 		var constructor = potentialConstructors.Where(c => c.IsValid).First();
 
 		object[] parameters = constructor.Parameters.Select(p => p?.Value!).ToArray();
-		object rawPlugin = constructor.Constructor.Invoke(parameters: parameters);
+		var rawPlugin = constructor.Constructor.Invoke(parameters: parameters);
 		if (rawPlugin is not TPlugin plugin)
 			return new Error<string>($"Could not construct a {typeof(TPlugin)} subclass from the type {pluginType} in assembly {assembly} in package {package}.");
 		return plugin;

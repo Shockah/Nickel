@@ -1,6 +1,6 @@
 namespace Nickel;
 
-public readonly struct StarterShipConfiguration
+public readonly struct ShipConfiguration
 {
 	public StarterShip Ship { get; init; }
 }

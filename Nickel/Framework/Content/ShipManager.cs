@@ -4,12 +4,12 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Nickel;
 
-internal sealed class StarterShipManager
+internal sealed class ShipManager
 {
 	private AfterDbInitManager<Entry> Manager { get; }
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = new();
 
-	public StarterShipManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
+	public ShipManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
 	}
@@ -17,9 +17,9 @@ internal sealed class StarterShipManager
 	internal void InjectQueuedEntries()
 		=> this.Manager.InjectQueuedEntries();
 
-	public IStarterShipEntry RegisterStarterShip(IModManifest owner, string name, StarterShipConfiguration configuration)
+	public IShipEntry RegisterShip(IModManifest owner, string name, ShipConfiguration configuration)
 	{
-		string uniqueName = $"{owner.UniqueName}::{name}";
+		var uniqueName = $"{owner.UniqueName}::{name}";
 		configuration.Ship.ship.key = uniqueName;
 		Entry entry = new(owner, uniqueName, configuration);
 
@@ -28,7 +28,7 @@ internal sealed class StarterShipManager
 		return entry;
 	}
 
-	public bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IStarterShipEntry entry)
+	public bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IShipEntry entry)
 	{
 		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry))
 		{
@@ -42,18 +42,15 @@ internal sealed class StarterShipManager
 		}
 	}
 
-	private static void Inject(Entry entry)
-	{
-		StarterShip.ships[entry.UniqueName] = entry.Configuration.Ship;
-	}
+	private static void Inject(Entry entry) => StarterShip.ships[entry.UniqueName] = entry.Configuration.Ship;
 
-	private sealed class Entry : IStarterShipEntry
+	private sealed class Entry : IShipEntry
 	{
 		public IModManifest ModOwner { get; }
 		public string UniqueName { get; }
-		public StarterShipConfiguration Configuration { get; }
+		public ShipConfiguration Configuration { get; }
 
-		public Entry(IModManifest modOwner, string uniqueName, StarterShipConfiguration configuration)
+		public Entry(IModManifest modOwner, string uniqueName, ShipConfiguration configuration)
 		{
 			this.ModOwner = modOwner;
 			this.UniqueName = uniqueName;

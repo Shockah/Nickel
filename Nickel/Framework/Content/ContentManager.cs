@@ -11,7 +11,7 @@ internal sealed class ContentManager
 	public CardManager Cards { get; }
 	public ArtifactManager Artifacts { get; }
 	public CharacterManager Characters { get; }
-	public StarterShipManager StarterShips { get; }
+	public ShipManager Ships { get; }
 	public PartManager Parts { get; }
 
 	public ContentManager(
@@ -21,7 +21,7 @@ internal sealed class ContentManager
 		CardManager cards,
 		ArtifactManager artifacts,
 		CharacterManager characters,
-		StarterShipManager starterShipManager,
+		ShipManager starterShipManager,
 		PartManager parts
 	)
 	{
@@ -31,7 +31,7 @@ internal sealed class ContentManager
 		this.Cards = cards;
 		this.Artifacts = artifacts;
 		this.Characters = characters;
-		this.StarterShips = starterShipManager;
+		this.Ships = starterShipManager;
 		this.Parts = parts;
 	}
 
@@ -45,7 +45,7 @@ internal sealed class ContentManager
 		new CardManager(currentModLoadPhaseProvider),
 		new ArtifactManager(currentModLoadPhaseProvider),
 		new CharacterManager(currentModLoadPhaseProvider, loggerProvider),
-		new StarterShipManager(currentModLoadPhaseProvider),
+		new ShipManager(currentModLoadPhaseProvider),
 		new PartManager(currentModLoadPhaseProvider)
 	)
 	{
@@ -58,7 +58,7 @@ internal sealed class ContentManager
 		this.Cards.InjectQueuedEntries();
 		this.Artifacts.InjectQueuedEntries();
 		this.Characters.InjectQueuedEntries();
-		this.StarterShips.InjectQueuedEntries();
+		this.Ships.InjectQueuedEntries();
 		this.Parts.InjectQueuedEntries();
 	}
 }

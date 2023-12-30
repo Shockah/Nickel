@@ -8,6 +8,6 @@ public interface IModContent
 	IModCards Cards { get; }
 	IModArtifacts Artifacts { get; }
 	IModCharacters Characters { get; }
-	IModStarterShips StarterShips { get; }
+	IModShips Ships { get; }
 	IModParts Parts { get; }
 }

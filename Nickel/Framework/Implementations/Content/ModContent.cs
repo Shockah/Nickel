@@ -9,7 +9,7 @@ internal sealed class ModContent
 	public IModCards Cards { get; init; }
 	public IModArtifacts Artifacts { get; init; }
 	public IModCharacters Characters { get; init; }
-	public IModStarterShips StarterShips { get; init; }
+	public IModShips Ships { get; init; }
 	public IModParts Parts { get; init; }
 
 	public ModContent(
@@ -19,7 +19,7 @@ internal sealed class ModContent
 		IModCards cards,
 		IModArtifacts artifacts,
 		IModCharacters characters,
-		IModStarterShips starterShips,
+		IModShips starterShips,
 		IModParts parts
 	)
 	{
@@ -29,7 +29,7 @@ internal sealed class ModContent
 		this.Cards = cards;
 		this.Artifacts = artifacts;
 		this.Characters = characters;
-		this.StarterShips = starterShips;
+		this.Ships = starterShips;
 		this.Parts = parts;
 	}
 }
