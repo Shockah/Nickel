@@ -47,14 +47,10 @@ internal static class HarmonyPatches
 	}
 
 	private static void PatchFunctions_UpdateWrapper_Prefix(PatchInfo patchInfo)
-	{
-		CurrentPatchInfo = patchInfo;
-	}
+		=> CurrentPatchInfo = patchInfo;
 
 	private static void PatchFunctions_UpdateWrapper_Postfix()
-	{
-		CurrentPatchInfo = null;
-	}
+		=> CurrentPatchInfo = null;
 
 	private static void MethodPatcher_CreateDynamicMethod_Prefix(ref string suffix)
 	{

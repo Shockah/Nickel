@@ -126,11 +126,11 @@ internal sealed class Nickel
 		instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderModManifest);
 		instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderModManifest);
 
-		DBPatches.Apply(harmony, logger);
-		MGPatches.Apply(harmony, logger);
-		SpriteLoaderPatches.Apply(harmony, logger);
-		StoryVarsPatches.Apply(harmony, logger);
-		TTGlossaryPatches.Apply(harmony, logger);
+		DBPatches.Apply(harmony);
+		MGPatches.Apply(harmony);
+		SpriteLoaderPatches.Apply(harmony);
+		StoryVarsPatches.Apply(harmony);
+		TTGlossaryPatches.Apply(harmony);
 
 		var debug = launchArguments.Debug ?? true;
 		logger.LogInformation("Debug: {Value}", debug);
@@ -177,9 +177,7 @@ internal sealed class Nickel
 
 	[EventPriority(double.MaxValue)]
 	private void OnLoadStringsForLocale(object? sender, LoadStringsForLocaleEventArgs e)
-	{
-		this.ModManager.LegacyDatabase?.InjectLocalizations(e.Locale, e.Localizations);
-	}
+		=> this.ModManager.LegacyDatabase?.InjectLocalizations(e.Locale, e.Localizations);
 
 	private static DirectoryInfo GetOrCreateDefaultModLibraryDirectory()
 	{

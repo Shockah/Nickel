@@ -57,9 +57,7 @@ internal sealed class StatusManager
 	}
 
 	private static void Inject(Entry entry)
-	{
-		DB.statuses[entry.Status] = entry.Configuration.Definition;
-	}
+		=> DB.statuses[entry.Status] = entry.Configuration.Definition;
 
 	private sealed class Entry : IStatusEntry
 	{

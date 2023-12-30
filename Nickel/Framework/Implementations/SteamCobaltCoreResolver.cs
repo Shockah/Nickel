@@ -29,29 +29,23 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 
 		if (isLinux)
 		{
-			potentialSteamLocations.AddRange(
-				new[]
-				{
-					Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".steam/steam"),
-					Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local/share"),
-					Path.Combine(
-						Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-						".var/app/com.valvesoftware.Steam/data/Steam"
-					),
-				}
-			);
+			potentialSteamLocations.AddRange([
+				Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".steam/steam"),
+				Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local/share"),
+				Path.Combine(
+					Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+					".var/app/com.valvesoftware.Steam/data/Steam"
+				),
+			]);
 		}
 		else if (isOsx)
 		{
-			potentialSteamLocations.AddRange(
-				new[]
-				{
-					Path.Combine(
-						Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-						"Library/Application Support/Steam"
-					),
-				}
-			);
+			potentialSteamLocations.AddRange([
+				Path.Combine(
+					Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+					"Library/Application Support/Steam"
+				),
+			]);
 		}
 		else if (isWindows)
 		{
@@ -64,19 +58,14 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 				using var key = Registry.LocalMachine.OpenSubKey(subkey);
 				var value = key?.GetValue(steamInstallKeyName, null);
 				if (value is string sValue)
-				{
 					potentialSteamLocations.Add(sValue);
-				}
 			}
 
-			potentialSteamLocations.AddRange(
-				new[]
-				{
-					"C:\\Program Files\\Steam",
-					"C:\\Program Files (x86)\\Steam",
-					"C:\\Steam\\steamapps\\common",
-				}
-			);
+			potentialSteamLocations.AddRange([
+				"C:\\Program Files\\Steam",
+				"C:\\Program Files (x86)\\Steam",
+				"C:\\Steam\\steamapps\\common",
+			]);
 		}
 
 		var potentialSteamAppsPaths = new HashSet<string>();
@@ -88,29 +77,25 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 			// Check for steamapps folder in vdf file
 			var libraryVdfPath = Path.Combine(potentialSteamPath, "steamapps", "libraryfolders.vdf");
 			if (!File.Exists(libraryVdfPath))
-			{
 				continue;
-			}
 
 			using var libraryVdfFile = File.OpenRead(libraryVdfPath);
 			var deserializer = new VdfDeserializer();
 
 			if (deserializer.Deserialize(libraryVdfFile) is not IDictionary<string, dynamic> result)
-			{
 				continue;
-			}
 
-			/* regular install */
+			// regular install
 			if (!result.TryGetValue("libraryfolders", out var libraryFoldersVdfEntryRaw))
 			{
-				/* proton shim */
+				// proton shim
 				if (!result.TryGetValue("LibraryFolders", out libraryFoldersVdfEntryRaw))
 				{
-					/* trying the patience */
+					// trying the patience
 					var entry = result.FirstOrDefault(x => x.Key.ToLowerInvariant() == "libraryfolders");
 					if (entry.Key == null)
 					{
-						/* nope, not found */
+						// nope, not found
 						continue;
 					}
 
@@ -119,22 +104,14 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 			}
 
 			if (libraryFoldersVdfEntryRaw is not IDictionary<string, dynamic> libraryFoldersVdfEntry)
-			{
 				continue;
-			}
 
 			foreach (var folderDynamic in libraryFoldersVdfEntry.Values)
 			{
 				if (folderDynamic is not IDictionary<string, dynamic> folderDict)
-				{
 					continue;
-				}
-
 				if (folderDict["path"] is not string path)
-				{
 					continue;
-				}
-
 				potentialSteamAppsPaths.Add(Path.Combine(path, "steamapps"));
 			}
 		}
@@ -143,18 +120,19 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 		{
 			var potentialPath = Path.Combine(potentialSteamAppPath, "common", "Cobalt Core");
 			if (isOsx)
-			{
 				potentialPath = Path.Combine(potentialPath, "Contents", "MacOS");
-			}
 
 			DirectoryInfo directory = new(potentialPath);
-			if (!directory.Exists) continue;
+			if (!directory.Exists)
+				continue;
 
 			FileInfo singleFileApplicationPath = new(Path.Combine(directory.FullName, "CobaltCore.exe"));
-			if (!singleFileApplicationPath.Exists) continue;
+			if (!singleFileApplicationPath.Exists)
+				continue;
 
 			FileInfo? pdbPath = new(Path.Combine(directory.FullName, "CobaltCore.pdb"));
-			if (pdbPath.Exists != true) pdbPath = null;
+			if (pdbPath.Exists != true)
+				pdbPath = null;
 
 			var resolver = this.ResolverFactory(singleFileApplicationPath, pdbPath);
 			return resolver.ResolveCobaltCore();
