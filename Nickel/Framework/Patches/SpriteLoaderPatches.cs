@@ -12,20 +12,15 @@ internal static class SpriteLoaderPatches
 	internal static void Apply(Harmony harmony)
 	{
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(SpriteLoader), nameof(SpriteLoader.Get)) ??
-					  throw new InvalidOperationException(
-						  "Could not patch game methods: missing method `SpriteLoader.Get`"
-					  ),
-			prefix: new HarmonyMethod(
-				AccessTools.DeclaredMethod(typeof(SpriteLoaderPatches), nameof(Get_Prefix)),
-				priority: Priority.Last
-			)
+			original: AccessTools.DeclaredMethod(typeof(SpriteLoader), nameof(SpriteLoader.Get)) ?? throw new InvalidOperationException("Could not patch game methods: missing method `SpriteLoader.Get`"),
+			prefix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(SpriteLoaderPatches), nameof(Get_Prefix)), priority: Priority.Last)
 		);
 	}
 
 	private static bool Get_Prefix(Spr id, ref Texture2D? __result)
 	{
-		if (SpriteLoader.textures.TryGetValue(id, out __result)) return false;
+		if (SpriteLoader.textures.TryGetValue(id, out __result))
+			return false;
 
 		GetTextureEventArgs args = new(id);
 		OnGetTexture.Raise(null, args);

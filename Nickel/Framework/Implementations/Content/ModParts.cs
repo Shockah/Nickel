@@ -13,6 +13,6 @@ internal sealed class ModParts : IModParts
 		this.PartManagerProvider = partManagerProvider;
 	}
 
-	public IPartEntry RegisterPart(string name, Spr part, Spr? partOff = null)
+	public IPartEntry RegisterPart(string name, Spr part, Spr? partOff=null)
 		=> this.PartManagerProvider().RegisterPart(this.ModManifest, name, part, partOff);
 }
