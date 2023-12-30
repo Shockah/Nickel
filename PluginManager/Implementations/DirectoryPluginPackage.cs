@@ -19,13 +19,15 @@ public sealed class DirectoryPluginPackage<TPluginManifest> : IDirectoryPluginPa
 		this.Directory = directory;
 		this.Files = files;
 
-		Uri directoryUri = new(directory.FullName);
+		Uri directoryUri = new(directory.FullName + Path.DirectorySeparatorChar);
 		this.DataEntries = this.Files
-			.Select(f =>
-			{
-				Uri uri = new(f.FullName);
-				return directoryUri.MakeRelativeUri(uri).OriginalString;
-			})
+			.Select(
+				f =>
+				{
+					Uri uri = new(f.FullName);
+					return directoryUri.MakeRelativeUri(uri).ToString();
+				}
+			)
 			.ToHashSet();
 	}
 
