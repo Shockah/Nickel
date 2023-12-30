@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using OneOf.Types;
 using OneOf;
+using OneOf.Types;
 
 namespace Nanoray.PluginManager;
 

@@ -40,7 +40,8 @@ internal sealed class Nickel
 		);
 		Option<string?> logPipeNameOption = new(
 			name: "--logPipeName"
-		) { IsHidden = true };
+		)
+		{ IsHidden = true };
 
 		RootCommand rootCommand = new(NickelConstants.IntroMessage);
 		rootCommand.AddOption(debugOption);

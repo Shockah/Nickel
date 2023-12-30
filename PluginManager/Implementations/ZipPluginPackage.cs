@@ -27,8 +27,10 @@ public sealed class ZipPluginPackage<TPluginManifest> : IPluginPackage<TPluginMa
 		this.DataEntries = this.DataMapping.Keys.ToHashSet();
 	}
 
-	public Stream GetDataStream(string entry) {
-		if(!this.DataMapping.TryGetValue(entry, out string? realName)) {
+	public Stream GetDataStream(string entry)
+	{
+		if (!this.DataMapping.TryGetValue(entry, out string? realName))
+		{
 			/* TODO: Exception type! */
 			throw new ArgumentException("Entry does not exist.", nameof(entry));
 		}

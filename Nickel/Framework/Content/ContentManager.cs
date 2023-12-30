@@ -36,7 +36,8 @@ internal sealed class ContentManager
 		new CardManager(currentModLoadPhaseProvider),
 		new ArtifactManager(currentModLoadPhaseProvider),
 		new CharacterManager(currentModLoadPhaseProvider, loggerProvider)
-	) { }
+	)
+	{ }
 
 	internal void InjectQueuedEntries()
 	{
