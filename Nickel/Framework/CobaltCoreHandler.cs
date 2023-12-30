@@ -1,11 +1,11 @@
-using System;
-using System.IO;
-using System.Reflection;
-using System.Runtime.Loader;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using OneOf;
 using OneOf.Types;
+using System;
+using System.IO;
+using System.Reflection;
+using System.Runtime.Loader;
 
 namespace Nickel;
 
@@ -29,7 +29,7 @@ internal sealed class CobaltCoreHandler
 			return new Error<string>($"Could not resolve Cobalt Core: {error.Value}");
 
 		this.Logger.LogInformation("Loading game assembly...");
-		var gameAssembly = LoadAssembly(
+		var gameAssembly = this.LoadAssembly(
 			name: "CobaltCore.dll",
 			assemblyStream: resolveResult.GameAssemblyDataStream,
 			symbolsStream: resolveResult.GamePdbDataStream
@@ -41,7 +41,7 @@ internal sealed class CobaltCoreHandler
 			this.Logger.LogDebug("Trying to load (potential) assembly {AssemblyName}...", name);
 			try
 			{
-				LoadAssembly(name, stream);
+				this.LoadAssembly(name, stream);
 			}
 			catch (BadImageFormatException e)
 			{
@@ -65,7 +65,7 @@ internal sealed class CobaltCoreHandler
 
 	private Assembly LoadAssembly(string name, Stream assemblyStream, Stream? symbolsStream = null)
 	{
-		AssemblyLoadContext context = AssemblyLoadContext.GetLoadContext(GetType().Assembly)
+		var context = AssemblyLoadContext.GetLoadContext(this.GetType().Assembly)
 			?? AssemblyLoadContext.CurrentContextualReflectionContext
 			?? AssemblyLoadContext.Default;
 		if (this.AssemblyEditor is { } assemblyEditor)

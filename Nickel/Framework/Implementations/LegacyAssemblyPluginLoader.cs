@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using CobaltCoreModding.Definitions;
 using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
@@ -11,6 +6,11 @@ using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using OneOf;
 using OneOf.Types;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using ILegacyManifest = CobaltCoreModding.Definitions.ModManifests.IManifest;
 using ILegacyModManifest = CobaltCoreModding.Definitions.ModManifests.IModManifest;
 
@@ -40,7 +40,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 	}
 
 	public bool CanLoadPlugin(IPluginPackage<IAssemblyModManifest> package)
-		=> package is IDirectoryPluginPackage<IAssemblyModManifest> && Loader.CanLoadPlugin(package);
+		=> package is IDirectoryPluginPackage<IAssemblyModManifest> && this.Loader.CanLoadPlugin(package);
 
 	public OneOf<Mod, Error<string>> LoadPlugin(IPluginPackage<IAssemblyModManifest> package)
 	{
@@ -195,15 +195,15 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 		{
 			this.LegacyManifest = legacyManifest;
 			this.LegacyRegistry = legacyRegistry;
-			helper.Events.OnModLoadPhaseFinished += BootMod;
-			helper.Events.OnModLoadPhaseFinished += LoadSpriteManifest;
-			helper.Events.OnModLoadPhaseFinished += LoadDeckManifest;
-			helper.Events.OnModLoadPhaseFinished += LoadStatusManifest;
-			helper.Events.OnModLoadPhaseFinished += LoadCardManifest;
-			helper.Events.OnModLoadPhaseFinished += LoadArtifactManifest;
-			helper.Events.OnModLoadPhaseFinished += LoadAnimationManifest;
-			helper.Events.OnModLoadPhaseFinished += LoadCharacterManifest;
-			helper.Events.OnModLoadPhaseFinished += FinalizePreparations;
+			helper.Events.OnModLoadPhaseFinished += this.BootMod;
+			helper.Events.OnModLoadPhaseFinished += this.LoadSpriteManifest;
+			helper.Events.OnModLoadPhaseFinished += this.LoadDeckManifest;
+			helper.Events.OnModLoadPhaseFinished += this.LoadStatusManifest;
+			helper.Events.OnModLoadPhaseFinished += this.LoadCardManifest;
+			helper.Events.OnModLoadPhaseFinished += this.LoadArtifactManifest;
+			helper.Events.OnModLoadPhaseFinished += this.LoadAnimationManifest;
+			helper.Events.OnModLoadPhaseFinished += this.LoadCharacterManifest;
+			helper.Events.OnModLoadPhaseFinished += this.FinalizePreparations;
 
 			legacyManifest.GameRootFolder = new DirectoryInfo(Directory.GetCurrentDirectory());
 			legacyManifest.ModRootFolder = directory;

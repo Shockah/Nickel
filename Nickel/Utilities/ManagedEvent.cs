@@ -6,10 +6,10 @@ namespace Nickel;
 
 public sealed class ManagedEvent<TEventArgs>
 {
-	private OrderedList<ManagedEventHandler, double> Handlers { get; } = new();
+	private OrderedList<ManagedEventHandler, double> Handlers { get; } = [];
 	private Action<EventHandler<TEventArgs>, IModManifest, Exception>? ExceptionHandler { get; }
 	private bool IsRaising { get; set; } = false;
-	private List<(ManagedEventsModification, ManagedEventHandler)> AwaitingModifications { get; } = new();
+	private List<(ManagedEventsModification, ManagedEventHandler)> AwaitingModifications { get; } = [];
 
 	public ManagedEvent(Action<EventHandler<TEventArgs>, IModManifest, Exception>? exceptionHandler)
 	{
@@ -24,7 +24,7 @@ public sealed class ManagedEvent<TEventArgs>
 			if (this.IsRaising)
 				this.AwaitingModifications.Add((ManagedEventsModification.Add, managedEventHandler));
 			else
-				ActuallyAdd(managedEventHandler);
+				this.ActuallyAdd(managedEventHandler);
 		}
 	}
 
@@ -32,7 +32,7 @@ public sealed class ManagedEvent<TEventArgs>
 	{
 		lock (this.Handlers)
 		{
-			double priority = handler.Handler.Method.GetCustomAttribute<EventPriorityAttribute>()?.Priority ?? 0;
+			var priority = handler.Handler.Method.GetCustomAttribute<EventPriorityAttribute>()?.Priority ?? 0;
 			this.Handlers.Add(handler, -priority);
 		}
 	}
@@ -45,7 +45,7 @@ public sealed class ManagedEvent<TEventArgs>
 			if (this.IsRaising)
 				this.AwaitingModifications.Add((ManagedEventsModification.Remove, managedEventHandler));
 			else
-				ActuallyRemove(managedEventHandler);
+				this.ActuallyRemove(managedEventHandler);
 		}
 	}
 

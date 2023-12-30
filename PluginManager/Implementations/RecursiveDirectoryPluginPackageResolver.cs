@@ -1,7 +1,7 @@
-using System.Collections.Generic;
-using System.IO;
 using OneOf;
 using OneOf.Types;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Nanoray.PluginManager;
 
@@ -21,7 +21,7 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 	}
 
 	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
-		=> ResolveChildDirectories(this.Directory);
+		=> this.ResolveChildDirectories(this.Directory);
 
 	private IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePackagesAndThenResolveChildDirectories(DirectoryInfo directory)
 	{

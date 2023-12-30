@@ -1,14 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using Nanoray.PluginManager.Implementations;
 using Nickel.Common;
 using OneOf.Types;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using ILegacyModManifest = CobaltCoreModding.Definitions.ModManifests.IModManifest;
 
 namespace Nickel;
@@ -28,13 +28,13 @@ internal sealed class ModManager
 	internal ContentManager? ContentManager { get; private set; }
 
 	private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; } = new();
-	private List<IPluginPackage<IModManifest>> ResolvedMods { get; } = new();
-	private List<IModManifest> FailedMods { get; } = new();
-	private HashSet<IModManifest> OptionalSubmods { get; } = new();
+	private List<IPluginPackage<IModManifest>> ResolvedMods { get; } = [];
+	private List<IModManifest> FailedMods { get; } = [];
+	private HashSet<IModManifest> OptionalSubmods { get; } = [];
 
-	private Dictionary<string, ILogger> UniqueNameToLogger { get; } = new();
-	private Dictionary<string, IModHelper> UniqueNameToHelper { get; } = new();
-	private Dictionary<string, Mod> UniqueNameToInstance { get; } = new();
+	private Dictionary<string, ILogger> UniqueNameToLogger { get; } = [];
+	private Dictionary<string, IModHelper> UniqueNameToHelper { get; } = [];
+	private Dictionary<string, Mod> UniqueNameToInstance { get; } = [];
 
 	public ModManager(
 		DirectoryInfo modsDirectory,
@@ -46,7 +46,7 @@ internal sealed class ModManager
 		this.ModsDirectory = modsDirectory;
 		this.LoggerFactory = loggerFactory;
 		this.Logger = logger;
-		this.EventManager = new(ObtainLogger);
+		this.EventManager = new(this.ObtainLogger);
 
 		this.ModLoaderModManifest = new ModManifest()
 		{
@@ -56,8 +56,8 @@ internal sealed class ModManager
 		};
 
 		var assemblyPluginLoaderParameterInjector = new CompoundAssemblyPluginLoaderParameterInjector<IModManifest>(
-			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, ILogger>(package => ObtainLogger(package.Manifest)),
-			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, IModHelper>(package => ObtainModHelper(package.Manifest)),
+			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, ILogger>(package => this.ObtainLogger(package.Manifest)),
+			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, IModHelper>(package => this.ObtainModHelper(package.Manifest)),
 			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendablePluginLoader<IModManifest, Mod>>(this.ExtendablePluginLoader),
 			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendableAssemblyDefinitionEditor>(extendableAssemblyDefinitionEditor)
 		);
@@ -195,7 +195,7 @@ internal sealed class ModManager
 		this.Logger.LogInformation("Loading {Phase} phase mods...", phase);
 		this.CurrentModLoadPhase = phase;
 
-		List<IModManifest> successfulMods = new();
+		List<IModManifest> successfulMods = [];
 		foreach (var package in this.ResolvedMods)
 		{
 			var manifest = package.Manifest;

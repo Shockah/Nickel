@@ -1,8 +1,8 @@
+using OneOf;
+using OneOf.Types;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using OneOf;
-using OneOf.Types;
 
 namespace Nanoray.PluginManager;
 

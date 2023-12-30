@@ -1,9 +1,9 @@
+using CobaltCoreModding.Definitions.ExternalItems;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using CobaltCoreModding.Definitions.ExternalItems;
 
 namespace Nickel;
 
@@ -11,15 +11,15 @@ internal sealed class LegacyDatabase
 {
 	private Func<ContentManager> ContentManagerProvider { get; }
 
-	private Dictionary<string, ExternalSprite> GlobalNameToSprite { get; } = new();
-	private Dictionary<string, ExternalDeck> GlobalNameToDeck { get; } = new();
-	private Dictionary<string, ExternalStatus> GlobalNameToStatus { get; } = new();
-	private Dictionary<string, ExternalCard> GlobalNameToCard { get; } = new();
-	private Dictionary<string, ExternalArtifact> GlobalNameToArtifact { get; } = new();
-	private Dictionary<string, ExternalAnimation> GlobalNameToAnimation { get; } = new();
-	private Dictionary<string, ExternalCharacter> GlobalNameToCharacter { get; } = new();
+	private Dictionary<string, ExternalSprite> GlobalNameToSprite { get; } = [];
+	private Dictionary<string, ExternalDeck> GlobalNameToDeck { get; } = [];
+	private Dictionary<string, ExternalStatus> GlobalNameToStatus { get; } = [];
+	private Dictionary<string, ExternalCard> GlobalNameToCard { get; } = [];
+	private Dictionary<string, ExternalArtifact> GlobalNameToArtifact { get; } = [];
+	private Dictionary<string, ExternalAnimation> GlobalNameToAnimation { get; } = [];
+	private Dictionary<string, ExternalCharacter> GlobalNameToCharacter { get; } = [];
 
-	private Dictionary<string, ICharacterEntry> GlobalNameToCharacterEntry { get; init; } = new();
+	private Dictionary<string, ICharacterEntry> GlobalNameToCharacterEntry { get; init; } = [];
 
 	public LegacyDatabase(Func<ContentManager> contentManagerProvider)
 	{
@@ -30,8 +30,8 @@ internal sealed class LegacyDatabase
 	{
 		foreach (var status in this.GlobalNameToStatus.Values)
 		{
-			string key = ((Status)status.Id!.Value).Key();
-			status.GetLocalisation(locale, out string? name, out string? description);
+			var key = ((Status)status.Id!.Value).Key();
+			status.GetLocalisation(locale, out var name, out var description);
 			if (name is not null)
 				localizations[$"status.{key}.name"] = name;
 			if (description is not null)
@@ -39,8 +39,8 @@ internal sealed class LegacyDatabase
 		}
 		foreach (var card in this.GlobalNameToCard.Values)
 		{
-			string key = card.CardType.Name; // TODO: change this when Card.Key gets patched
-			card.GetLocalisation(locale, out string? name, out string? description, out string? descriptionA, out string? descriptionB);
+			var key = card.CardType.Name; // TODO: change this when Card.Key gets patched
+			card.GetLocalisation(locale, out var name, out var description, out var descriptionA, out var descriptionB);
 			if (name is not null)
 				localizations[$"card.{key}.name"] = name;
 			if (description is not null)
@@ -52,15 +52,15 @@ internal sealed class LegacyDatabase
 		}
 		foreach (var artifact in this.GlobalNameToArtifact.Values)
 		{
-			if (!artifact.GetLocalisation(locale, out string name, out string description))
+			if (!artifact.GetLocalisation(locale, out var name, out var description))
 				continue;
-			string key = artifact.ArtifactType.Name; // TODO: change this when Artifact.Key gets patched
+			var key = artifact.ArtifactType.Name; // TODO: change this when Artifact.Key gets patched
 			localizations[$"artifact.{key}.name"] = name;
 			localizations[$"artifact.{key}.desc"] = description;
 		}
 		foreach (var character in this.GlobalNameToCharacter.Values)
 		{
-			string key = ((Deck)character.Deck.Id!.Value).Key();
+			var key = ((Deck)character.Deck.Id!.Value).Key();
 			if (character.GetCharacterName(locale) is { } name)
 			{
 				localizations[$"char.{key}"] = name;

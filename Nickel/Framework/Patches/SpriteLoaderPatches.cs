@@ -1,7 +1,7 @@
-using System;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using WeakEvent;
 
 namespace Nickel;

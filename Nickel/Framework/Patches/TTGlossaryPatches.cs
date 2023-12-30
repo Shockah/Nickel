@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
 using WeakEvent;
 
 namespace Nickel;

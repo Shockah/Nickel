@@ -1,6 +1,6 @@
+using Nickel.Common;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Nickel.Common;
 
 namespace Nickel;
 

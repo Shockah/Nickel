@@ -29,7 +29,7 @@ public sealed class ZipPluginPackage<TPluginManifest> : IPluginPackage<TPluginMa
 
 	public Stream GetDataStream(string entry)
 	{
-		if (!this.DataMapping.TryGetValue(entry, out string? realName))
+		if (!this.DataMapping.TryGetValue(entry, out var realName))
 		{
 			/* TODO: Exception type! */
 			throw new ArgumentException("Entry does not exist.", nameof(entry));

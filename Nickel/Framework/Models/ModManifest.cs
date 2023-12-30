@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using Newtonsoft.Json;
 using Nickel.Common;
+using System.Collections.Generic;
 
 namespace Nickel;
 
@@ -40,5 +40,5 @@ internal sealed class ModManifest : IModManifest
 	public IDictionary<string, object> ExtensionData { get; internal set; } = new Dictionary<string, object>();
 
 	IReadOnlyDictionary<string, object> IModManifest.ExtensionData
-		=> (IReadOnlyDictionary<string, object>)ExtensionData;
+		=> (IReadOnlyDictionary<string, object>)this.ExtensionData;
 }

@@ -1,7 +1,7 @@
-using System.IO;
 using Newtonsoft.Json;
 using OneOf;
 using OneOf.Types;
+using System.IO;
 
 namespace Nanoray.PluginManager;
 
@@ -13,7 +13,7 @@ public sealed class JsonPluginManifestLoader<TPluginManifest> : IPluginManifestL
 	{
 		using StreamReader reader = new(stream);
 		using JsonTextReader jsonReader = new(reader);
-		var manifest = Serializer.Deserialize<TPluginManifest>(jsonReader);
+		var manifest = this.Serializer.Deserialize<TPluginManifest>(jsonReader);
 		if (manifest is null)
 			return new Error<string>($"The provided data could not be deserialized as `{typeof(TPluginManifest)}`.");
 		return manifest;

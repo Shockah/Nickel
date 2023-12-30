@@ -1,15 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.Diagnostics;
-using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.Console;
 using Nickel.Common;
+using System;
+using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+using System.Diagnostics;
+using System.IO;
 
 namespace Nickel.Launcher;
 
@@ -55,12 +55,12 @@ internal class NickelLauncher
 		var logger = loggerFactory.CreateLogger($"{NickelConstants.Name}Launcher");
 		Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, Console.Out));
 		Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));
-		Dictionary<string, ILogger> categoryLoggers = new();
+		Dictionary<string, ILogger> categoryLoggers = [];
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
 
-		FileInfo launchPath = launchArguments.LaunchPath ?? new("Nickel.exe"); // TODO: this probably doesn't work on non-Windows machines; make sure it does
-		bool pipeLogs = launchArguments.PipeLogs ?? true;
-		string? pipeName = pipeLogs ? $"{Guid.NewGuid()}" : null;
+		var launchPath = launchArguments.LaunchPath ?? new("Nickel.exe"); // TODO: this probably doesn't work on non-Windows machines; make sure it does
+		var pipeLogs = launchArguments.PipeLogs ?? true;
+		var pipeName = pipeLogs ? $"{Guid.NewGuid()}" : null;
 		using var logNamedPipeServer = string.IsNullOrEmpty(pipeName) ? null : new LogNamedPipeServer(pipeName, logger, e =>
 		{
 			if (!categoryLoggers.TryGetValue(e.CategoryName, out var categoryLogger))
@@ -88,7 +88,7 @@ internal class NickelLauncher
 			process.StartInfo.ArgumentList.Add("--logPipeName");
 			process.StartInfo.ArgumentList.Add(pipeName);
 		}
-		foreach (string unmatchedArgument in launchArguments.UnmatchedArguments)
+		foreach (var unmatchedArgument in launchArguments.UnmatchedArguments)
 			process.StartInfo.ArgumentList.Add(unmatchedArgument);
 
 		try

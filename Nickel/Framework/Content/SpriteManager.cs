@@ -1,16 +1,16 @@
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Nickel;
 
 internal sealed class SpriteManager
 {
 	private int NextId { get; set; } = 10_000_001;
-	private Dictionary<Spr, Entry> SpriteToEntry { get; } = new();
-	private Dictionary<string, Entry> UniqueNameToEntry { get; } = new();
+	private Dictionary<Spr, Entry> SpriteToEntry { get; } = [];
+	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 
 	public SpriteManager()
 	{
@@ -23,7 +23,7 @@ internal sealed class SpriteManager
 		this.SpriteToEntry[entry.Sprite] = entry;
 		this.UniqueNameToEntry[entry.UniqueName] = entry;
 
-		string path = $"{GetType().Namespace!}-managed/{entry.UniqueName}";
+		var path = $"{this.GetType().Namespace!}-managed/{entry.UniqueName}";
 		SpriteMapping.mapping[entry.Sprite] = new SpritePath(path);
 		SpriteMapping.strToId[path] = entry.Sprite;
 		return entry;

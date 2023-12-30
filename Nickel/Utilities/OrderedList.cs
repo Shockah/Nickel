@@ -13,46 +13,46 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 		TOrderingValue OrderingValue
 	);
 
-	private readonly List<Entry> Entries = new();
+	private readonly List<Entry> Entries = [];
 
 	public int Count
-		=> Entries.Count;
+		=> this.Entries.Count;
 
 	public TElement this[int index]
-		=> Entries[index].Element;
+		=> this.Entries[index].Element;
 
 	public IEnumerator<TElement> GetEnumerator()
-		=> Entries.Select(e => e.Element).GetEnumerator();
+		=> this.Entries.Select(e => e.Element).GetEnumerator();
 
 	IEnumerator IEnumerable.GetEnumerator()
-		=> GetEnumerator();
+		=> this.GetEnumerator();
 
 	public void Clear()
-		=> Entries.Clear();
+		=> this.Entries.Clear();
 
 	public bool Contains(TElement item)
-		=> Entries.Any(e => Equals(e.Element, item));
+		=> this.Entries.Any(e => Equals(e.Element, item));
 
 	public void Add(TElement element, TOrderingValue orderingValue)
 	{
-		for (int i = 0; i < Entries.Count; i++)
+		for (var i = 0; i < this.Entries.Count; i++)
 		{
-			if (Entries[i].OrderingValue.CompareTo(orderingValue) > 0)
+			if (this.Entries[i].OrderingValue.CompareTo(orderingValue) > 0)
 			{
-				Entries.Insert(i, new(element, orderingValue));
+				this.Entries.Insert(i, new(element, orderingValue));
 				return;
 			}
 		}
-		Entries.Add(new(element, orderingValue));
+		this.Entries.Add(new(element, orderingValue));
 	}
 
 	public bool Remove(TElement element)
 	{
-		for (int i = 0; i < Entries.Count; i++)
+		for (var i = 0; i < this.Entries.Count; i++)
 		{
-			if (Equals(Entries[i].Element, element))
+			if (Equals(this.Entries[i].Element, element))
 			{
-				Entries.RemoveAt(i);
+				this.Entries.RemoveAt(i);
 				return true;
 			}
 		}
@@ -61,7 +61,7 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 
 	public bool TryGetOrderingValue(TElement element, [MaybeNullWhen(false)] out TOrderingValue orderingValue)
 	{
-		foreach (var entry in Entries)
+		foreach (var entry in this.Entries)
 		{
 			if (!Equals(entry.Element, element))
 				continue;

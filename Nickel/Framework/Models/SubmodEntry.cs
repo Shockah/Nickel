@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Nickel;
 
@@ -17,5 +17,5 @@ internal sealed class SubmodEntry : ISubmodEntry
 	public IDictionary<string, object> ExtensionData { get; private set; } = new Dictionary<string, object>();
 
 	IReadOnlyDictionary<string, object> ISubmodEntry.ExtensionData
-		=> (IReadOnlyDictionary<string, object>)ExtensionData;
+		=> (IReadOnlyDictionary<string, object>)this.ExtensionData;
 }

@@ -7,18 +7,18 @@ public static class SemanticVersionParser
 	public static bool TryParse(string? versionStr, [MaybeNullWhen(false)] out SemanticVersion version)
 	{
 		version = default;
-		int patch = 0;
+		var patch = 0;
 		string? prereleaseTag = null;
 
 		// normalize
 		versionStr = versionStr?.Trim();
 		if (string.IsNullOrWhiteSpace(versionStr))
 			return false;
-		char[] raw = versionStr.ToCharArray();
+		var raw = versionStr.ToCharArray();
 
 		// read major/minor version
-		int i = 0;
-		if (!TryParseVersionPart(raw, ref i, out int major) || !TryParseLiteral(raw, ref i, '.') || !TryParseVersionPart(raw, ref i, out int minor))
+		var i = 0;
+		if (!TryParseVersionPart(raw, ref i, out var major) || !TryParseLiteral(raw, ref i, '.') || !TryParseVersionPart(raw, ref i, out var minor))
 			return false;
 
 		// read optional patch version
@@ -42,8 +42,8 @@ public static class SemanticVersionParser
 		part = 0;
 
 		// take digits
-		string str = "";
-		for (int i = index; i < raw.Length && char.IsDigit(raw[i]); i++)
+		var str = "";
+		for (var i = index; i < raw.Length && char.IsDigit(raw[i]); i++)
 			str += raw[i];
 
 		// validate
@@ -70,8 +70,8 @@ public static class SemanticVersionParser
 	private static bool TryParseTag(char[] raw, ref int index, [NotNullWhen(true)] out string? tag)
 	{
 		// read tag length
-		int length = 0;
-		for (int i = index; i < raw.Length && (char.IsLetterOrDigit(raw[i]) || raw[i] == '-' || raw[i] == '.'); i++)
+		var length = 0;
+		for (var i = index; i < raw.Length && (char.IsLetterOrDigit(raw[i]) || raw[i] == '-' || raw[i] == '.'); i++)
 			length++;
 
 		// validate

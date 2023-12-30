@@ -1,6 +1,6 @@
+using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Text;
-using Microsoft.Extensions.Logging;
 
 namespace Nickel.Common;
 
@@ -27,7 +27,7 @@ public sealed class LoggerTextWriter : TextWriter
 	public override void Write(char[] buffer, int index, int count)
 	{
 		// track newline skip
-		bool ignoreIfNewline = this.IgnoreNextIfNewline;
+		var ignoreIfNewline = this.IgnoreNextIfNewline;
 		this.IgnoreNextIfNewline = false;
 
 		// get first character if valid
@@ -36,7 +36,7 @@ public sealed class LoggerTextWriter : TextWriter
 			this.Out.Write(buffer, index, count);
 			return;
 		}
-		char firstChar = buffer[index];
+		var firstChar = buffer[index];
 
 		// handle output
 		if (firstChar == IgnoreChar)
@@ -63,8 +63,8 @@ public sealed class LoggerTextWriter : TextWriter
 
 	private static bool IsEmptyOrNewline(char[] buffer)
 	{
-		foreach (char ch in buffer)
-			if (ch != '\n' && ch != '\r')
+		foreach (var ch in buffer)
+			if (ch is not '\n' and not '\r')
 				return false;
 		return true;
 	}

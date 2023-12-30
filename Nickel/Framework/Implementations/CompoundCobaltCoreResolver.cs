@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using OneOf;
 using OneOf.Types;
+using System.Collections.Generic;
 
 namespace Nickel;
 
@@ -17,7 +17,7 @@ internal sealed class CompoundCobaltCoreResolver : ICobaltCoreResolver
 
 	public OneOf<CobaltCoreResolveResult, Error<string>> ResolveCobaltCore()
 	{
-		List<string> errors = new();
+		List<string> errors = [];
 		foreach (var resolver in this.Resolvers)
 		{
 			var resultOrError = resolver.ResolveCobaltCore();

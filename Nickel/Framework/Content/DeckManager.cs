@@ -8,8 +8,8 @@ internal sealed class DeckManager
 {
 	private int NextId { get; set; } = 10_000_001;
 	private AfterDbInitManager<Entry> Manager { get; }
-	private Dictionary<Deck, Entry> DeckToEntry { get; } = new();
-	private Dictionary<string, Entry> UniqueNameToEntry { get; } = new();
+	private Dictionary<Deck, Entry> DeckToEntry { get; } = [];
+	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 
 	public DeckManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{

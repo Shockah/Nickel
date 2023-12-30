@@ -19,7 +19,7 @@ public readonly struct SemanticVersion : IEquatable<SemanticVersion>, IComparabl
 
 	public override string ToString()
 	{
-		string version = $"{this.MajorVersion}.{this.MinorVersion}.{this.PatchVersion}";
+		var version = $"{this.MajorVersion}.{this.MinorVersion}.{this.PatchVersion}";
 		if (this.PrereleaseTag != null)
 			version += $"-{this.PrereleaseTag}";
 		return version;
@@ -29,10 +29,10 @@ public readonly struct SemanticVersion : IEquatable<SemanticVersion>, IComparabl
 		=> this.MajorVersion == other.MajorVersion && this.MinorVersion == other.MinorVersion && this.PatchVersion == other.PatchVersion && Equals(this.PrereleaseTag, other.PrereleaseTag);
 
 	public override bool Equals(object? obj)
-		=> obj is SemanticVersion version && Equals(version);
+		=> obj is SemanticVersion version && this.Equals(version);
 
 	public override int GetHashCode()
-		=> (MajorVersion, MinorVersion, PatchVersion, PrereleaseTag).GetHashCode();
+		=> (this.MajorVersion, this.MinorVersion, this.PatchVersion, this.PrereleaseTag).GetHashCode();
 
 	public int CompareTo(SemanticVersion other)
 	{
@@ -49,10 +49,10 @@ public readonly struct SemanticVersion : IEquatable<SemanticVersion>, IComparabl
 		if (string.IsNullOrEmpty(other.PrereleaseTag))
 			return -1;
 
-		string[] thisParts = this.PrereleaseTag?.Split('.', '-') ?? Array.Empty<string>();
-		string[] otherParts = other.PrereleaseTag?.Split('.', '-') ?? Array.Empty<string>();
-		int length = Math.Max(thisParts.Length, otherParts.Length);
-		for (int i = 0; i < length; i++)
+		var thisParts = this.PrereleaseTag?.Split('.', '-') ?? [];
+		var otherParts = other.PrereleaseTag?.Split('.', '-') ?? [];
+		var length = Math.Max(thisParts.Length, otherParts.Length);
+		for (var i = 0; i < length; i++)
 		{
 			// longer prerelease tag supersedes if otherwise equal
 			if (thisParts.Length <= i)
@@ -75,7 +75,7 @@ public readonly struct SemanticVersion : IEquatable<SemanticVersion>, IComparabl
 				return -1;
 
 			// compare numerically if possible
-			if (int.TryParse(thisParts[i], out int thisNum) && int.TryParse(otherParts[i], out int otherNum))
+			if (int.TryParse(thisParts[i], out var thisNum) && int.TryParse(otherParts[i], out var otherNum))
 				return thisNum.CompareTo(otherNum);
 
 			// else compare lexically

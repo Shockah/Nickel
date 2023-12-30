@@ -17,16 +17,16 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 
 	public PluginDependencyResolveResult<TPluginManifest, TVersion> ResolveDependencies(IEnumerable<TPluginManifest> toResolve, IReadOnlySet<TPluginManifest>? resolved = null)
 	{
-		Dictionary<TPluginManifest, ManifestEntry> manifestEntries = toResolve.Concat(resolved ?? Enumerable.Empty<TPluginManifest>())
+		var manifestEntries = toResolve.Concat(resolved ?? Enumerable.Empty<TPluginManifest>())
 			.ToDictionary(m => m, m => new ManifestEntry { Manifest = m, Data = this.RequiredManifestDataProvider(m) });
-		Dictionary<string, ManifestEntry> manifestEntriesByName = manifestEntries.Values
+		var manifestEntriesByName = manifestEntries.Values
 			.ToDictionary(m => m.Data.UniqueName, m => m);
 
 		#region happy path
-		List<IReadOnlySet<TPluginManifest>> loadSteps = new();
-		Dictionary<TPluginManifest, PluginDependencyUnresolvableResult<TPluginManifest, TVersion>> unresolvable = new();
-		List<TPluginManifest> allResolved = resolved?.ToList() ?? new();
-		List<TPluginManifest> toResolveLeft = toResolve.ToList();
+		List<IReadOnlySet<TPluginManifest>> loadSteps = [];
+		Dictionary<TPluginManifest, PluginDependencyUnresolvableResult<TPluginManifest, TVersion>> unresolvable = [];
+		var allResolved = resolved?.ToList() ?? [];
+		var toResolveLeft = toResolve.ToList();
 
 		bool MatchesDependency(TPluginManifest manifest, PluginDependency<TVersion> dependency)
 		{
@@ -76,7 +76,7 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 		HashSet<PluginDependency<TVersion>> GetMissingDependencies(TPluginManifest manifest)
 		{
 			if (!manifestEntries.TryGetValue(manifest, out var entry))
-				return new();
+				return [];
 			return entry.Data.Dependencies
 				.Where(d => !ContainsDependency(allResolved, d) && !ContainsDependency(toResolveLeft, d))
 				.ToHashSet();
@@ -106,7 +106,7 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 		PluginDependencyChain<TPluginManifest>? FindDependencyCycle(TPluginManifest firstManifest, TPluginManifest? currentManifest = default, List<TPluginManifest>? currentCycle = null)
 		{
 			currentManifest ??= firstManifest;
-			currentCycle ??= new();
+			currentCycle ??= [];
 
 			if (Equals(currentManifest, firstManifest) && currentCycle.Count > 0)
 				return new() { Values = currentCycle };
@@ -127,7 +127,7 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 
 		while (toResolveLeft.Count > 0)
 		{
-			List<TPluginManifest> toRemove = new();
+			List<TPluginManifest> toRemove = [];
 			foreach (var manifest in toResolveLeft)
 			{
 				if (toRemove.Contains(manifest))

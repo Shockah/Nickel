@@ -1,7 +1,7 @@
-using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Nickel.Common;
+using System;
 
 namespace Nickel;
 
@@ -11,7 +11,7 @@ public sealed class SemanticVersionConverter : JsonConverter<SemanticVersion>
 	{
 		if (reader.TokenType != JsonToken.String)
 			throw new ArgumentException($"Cannot parse {reader.Value} as {nameof(SemanticVersion)}.");
-		string? rawValue = JToken.Load(reader).Value<string>();
+		var rawValue = JToken.Load(reader).Value<string>();
 		return SemanticVersionParser.TryParse(rawValue, out var version) ? version : throw new ArgumentException($"Cannot parse {reader.Value} as {nameof(SemanticVersion)}.");
 	}
 
