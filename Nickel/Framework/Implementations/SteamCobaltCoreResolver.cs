@@ -101,7 +101,7 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 			}
 
 			/* regular install */
-			if (!result.TryGetValue("libraryfolders", out dynamic? libraryFoldersVdfEntryRaw))
+			if (!result.TryGetValue("libraryfolders", out var libraryFoldersVdfEntryRaw))
 			{
 				/* proton shim */
 				if (!result.TryGetValue("LibraryFolders", out libraryFoldersVdfEntryRaw))
