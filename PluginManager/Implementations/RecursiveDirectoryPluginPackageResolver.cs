@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
-using OneOf.Types;
 using OneOf;
+using OneOf.Types;
 
 namespace Nanoray.PluginManager;
 
