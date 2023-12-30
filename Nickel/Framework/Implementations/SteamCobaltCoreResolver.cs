@@ -4,6 +4,7 @@ using OneOf.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using VdfParser;
 
@@ -99,7 +100,25 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 				continue;
 			}
 
-			if (result["libraryfolders"] is not IDictionary<string, dynamic> libraryFoldersVdfEntry)
+			/* regular install */
+			if (!result.TryGetValue("libraryfolders", out dynamic? libraryFoldersVdfEntryRaw))
+			{
+				/* proton shim */
+				if (!result.TryGetValue("LibraryFolders", out libraryFoldersVdfEntryRaw))
+				{
+					/* trying the patience */
+					var entry = result.FirstOrDefault(x => x.Key.ToLowerInvariant() == "libraryfolders");
+					if (entry.Key == null)
+					{
+						/* nope, not found */
+						continue;
+					}
+
+					libraryFoldersVdfEntryRaw = entry.Value;
+				}
+			}
+
+			if (libraryFoldersVdfEntryRaw is not IDictionary<string, dynamic> libraryFoldersVdfEntry)
 			{
 				continue;
 			}
