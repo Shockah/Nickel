@@ -10,7 +10,7 @@ internal sealed record ContentManager(
 	CardManager Cards,
 	ArtifactManager Artifacts,
 	CharacterManager Characters,
-	ShipManager StarterShipManager,
+	ShipManager Ships,
 	PartManager Parts
 )
 {
