@@ -37,7 +37,7 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPlugin> : IPluginLoad
 
 		AssemblyLoadContext context = new(requiredPluginData.UniqueName);
 		var assembly = context.LoadFromStream(stream);
-		var pluginTypes = assembly.GetTypes().Where(t => t.IsAssignableTo(typeof(TPlugin))).ToList();
+		var pluginTypes = assembly.GetExportedTypes().Where(t => t.IsAssignableTo(typeof(TPlugin))).ToList();
 
 		if (pluginTypes.Count <= 0)
 			return new Error<string>($"The assembly {assembly} in package {package} does not include any {typeof(TPlugin)} subclasses.");
