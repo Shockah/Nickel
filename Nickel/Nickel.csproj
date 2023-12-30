@@ -41,7 +41,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="VdfConverter" Version="1.0.3" />
 		<ProjectReference Include="..\NickelCommon\NickelCommon.csproj" />
 		<ProjectReference Include="..\PluginManager\PluginManager.csproj" />
 		<ProjectReference Include="..\PluginManager.Cecil\PluginManager.Cecil.csproj" />
@@ -51,6 +50,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
 		<PackageReference Include="SingleFileExtractor.Core" Version="2.2.0" />
+		<PackageReference Include="VdfConverter" Version="1.0.3" />
 		<PackageReference Include="ThomasLevesque.WeakEvent" Version="4.1.0" />
 		<PackageReference Include="Pintail" Version="2.4.0" />
 		<PackageReference Include="Lib.Harmony" Version="2.2.2" />
