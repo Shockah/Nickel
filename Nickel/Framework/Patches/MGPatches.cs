@@ -1,12 +1,11 @@
 using HarmonyLib;
-using Microsoft.Extensions.Logging;
 using System;
 
 namespace Nickel;
 
 internal static class MGPatches
 {
-	internal static void Apply(Harmony harmony, ILogger logger)
+	internal static void Apply(Harmony harmony)
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(MG), "DrawLoadingScreen") ?? throw new InvalidOperationException("Could not patch game methods: missing method `MG.DrawLoadingScreen`"),
