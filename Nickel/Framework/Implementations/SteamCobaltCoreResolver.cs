@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using VdfParser;
 
 namespace Nickel;
 
@@ -19,49 +20,122 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 
 	public OneOf<CobaltCoreResolveResult, Error<string>> ResolveCobaltCore()
 	{
-		List<string> potentialPaths = [];
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-		{
-			potentialPaths.AddRange(new string[]
-			{
-				Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".steam/steam/steamapps/common/Cobalt Core"),
-				Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local/share/Steam/steamapps/common/Cobalt Core"),
-				Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".var/app/com.valvesoftware.Steam/data/Steam/steamapps/common/Cobalt Core"),
-			});
-		}
-		else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-		{
-			potentialPaths.AddRange(new string[]
-			{
-				Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support/Steam/steamapps/common/Cobalt Core/Contents/MacOS"),
-			});
-		}
-		else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-		{
-			if (Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Valve\\Steam", "SteamPath", null) is string steamPath)
-				potentialPaths.Add(Path.Combine(steamPath, "steamapps\\common\\Cobalt Core"));
+		List<string> potentialSteamLocations = [];
 
-			potentialPaths.AddRange(new string[]
+		var isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+		var isOsx = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+		var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+		if (isLinux)
+		{
+			potentialSteamLocations.AddRange(
+				new[]
+				{
+					Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".steam/steam"),
+					Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local/share"),
+					Path.Combine(
+						Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+						".var/app/com.valvesoftware.Steam/data/Steam"
+					),
+				}
+			);
+		}
+		else if (isOsx)
+		{
+			potentialSteamLocations.AddRange(
+				new[]
+				{
+					Path.Combine(
+						Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+						"Library/Application Support/Steam"
+					),
+				}
+			);
+		}
+		else if (isWindows)
+		{
+			const string steamInstallKeyName = "InstallPath";
+			const string steamInstallSubKey32 = @"SOFTWARE\Valve\Steam";
+			const string steamInstallSubKey64 = @"SOFTWARE\WOW6432Node\Valve\Steam";
+
+			foreach (var subkey in new[] { steamInstallSubKey32, steamInstallSubKey64 })
 			{
-				"C:\\Program Files\\Steam\\steamapps\\common\\Cobalt Core",
-				"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cobalt Core",
-				"C:\\Steam\\steamapps\\common\\Cobalt Core",
-			});
+				using var key = Registry.LocalMachine.OpenSubKey(subkey);
+				var value = key?.GetValue(steamInstallKeyName, null);
+				if (value is string sValue)
+				{
+					potentialSteamLocations.Add(sValue);
+				}
+			}
+
+			potentialSteamLocations.AddRange(
+				new[]
+				{
+					"C:\\Program Files\\Steam",
+					"C:\\Program Files (x86)\\Steam",
+					"C:\\Steam\\steamapps\\common",
+				}
+			);
 		}
 
-		foreach (var potentialPath in potentialPaths)
+		var potentialSteamAppsPaths = new HashSet<string>();
+		foreach (var potentialSteamPath in potentialSteamLocations)
 		{
-			DirectoryInfo directory = new(potentialPath);
-			if (!directory.Exists)
+			// This should be safe to delete
+			potentialSteamAppsPaths.Add(Path.Combine(potentialSteamPath, "steamapps"));
+
+			// Check for steamapps folder in vdf file
+			var libraryVdfPath = Path.Combine(potentialSteamPath, "steamapps", "libraryfolders.vdf");
+			if (!File.Exists(libraryVdfPath))
+			{
 				continue;
+			}
+
+			using var libraryVdfFile = File.OpenRead(libraryVdfPath);
+			var deserializer = new VdfDeserializer();
+
+			if (deserializer.Deserialize(libraryVdfFile) is not IDictionary<string, dynamic> result)
+			{
+				continue;
+			}
+
+			if (result["libraryfolders"] is not IDictionary<string, dynamic> libraryFoldersVdfEntry)
+			{
+				continue;
+			}
+
+			foreach (var folderDynamic in libraryFoldersVdfEntry.Values)
+			{
+				if (folderDynamic is not IDictionary<string, dynamic> folderDict)
+				{
+					continue;
+				}
+
+				if (folderDict["path"] is not string path)
+				{
+					continue;
+				}
+
+				potentialSteamAppsPaths.Add(Path.Combine(path, "steamapps"));
+			}
+		}
+
+		foreach (var potentialSteamAppPath in potentialSteamAppsPaths)
+		{
+			var potentialPath = Path.Combine(potentialSteamAppPath, "common", "Cobalt Core");
+			if (isOsx)
+			{
+				potentialPath = Path.Combine(potentialPath, "Contents", "MacOS");
+			}
+
+			DirectoryInfo directory = new(potentialPath);
+			if (!directory.Exists) continue;
 
 			FileInfo singleFileApplicationPath = new(Path.Combine(directory.FullName, "CobaltCore.exe"));
-			if (!singleFileApplicationPath.Exists)
-				continue;
+			if (!singleFileApplicationPath.Exists) continue;
 
 			FileInfo? pdbPath = new(Path.Combine(directory.FullName, "CobaltCore.pdb"));
-			if (pdbPath.Exists != true)
-				pdbPath = null;
+			if (pdbPath.Exists != true) pdbPath = null;
 
 			var resolver = this.ResolverFactory(singleFileApplicationPath, pdbPath);
 			return resolver.ResolveCobaltCore();

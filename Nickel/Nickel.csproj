@@ -41,6 +41,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="VdfConverter" Version="1.0.3" />
 		<ProjectReference Include="..\NickelCommon\NickelCommon.csproj" />
 		<ProjectReference Include="..\PluginManager\PluginManager.csproj" />
 		<ProjectReference Include="..\PluginManager.Cecil\PluginManager.Cecil.csproj" />
