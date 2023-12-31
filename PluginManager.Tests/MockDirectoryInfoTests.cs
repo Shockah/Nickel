@@ -9,7 +9,7 @@ internal sealed class MockDirectoryInfoTests
 	[Test]
 	public void TestSimpleDirectory()
 	{
-		MockDirectoryInfo mock = new(rootPath: "", name: "/", [
+		MockDirectoryInfo mock = new("/", [
 			new MockFileInfo("test"),
 			new MockFileInfo("asdf")
 		]);
@@ -22,7 +22,7 @@ internal sealed class MockDirectoryInfoTests
 	[Test]
 	public void TestGetChildAndGoBackUp()
 	{
-		MockDirectoryInfo mock = new(rootPath: "", name: "/", [
+		MockDirectoryInfo mock = new("/", [
 			new MockFileInfo("test"),
 			new MockFileInfo("asdf")
 		]);
@@ -37,7 +37,7 @@ internal sealed class MockDirectoryInfoTests
 	[Test]
 	public void TestGetNonExistentChildAndGoBackUp()
 	{
-		MockDirectoryInfo mock = new(rootPath: "", name: "/", [
+		MockDirectoryInfo mock = new("/", [
 			new MockFileInfo("test"),
 			new MockFileInfo("asdf")
 		]);
@@ -52,7 +52,7 @@ internal sealed class MockDirectoryInfoTests
 	[Test]
 	public void TestMultipleLevels()
 	{
-		MockDirectoryInfo mock = new(rootPath: "", name: "/", [
+		MockDirectoryInfo mock = new("/", [
 			new MockDirectoryInfo("a", [
 				new MockDirectoryInfo("b", [
 					new MockFileInfo("c")
@@ -71,7 +71,7 @@ internal sealed class MockDirectoryInfoTests
 	[Test]
 	public void TestMultipleNonExistentLevels()
 	{
-		MockDirectoryInfo mock = new(rootPath: "", name: "/", []);
+		MockDirectoryInfo mock = new("/", []);
 
 		var nestedChild = mock.GetChild("a/b/c");
 		Assert.IsFalse(nestedChild.Exists);

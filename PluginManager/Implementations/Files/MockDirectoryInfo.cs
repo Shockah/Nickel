@@ -10,18 +10,15 @@ public sealed class MockDirectoryInfo : IDirectoryInfo<MockFileInfo, MockDirecto
 	public MockDirectoryInfo? Parent { get; internal set; }
 	public bool Exists { get; }
 	public IEnumerable<IFileSystemInfo<MockFileInfo, MockDirectoryInfo>> Children { get; }
-	private string? RootPath { get; }
 
 	public string FullName
 	{
 		get
 		{
-			if (this.RootPath is { } rootPath)
-				return $"{rootPath}{this.Name}";
-			else if (this.Parent is { } parent)
+			if (this.Parent is { } parent)
 				return $"{parent.FullName}/{this.Name}";
 			else
-				throw new InvalidDataException($"The {nameof(MockDirectoryInfo)} has no {nameof(this.RootPath)} nor {nameof(this.Parent)}");
+				return $"{(this.Name == "/" ? "" : "/")}{this.Name}";
 		}
 	}
 
@@ -31,9 +28,8 @@ public sealed class MockDirectoryInfo : IDirectoryInfo<MockFileInfo, MockDirecto
 	public MockDirectoryInfo? AsDirectory
 		=> this;
 
-	public MockDirectoryInfo(string? rootPath, string name, bool exists)
+	public MockDirectoryInfo(string name, bool exists)
 	{
-		this.RootPath = rootPath;
 		this.Name = name;
 		this.Exists = exists;
 		this.Children = [];
@@ -56,11 +52,6 @@ public sealed class MockDirectoryInfo : IDirectoryInfo<MockFileInfo, MockDirecto
 		}
 	}
 
-	public MockDirectoryInfo(string rootPath, string name, ICollection<IFileSystemInfo<MockFileInfo, MockDirectoryInfo>> children) : this(name, children)
-	{
-		this.RootPath = rootPath;
-	}
-
 	public IFileSystemInfo<MockFileInfo, MockDirectoryInfo> GetChild(string relativePath)
 	{
 		// TODO: stop using Path methods in mocks
@@ -79,7 +70,7 @@ public sealed class MockDirectoryInfo : IDirectoryInfo<MockFileInfo, MockDirecto
 		{
 			var splitPart = split[i];
 			var next = current.Children.FirstOrDefault(c => c.Name == splitPart)?.AsDirectory;
-			current = next ?? new MockDirectoryInfo(rootPath: $"{current.FullName}/", name: splitPart, exists: false)
+			current = next ?? new MockDirectoryInfo(splitPart, exists: false)
 			{
 				Parent = current
 			};
@@ -94,7 +85,10 @@ public sealed class MockDirectoryInfo : IDirectoryInfo<MockFileInfo, MockDirecto
 		var child = this.GetChild(relativePath);
 		if (child.AsFile is { } file)
 			return file;
-		return new MockFileInfo(rootPath: $"{this.RootPath}/", name: child.Name, exists: false);
+		return new MockFileInfo(child.Name, exists: false)
+		{
+			Parent = child.Parent
+		};
 	}
 
 	public MockDirectoryInfo GetDirectory(string relativePath)
@@ -102,6 +96,9 @@ public sealed class MockDirectoryInfo : IDirectoryInfo<MockFileInfo, MockDirecto
 		var child = this.GetChild(relativePath);
 		if (child.AsDirectory is { } directory)
 			return directory;
-		return new MockDirectoryInfo(rootPath: $"{this.RootPath}/", name: child.Name, exists: false);
+		return new MockDirectoryInfo(child.Name, exists: false)
+		{
+			Parent = child.Parent
+		};
 	}
 }
