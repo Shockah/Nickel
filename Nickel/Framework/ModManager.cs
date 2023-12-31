@@ -101,8 +101,8 @@ internal sealed class ModManager
 				databaseProvider: () => this.LegacyDatabase!
 			),
 			condition: package => package.Manifest.ModType == NickelConstants.LegacyModType &&
-			                      this.CobaltCoreAssembly is not null &&
-			                      this.LegacyDatabase is not null
+								  this.CobaltCoreAssembly is not null &&
+								  this.LegacyDatabase is not null
 		);
 
 		this.ExtendablePluginLoader.RegisterPluginLoader(
@@ -173,15 +173,7 @@ internal sealed class ModManager
 			{
 				if (package.Manifest.RequiredApiVersion > NickelConstants.Version)
 					return new Error<string>(
-						$"Mod {
-							package.Manifest.UniqueName
-						} requires API version {
-							package.Manifest.RequiredApiVersion
-						}, but {
-							NickelConstants.Name
-						} is currently {
-							NickelConstants.Version
-						}."
+						$"Mod {package.Manifest.UniqueName} requires API version {package.Manifest.RequiredApiVersion}, but {NickelConstants.Name} is currently {NickelConstants.Version}."
 					);
 				return null;
 			}
@@ -230,7 +222,7 @@ internal sealed class ModManager
 				.SelectMany(step => step)
 				.Select(
 					m => toLoad.FirstOrDefault(p => p.Manifest.UniqueName == m.UniqueName) ??
-					     throw new InvalidOperationException()
+						 throw new InvalidOperationException()
 				)
 		);
 	}
