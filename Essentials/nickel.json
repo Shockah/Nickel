@@ -1,0 +1,6 @@
+{
+	"UniqueName": "Nickel.Essentials",
+	"Version": "0.1.0",
+	"RequiredApiVersion": "0.1.0",
+	"EntryPointAssemblyFileName": "Essentials.dll"
+}
