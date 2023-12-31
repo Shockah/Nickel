@@ -11,5 +11,5 @@ public readonly struct CharacterConfiguration
 	public IReadOnlyList<Type> StarterCardTypes { get; init; }
 	public CharacterAnimationConfiguration? NeutralAnimation { get; init; }
 	public CharacterAnimationConfiguration? MiniAnimation { get; init; }
-	public bool IsLocked { get; init; }
+	public bool StartLocked { get; init; }
 }

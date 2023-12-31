@@ -135,7 +135,7 @@ internal sealed class CharacterManager
 	private void OnGetUnlockedChars(object? sender, HashSet<Deck> unlockedCharacters)
 	{
 		foreach (var entry in this.UniqueNameToCharacterEntry.Values)
-			if (!entry.Configuration.IsLocked)
+			if (!entry.Configuration.StartLocked)
 				unlockedCharacters.Add(entry.Configuration.Deck);
 	}
 

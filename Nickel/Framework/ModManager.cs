@@ -56,10 +56,18 @@ internal sealed class ModManager
 		};
 
 		var assemblyPluginLoaderParameterInjector = new CompoundAssemblyPluginLoaderParameterInjector<IModManifest>(
-			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, ILogger>(package => this.ObtainLogger(package.Manifest)),
-			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, IModHelper>(package => this.ObtainModHelper(package.Manifest)),
-			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendablePluginLoader<IModManifest, Mod>>(this.ExtendablePluginLoader),
-			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendableAssemblyDefinitionEditor>(extendableAssemblyDefinitionEditor)
+			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, ILogger>(
+				package => this.ObtainLogger(package.Manifest)
+			),
+			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, IModHelper>(
+				package => this.ObtainModHelper(package.Manifest)
+			),
+			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendablePluginLoader<IModManifest, Mod>>(
+				this.ExtendablePluginLoader
+			),
+			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendableAssemblyDefinitionEditor>(
+				extendableAssemblyDefinitionEditor
+			)
 		);
 
 		var assemblyPluginLoader = new ConditionalPluginLoader<IAssemblyModManifest, Mod>(
@@ -78,11 +86,12 @@ internal sealed class ModManager
 		var legacyAssemblyPluginLoader = new ConditionalPluginLoader<IAssemblyModManifest, Mod>(
 			loader: new LegacyAssemblyPluginLoader(
 				loader: new AssemblyPluginLoader<IAssemblyModManifest, ILegacyModManifest>(
-					requiredPluginDataProvider: p => new AssemblyPluginLoader<IAssemblyModManifest, ILegacyModManifest>.RequiredPluginData
-					{
-						UniqueName = p.Manifest.UniqueName,
-						EntryPointAssemblyFileName = p.Manifest.EntryPointAssemblyFileName
-					},
+					requiredPluginDataProvider: p =>
+						new AssemblyPluginLoader<IAssemblyModManifest, ILegacyModManifest>.RequiredPluginData
+						{
+							UniqueName = p.Manifest.UniqueName,
+							EntryPointAssemblyFileName = p.Manifest.EntryPointAssemblyFileName
+						},
 					parameterInjector: assemblyPluginLoaderParameterInjector,
 					assemblyEditor: extendableAssemblyDefinitionEditor
 				),
@@ -91,7 +100,8 @@ internal sealed class ModManager
 				cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!,
 				databaseProvider: () => this.LegacyDatabase!
 			),
-			condition: package => package.Manifest.ModType == NickelConstants.LegacyModType && this.CobaltCoreAssembly is not null && this.LegacyDatabase is not null
+			condition: package => package.Manifest.ModType == NickelConstants.LegacyModType
+				&& this.CobaltCoreAssembly is not null && this.LegacyDatabase is not null
 		);
 
 		this.ExtendablePluginLoader.RegisterPluginLoader(
@@ -120,20 +130,24 @@ internal sealed class ModManager
 	{
 		this.Logger.LogInformation("Resolving mods...");
 
-		var pluginDependencyResolver = new MultiPhasePluginDependencyResolver<IModManifest, SemanticVersion, ModLoadPhase>(
-			new PluginDependencyResolver<IModManifest, SemanticVersion>(
-				requiredManifestDataProvider: p => new PluginDependencyResolver<IModManifest, SemanticVersion>.RequiredManifestData
-				{
-					UniqueName = p.UniqueName,
-					Version = p.Version,
-					Dependencies = p.Dependencies
-						.Select(d => new PluginDependency<SemanticVersion>(d.UniqueName, d.Version, d.IsRequired))
-						.ToHashSet()
-				}
-			),
-			GetModLoadPhaseForManifest,
-			Enum.GetValues<ModLoadPhase>()
-		);
+		var pluginDependencyResolver =
+			new MultiPhasePluginDependencyResolver<IModManifest, SemanticVersion, ModLoadPhase>(
+				new PluginDependencyResolver<IModManifest, SemanticVersion>(
+					requiredManifestDataProvider: p =>
+						new PluginDependencyResolver<IModManifest, SemanticVersion>.RequiredManifestData
+						{
+							UniqueName = p.UniqueName,
+							Version = p.Version,
+							Dependencies = p.Dependencies
+								.Select(
+									d => new PluginDependency<SemanticVersion>(d.UniqueName, d.Version, d.IsRequired)
+								)
+								.ToHashSet()
+						}
+				),
+				GetModLoadPhaseForManifest,
+				Enum.GetValues<ModLoadPhase>()
+			);
 		var pluginManifestLoader = new JsonPluginManifestLoader<ModManifest>();
 		var pluginPackageResolver = new ValidatingPluginPackageResolver<IModManifest>(
 			resolver: new SubpluginPluginPackageResolver<IModManifest>(
@@ -141,19 +155,25 @@ internal sealed class ModManager
 					directory: new DirectoryInfoImpl(this.ModsDirectory),
 					manifestFileName: "nickel.json",
 					ignoreDotDirectories: true,
-					pluginManifestLoader: new SpecializedPluginManifestLoader<ModManifest, IModManifest>(pluginManifestLoader)
+					pluginManifestLoader: new SpecializedPluginManifestLoader<ModManifest, IModManifest>(
+						pluginManifestLoader
+					)
 				),
 				subpluginResolverFactory: p =>
 				{
 					foreach (var optionalSubmod in p.Manifest.Submods.Where(submod => submod.IsOptional))
 						this.OptionalSubmods.Add(optionalSubmod.Manifest);
-					return p.Manifest.Submods.Select(submod => new InnerPluginPackageResolver<IModManifest>(p, submod.Manifest));
+					return p.Manifest.Submods.Select(
+						submod => new InnerPluginPackageResolver<IModManifest>(p, submod.Manifest)
+					);
 				}
 			),
 			validator: package =>
 			{
 				if (package.Manifest.RequiredApiVersion > NickelConstants.Version)
-					return new Error<string>($"Mod {package.Manifest.UniqueName} requires API version {package.Manifest.RequiredApiVersion}, but {NickelConstants.Name} is currently {NickelConstants.Version}.");
+					return new Error<string>(
+						$"Mod {package.Manifest.UniqueName} requires API version {package.Manifest.RequiredApiVersion}, but {NickelConstants.Name} is currently {NickelConstants.Version}."
+					);
 				return null;
 			}
 		);
@@ -174,19 +194,35 @@ internal sealed class ModManager
 		var dependencyResolverResult = pluginDependencyResolver.ResolveDependencies(toLoad.Select(p => p.Manifest));
 		foreach (var (unresolvableManifest, reason) in dependencyResolverResult.Unresolvable)
 		{
-			if (this.OptionalSubmods.Contains(unresolvableManifest))
-				continue;
+			if (this.OptionalSubmods.Contains(unresolvableManifest)) continue;
 			reason.Switch(
-				missingDependencies => this.Logger.LogError("Could not load {UniqueName}: missing dependencies: {Dependencies}", unresolvableManifest.UniqueName, string.Join(", ", missingDependencies.Dependencies.Select(d => d.UniqueName))),
-				dependencyCycle => this.Logger.LogError("Could not load {UniqueName}: dependency cycle: {Cycle}", unresolvableManifest.UniqueName, string.Join(" -> ", dependencyCycle.Cycle.Values.Append(dependencyCycle.Cycle.Values[0]).Select(m => m.UniqueName))),
-				unknown => this.Logger.LogError("Could not load {UniqueName}: unknown reason.", unresolvableManifest.UniqueName)
+				missingDependencies => this.Logger.LogError(
+					"Could not load {UniqueName}: missing dependencies: {Dependencies}",
+					unresolvableManifest.UniqueName,
+					string.Join(", ", missingDependencies.Dependencies.Select(d => d.UniqueName))
+				),
+				dependencyCycle => this.Logger.LogError(
+					"Could not load {UniqueName}: dependency cycle: {Cycle}",
+					unresolvableManifest.UniqueName,
+					string.Join(
+						" -> ",
+						dependencyCycle.Cycle.Values.Append(dependencyCycle.Cycle.Values[0]).Select(m => m.UniqueName)
+					)
+				),
+				unknown => this.Logger.LogError(
+					"Could not load {UniqueName}: unknown reason.",
+					unresolvableManifest.UniqueName
+				)
 			);
 		}
 
 		this.ResolvedMods.AddRange(
 			dependencyResolverResult.LoadSteps
 				.SelectMany(step => step)
-				.Select(m => toLoad.FirstOrDefault(p => p.Manifest.UniqueName == m.UniqueName) ?? throw new InvalidOperationException())
+				.Select(
+					m => toLoad.FirstOrDefault(p => p.Manifest.UniqueName == m.UniqueName)
+						?? throw new InvalidOperationException()
+				)
 		);
 	}
 
@@ -207,37 +243,47 @@ internal sealed class ModManager
 				continue;
 			this.Logger.LogDebug("Loading mod {UniqueName}...", manifest.UniqueName);
 
-			var failedRequiredDependencies = manifest.Dependencies.Where(d => d.IsRequired && this.FailedMods.Any(m => m.UniqueName == d.UniqueName)).ToList();
+			var failedRequiredDependencies = manifest.Dependencies
+				.Where(d => d.IsRequired && this.FailedMods.Any(m => m.UniqueName == d.UniqueName))
+				.ToList();
 			if (failedRequiredDependencies.Count > 0)
 			{
 				this.FailedMods.Add(manifest);
-				this.Logger.LogError("Could not load {UniqueName}: Required dependencies failed to load: {Dependencies}", manifest.UniqueName, string.Join(", ", failedRequiredDependencies.Select(d => d.UniqueName)));
+				this.Logger.LogError(
+					"Could not load {UniqueName}: Required dependencies failed to load: {Dependencies}",
+					manifest.UniqueName,
+					string.Join(", ", failedRequiredDependencies.Select(d => d.UniqueName))
+				);
 				continue;
 			}
 
 			if (!this.ExtendablePluginLoader.CanLoadPlugin(package))
 			{
 				this.FailedMods.Add(manifest);
-				this.Logger.LogError("Could not load {UniqueName}: no registered loader for this kind of mod.", manifest.UniqueName);
+				this.Logger.LogError(
+					"Could not load {UniqueName}: no registered loader for this kind of mod.",
+					manifest.UniqueName
+				);
 				continue;
 			}
 
-			this.ExtendablePluginLoader.LoadPlugin(package).Switch(
-				mod =>
-				{
-					this.UniqueNameToInstance[manifest.UniqueName] = mod;
-					mod.Package = package;
-					mod.Logger = this.ObtainLogger(manifest);
-					mod.Helper = this.ObtainModHelper(manifest);
-					successfulMods.Add(manifest);
-					this.Logger.LogInformation("Loaded mod {UniqueName}.", manifest.UniqueName);
-				},
-				error =>
-				{
-					this.FailedMods.Add(manifest);
-					this.Logger.LogError("Could not load {UniqueName}: {Error}", manifest.UniqueName, error.Value);
-				}
-			);
+			this.ExtendablePluginLoader.LoadPlugin(package)
+				.Switch(
+					mod =>
+					{
+						this.UniqueNameToInstance[manifest.UniqueName] = mod;
+						mod.Package = package;
+						mod.Logger = this.ObtainLogger(manifest);
+						mod.Helper = this.ObtainModHelper(manifest);
+						successfulMods.Add(manifest);
+						this.Logger.LogInformation("Loaded mod {UniqueName}.", manifest.UniqueName);
+					},
+					error =>
+					{
+						this.FailedMods.Add(manifest);
+						this.Logger.LogError("Could not load {UniqueName}: {Error}", manifest.UniqueName, error.Value);
+					}
+				);
 		}
 
 		this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
@@ -258,6 +304,7 @@ internal sealed class ModManager
 			logger = this.LoggerFactory.CreateLogger(manifest.UniqueName);
 			this.UniqueNameToLogger[manifest.UniqueName] = logger;
 		}
+
 		return logger;
 	}
 
@@ -273,10 +320,24 @@ internal sealed class ModManager
 			ModCards modCards = new(manifest, () => this.ContentManager!.Cards);
 			ModArtifacts modArtifacts = new(manifest, () => this.ContentManager!.Artifacts);
 			ModCharacters modCharacters = new(manifest, () => this.ContentManager!.Characters);
-			ModContent modContent = new(modSprites, modDecks, modStatuses, modCards, modArtifacts, modCharacters);
+			ModShips modShips = new(
+				manifest,
+				() => this.ContentManager!.Ships,
+				() => this.ContentManager!.Parts
+			);
+			ModContent modContent = new(
+				modSprites,
+				modDecks,
+				modStatuses,
+				modCards,
+				modArtifacts,
+				modCharacters,
+				modShips
+			);
 			helper = new ModHelper(modRegistry, modEvents, modContent, () => this.CurrentModLoadPhase);
 			this.UniqueNameToHelper[manifest.UniqueName] = helper;
 		}
+
 		return helper;
 	}
 }

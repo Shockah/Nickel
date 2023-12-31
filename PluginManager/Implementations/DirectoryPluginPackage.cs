@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,8 +19,13 @@ public sealed class DirectoryPluginPackage<TPluginManifest> : IDirectoryPluginPa
 		this.Directory = directory;
 		this.Files = files;
 
+		Uri directoryUri = new(directory.FullName + Path.DirectorySeparatorChar);
 		this.DataEntries = this.Files
-			.Select(directory.GetRelativePathTo)
+			.Select(f =>
+			{
+				Uri uri = new(f.FullName);
+				return directoryUri.MakeRelativeUri(uri).ToString();
+			})
 			.ToHashSet();
 	}
 

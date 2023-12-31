@@ -9,7 +9,9 @@ internal sealed record ContentManager(
 	StatusManager Statuses,
 	CardManager Cards,
 	ArtifactManager Artifacts,
-	CharacterManager Characters
+	CharacterManager Characters,
+	ShipManager Ships,
+	PartManager Parts
 )
 {
 	public ContentManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider) : this(
@@ -18,7 +20,9 @@ internal sealed record ContentManager(
 		new StatusManager(currentModLoadPhaseProvider),
 		new CardManager(currentModLoadPhaseProvider),
 		new ArtifactManager(currentModLoadPhaseProvider),
-		new CharacterManager(currentModLoadPhaseProvider, loggerProvider)
+		new CharacterManager(currentModLoadPhaseProvider, loggerProvider),
+		new ShipManager(currentModLoadPhaseProvider),
+		new PartManager(currentModLoadPhaseProvider)
 	)
 	{ }
 
@@ -29,5 +33,7 @@ internal sealed record ContentManager(
 		this.Cards.InjectQueuedEntries();
 		this.Artifacts.InjectQueuedEntries();
 		this.Characters.InjectQueuedEntries();
+		this.Ships.InjectQueuedEntries();
+		this.Parts.InjectQueuedEntries();
 	}
 }

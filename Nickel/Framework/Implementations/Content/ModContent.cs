@@ -1,6 +1,7 @@
 namespace Nickel;
 
-internal sealed class ModContent : IModContent
+internal sealed class ModContent
+	: IModContent
 {
 	public IModSprites Sprites { get; init; }
 	public IModDecks Decks { get; init; }
@@ -8,8 +9,17 @@ internal sealed class ModContent : IModContent
 	public IModCards Cards { get; init; }
 	public IModArtifacts Artifacts { get; init; }
 	public IModCharacters Characters { get; init; }
+	public IModShips Ships { get; init; }
 
-	public ModContent(IModSprites sprites, IModDecks decks, IModStatuses statuses, IModCards cards, IModArtifacts artifacts, IModCharacters characters)
+	public ModContent(
+		IModSprites sprites,
+		IModDecks decks,
+		IModStatuses statuses,
+		IModCards cards,
+		IModArtifacts artifacts,
+		IModCharacters characters,
+		IModShips starterShips
+	)
 	{
 		this.Sprites = sprites;
 		this.Decks = decks;
@@ -17,5 +27,6 @@ internal sealed class ModContent : IModContent
 		this.Cards = cards;
 		this.Artifacts = artifacts;
 		this.Characters = characters;
+		this.Ships = starterShips;
 	}
 }
