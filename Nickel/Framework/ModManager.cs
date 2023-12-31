@@ -138,7 +138,7 @@ internal sealed class ModManager
 		var pluginPackageResolver = new ValidatingPluginPackageResolver<IModManifest>(
 			resolver: new SubpluginPluginPackageResolver<IModManifest>(
 				baseResolver: new RecursiveDirectoryPluginPackageResolver<IModManifest>(
-					directory: this.ModsDirectory,
+					directory: new DirectoryInfoImpl(this.ModsDirectory),
 					manifestFileName: "nickel.json",
 					ignoreDotDirectories: true,
 					pluginManifestLoader: new SpecializedPluginManifestLoader<ModManifest, IModManifest>(pluginManifestLoader)

@@ -11,6 +11,9 @@ public sealed record DirectoryInfoImpl(
 	public string Name
 		=> this.DirectoryInfo.Name;
 
+	public string FullName
+		=> this.DirectoryInfo.FullName;
+
 	public bool Exists
 		=> this.DirectoryInfo.Exists;
 
@@ -32,6 +35,15 @@ public sealed record DirectoryInfoImpl(
 
 	public DirectoryInfoImpl? AsDirectory
 		=> this;
+
+	public IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl> GetChild(string relativePath)
+		=> new LazyFileSystemInfoImpl(relativePath.Replace("\\", "/").Split("/").Last(), Path.Combine(this.FullName, relativePath));
+
+	public FileInfoImpl GetFile(string relativePath)
+		=> new(new FileInfo(Path.Combine(this.FullName, relativePath)));
+
+	public DirectoryInfoImpl GetDirectory(string relativePath)
+		=> new(new DirectoryInfo(Path.Combine(this.FullName, relativePath)));
 
 	public void Create()
 		=> this.DirectoryInfo.Create();

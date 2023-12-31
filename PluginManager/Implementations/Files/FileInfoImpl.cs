@@ -9,6 +9,9 @@ public sealed record FileInfoImpl(
 	public string Name
 		=> this.FileInfo.Name;
 
+	public string FullName
+		=> this.FileInfo.FullName;
+
 	public bool Exists
 		=> this.FileInfo.Exists;
 

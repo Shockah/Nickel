@@ -65,7 +65,7 @@ public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPlugin
 	{
 		public TSpecializedPluginManifest Manifest { get; }
 
-		public DirectoryInfo Directory
+		public IDirectoryInfo Directory
 			=> this.Package.Directory;
 
 		public IReadOnlySet<string> DataEntries
