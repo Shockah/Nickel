@@ -9,7 +9,7 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 {
 	private IDirectoryInfo Directory { get; }
 	private string ManifestFileName { get; }
-	private bool IgnoreDotDirectories { get; }
+	private bool IgnoreDotNames { get; }
 	private bool AllowPluginsInRoot { get; }
 	private Func<IDirectoryInfo, IPluginPackageResolver<TPluginManifest>?>? DirectoryResolverFactory { get; }
 	private Func<IFileInfo, IPluginPackageResolver<TPluginManifest>?>? FileResolverFactory { get; }
@@ -17,7 +17,7 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 	public RecursiveDirectoryPluginPackageResolver(
 		IDirectoryInfo directory,
 		string manifestFileName,
-		bool ignoreDotDirectories,
+		bool ignoreDotNames,
 		bool allowPluginsInRoot,
 		Func<IDirectoryInfo, IPluginPackageResolver<TPluginManifest>?>? directoryResolverFactory,
 		Func<IFileInfo, IPluginPackageResolver<TPluginManifest>?>? fileResolverFactory
@@ -25,7 +25,7 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 	{
 		this.Directory = directory;
 		this.ManifestFileName = manifestFileName;
-		this.IgnoreDotDirectories = ignoreDotDirectories;
+		this.IgnoreDotNames = ignoreDotNames;
 		this.AllowPluginsInRoot = allowPluginsInRoot;
 		this.DirectoryResolverFactory = directoryResolverFactory;
 		this.FileResolverFactory = fileResolverFactory;
@@ -56,13 +56,13 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 		}
 
 		foreach (var file in directory.Files)
-			if (this.FileResolverFactory?.Invoke(file) is { } fileResolver)
+			if ((!file.Name.StartsWith(".") || !this.IgnoreDotNames) && this.FileResolverFactory?.Invoke(file) is { } fileResolver)
 				foreach (var package in fileResolver.ResolvePluginPackages())
 					yield return package;
 
 		foreach (var childDirectory in directory.Directories)
 		{
-			if (childDirectory.Name.StartsWith(".") && this.IgnoreDotDirectories)
+			if (childDirectory.Name.StartsWith(".") && this.IgnoreDotNames)
 				continue;
 
 			var hadAnyChildPackages = false;

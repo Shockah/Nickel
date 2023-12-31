@@ -16,7 +16,7 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 		return new(
 			directory,
 			manifestFileName: "manifest.json",
-			ignoreDotDirectories: true,
+			ignoreDotNames: true,
 			allowPluginsInRoot: false,
 			directoryResolverFactory: d => new DirectoryPluginPackageResolver<string>(d, "manifest.json", manifestLoader, SingleFilePluginPackageResolverNoManifestResult.Error),
 			fileResolverFactory: null
