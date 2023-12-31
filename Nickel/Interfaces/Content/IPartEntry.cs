@@ -5,5 +5,5 @@ namespace Nickel;
 public interface IPartEntry : IModOwned
 {
 	Spr Sprite { get; }
-	Spr? SpriteOff { get; }
+	Spr? DisabledSprite { get; }
 }
