@@ -26,9 +26,12 @@ public sealed class LazyFileSystemInfoImpl : IFileSystemInfo<FileInfoImpl, Direc
 		this.FullName = fullName;
 	}
 
+	public bool IsInSameFileSystemType(IFileSystemInfo other)
+		=> other is IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>;
+
 	public string GetRelativePathTo(IFileSystemInfo other)
 	{
-		if (other is not IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>)
+		if (other is not FileSystemInfoImpl<FileSystemInfo>)
 			throw new ArgumentException("The two file systems are unrelated to each other");
 		return Path.GetRelativePath(this.FullName, other.FullName);
 	}

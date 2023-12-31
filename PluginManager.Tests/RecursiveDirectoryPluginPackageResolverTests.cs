@@ -40,9 +40,9 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 			}
 
 			Assert.AreEqual("moda", package.Manifest);
-			Assert.AreEqual(2, package.DataEntries.Count);
-			Assert.IsTrue(package.DataEntries.Contains("manifest.json"));
-			Assert.IsTrue(package.DataEntries.Contains("moda.dll"));
+			Assert.AreEqual(2, package.PackageRoot.Children.Count());
+			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
+			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "moda.dll"));
 		}
 		{
 			var packageOrError = results[1];
@@ -53,9 +53,9 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 			}
 
 			Assert.AreEqual("modb", package.Manifest);
-			Assert.AreEqual(3, package.DataEntries.Count);
-			Assert.IsTrue(package.DataEntries.Contains("manifest.json"));
-			Assert.IsTrue(package.DataEntries.Contains("modb.dll"));
+			Assert.AreEqual(3, package.PackageRoot.Children.Count());
+			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
+			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "modb.dll"));
 		}
 	}
 
@@ -144,9 +144,9 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 			}
 
 			Assert.AreEqual("moda", package.Manifest);
-			Assert.AreEqual(2, package.DataEntries.Count);
-			Assert.IsTrue(package.DataEntries.Contains("manifest.json"));
-			Assert.IsTrue(package.DataEntries.Contains("moda.dll"));
+			Assert.AreEqual(2, package.PackageRoot.Children.Count());
+			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
+			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "moda.dll"));
 		}
 		{
 			var packageOrError = results[1];

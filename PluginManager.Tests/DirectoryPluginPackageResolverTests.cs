@@ -21,7 +21,7 @@ internal sealed class DirectoryPluginPackageResolverTests
 			Manifest = "manifest"
 		};
 
-		DirectoryPluginPackageResolver<string> resolver = new(directory, "manifest.json", manifestLoader);
+		DirectoryPluginPackageResolver<string> resolver = new(directory, "manifest.json", manifestLoader, SingleFilePluginPackageResolverNoManifestResult.Error);
 
 		var results = resolver.ResolvePluginPackages().ToList();
 		Assert.AreEqual(1, results.Count);
@@ -34,9 +34,9 @@ internal sealed class DirectoryPluginPackageResolverTests
 		}
 
 		Assert.AreEqual("manifest", package.Manifest);
-		Assert.AreEqual(2, package.DataEntries.Count);
-		Assert.IsTrue(package.DataEntries.Contains("manifest.json"));
-		Assert.IsTrue(package.DataEntries.Contains("mod.dll"));
+		Assert.AreEqual(2, package.PackageRoot.Children.Count());
+		Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
+		Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "mod.dll"));
 	}
 
 	[Test]
@@ -50,7 +50,7 @@ internal sealed class DirectoryPluginPackageResolverTests
 			Manifest = "manifest"
 		};
 
-		DirectoryPluginPackageResolver<string> resolver = new(directory, "manifest.json", manifestLoader);
+		DirectoryPluginPackageResolver<string> resolver = new(directory, "manifest.json", manifestLoader, SingleFilePluginPackageResolverNoManifestResult.Error);
 
 		var results = resolver.ResolvePluginPackages().ToList();
 		Assert.AreEqual(1, results.Count);

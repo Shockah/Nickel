@@ -33,7 +33,7 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 				yield break;
 			}
 
-			foreach (var package in new DirectoryPluginPackageResolver<TPluginManifest>(directory, this.ManifestFileName, this.PluginManifestLoader).ResolvePluginPackages())
+			foreach (var package in new DirectoryPluginPackageResolver<TPluginManifest>(directory, this.ManifestFileName, this.PluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Error).ResolvePluginPackages())
 				yield return package;
 			yield break;
 		}

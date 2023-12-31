@@ -40,22 +40,18 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 	}
 
 	public bool CanLoadPlugin(IPluginPackage<IAssemblyModManifest> package)
-		=> package is IDirectoryPluginPackage<IAssemblyModManifest> && this.Loader.CanLoadPlugin(package);
+		=> package.PackageRoot is IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl> && this.Loader.CanLoadPlugin(package);
 
 	public OneOf<Mod, Error<string>> LoadPlugin(IPluginPackage<IAssemblyModManifest> package)
-	{
-		if (package is not IDirectoryPluginPackage<IAssemblyModManifest> directoryPackage)
-			throw new ArgumentException($"This plugin loader cannot load the plugin package {package}.");
-		return this.Loader.LoadPlugin(package).Match<OneOf<Mod, Error<string>>>(
+		=> this.Loader.LoadPlugin(package).Match<OneOf<Mod, Error<string>>>(
 			mod =>
 			{
 				var helper = this.HelperProvider(package.Manifest);
 				LegacyRegistry registry = new(package.Manifest, helper, this.CobaltCoreAssemblyProvider(), this.DatabaseProvider());
-				return new LegacyModWrapper(mod, registry, directoryPackage.Directory, helper, this.LoggerProvider(package.Manifest));
+				return new LegacyModWrapper(mod, registry, package.PackageRoot, helper, this.LoggerProvider(package.Manifest));
 			},
 			error => error
 		);
-	}
 
 	private sealed class LegacyRegistry : IModLoaderContact, IPrelaunchContactPoint, ISpriteRegistry, IDeckRegistry, IStatusRegistry, ICardRegistry, IArtifactRegistry, IAnimationRegistry, ICharacterRegistry
 	{

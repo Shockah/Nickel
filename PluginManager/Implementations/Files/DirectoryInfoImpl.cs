@@ -1,28 +1,16 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
 namespace Nanoray.PluginManager;
 
-public sealed record DirectoryInfoImpl(
-	DirectoryInfo DirectoryInfo
-) : IWritableDirectoryInfo<FileInfoImpl, DirectoryInfoImpl>
+public sealed class DirectoryInfoImpl : FileSystemInfoImpl<DirectoryInfo>, IWritableDirectoryInfo<FileInfoImpl, DirectoryInfoImpl>
 {
-	public string Name
-		=> this.DirectoryInfo.Name;
-
-	public string FullName
-		=> this.DirectoryInfo.FullName;
-
-	public bool Exists
-		=> this.DirectoryInfo.Exists;
-
-	public DirectoryInfoImpl? Parent
-		=> this.DirectoryInfo.Parent is { } parent ? new DirectoryInfoImpl(parent) : null;
+	public override DirectoryInfoImpl? Parent
+		=> this.FileSystemInfo.Parent is { } parent ? new DirectoryInfoImpl(parent) : null;
 
 	public IEnumerable<IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>> Children
-		=> this.DirectoryInfo.EnumerateFileSystemInfos().Select<FileSystemInfo, IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>>(i =>
+		=> this.FileSystemInfo.EnumerateFileSystemInfos().Select<FileSystemInfo, IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>>(i =>
 		{
 			if (i is FileInfo fileInfo)
 				return new FileInfoImpl(fileInfo);
@@ -31,11 +19,9 @@ public sealed record DirectoryInfoImpl(
 			throw new InvalidDataException($"Unrecognized type {i.GetType()}");
 		});
 
-	public FileInfoImpl? AsFile
-		=> null;
-
-	public DirectoryInfoImpl? AsDirectory
-		=> this;
+	public DirectoryInfoImpl(DirectoryInfo info) : base(info)
+	{
+	}
 
 	public IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl> GetRelative(string relativePath)
 		=> new LazyFileSystemInfoImpl(relativePath.Replace("\\", "/").Split("/").Last(), Path.Combine(this.FullName, relativePath));
@@ -47,15 +33,8 @@ public sealed record DirectoryInfoImpl(
 		=> new(new DirectoryInfo(Path.Combine(this.FullName, relativePath)));
 
 	public void Create()
-		=> this.DirectoryInfo.Create();
+		=> this.FileSystemInfo.Create();
 
 	public void Delete()
-		=> this.DirectoryInfo.Delete(recursive: true);
-
-	public string GetRelativePathTo(IFileSystemInfo other)
-	{
-		if (other is not IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>)
-			throw new ArgumentException("The two file systems are unrelated to each other");
-		return Path.GetRelativePath(this.FullName, other.FullName);
-	}
+		=> this.FileSystemInfo.Delete(recursive: true);
 }

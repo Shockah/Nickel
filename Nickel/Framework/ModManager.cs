@@ -164,7 +164,7 @@ internal sealed class ModManager
 					foreach (var optionalSubmod in p.Manifest.Submods.Where(submod => submod.IsOptional))
 						this.OptionalSubmods.Add(optionalSubmod.Manifest);
 					return p.Manifest.Submods.Select(
-						submod => new InnerPluginPackageResolver<IModManifest>(p, submod.Manifest)
+						submod => new InnerPluginPackageResolver<IModManifest>(p, submod.Manifest, disposesOuterPackage: false))
 					);
 				}
 			),
