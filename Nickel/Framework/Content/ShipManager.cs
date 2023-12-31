@@ -19,7 +19,8 @@ internal sealed class ShipManager
 	{
 		foreach (var (uniqueName, entry) in this.UniqueNameToEntry)
 		{
-			if (entry.Configuration.StartLocked) continue;
+			if (entry.Configuration.StartLocked)
+				continue;
 			unlockedShips.Add(uniqueName);
 		}
 	}
@@ -50,7 +51,8 @@ internal sealed class ShipManager
 		return false;
 	}
 
-	private static void Inject(Entry entry) => StarterShip.ships[entry.UniqueName] = entry.Configuration.Ship;
+	private static void Inject(Entry entry)
+		=> StarterShip.ships[entry.UniqueName] = entry.Configuration.Ship;
 
 	private sealed class Entry : IShipEntry
 	{

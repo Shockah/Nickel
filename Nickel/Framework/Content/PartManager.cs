@@ -53,8 +53,6 @@ internal sealed class PartManager
 	{
 		DB.parts[entry.UniqueName] = entry.Sprite;
 		if (entry.DisabledSprite != null)
-		{
 			DB.partsOff[entry.UniqueName] = entry.DisabledSprite.Value;
-		}
 	}
 }

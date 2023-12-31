@@ -100,9 +100,8 @@ internal sealed class ModManager
 				cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!,
 				databaseProvider: () => this.LegacyDatabase!
 			),
-			condition: package => package.Manifest.ModType == NickelConstants.LegacyModType &&
-								  this.CobaltCoreAssembly is not null &&
-								  this.LegacyDatabase is not null
+			condition: package => package.Manifest.ModType == NickelConstants.LegacyModType
+				&& this.CobaltCoreAssembly is not null && this.LegacyDatabase is not null
 		);
 
 		this.ExtendablePluginLoader.RegisterPluginLoader(
@@ -221,8 +220,8 @@ internal sealed class ModManager
 			dependencyResolverResult.LoadSteps
 				.SelectMany(step => step)
 				.Select(
-					m => toLoad.FirstOrDefault(p => p.Manifest.UniqueName == m.UniqueName) ??
-						 throw new InvalidOperationException()
+					m => toLoad.FirstOrDefault(p => p.Manifest.UniqueName == m.UniqueName)
+						?? throw new InvalidOperationException()
 				)
 		);
 	}
@@ -236,9 +235,12 @@ internal sealed class ModManager
 		foreach (var package in this.ResolvedMods)
 		{
 			var manifest = package.Manifest;
-			if (this.UniqueNameToInstance.ContainsKey(manifest.UniqueName)) continue;
-			if (this.FailedMods.Contains(manifest)) continue;
-			if (GetModLoadPhaseForManifest(manifest) != phase) continue;
+			if (this.UniqueNameToInstance.ContainsKey(manifest.UniqueName))
+				continue;
+			if (this.FailedMods.Contains(manifest))
+				continue;
+			if (GetModLoadPhaseForManifest(manifest) != phase)
+				continue;
 			this.Logger.LogDebug("Loading mod {UniqueName}...", manifest.UniqueName);
 
 			var failedRequiredDependencies = manifest.Dependencies
