@@ -8,12 +8,12 @@ namespace Nanoray.PluginManager;
 public sealed class DirectoryPluginPackage<TPluginManifest> : IDirectoryPluginPackage<TPluginManifest>
 {
 	public TPluginManifest Manifest { get; init; }
-	public DirectoryInfo Directory { get; init; }
+	public IDirectoryInfo Directory { get; init; }
 	public IReadOnlySet<string> DataEntries { get; init; }
 
-	private IReadOnlySet<FileInfo> Files { get; }
+	private IReadOnlySet<IFileInfo> Files { get; }
 
-	public DirectoryPluginPackage(TPluginManifest manifest, DirectoryInfo directory, IReadOnlySet<FileInfo> files)
+	public DirectoryPluginPackage(TPluginManifest manifest, IDirectoryInfo directory, IReadOnlySet<IFileInfo> files)
 	{
 		this.Manifest = manifest;
 		this.Directory = directory;
@@ -30,5 +30,5 @@ public sealed class DirectoryPluginPackage<TPluginManifest> : IDirectoryPluginPa
 	}
 
 	public Stream GetDataStream(string entry)
-		=> new FileInfo(Path.Combine(this.Directory.FullName, entry)).OpenRead();
+		=> this.Directory.GetRelative(entry).AsFile?.OpenRead() ?? throw new FileNotFoundException();
 }

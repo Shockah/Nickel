@@ -8,11 +8,11 @@ namespace Nanoray.PluginManager;
 
 public sealed class ZipPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-	private FileInfo ZipFile { get; }
+	private IFileInfo ZipFile { get; }
 	private string ManifestFileName { get; }
 	private IPluginManifestLoader<TPluginManifest> PluginManifestLoader { get; }
 
-	public ZipPluginPackageResolver(FileInfo zipFile, string manifestFileName, IPluginManifestLoader<TPluginManifest> pluginManifestLoader)
+	public ZipPluginPackageResolver(IFileInfo zipFile, string manifestFileName, IPluginManifestLoader<TPluginManifest> pluginManifestLoader)
 	{
 		this.ZipFile = zipFile;
 		this.ManifestFileName = manifestFileName;
