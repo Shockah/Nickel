@@ -42,8 +42,8 @@ internal sealed class PartManager
 	{
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
-		public Spr Part { get; } = part;
-		public Spr? PartOff { get; } = partOff;
+		public Spr Sprite { get; } = part;
+		public Spr? SpriteOff { get; } = partOff;
 	}
 
 	internal void InjectQueuedEntries()
@@ -51,10 +51,10 @@ internal sealed class PartManager
 
 	private static void Inject(Entry entry)
 	{
-		DB.parts[entry.UniqueName] = entry.Part;
-		if (entry.PartOff != null)
+		DB.parts[entry.UniqueName] = entry.Sprite;
+		if (entry.SpriteOff != null)
 		{
-			DB.partsOff[entry.UniqueName] = entry.PartOff.Value;
+			DB.partsOff[entry.UniqueName] = entry.SpriteOff.Value;
 		}
 	}
 }
