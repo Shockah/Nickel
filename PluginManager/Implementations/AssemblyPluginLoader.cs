@@ -71,7 +71,7 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPlugin> : IPluginLoad
 			return new Error<string>($"The type {pluginType} in assembly {assembly} in package {package} has a constructor with parameters which could not be injected: {string.Join(", ", potentialConstructors.First().Constructor.GetParameters().Select(p => p.Name))}.");
 		var constructor = potentialConstructors.Where(c => c.IsValid).First();
 
-		object[] parameters = constructor.Parameters.Select(p => p?.Value!).ToArray();
+		var parameters = constructor.Parameters.Select(p => p?.Value!).ToArray();
 		var rawPlugin = constructor.Constructor.Invoke(parameters: parameters);
 		if (rawPlugin is not TPlugin plugin)
 			return new Error<string>($"Could not construct a {typeof(TPlugin)} subclass from the type {pluginType} in assembly {assembly} in package {package}.");
