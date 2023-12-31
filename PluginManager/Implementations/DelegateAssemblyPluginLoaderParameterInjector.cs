@@ -3,8 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Nanoray.PluginManager;
 
-public sealed class DelegateAssemblyPluginLoaderParameterInjector
-	<TPluginManifest, T> : IAssemblyPluginLoaderParameterInjector<TPluginManifest>
+public sealed class DelegateAssemblyPluginLoaderParameterInjector<TPluginManifest, T>
+	: IAssemblyPluginLoaderParameterInjector<TPluginManifest>
 {
 	private Func<IPluginPackage<TPluginManifest>, T> Delegate { get; }
 
