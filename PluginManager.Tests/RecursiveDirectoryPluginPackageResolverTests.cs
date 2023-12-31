@@ -10,6 +10,19 @@ namespace Nanoray.PluginManager.Tests;
 [TestFixture]
 internal sealed class RecursiveDirectoryPluginPackageResolverTests
 {
+	private static RecursiveDirectoryPluginPackageResolver<string> CreateResolver(IDirectoryInfo directory)
+	{
+		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader();
+		return new(
+			directory,
+			manifestFileName: "manifest.json",
+			ignoreDotNames: true,
+			allowPluginsInRoot: false,
+			directoryResolverFactory: d => new DirectoryPluginPackageResolver<string>(d, "manifest.json", manifestLoader, SingleFilePluginPackageResolverNoManifestResult.Error),
+			fileResolverFactory: null
+		);
+	}
+
 	[Test]
 	public void TestResolveTwoMods()
 	{
@@ -24,10 +37,8 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 				new MockFileInfo("someOtherFile")
 			])
 		]);
-		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader();
 
-		RecursiveDirectoryPluginPackageResolver<string> resolver = new(directory, "manifest.json", ignoreDotDirectories: true, manifestLoader);
-
+		var resolver = CreateResolver(directory);
 		var results = resolver.ResolvePluginPackages().ToList();
 		Assert.AreEqual(2, results.Count);
 
@@ -40,9 +51,9 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 			}
 
 			Assert.AreEqual("moda", package.Manifest);
-			Assert.AreEqual(2, package.DataEntries.Count);
-			Assert.IsTrue(package.DataEntries.Contains("manifest.json"));
-			Assert.IsTrue(package.DataEntries.Contains("moda.dll"));
+			Assert.AreEqual(2, package.PackageRoot.Children.Count());
+			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
+			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "moda.dll"));
 		}
 		{
 			var packageOrError = results[1];
@@ -53,9 +64,9 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 			}
 
 			Assert.AreEqual("modb", package.Manifest);
-			Assert.AreEqual(3, package.DataEntries.Count);
-			Assert.IsTrue(package.DataEntries.Contains("manifest.json"));
-			Assert.IsTrue(package.DataEntries.Contains("modb.dll"));
+			Assert.AreEqual(3, package.PackageRoot.Children.Count());
+			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
+			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "modb.dll"));
 		}
 	}
 
@@ -65,8 +76,7 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 		IDirectoryInfo directory = new MockDirectoryInfo("/", []);
 		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader();
 
-		RecursiveDirectoryPluginPackageResolver<string> resolver = new(directory, "manifest.json", ignoreDotDirectories: true, manifestLoader);
-
+		var resolver = CreateResolver(directory);
 		var results = resolver.ResolvePluginPackages().ToList();
 		Assert.AreEqual(0, results.Count);
 	}
@@ -82,8 +92,7 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 		]);
 		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader();
 
-		RecursiveDirectoryPluginPackageResolver<string> resolver = new(directory, "manifest.json", ignoreDotDirectories: true, manifestLoader);
-
+		var resolver = CreateResolver(directory);
 		var results = resolver.ResolvePluginPackages().ToList();
 		Assert.AreEqual(0, results.Count);
 	}
@@ -104,8 +113,7 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 		]);
 		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader();
 
-		RecursiveDirectoryPluginPackageResolver<string> resolver = new(directory, "manifest.json", ignoreDotDirectories: true, manifestLoader);
-
+		var resolver = CreateResolver(directory);
 		var results = resolver.ResolvePluginPackages().ToList();
 		Assert.AreEqual(1, results.Count);
 
@@ -130,8 +138,7 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 		]);
 		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader();
 
-		RecursiveDirectoryPluginPackageResolver<string> resolver = new(directory, "manifest.json", ignoreDotDirectories: true, manifestLoader);
-
+		var resolver = CreateResolver(directory);
 		var results = resolver.ResolvePluginPackages().ToList();
 		Assert.AreEqual(2, results.Count);
 
@@ -144,9 +151,9 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 			}
 
 			Assert.AreEqual("moda", package.Manifest);
-			Assert.AreEqual(2, package.DataEntries.Count);
-			Assert.IsTrue(package.DataEntries.Contains("manifest.json"));
-			Assert.IsTrue(package.DataEntries.Contains("moda.dll"));
+			Assert.AreEqual(2, package.PackageRoot.Children.Count());
+			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
+			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "moda.dll"));
 		}
 		{
 			var packageOrError = results[1];

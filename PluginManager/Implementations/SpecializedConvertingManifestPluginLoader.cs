@@ -1,8 +1,6 @@
 using OneOf;
 using OneOf.Types;
 using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace Nanoray.PluginManager;
 
@@ -38,16 +36,14 @@ public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPlugin
 	}
 
 	private static IPluginPackage<TSpecializedPluginManifest> MakeSpecializedPackage(IPluginPackage<TPluginManifest> package, TSpecializedPluginManifest manifest)
-		=> package is IDirectoryPluginPackage<TPluginManifest> directoryPackage
-			? new SpecializedDirectoryPluginPackage(directoryPackage, manifest)
-			: new SpecializedPluginPackage(package, manifest);
+		=> new SpecializedPluginPackage(package, manifest);
 
 	private sealed class SpecializedPluginPackage : IPluginPackage<TSpecializedPluginManifest>
 	{
 		public TSpecializedPluginManifest Manifest { get; }
 
-		public IReadOnlySet<string> DataEntries
-			=> this.Package.DataEntries;
+		public IDirectoryInfo PackageRoot
+			=> this.Package.PackageRoot;
 
 		private IPluginPackage<TPluginManifest> Package { get; }
 
@@ -57,29 +53,7 @@ public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPlugin
 			this.Manifest = manifest;
 		}
 
-		public Stream GetDataStream(string entry)
-			=> this.Package.GetDataStream(entry);
-	}
-
-	private sealed class SpecializedDirectoryPluginPackage : IDirectoryPluginPackage<TSpecializedPluginManifest>
-	{
-		public TSpecializedPluginManifest Manifest { get; }
-
-		public IDirectoryInfo Directory
-			=> this.Package.Directory;
-
-		public IReadOnlySet<string> DataEntries
-			=> this.Package.DataEntries;
-
-		private IDirectoryPluginPackage<TPluginManifest> Package { get; }
-
-		public SpecializedDirectoryPluginPackage(IDirectoryPluginPackage<TPluginManifest> package, TSpecializedPluginManifest manifest)
-		{
-			this.Package = package;
-			this.Manifest = manifest;
-		}
-
-		public Stream GetDataStream(string entry)
-			=> this.Package.GetDataStream(entry);
+		public void Dispose()
+			=> this.Package.Dispose();
 	}
 }

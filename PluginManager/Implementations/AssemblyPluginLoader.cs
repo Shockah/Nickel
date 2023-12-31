@@ -32,7 +32,7 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPlugin> : IPluginLoad
 		if (this.RequiredPluginDataProvider(package) is not { } requiredPluginData)
 			throw new ArgumentException($"This plugin loader cannot load the plugin package {package}.");
 
-		using var originalStream = package.GetDataStream(requiredPluginData.EntryPointAssemblyFileName);
+		using var originalStream = package.PackageRoot.GetRelativeFile(requiredPluginData.EntryPointAssemblyFileName).OpenRead();
 		using var stream = this.AssemblyEditor?.EditAssemblyStream(requiredPluginData.EntryPointAssemblyFileName, originalStream) ?? originalStream;
 
 		AssemblyLoadContext context = new(requiredPluginData.UniqueName);

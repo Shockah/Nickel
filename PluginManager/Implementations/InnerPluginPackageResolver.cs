@@ -1,7 +1,6 @@
 using OneOf;
 using OneOf.Types;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Nanoray.PluginManager.Implementations;
 
@@ -9,34 +8,17 @@ public sealed class InnerPluginPackageResolver<TPluginManifest> : IPluginPackage
 {
 	private IPluginPackage<TPluginManifest> OuterPackage { get; }
 	private TPluginManifest InnerManifest { get; }
+	private bool DisposesOuterPackage { get; }
 
-	public InnerPluginPackageResolver(IPluginPackage<TPluginManifest> outerPackage, TPluginManifest innerManifest)
+	public InnerPluginPackageResolver(IPluginPackage<TPluginManifest> outerPackage, TPluginManifest innerManifest, bool disposesOuterPackage)
 	{
 		this.OuterPackage = outerPackage;
 		this.InnerManifest = innerManifest;
+		this.DisposesOuterPackage = disposesOuterPackage;
 	}
 
 	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
 	{
-		yield return new InnerPluginPackage(this.OuterPackage, this.InnerManifest);
-	}
-
-	private sealed class InnerPluginPackage : IPluginPackage<TPluginManifest>
-	{
-		public TPluginManifest Manifest { get; }
-
-		public IReadOnlySet<string> DataEntries
-			=> this.OuterPackage.DataEntries;
-
-		private IPluginPackage<TPluginManifest> OuterPackage { get; }
-
-		public InnerPluginPackage(IPluginPackage<TPluginManifest> outerPackage, TPluginManifest manifest)
-		{
-			this.OuterPackage = outerPackage;
-			this.Manifest = manifest;
-		}
-
-		public Stream GetDataStream(string entry)
-			=> this.OuterPackage.GetDataStream(entry);
+		yield return new InnerPluginPackage<TPluginManifest>(this.OuterPackage, this.InnerManifest, this.DisposesOuterPackage);
 	}
 }

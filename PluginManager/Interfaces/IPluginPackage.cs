@@ -1,13 +1,9 @@
-using System.Collections.Generic;
-using System.IO;
+using System;
 
 namespace Nanoray.PluginManager;
 
-public interface IPluginPackage<out TPluginManifest>
+public interface IPluginPackage<out TPluginManifest> : IDisposable
 {
 	TPluginManifest Manifest { get; }
-	IReadOnlySet<string> DataEntries { get; }
-
-	Stream GetDataStream(string entry);
-	string? GetDataPath(string entry) => null;
+	IDirectoryInfo PackageRoot { get; }
 }

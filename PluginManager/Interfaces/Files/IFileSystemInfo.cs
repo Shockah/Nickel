@@ -16,7 +16,10 @@ public interface IFileSystemInfo
 	IFileInfo? AsFile { get; }
 	IDirectoryInfo? AsDirectory { get; }
 
-	string GetRelativePathTo(IFileSystemInfo other);
+	bool IsInSameFileSystemType(IFileSystemInfo other);
+
+	string GetRelativePathTo(IFileSystemInfo other)
+		=> FileSystemInfoExt.GetRelativePath(this, other);
 }
 
 public interface IFileSystemInfo<TFileInfo, TDirectoryInfo> : IFileSystemInfo
