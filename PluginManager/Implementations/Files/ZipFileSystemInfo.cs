@@ -14,7 +14,7 @@ public abstract class ZipFileSystemInfo : IFileSystemInfo<ZipFileInfo, ZipDirect
 		get
 		{
 			if (this.Parent is { } parent)
-				return $"{parent.FullName}/{this.Name}";
+				return $"{parent.FullName}{(parent.FullName == "/" ? "" : "/")}{this.Name}";
 			else
 				return $"{(this.Name == "/" ? "" : "/")}{this.Name}";
 		}

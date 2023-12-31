@@ -19,29 +19,6 @@ public sealed class InnerPluginPackageResolver<TPluginManifest> : IPluginPackage
 
 	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
 	{
-		yield return new InnerPluginPackage(this.OuterPackage, this.InnerManifest, this.DisposesOuterPackage);
-	}
-
-	private sealed class InnerPluginPackage : IPluginPackage<TPluginManifest>
-	{
-		public TPluginManifest Manifest { get; }
-		public IDirectoryInfo PackageRoot { get; }
-
-		private IPluginPackage<TPluginManifest> OuterPackage { get; }
-		private bool DisposesOuterPackage { get; }
-
-		public InnerPluginPackage(IPluginPackage<TPluginManifest> outerPackage, TPluginManifest manifest, bool disposesOuterPackage)
-		{
-			this.OuterPackage = outerPackage;
-			this.Manifest = manifest;
-			this.PackageRoot = outerPackage.PackageRoot;
-			this.DisposesOuterPackage = disposesOuterPackage;
-		}
-
-		public void Dispose()
-		{
-			if (this.DisposesOuterPackage)
-				this.OuterPackage.Dispose();
-		}
+		yield return new InnerPluginPackage<TPluginManifest>(this.OuterPackage, this.InnerManifest, this.DisposesOuterPackage);
 	}
 }

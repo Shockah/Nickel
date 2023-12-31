@@ -25,7 +25,9 @@ public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFile
 		var thisPath = parent.FullName;
 		if (thisPath.StartsWith("/"))
 			thisPath = thisPath.Substring(1);
-		var thisPathComponents = thisPath.Split("/");
+		if (thisPath.EndsWith("/"))
+			thisPath = thisPath.Substring(0, thisPath.Length - 1);
+		var thisPathComponents = thisPath == "" ? [] : thisPath.Split("/");
 
 		HashSet<string> yieldedDirectoryNames = [];
 
@@ -34,7 +36,9 @@ public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFile
 			var entryPath = entry.FullName;
 			if (entryPath.StartsWith("/"))
 				entryPath = entryPath.Substring(1);
-			var entryPathComponents = entryPath.Split("/");
+			if (entryPath.EndsWith("/"))
+				entryPath = entryPath.Substring(0, entryPath.Length - 1);
+			var entryPathComponents = entryPath == "" ? [] : entryPath.Split("/");
 
 			if (entryPathComponents.Length <= thisPathComponents.Length)
 				continue;
@@ -45,7 +49,7 @@ public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFile
 
 			var infoName = entryPathComponents[thisPathComponents.Length];
 
-			if (entryPathComponents.Length >= thisPathComponents.Length + 2)
+			if (entryPathComponents.Length >= thisPathComponents.Length + 2 || entry.FullName.EndsWith("/"))
 			{
 				if (yieldedDirectoryNames.Contains(infoName))
 					continue;

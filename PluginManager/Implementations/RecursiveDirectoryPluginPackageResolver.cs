@@ -10,6 +10,7 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 	private IDirectoryInfo Directory { get; }
 	private string ManifestFileName { get; }
 	private bool IgnoreDotDirectories { get; }
+	private bool AllowPluginsInRoot { get; }
 	private Func<IDirectoryInfo, IPluginPackageResolver<TPluginManifest>?>? DirectoryResolverFactory { get; }
 	private Func<IFileInfo, IPluginPackageResolver<TPluginManifest>?>? FileResolverFactory { get; }
 
@@ -17,6 +18,7 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 		IDirectoryInfo directory,
 		string manifestFileName,
 		bool ignoreDotDirectories,
+		bool allowPluginsInRoot,
 		Func<IDirectoryInfo, IPluginPackageResolver<TPluginManifest>?>? directoryResolverFactory,
 		Func<IFileInfo, IPluginPackageResolver<TPluginManifest>?>? fileResolverFactory
 	)
@@ -24,6 +26,7 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 		this.Directory = directory;
 		this.ManifestFileName = manifestFileName;
 		this.IgnoreDotDirectories = ignoreDotDirectories;
+		this.AllowPluginsInRoot = allowPluginsInRoot;
 		this.DirectoryResolverFactory = directoryResolverFactory;
 		this.FileResolverFactory = fileResolverFactory;
 	}
@@ -40,7 +43,7 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 		var manifestFile = directory.GetRelativeFile(this.ManifestFileName);
 		if (manifestFile.Exists)
 		{
-			if (isRoot)
+			if (isRoot && !this.AllowPluginsInRoot)
 			{
 				yield return new Error<string>($"Found a manifest file at `{manifestFile.FullName}`, but it's in the root of the mods folder.");
 				yield break;
@@ -69,7 +72,7 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 				yield return package;
 			}
 
-			if (isRoot && !hadAnyChildPackages)
+			if (isRoot && !this.AllowPluginsInRoot && !hadAnyChildPackages)
 				yield return new Error<string>($"Found a folder `{childDirectory.FullName}`, but it does not contain any mods.");
 		}
 	}
