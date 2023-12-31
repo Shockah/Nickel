@@ -1,5 +1,6 @@
 using OneOf;
 using OneOf.Types;
+using System;
 using System.Collections.Generic;
 
 namespace Nanoray.PluginManager;
@@ -9,18 +10,30 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 	private IDirectoryInfo Directory { get; }
 	private string ManifestFileName { get; }
 	private bool IgnoreDotDirectories { get; }
-	private IPluginManifestLoader<TPluginManifest> PluginManifestLoader { get; }
+	private Func<IDirectoryInfo, IPluginPackageResolver<TPluginManifest>?>? DirectoryResolverFactory { get; }
+	private Func<IFileInfo, IPluginPackageResolver<TPluginManifest>?>? FileResolverFactory { get; }
 
-	public RecursiveDirectoryPluginPackageResolver(IDirectoryInfo directory, string manifestFileName, bool ignoreDotDirectories, IPluginManifestLoader<TPluginManifest> pluginManifestLoader)
+	public RecursiveDirectoryPluginPackageResolver(
+		IDirectoryInfo directory,
+		string manifestFileName,
+		bool ignoreDotDirectories,
+		Func<IDirectoryInfo, IPluginPackageResolver<TPluginManifest>?>? directoryResolverFactory,
+		Func<IFileInfo, IPluginPackageResolver<TPluginManifest>?>? fileResolverFactory
+	)
 	{
 		this.Directory = directory;
 		this.ManifestFileName = manifestFileName;
 		this.IgnoreDotDirectories = ignoreDotDirectories;
-		this.PluginManifestLoader = pluginManifestLoader;
+		this.DirectoryResolverFactory = directoryResolverFactory;
+		this.FileResolverFactory = fileResolverFactory;
 	}
 
 	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
-		=> this.ResolvePluginPackages(this.Directory, isRoot: true);
+	{
+		if (this.DirectoryResolverFactory is null && this.FileResolverFactory is null)
+			return [];
+		return this.ResolvePluginPackages(this.Directory, isRoot: true);
+	}
 
 	private IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages(IDirectoryInfo directory, bool isRoot = false)
 	{
@@ -33,10 +46,16 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 				yield break;
 			}
 
-			foreach (var package in new DirectoryPluginPackageResolver<TPluginManifest>(directory, this.ManifestFileName, this.PluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Error).ResolvePluginPackages())
-				yield return package;
+			if (this.DirectoryResolverFactory?.Invoke(directory) is { } directoryResolver)
+				foreach (var package in directoryResolver.ResolvePluginPackages())
+					yield return package;
 			yield break;
 		}
+
+		foreach (var file in directory.Files)
+			if (this.FileResolverFactory?.Invoke(file) is { } fileResolver)
+				foreach (var package in fileResolver.ResolvePluginPackages())
+					yield return package;
 
 		foreach (var childDirectory in directory.Directories)
 		{

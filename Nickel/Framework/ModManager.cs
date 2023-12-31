@@ -148,16 +148,15 @@ internal sealed class ModManager
 				GetModLoadPhaseForManifest,
 				Enum.GetValues<ModLoadPhase>()
 			);
-		var pluginManifestLoader = new JsonPluginManifestLoader<ModManifest>();
+		var pluginManifestLoader = new SpecializedPluginManifestLoader<ModManifest, IModManifest>(new JsonPluginManifestLoader<ModManifest>());
 		var pluginPackageResolver = new ValidatingPluginPackageResolver<IModManifest>(
 			resolver: new SubpluginPluginPackageResolver<IModManifest>(
 				baseResolver: new RecursiveDirectoryPluginPackageResolver<IModManifest>(
 					directory: new DirectoryInfoImpl(this.ModsDirectory),
 					manifestFileName: "nickel.json",
 					ignoreDotDirectories: true,
-					pluginManifestLoader: new SpecializedPluginManifestLoader<ModManifest, IModManifest>(
-						pluginManifestLoader
-					)
+					directoryResolverFactory: d => new DirectoryPluginPackageResolver<IModManifest>(d, "nickel.json", pluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Empty),
+					fileResolverFactory: f => f.Name.EndsWith(".zip") ? new ZipPluginPackageResolver<IModManifest>(f, "nickel.json", pluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Empty) : null
 				),
 				subpluginResolverFactory: p =>
 				{
