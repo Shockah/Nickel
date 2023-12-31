@@ -24,7 +24,7 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 
 	private IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages(IDirectoryInfo directory, bool isRoot = false)
 	{
-		var manifestFile = directory.GetFile(this.ManifestFileName);
+		var manifestFile = directory.GetRelativeFile(this.ManifestFileName);
 		if (manifestFile.Exists)
 		{
 			if (isRoot)

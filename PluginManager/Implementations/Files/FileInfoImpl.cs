@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace Nanoray.PluginManager;
@@ -32,4 +33,11 @@ public sealed record FileInfoImpl(
 
 	public void Delete()
 		=> this.FileInfo.Delete();
+
+	public string GetRelativePathTo(IFileSystemInfo other)
+	{
+		if (other is not IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>)
+			throw new ArgumentException("The two file systems are unrelated to each other");
+		return Path.GetRelativePath(this.FullName, other.FullName);
+	}
 }

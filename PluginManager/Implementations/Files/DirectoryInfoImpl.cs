@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -36,13 +37,13 @@ public sealed record DirectoryInfoImpl(
 	public DirectoryInfoImpl? AsDirectory
 		=> this;
 
-	public IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl> GetChild(string relativePath)
+	public IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl> GetRelative(string relativePath)
 		=> new LazyFileSystemInfoImpl(relativePath.Replace("\\", "/").Split("/").Last(), Path.Combine(this.FullName, relativePath));
 
-	public FileInfoImpl GetFile(string relativePath)
+	public FileInfoImpl GetRelativeFile(string relativePath)
 		=> new(new FileInfo(Path.Combine(this.FullName, relativePath)));
 
-	public DirectoryInfoImpl GetDirectory(string relativePath)
+	public DirectoryInfoImpl GetRelativeDirectory(string relativePath)
 		=> new(new DirectoryInfo(Path.Combine(this.FullName, relativePath)));
 
 	public void Create()
@@ -50,4 +51,11 @@ public sealed record DirectoryInfoImpl(
 
 	public void Delete()
 		=> this.DirectoryInfo.Delete(recursive: true);
+
+	public string GetRelativePathTo(IFileSystemInfo other)
+	{
+		if (other is not IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>)
+			throw new ArgumentException("The two file systems are unrelated to each other");
+		return Path.GetRelativePath(this.FullName, other.FullName);
+	}
 }

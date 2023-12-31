@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace Nanoray.PluginManager;
@@ -23,5 +24,12 @@ public sealed class LazyFileSystemInfoImpl : IFileSystemInfo<FileInfoImpl, Direc
 	{
 		this.Name = name;
 		this.FullName = fullName;
+	}
+
+	public string GetRelativePathTo(IFileSystemInfo other)
+	{
+		if (other is not IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>)
+			throw new ArgumentException("The two file systems are unrelated to each other");
+		return Path.GetRelativePath(this.FullName, other.FullName);
 	}
 }

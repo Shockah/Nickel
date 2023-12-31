@@ -15,6 +15,8 @@ public interface IFileSystemInfo
 	IDirectoryInfo? Parent { get; }
 	IFileInfo? AsFile { get; }
 	IDirectoryInfo? AsDirectory { get; }
+
+	string GetRelativePathTo(IFileSystemInfo other);
 }
 
 public interface IFileSystemInfo<TFileInfo, TDirectoryInfo> : IFileSystemInfo

@@ -20,7 +20,7 @@ public sealed class DirectoryPluginPackageResolver<TPluginManifest> : IPluginPac
 
 	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
 	{
-		var manifestFile = this.Directory.GetFile(this.ManifestFileName);
+		var manifestFile = this.Directory.GetRelativeFile(this.ManifestFileName);
 		if (!manifestFile.Exists)
 		{
 			yield return new Error<string>($"Could not find a manifest file at `{manifestFile.FullName}`.");

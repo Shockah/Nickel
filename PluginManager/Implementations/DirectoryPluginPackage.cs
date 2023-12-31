@@ -19,10 +19,10 @@ public sealed class DirectoryPluginPackage<TPluginManifest> : IDirectoryPluginPa
 		this.Files = files;
 
 		this.DataEntries = this.Files
-			.Select(f => f.FullName.StartsWith(directory.FullName) ? f.FullName.Substring(directory.FullName.Length + 1) : Path.GetRelativePath(directory.FullName, f.FullName))
+			.Select(directory.GetRelativePathTo)
 			.ToHashSet();
 	}
 
 	public Stream GetDataStream(string entry)
-		=> this.Directory.GetChild(entry).AsFile?.OpenRead() ?? throw new FileNotFoundException();
+		=> this.Directory.GetRelative(entry).AsFile?.OpenRead() ?? throw new FileNotFoundException();
 }

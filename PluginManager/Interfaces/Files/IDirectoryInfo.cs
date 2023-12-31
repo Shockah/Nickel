@@ -19,9 +19,9 @@ public interface IDirectoryInfo : IFileSystemInfo
 			.Where(d => d is not null)
 			.Select(d => d!);
 
-	IFileSystemInfo GetChild(string relativePath);
-	IFileInfo GetFile(string relativePath);
-	IDirectoryInfo GetDirectory(string relativePath);
+	IFileSystemInfo GetRelative(string relativePath);
+	IFileInfo GetRelativeFile(string relativePath);
+	IDirectoryInfo GetRelativeDirectory(string relativePath);
 }
 
 public interface IDirectoryInfo<TFileInfo, TDirectoryInfo> : IFileSystemInfo<TFileInfo, TDirectoryInfo>, IDirectoryInfo
@@ -30,21 +30,21 @@ public interface IDirectoryInfo<TFileInfo, TDirectoryInfo> : IFileSystemInfo<TFi
 {
 	new IEnumerable<IFileSystemInfo<TFileInfo, TDirectoryInfo>> Children { get; }
 
-	new IFileSystemInfo<TFileInfo, TDirectoryInfo> GetChild(string relativePath);
+	new IFileSystemInfo<TFileInfo, TDirectoryInfo> GetRelative(string relativePath);
 
-	new TFileInfo GetFile(string relativePath);
+	new TFileInfo GetRelativeFile(string relativePath);
 
-	new TDirectoryInfo GetDirectory(string relativePath);
+	new TDirectoryInfo GetRelativeDirectory(string relativePath);
 
 	IEnumerable<IFileSystemInfo> IDirectoryInfo.Children
 		=> this.Children;
 
-	IFileSystemInfo IDirectoryInfo.GetChild(string relativePath)
-		=> this.GetChild(relativePath);
+	IFileSystemInfo IDirectoryInfo.GetRelative(string relativePath)
+		=> this.GetRelative(relativePath);
 
-	IFileInfo IDirectoryInfo.GetFile(string relativePath)
-		=> this.GetFile(relativePath);
+	IFileInfo IDirectoryInfo.GetRelativeFile(string relativePath)
+		=> this.GetRelativeFile(relativePath);
 
-	IDirectoryInfo IDirectoryInfo.GetDirectory(string relativePath)
-		=> this.GetDirectory(relativePath);
+	IDirectoryInfo IDirectoryInfo.GetRelativeDirectory(string relativePath)
+		=> this.GetRelativeDirectory(relativePath);
 }

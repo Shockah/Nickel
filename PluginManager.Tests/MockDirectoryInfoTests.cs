@@ -27,7 +27,7 @@ internal sealed class MockDirectoryInfoTests
 			new MockFileInfo("asdf")
 		]);
 
-		var child = mock.GetChild("test");
+		var child = mock.GetRelative("test");
 		Assert.IsTrue(child.Exists);
 
 		var parent = child.Parent;
@@ -42,7 +42,7 @@ internal sealed class MockDirectoryInfoTests
 			new MockFileInfo("asdf")
 		]);
 
-		var child = mock.GetChild("meow");
+		var child = mock.GetRelative("meow");
 		Assert.IsFalse(child.Exists);
 
 		var parent = child.Parent;
@@ -60,7 +60,7 @@ internal sealed class MockDirectoryInfoTests
 			])
 		]);
 
-		var nestedChild = mock.GetChild("a/b/c");
+		var nestedChild = mock.GetRelative("a/b/c");
 		Assert.IsTrue(nestedChild.Exists);
 
 		Assert.AreEqual("b", nestedChild.Parent?.Name);
@@ -73,7 +73,7 @@ internal sealed class MockDirectoryInfoTests
 	{
 		MockDirectoryInfo mock = new("/", []);
 
-		var nestedChild = mock.GetChild("a/b/c");
+		var nestedChild = mock.GetRelative("a/b/c");
 		Assert.IsFalse(nestedChild.Exists);
 
 		Assert.AreEqual(false, nestedChild.Parent?.Exists);
