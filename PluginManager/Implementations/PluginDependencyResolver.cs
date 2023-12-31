@@ -65,8 +65,11 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 				}
 			}
 
+			var oldCount = toResolveLeft.Count;
 			Loop(onlyRequiredDependencies: false);
 			Loop(onlyRequiredDependencies: true);
+			if (toResolveLeft.Count == oldCount)
+				break;
 		}
 
 		if (toResolveLeft.Count == 0)

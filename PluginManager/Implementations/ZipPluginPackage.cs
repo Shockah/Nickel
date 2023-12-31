@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -30,11 +29,9 @@ public sealed class ZipPluginPackage<TPluginManifest> : IPluginPackage<TPluginMa
 	public Stream GetDataStream(string entry)
 	{
 		if (!this.DataMapping.TryGetValue(entry, out var realName))
-		{
-			/* TODO: Exception type! */
-			throw new ArgumentException("Entry does not exist.", nameof(entry));
-		}
+			throw new FileNotFoundException("Entry does not exist.", entry);
 
-		return this.Archive.GetEntry(realName)!.Open();
+		var zipEntry = this.Archive.GetEntry(realName) ?? throw new InvalidDataException("Entry does not exist.");
+		return zipEntry.Open();
 	}
 }

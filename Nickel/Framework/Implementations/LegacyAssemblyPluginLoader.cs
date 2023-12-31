@@ -191,7 +191,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 		internal ILegacyModManifest LegacyManifest { get; }
 		private LegacyRegistry LegacyRegistry { get; }
 
-		public LegacyModWrapper(ILegacyModManifest legacyManifest, LegacyRegistry legacyRegistry, DirectoryInfo directory, IModHelper helper, ILogger logger)
+		public LegacyModWrapper(ILegacyModManifest legacyManifest, LegacyRegistry legacyRegistry, IDirectoryInfo directory, IModHelper helper, ILogger logger)
 		{
 			this.LegacyManifest = legacyManifest;
 			this.LegacyRegistry = legacyRegistry;
@@ -206,7 +206,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 			helper.Events.OnModLoadPhaseFinished += this.FinalizePreparations;
 
 			legacyManifest.GameRootFolder = new DirectoryInfo(Directory.GetCurrentDirectory());
-			legacyManifest.ModRootFolder = directory;
+			legacyManifest.ModRootFolder = new DirectoryInfo(directory.FullName);
 			legacyManifest.Logger = logger;
 		}
 
