@@ -43,7 +43,7 @@ public sealed class MockDirectoryInfo : IDirectoryInfo<MockFileInfo, MockDirecto
 	{
 		this.Name = name;
 		this.Exists = true;
-		this.Children = [];
+		this.Children = children;
 
 		foreach (var child in children)
 		{
@@ -63,7 +63,8 @@ public sealed class MockDirectoryInfo : IDirectoryInfo<MockFileInfo, MockDirecto
 
 	public IFileSystemInfo<MockFileInfo, MockDirectoryInfo> GetChild(string relativePath)
 	{
-		var currentFullPath = this.FullName.Replace("\\", "/");
+		// TODO: stop using Path methods in mocks
+		var currentFullPath = Path.GetFullPath(this.FullName).Replace("\\", "/");
 		if (!currentFullPath.EndsWith("/"))
 			currentFullPath = $"{currentFullPath}/";
 
@@ -85,7 +86,7 @@ public sealed class MockDirectoryInfo : IDirectoryInfo<MockFileInfo, MockDirecto
 		}
 
 		var last = current.Children.FirstOrDefault(c => c.Name == split[^1]);
-		return last ?? new MockNonExistentFileSystemInfo(split[^1], newFullPath);
+		return last ?? new MockNonExistentFileSystemInfo(split[^1], newFullPath, current);
 	}
 
 	public MockFileInfo GetFile(string relativePath)

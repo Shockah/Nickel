@@ -4,6 +4,7 @@ public sealed class MockNonExistentFileSystemInfo : IFileSystemInfo<MockFileInfo
 {
 	public string Name { get; }
 	public string FullName { get; }
+	public MockDirectoryInfo? Parent { get; }
 
 	public bool Exists
 		=> false;
@@ -14,12 +15,10 @@ public sealed class MockNonExistentFileSystemInfo : IFileSystemInfo<MockFileInfo
 	public MockDirectoryInfo? AsDirectory
 		=> null;
 
-	public MockDirectoryInfo? Parent
-		=> this.AsFile?.Parent ?? this.AsDirectory?.Parent;
-
-	public MockNonExistentFileSystemInfo(string name, string fullName)
+	public MockNonExistentFileSystemInfo(string name, string fullName, MockDirectoryInfo? parent = null)
 	{
 		this.Name = name;
 		this.FullName = fullName;
+		this.Parent = parent;
 	}
 }
