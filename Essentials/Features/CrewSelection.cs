@@ -167,15 +167,8 @@ internal static class CrewSelection
 		return buttonResult;
 	}
 
-	private sealed class MouseDownHandler : OnMouseDown
+	private sealed record MouseDownHandler(Action Delegate) : OnMouseDown
 	{
-		private readonly Action Delegate;
-
-		public MouseDownHandler(Action @delegate)
-		{
-			this.Delegate = @delegate;
-		}
-
 		public void OnMouseDown(G g, Box b)
 			=> this.Delegate();
 	}

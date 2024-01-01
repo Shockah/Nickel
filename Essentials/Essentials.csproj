@@ -2,13 +2,10 @@
 	<Import Project="..\Configuration.props" />
 	<PropertyGroup>
 		<RootNamespace>Nickel.Essentials</RootNamespace>
-		<Version>0.1.0</Version>
+		<Version>0.1.1</Version>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Nickel.ModBuildConfig" Version="0.1.0" />
+		<PackageReference Include="Nickel.ModBuildConfig" Version="0.1.1" />
 		<PackageReference Include="EnumByNameSourceGenerator" Version="1.1.1" PrivateAssets="All" ExcludeAssets="runtime" />
-		<!-- TODO: reference these via ModBuildConfig -->
-		<Reference Include="Shrike" Private="False" HintPath="$(ModLoaderPath)\Shrike.dll" />
-		<Reference Include="Shrike.Harmony" Private="False" HintPath="$(ModLoaderPath)\Shrike.Harmony.dll" />
 	</ItemGroup>
 </Project>
