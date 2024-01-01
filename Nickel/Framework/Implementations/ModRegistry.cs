@@ -1,4 +1,5 @@
 using Nanoray.Pintail;
+using Nanoray.PluginManager;
 using Nickel.Common;
 using System;
 using System.Collections.Generic;
@@ -12,18 +13,24 @@ namespace Nickel;
 internal sealed class ModRegistry : IModRegistry
 {
 	public IReadOnlyDictionary<string, IModManifest> LoadedMods
-		=> this.ModUniqueNameToInstance
-			.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Package.Manifest);
+		=> this.ModUniqueNameToPackage
+			.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Manifest);
 
 	private IModManifest ModManifest { get; }
 	internal IReadOnlyDictionary<string, Mod> ModUniqueNameToInstance { get; }
+	internal IReadOnlyDictionary<string, IPluginPackage<IModManifest>> ModUniqueNameToPackage { get; }
 	private Dictionary<string, object?> ApiCache { get; } = [];
 	private IProxyManager<string> ProxyManager { get; }
 
-	public ModRegistry(IModManifest modManifest, IReadOnlyDictionary<string, Mod> modUniqueNameToInstance)
+	public ModRegistry(
+		IModManifest modManifest,
+		IReadOnlyDictionary<string, Mod> modUniqueNameToInstance,
+		IReadOnlyDictionary<string, IPluginPackage<IModManifest>> modUniqueNameToPackage
+	)
 	{
 		this.ModManifest = modManifest;
 		this.ModUniqueNameToInstance = modUniqueNameToInstance;
+		this.ModUniqueNameToPackage = modUniqueNameToPackage;
 
 		var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"{this.GetType().Namespace}.Proxies, Version={this.GetType().Assembly.GetName().Version}, Culture=neutral"), AssemblyBuilderAccess.Run);
 		var moduleBuilder = assemblyBuilder.DefineDynamicModule($"{this.GetType().Namespace}.Proxies");
@@ -45,7 +52,9 @@ internal sealed class ModRegistry : IModRegistry
 			throw new ArgumentException($"The requested API type {typeof(TApi)} is not an interface.");
 		if (!this.ModUniqueNameToInstance.TryGetValue(uniqueName, out var mod))
 			return null;
-		if (minimumVersion is not null && minimumVersion > mod.Package.Manifest.Version)
+		if (!this.ModUniqueNameToPackage.TryGetValue(uniqueName, out var package))
+			return null;
+		if (minimumVersion is not null && minimumVersion > package.Manifest.Version)
 			return null;
 
 		if (!this.ApiCache.TryGetValue(uniqueName, out var apiObject))

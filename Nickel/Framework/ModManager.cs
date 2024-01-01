@@ -35,6 +35,7 @@ internal sealed class ModManager
 	private Dictionary<string, ILogger> UniqueNameToLogger { get; } = [];
 	private Dictionary<string, IModHelper> UniqueNameToHelper { get; } = [];
 	private Dictionary<string, Mod> UniqueNameToInstance { get; } = [];
+	private Dictionary<string, IPluginPackage<IModManifest>> UniqueNameToPackage { get; } = [];
 
 	public ModManager(
 		DirectoryInfo modsDirectory,
@@ -277,10 +278,8 @@ internal sealed class ModManager
 				.Switch(
 					mod =>
 					{
+						this.UniqueNameToPackage[manifest.UniqueName] = package;
 						this.UniqueNameToInstance[manifest.UniqueName] = mod;
-						mod.Package = package;
-						mod.Logger = this.ObtainLogger(manifest);
-						mod.Helper = this.ObtainModHelper(manifest);
 						successfulMods.Add(manifest);
 						this.Logger.LogInformation("Loaded mod {UniqueName}.", manifest.UniqueName);
 					},
@@ -318,7 +317,7 @@ internal sealed class ModManager
 	{
 		if (!this.UniqueNameToHelper.TryGetValue(manifest.UniqueName, out var helper))
 		{
-			ModRegistry modRegistry = new(manifest, this.UniqueNameToInstance);
+			ModRegistry modRegistry = new(manifest, this.UniqueNameToInstance, this.UniqueNameToPackage);
 			ModEvents modEvents = new(manifest, this.EventManager);
 			ModSprites modSprites = new(manifest, () => this.ContentManager!.Sprites);
 			ModDecks modDecks = new(manifest, () => this.ContentManager!.Decks);
