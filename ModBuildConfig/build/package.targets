@@ -120,6 +120,8 @@
 		<Reference Include="$(_ModLoaderName)" Private="False" HintPath="$(ModLoaderPath)\$(_ModLoaderName).dll"/>
 		<Reference Include="0Harmony" Private="False" HintPath="$(ModLoaderPath)\0Harmony.dll"/>
 		<Reference Include="Microsoft.Extensions.Logging.Abstractions" Private="False" HintPath="$(ModLoaderPath)\Microsoft.Extensions.Logging.Abstractions.dll"/>
+		<Reference Include="PluginManager" Private="False" HintPath="$(ModLoaderPath)\PluginManager.dll"/>
+		<Reference Include="PluginManager.Cecil" Private="False" HintPath="$(ModLoaderPath)\PluginManager.Cecil.dll"/>
 		<Reference Include="Shrike" Private="False" HintPath="$(ModLoaderPath)\Shrike.dll"/>
 		<Reference Include="Shrike.Harmony" Private="False" HintPath="$(ModLoaderPath)\Shrike.Harmony.dll"/>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" IncludeAssets="compile" PrivateAssets="all" />
