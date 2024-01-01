@@ -25,6 +25,7 @@ internal sealed class LegacyDatabase
 	private Dictionary<string, ExternalStarterShip> GlobalNameToStarterShip { get; } = [];
 
 	private Dictionary<string, ICharacterEntry> GlobalNameToCharacterEntry { get; init; } = [];
+	private Dictionary<string, IPartEntry> GlobalNameToPartEntry { get; init; } = [];
 	private Dictionary<string, IShipEntry> GlobalNameToShipEntry { get; } = [];
 
 	public LegacyDatabase(Func<ContentManager> contentManagerProvider)
@@ -74,6 +75,18 @@ internal sealed class LegacyDatabase
 			}
 			if (character.GetDesc(locale) is { } description)
 				localizations[$"char.{key}.desc"] = description;
+		}
+		foreach (var starterShip in this.GlobalNameToStarterShip.Values)
+		{
+			if (!this.GlobalNameToShipEntry.TryGetValue(starterShip.GlobalName, out var shipEntry))
+				continue;
+
+			var key = shipEntry.UniqueName;
+			starterShip.GetLocalisations(locale, out var name, out var description);
+			if (name is not null)
+				localizations[$"ship.{key}.name"] = name;
+			if (description is not null)
+				localizations[$"ship.{key}.desc"] = description;
 		}
 	}
 
@@ -208,8 +221,9 @@ internal sealed class LegacyDatabase
 			DisabledSprite = value.PartOffSprite is { } partOff ? (Spr)partOff.Id!.Value : null
 		};
 
-		this.ContentManagerProvider().Parts.RegisterPart(mod, value.GlobalName, configuration);
+		var entry = this.ContentManagerProvider().Parts.RegisterPart(mod, value.GlobalName, configuration);
 		this.GlobalNameToPart[value.GlobalName] = value;
+		this.GlobalNameToPartEntry[value.GlobalName] = entry;
 	}
 
 	public void RegisterRawPart(IModManifest mod, string globalName, int spriteId, int? disabledSpriteId)
@@ -220,8 +234,9 @@ internal sealed class LegacyDatabase
 			DisabledSprite = disabledSpriteId is null ? null : (Spr)disabledSpriteId.Value
 		};
 
-		this.ContentManagerProvider().Parts.RegisterPart(mod, globalName, configuration);
-		// do not add to any dictionary - legacy modloader did not, you can't look up these
+		var entry = this.ContentManagerProvider().Parts.RegisterPart(mod, globalName, configuration);
+		// do not add to `GlobalNameToPart` dictionary - legacy modloader did not, you can't look up these
+		this.GlobalNameToPartEntry[globalName] = entry;
 	}
 
 	public void RegisterShip(ExternalShip value)
@@ -232,9 +247,14 @@ internal sealed class LegacyDatabase
 
 	public void RegisterStarterShip(IModManifest mod, ExternalStarterShip value)
 	{
+		if (!this.GlobalNameToShip.TryGetValue(value.ShipGlobalName, out var ship))
+			throw new ArgumentException("Cannot register a legacy starter ship without a registered ship", nameof(value));
+
 		ShipConfiguration configuration = new()
 		{
-			Ship = ActualizeExternalStarterShip(value, this.ActualizeShip(value.ShipGlobalName))
+			Ship = ActualizeExternalStarterShip(value, this.ActualizeShip(value.ShipGlobalName)),
+			UnderChassisSprite = ship.ChassisUnderSprite is { } underChassisSprite ? (Spr)underChassisSprite.Id!.Value : null,
+			OverChassisSprite = ship.ChassisOverSprite is { } overChassisSprite ? (Spr)overChassisSprite.Id!.Value : null
 		};
 
 		var entry = this.ContentManagerProvider().Ships.RegisterShip(mod, value.GlobalName, configuration);
@@ -277,29 +297,27 @@ internal sealed class LegacyDatabase
 		if (this.GlobalNameToVanillaShip.TryGetValue(globalName, out var ship))
 			return Mutil.DeepCopy(ship);
 		if (this.GlobalNameToShip.TryGetValue(globalName, out var externalShip))
-			return ActualizeExternalShip(externalShip);
+			return this.ActualizeExternalShip(externalShip);
 		throw new KeyNotFoundException();
 	}
 
-	private static Part ActualizeExternalShipPart(ExternalPart externalPart)
+	private Part ActualizeExternalShipPart(ExternalPart externalPart)
 	{
+		if (!this.GlobalNameToPartEntry.TryGetValue(externalPart.GlobalName, out var entry))
+			throw new KeyNotFoundException();
+
 		var part = externalPart.GetPartObject() is Part partTemplate
 			? Mutil.DeepCopy(partTemplate)
 			: new();
-		part.skin = externalPart.Key;
+		part.skin = entry.UniqueName;
 		return part;
 	}
 
-	private static Ship ActualizeExternalShip(ExternalShip externalShip)
+	private Ship ActualizeExternalShip(ExternalShip externalShip)
 	{
 		var ship = externalShip.GetShipObject() is Ship shipTemplate
 			? Mutil.DeepCopy(shipTemplate)
 			: new();
-
-		if (externalShip.ChassisUnderSprite is not null)
-			ship.chassisUnder = externalShip.underChassisKey;
-		if (externalShip.ChassisOverSprite is not null)
-			ship.chassisUnder = externalShip.overChassisKey;
 
 		ship.parts = externalShip.Parts
 			.Select(ActualizeExternalShipPart)

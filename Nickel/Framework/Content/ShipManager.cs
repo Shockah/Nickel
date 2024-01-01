@@ -52,7 +52,23 @@ internal sealed class ShipManager
 	}
 
 	private static void Inject(Entry entry)
-		=> StarterShip.ships[entry.UniqueName] = entry.Configuration.Ship;
+	{
+		entry.Configuration.Ship.ship.isPlayerShip = true;
+		if (entry.Configuration.UnderChassisSprite is { } underChassisSprite)
+		{
+			var key = $"{entry.UniqueName}::underChassis";
+			DB.parts[key] = underChassisSprite;
+			entry.Configuration.Ship.ship.chassisUnder = key;
+		}
+		if (entry.Configuration.OverChassisSprite is { } overChassisSprite)
+		{
+			var key = $"{entry.UniqueName}::overChassis";
+			DB.parts[key] = overChassisSprite;
+			entry.Configuration.Ship.ship.chassisOver = key;
+		}
+
+		StarterShip.ships[entry.UniqueName] = entry.Configuration.Ship;
+	}
 
 	private sealed class Entry(IModManifest modOwner, string uniqueName, ShipConfiguration configuration)
 		: IShipEntry
