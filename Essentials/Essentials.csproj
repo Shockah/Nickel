@@ -2,10 +2,10 @@
 	<Import Project="..\Configuration.props" />
 	<PropertyGroup>
 		<RootNamespace>Nickel.Essentials</RootNamespace>
-		<Version>0.1.1</Version>
+		<Version>0.1.0</Version>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Nickel.ModBuildConfig" Version="0.1.1" />
+		<PackageReference Include="Nickel.ModBuildConfig" Version="0.1.2" />
 		<PackageReference Include="EnumByNameSourceGenerator" Version="1.1.1" PrivateAssets="All" ExcludeAssets="runtime" />
 	</ItemGroup>
 </Project>
