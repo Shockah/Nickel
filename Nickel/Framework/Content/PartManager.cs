@@ -14,9 +14,9 @@ internal sealed class PartManager
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
 	}
 
-	public IPartEntry RegisterPart(IModManifest owner, string name, Spr part, Spr? partOff)
+	public IPartEntry RegisterPart(IModManifest owner, string name, PartConfiguration configuration)
 	{
-		Entry entry = new(owner, $"{owner.UniqueName}::{name}", part, partOff);
+		Entry entry = new(owner, $"{owner.UniqueName}::{name}", configuration);
 		this.UniqueNameToEntry[entry.UniqueName] = entry;
 
 		this.Manager.QueueOrInject(entry);
@@ -37,13 +37,12 @@ internal sealed class PartManager
 		}
 	}
 
-	private sealed class Entry(IModManifest modOwner, string uniqueName, Spr part, Spr? partOff)
+	private sealed class Entry(IModManifest modOwner, string uniqueName, PartConfiguration configuration)
 		: IPartEntry
 	{
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
-		public Spr Sprite { get; } = part;
-		public Spr? DisabledSprite { get; } = partOff;
+		public PartConfiguration Configuration { get; } = configuration;
 	}
 
 	internal void InjectQueuedEntries()
@@ -51,8 +50,8 @@ internal sealed class PartManager
 
 	private static void Inject(Entry entry)
 	{
-		DB.parts[entry.UniqueName] = entry.Sprite;
-		if (entry.DisabledSprite != null)
-			DB.partsOff[entry.UniqueName] = entry.DisabledSprite.Value;
+		DB.parts[entry.UniqueName] = entry.Configuration.Sprite;
+		if (entry.Configuration.DisabledSprite is { } disabledSprite)
+			DB.partsOff[entry.UniqueName] = disabledSprite;
 	}
 }

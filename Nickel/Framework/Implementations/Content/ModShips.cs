@@ -22,6 +22,6 @@ internal sealed class ModShips : IModShips
 	public IShipEntry RegisterShip(string name, ShipConfiguration configuration)
 		=> this.ShipManagerProvider().RegisterShip(this.ModManifest, name, configuration);
 
-	public IPartEntry RegisterPart(string name, Spr part, Spr? partOff = null)
-		=> this.PartManagerProvider().RegisterPart(this.ModManifest, name, part, partOff);
+	public IPartEntry RegisterPart(string name, PartConfiguration configuration)
+		=> this.PartManagerProvider().RegisterPart(this.ModManifest, name, configuration);
 }
