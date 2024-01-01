@@ -53,12 +53,17 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 			error => error
 		);
 
-	private sealed class LegacyRegistry : IModLoaderContact, IPrelaunchContactPoint, ISpriteRegistry, IDeckRegistry, IStatusRegistry, ICardRegistry, IArtifactRegistry, IAnimationRegistry, ICharacterRegistry
+	private sealed class LegacyRegistry
+		: IModLoaderContact, IPrelaunchContactPoint,
+		ISpriteRegistry, IDeckRegistry, IStatusRegistry, ICardRegistry, IArtifactRegistry,
+		IAnimationRegistry, ICharacterRegistry,
+		IPartTypeRegistry, IShipPartRegistry, IShipRegistry, IRawShipRegistry, IStartershipRegistry
 	{
 		public Assembly CobaltCoreAssembly { get; }
 
 		private IModManifest ModManifest { get; }
 		private IModHelper Helper { get; }
+		private ILogger Logger { get; }
 
 		public IEnumerable<ILegacyManifest> LoadedManifests
 		{
@@ -80,6 +85,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 		public LegacyRegistry(
 			IModManifest modManifest,
 			IModHelper helper,
+			ILogger logger,
 			Assembly cobaltCoreAssembly,
 			LegacyDatabase database
 		)
@@ -180,6 +186,55 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 			this.Database.RegisterCharacter(this.ModManifest, character);
 			return true;
 		}
+
+		public ExternalPartType LookupPartType(string globalName)
+			=> this.Database.GetPartType(globalName);
+
+		public bool RegisterPartType(ExternalPartType externalPartType)
+		{
+			this.Database.RegisterPartType(this.ModManifest, externalPartType);
+			return true;
+		}
+
+		public ExternalPart LookupPart(string globalName)
+			=> this.Database.GetPart(globalName);
+
+		public bool RegisterPart(ExternalPart externalPart)
+		{
+			this.Database.RegisterPart(this.ModManifest, externalPart);
+			return true;
+		}
+
+		public bool RegisterRawPart(string global_name, int spr_value, int? off_spr_value = null)
+		{
+			this.Database.RegisterRawPart(this.ModManifest, global_name, spr_value, off_spr_value);
+			return true;
+		}
+
+		public object LookupShip(string globalName)
+			=> this.Database.ActualizeShip(globalName);
+
+		public bool RegisterShip(ExternalShip ship)
+		{
+			this.Database.RegisterShip(ship);
+			return true;
+		}
+
+		public bool RegisterShip(object shipObject, string global_name)
+		{
+			if (shipObject is not Ship ship)
+			{
+				this.Logger.LogError("Tried to register a new Ship, but the given object {Object} is not a `{ShipTypeName}`.", shipObject, typeof(Ship).FullName);
+				return false;
+			}
+
+			this.Database.RegisterShip(ship, global_name);
+			return true;
+		}
+
+		public object LookupStarterShip(string globalName) => throw new NotImplementedException();
+
+		public bool RegisterStartership(ExternalStarterShip starterShip) => throw new NotImplementedException();
 	}
 
 	private sealed class LegacyModWrapper : Mod
@@ -199,6 +254,8 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 			helper.Events.OnModLoadPhaseFinished += this.LoadArtifactManifest;
 			helper.Events.OnModLoadPhaseFinished += this.LoadAnimationManifest;
 			helper.Events.OnModLoadPhaseFinished += this.LoadCharacterManifest;
+			helper.Events.OnModLoadPhaseFinished += this.LoadPartTypeManifest;
+			helper.Events.OnModLoadPhaseFinished += this.LoadShipPartManifest;
 			helper.Events.OnModLoadPhaseFinished += this.FinalizePreparations;
 
 			legacyManifest.GameRootFolder = new DirectoryInfo(Directory.GetCurrentDirectory());
@@ -266,7 +323,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 			(this.LegacyManifest as IArtifactManifest)?.LoadManifest(this.LegacyRegistry);
 		}
 
-		[EventPriority(-600)]
+		[EventPriority(-700)]
 		private void LoadAnimationManifest(object? sender, ModLoadPhase phase)
 		{
 			if (phase != ModLoadPhase.AfterGameAssembly)
@@ -274,7 +331,7 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 			(this.LegacyManifest as IAnimationManifest)?.LoadManifest(this.LegacyRegistry);
 		}
 
-		[EventPriority(-700)]
+		[EventPriority(-800)]
 		private void LoadCharacterManifest(object? sender, ModLoadPhase phase)
 		{
 			if (phase != ModLoadPhase.AfterGameAssembly)
@@ -282,7 +339,23 @@ internal sealed class LegacyAssemblyPluginLoader : IPluginLoader<IAssemblyModMan
 			(this.LegacyManifest as ICharacterManifest)?.LoadManifest(this.LegacyRegistry);
 		}
 
+		[EventPriority(-900)]
+		private void LoadPartTypeManifest(object? sender, ModLoadPhase phase)
+		{
+			if (phase != ModLoadPhase.AfterGameAssembly)
+				return;
+			(this.LegacyManifest as IPartTypeManifest)?.LoadManifest(this.LegacyRegistry);
+		}
+
 		[EventPriority(-1000)]
+		private void LoadShipPartManifest(object? sender, ModLoadPhase phase)
+		{
+			if (phase != ModLoadPhase.AfterGameAssembly)
+				return;
+			(this.LegacyManifest as IShipPartManifest)?.LoadManifest(this.LegacyRegistry);
+		}
+
+		[EventPriority(-10000)]
 		private void FinalizePreparations(object? sender, ModLoadPhase phase)
 		{
 			if (phase != ModLoadPhase.AfterGameAssembly)

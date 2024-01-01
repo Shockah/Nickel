@@ -139,18 +139,12 @@ internal sealed class CharacterManager
 				unlockedCharacters.Add(entry.Configuration.Deck);
 	}
 
-	private sealed class AnimationEntry : ICharacterAnimationEntry
+	private sealed class AnimationEntry(IModManifest modOwner, string uniqueName, CharacterAnimationConfiguration configuration)
+		: ICharacterAnimationEntry
 	{
-		public IModManifest ModOwner { get; }
-		public string UniqueName { get; }
-		public CharacterAnimationConfiguration Configuration { get; }
-
-		public AnimationEntry(IModManifest modOwner, string uniqueName, CharacterAnimationConfiguration configuration)
-		{
-			this.ModOwner = modOwner;
-			this.UniqueName = uniqueName;
-			this.Configuration = configuration;
-		}
+		public IModManifest ModOwner { get; } = modOwner;
+		public string UniqueName { get; } = uniqueName;
+		public CharacterAnimationConfiguration Configuration { get; } = configuration;
 	}
 
 	private sealed class CharacterEntry(IModManifest modOwner, string uniqueName, CharacterConfiguration configuration)

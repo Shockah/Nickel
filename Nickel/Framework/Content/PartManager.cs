@@ -6,26 +6,42 @@ namespace Nickel;
 
 internal sealed class PartManager
 {
-	private AfterDbInitManager<Entry> Manager { get; }
-	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
+	private int NextPartTypeId { get; set; } = 10_000_001;
+	private AfterDbInitManager<PartTypeEntry> PartTypeManager { get; }
+	private AfterDbInitManager<PartEntry> PartInstanceManager { get; }
+	private Dictionary<string, PartTypeEntry> UniqueNameToPartTypeEntry { get; } = [];
+	private Dictionary<string, PartEntry> UniqueNameToPartInstanceEntry { get; } = [];
 
 	public PartManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
-		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		this.PartTypeManager = new(currentModLoadPhaseProvider, Inject);
+		this.PartInstanceManager = new(currentModLoadPhaseProvider, Inject);
+	}
+
+	internal void InjectQueuedEntries()
+		=> this.PartInstanceManager.InjectQueuedEntries();
+
+	public IPartTypeEntry RegisterPartType(IModManifest owner, string name, PartTypeConfiguration configuration)
+	{
+		PartTypeEntry entry = new(owner, $"{owner.UniqueName}::{name}", (PType)this.NextPartTypeId++, configuration);
+		this.UniqueNameToPartTypeEntry[entry.UniqueName] = entry;
+
+		this.PartTypeManager.QueueOrInject(entry);
+		return entry;
 	}
 
 	public IPartEntry RegisterPart(IModManifest owner, string name, PartConfiguration configuration)
 	{
-		Entry entry = new(owner, $"{owner.UniqueName}::{name}", configuration);
-		this.UniqueNameToEntry[entry.UniqueName] = entry;
+		PartEntry entry = new(owner, $"{owner.UniqueName}::{name}", configuration);
+		this.UniqueNameToPartInstanceEntry[entry.UniqueName] = entry;
 
-		this.Manager.QueueOrInject(entry);
+		this.PartInstanceManager.QueueOrInject(entry);
 		return entry;
 	}
 
-	public bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IPartEntry entry)
+	public bool TryGetPartTypeByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IPartTypeEntry entry)
 	{
-		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry))
+		if (this.UniqueNameToPartTypeEntry.TryGetValue(uniqueName, out var typedEntry))
 		{
 			entry = typedEntry;
 			return true;
@@ -37,21 +53,45 @@ internal sealed class PartManager
 		}
 	}
 
-	private sealed class Entry(IModManifest modOwner, string uniqueName, PartConfiguration configuration)
+	public bool TryGetPartByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IPartEntry entry)
+	{
+		if (this.UniqueNameToPartInstanceEntry.TryGetValue(uniqueName, out var typedEntry))
+		{
+			entry = typedEntry;
+			return true;
+		}
+		else
+		{
+			entry = default;
+			return false;
+		}
+	}
+
+	private static void Inject(PartTypeEntry entry)
+	{
+	}
+
+	private static void Inject(PartEntry entry)
+	{
+		DB.parts[entry.UniqueName] = entry.Configuration.Sprite;
+		if (entry.Configuration.DisabledSprite is { } disabledSprite)
+			DB.partsOff[entry.UniqueName] = disabledSprite;
+	}
+
+	private sealed class PartTypeEntry(IModManifest modOwner, string uniqueName, PType partType, PartTypeConfiguration configuration)
+		: IPartTypeEntry
+	{
+		public IModManifest ModOwner { get; } = modOwner;
+		public string UniqueName { get; } = uniqueName;
+		public PType PartType { get; } = partType;
+		public PartTypeConfiguration Configuration { get; } = configuration;
+	}
+
+	private sealed class PartEntry(IModManifest modOwner, string uniqueName, PartConfiguration configuration)
 		: IPartEntry
 	{
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
 		public PartConfiguration Configuration { get; } = configuration;
-	}
-
-	internal void InjectQueuedEntries()
-		=> this.Manager.InjectQueuedEntries();
-
-	private static void Inject(Entry entry)
-	{
-		DB.parts[entry.UniqueName] = entry.Configuration.Sprite;
-		if (entry.Configuration.DisabledSprite is { } disabledSprite)
-			DB.partsOff[entry.UniqueName] = disabledSprite;
 	}
 }

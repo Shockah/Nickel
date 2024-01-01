@@ -14,7 +14,6 @@ internal sealed class StatusManager
 	public StatusManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
-
 		TTGlossaryPatches.OnTryGetIcon.Subscribe(this.OnTryGetIcon);
 	}
 
