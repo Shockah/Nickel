@@ -15,6 +15,12 @@ public sealed class ZipFileInfo : ZipFileSystemInfo, IFileInfo<ZipFileInfo, ZipD
 		if (entryName.StartsWith("/"))
 			entryName = entryName.Substring(1);
 		var entry = this.Archive.GetEntry(entryName) ?? throw new FileNotFoundException("File does not exist", entryName);
-		return entry.Open();
+
+		// DeflateStream is dumb and doesn't support `Length`, which breaks assembly loading - copy it to MemoryStream first
+		using var stream = entry.Open();
+		MemoryStream memoryStream = new();
+		stream.CopyTo(memoryStream);
+		memoryStream.Position = 0;
+		return memoryStream;
 	}
 }
