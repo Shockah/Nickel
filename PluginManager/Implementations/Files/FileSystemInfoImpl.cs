@@ -30,6 +30,15 @@ public abstract class FileSystemInfoImpl<TFileSystemInfo> : IFileSystemInfo<File
 		this.FileSystemInfo = fileSystemInfo;
 	}
 
+	public override string ToString()
+		=> this.FileSystemInfo.FullName;
+
+	public override bool Equals(object? obj)
+		=> obj is IFileSystemInfo other && this.IsInSameFileSystemType(other) && Equals(this.FullName, other.FullName);
+
+	public override int GetHashCode()
+		=> this.FullName.GetHashCode();
+
 	public bool IsInSameFileSystemType(IFileSystemInfo other)
 		=> other is IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>;
 

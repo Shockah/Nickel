@@ -26,6 +26,15 @@ public sealed class LazyFileSystemInfoImpl : IFileSystemInfo<FileInfoImpl, Direc
 		this.FullName = fullName;
 	}
 
+	public override string ToString()
+		=> this.FullName;
+
+	public override bool Equals(object? obj)
+		=> obj is IFileSystemInfo other && this.IsInSameFileSystemType(other) && Equals(this.FullName, other.FullName);
+
+	public override int GetHashCode()
+		=> this.FullName.GetHashCode();
+
 	public bool IsInSameFileSystemType(IFileSystemInfo other)
 		=> other is IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>;
 
