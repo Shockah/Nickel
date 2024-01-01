@@ -1,3 +1,5 @@
+using OneOf;
+using OneOf.Types;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -5,7 +7,7 @@ namespace Nickel;
 
 public static partial class ManifestExt
 {
-	public static IAssemblyModManifest? AsAssemblyModManifest(this IModManifest manifest)
+	public static OneOf<IAssemblyModManifest, Error<string>> AsAssemblyModManifest(this IModManifest manifest)
 	{
 		bool TryParseEntryPointAssemblyFileName([MaybeNullWhen(false)] out string result)
 		{
@@ -43,11 +45,12 @@ public static partial class ManifestExt
 		}
 
 		if (!TryParseEntryPointAssemblyFileName(out var entryPointAssembly))
-			return null;
+			return new Error<string>($"`{nameof(IAssemblyModManifest.EntryPointAssembly)}` value is invalid.");
 		if (!TryParseEntryPointTypeFullName(out var entryPointType))
-			return null;
+			return new Error<string>($"`{nameof(IAssemblyModManifest.EntryPointType)}` value is invalid.");
 		if (!TryParseLoadPhase(out var loadPhase))
-			return null;
+			return new Error<string>($"`{nameof(IAssemblyModManifest.LoadPhase)}` value is invalid.");
+		
 		return new AssemblyModManifest(manifest)
 		{
 			EntryPointAssembly = entryPointAssembly,

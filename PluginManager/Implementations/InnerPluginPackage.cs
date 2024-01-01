@@ -16,6 +16,9 @@ public sealed class InnerPluginPackage<TPluginManifest> : IPluginPackage<TPlugin
 		this.DisposesOuterPackage = disposesOuterPackage;
 	}
 
+	public override string ToString()
+		=> $"InnerPluginPackage {{ Manifest = {this.Manifest}, PackageRoot = {this.PackageRoot}, OuterPackage = {this.OuterPackage} }}";
+
 	public void Dispose()
 	{
 		if (this.DisposesOuterPackage)

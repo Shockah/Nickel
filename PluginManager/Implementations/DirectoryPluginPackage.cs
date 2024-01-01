@@ -11,6 +11,9 @@ public sealed class DirectoryPluginPackage<TPluginManifest> : IPluginPackage<TPl
 		this.PackageRoot = directory;
 	}
 
+	public override string ToString()
+		=> $"DirectoryPluginPackage {{ Manifest = {this.Manifest}, PackageRoot = {this.PackageRoot} }}";
+
 	public void Dispose()
 	{
 	}

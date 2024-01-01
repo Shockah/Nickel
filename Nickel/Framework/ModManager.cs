@@ -72,56 +72,52 @@ internal sealed class ModManager
 			)
 		);
 
-		var assemblyPluginLoader = new ConditionalPluginLoader<IAssemblyModManifest, Mod>(
-			loader: new AssemblyPluginLoader<IAssemblyModManifest, Mod, Mod>(
-				requiredPluginDataProvider: p => new AssemblyPluginLoaderRequiredPluginData
-				{
-					UniqueName = p.Manifest.UniqueName,
-					EntryPointAssembly = p.Manifest.EntryPointAssembly,
-					EntryPointType = p.Manifest.EntryPointType
-				},
-				partAssembler: new SingleAssemblyPluginPartAssembler<IAssemblyModManifest, Mod>(),
-				parameterInjector: assemblyPluginLoaderParameterInjector,
-				assemblyEditor: extendableAssemblyDefinitionEditor
-			),
-			condition: package => package.Manifest.ModType == NickelConstants.AssemblyModType
-		);
-
-		var legacyAssemblyPluginLoader = new ConditionalPluginLoader<IAssemblyModManifest, Mod>(
-			loader: new AssemblyPluginLoader<IAssemblyModManifest, ILegacyManifest, Mod>(
-				requiredPluginDataProvider: p =>
-					new AssemblyPluginLoaderRequiredPluginData
+		var assemblyPluginLoader = new ConditionalPluginLoader<IModManifest, Mod>(
+			loader: new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
+				loader: new AssemblyPluginLoader<IAssemblyModManifest, Mod, Mod>(
+					requiredPluginDataProvider: p => new AssemblyPluginLoaderRequiredPluginData
 					{
 						UniqueName = p.Manifest.UniqueName,
 						EntryPointAssembly = p.Manifest.EntryPointAssembly,
 						EntryPointType = p.Manifest.EntryPointType
 					},
-				partAssembler: new LegacyAssemblyPluginLoaderPartAssembler(
-					helperProvider: this.ObtainModHelper,
-					loggerProvider: this.ObtainLogger,
-					cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!,
-					databaseProvider: () => this.LegacyDatabase!
+					partAssembler: new SingleAssemblyPluginPartAssembler<IAssemblyModManifest, Mod>(),
+					parameterInjector: assemblyPluginLoaderParameterInjector,
+					assemblyEditor: extendableAssemblyDefinitionEditor
 				),
-				parameterInjector: assemblyPluginLoaderParameterInjector,
-				assemblyEditor: extendableAssemblyDefinitionEditor
+				converter: m => m.AsAssemblyModManifest()
 			),
-			condition: package => package.Manifest.ModType == NickelConstants.LegacyModType
-				&& this.CobaltCoreAssembly is not null && this.LegacyDatabase is not null
-				&& package.PackageRoot is IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>
+			condition: package => package.Manifest.ModType == NickelConstants.AssemblyModType
+				? new Yes() : new No()
 		);
 
-		this.ExtendablePluginLoader.RegisterPluginLoader(
-			new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
-				assemblyPluginLoader,
-				m => m.AsAssemblyModManifest()
-			)
+		var legacyAssemblyPluginLoader = new ConditionalPluginLoader<IModManifest, Mod>(
+			loader: new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
+				loader: new AssemblyPluginLoader<IAssemblyModManifest, ILegacyManifest, Mod>(
+					requiredPluginDataProvider: p =>
+						new AssemblyPluginLoaderRequiredPluginData
+						{
+							UniqueName = p.Manifest.UniqueName,
+							EntryPointAssembly = p.Manifest.EntryPointAssembly,
+							EntryPointType = p.Manifest.EntryPointType
+						},
+					partAssembler: new LegacyAssemblyPluginLoaderPartAssembler(
+						helperProvider: this.ObtainModHelper,
+						loggerProvider: this.ObtainLogger,
+						cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!,
+						databaseProvider: () => this.LegacyDatabase!
+					),
+					parameterInjector: assemblyPluginLoaderParameterInjector,
+					assemblyEditor: extendableAssemblyDefinitionEditor
+				),
+				converter: m => m.AsAssemblyModManifest()
+			),
+			condition: package => package.Manifest.ModType == NickelConstants.LegacyModType
+				? new Yes() : new No()
 		);
-		this.ExtendablePluginLoader.RegisterPluginLoader(
-			new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
-				legacyAssemblyPluginLoader,
-				m => m.AsAssemblyModManifest()
-			)
-		);
+
+		this.ExtendablePluginLoader.RegisterPluginLoader(assemblyPluginLoader);
+		this.ExtendablePluginLoader.RegisterPluginLoader(legacyAssemblyPluginLoader);
 
 		DBPatches.OnLoadStringsForLocale.Subscribe(this.OnLoadStringsForLocale);
 	}
@@ -206,7 +202,8 @@ internal sealed class ModManager
 		var dependencyResolverResult = pluginDependencyResolver.ResolveDependencies(toLoad.Select(p => p.Manifest));
 		foreach (var (unresolvableManifest, reason) in dependencyResolverResult.Unresolvable)
 		{
-			if (this.OptionalSubmods.Contains(unresolvableManifest)) continue;
+			if (this.OptionalSubmods.Contains(unresolvableManifest))
+				continue;
 			reason.Switch(
 				missingDependencies => this.Logger.LogError(
 					"Could not load {UniqueName}: missing dependencies: {Dependencies}",
@@ -271,7 +268,14 @@ internal sealed class ModManager
 				continue;
 			}
 
-			if (!this.ExtendablePluginLoader.CanLoadPlugin(package))
+			var canLoadYesNoOrError = this.ExtendablePluginLoader.CanLoadPlugin(package);
+			if (canLoadYesNoOrError.TryPickT2(out var error, out var canLoadYesOrNo))
+			{
+				this.FailedMods.Add(manifest);
+				this.Logger.LogError("Could not load {DisplayName}: {Error}", displayName, error.Value);
+				continue;
+			}
+			if (canLoadYesOrNo.IsT1)
 			{
 				this.FailedMods.Add(manifest);
 				this.Logger.LogError(

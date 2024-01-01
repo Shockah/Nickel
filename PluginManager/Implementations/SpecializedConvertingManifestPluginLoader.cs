@@ -7,32 +7,34 @@ namespace Nanoray.PluginManager;
 public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPluginManifest, TPluginManifest, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 	where TSpecializedPluginManifest : TPluginManifest
 {
-	private IPluginLoader<TSpecializedPluginManifest, TPlugin> PluginLoader { get; }
-	private Func<TPluginManifest, TSpecializedPluginManifest?> Converter { get; }
+	private IPluginLoader<TSpecializedPluginManifest, TPlugin> Loader { get; }
+	private Func<TPluginManifest, OneOf<TSpecializedPluginManifest, Error<string>>> Converter { get; }
 
 	public SpecializedConvertingManifestPluginLoader(
-		IPluginLoader<TSpecializedPluginManifest, TPlugin> pluginLoader,
-		Func<TPluginManifest, TSpecializedPluginManifest?> converter
+		IPluginLoader<TSpecializedPluginManifest, TPlugin> loader,
+		Func<TPluginManifest, OneOf<TSpecializedPluginManifest, Error<string>>> converter
 	)
 	{
-		this.PluginLoader = pluginLoader;
+		this.Loader = loader;
 		this.Converter = converter;
 	}
 
-	public bool CanLoadPlugin(IPluginPackage<TPluginManifest> package)
+	public OneOf<Yes, No, Error<string>> CanLoadPlugin(IPluginPackage<TPluginManifest> package)
 	{
-		var specializedManifest = this.Converter(package.Manifest);
-		if (specializedManifest is null)
-			return false;
+		var specializedManifestOrError = this.Converter(package.Manifest);
+		if (specializedManifestOrError.TryPickT1(out var error, out var specializedManifest))
+			return error;
 		var specializedPackage = MakeSpecializedPackage(package, specializedManifest);
-		return this.PluginLoader.CanLoadPlugin(specializedPackage);
+		return this.Loader.CanLoadPlugin(specializedPackage);
 	}
 
 	public OneOf<TPlugin, Error<string>> LoadPlugin(IPluginPackage<TPluginManifest> package)
 	{
-		var specializedManifest = this.Converter(package.Manifest) ?? throw new ArgumentException($"This plugin loader cannot load the plugin package {package}.");
+		var specializedManifestOrError = this.Converter(package.Manifest);
+		if (specializedManifestOrError.TryPickT1(out var error, out var specializedManifest))
+			return error;
 		var specializedPackage = MakeSpecializedPackage(package, specializedManifest);
-		return this.PluginLoader.LoadPlugin(specializedPackage);
+		return this.Loader.LoadPlugin(specializedPackage);
 	}
 
 	private static IPluginPackage<TSpecializedPluginManifest> MakeSpecializedPackage(IPluginPackage<TPluginManifest> package, TSpecializedPluginManifest manifest)
@@ -52,6 +54,9 @@ public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPlugin
 			this.Package = package;
 			this.Manifest = manifest;
 		}
+
+		public override string ToString()
+			=> $"SpecializedPluginPackage {{ {this.Package} }}";
 
 		public void Dispose()
 			=> this.Package.Dispose();

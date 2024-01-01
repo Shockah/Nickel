@@ -10,13 +10,13 @@ namespace Nanoray.PluginManager;
 
 public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 {
-	private Func<IPluginPackage<TPluginManifest>, AssemblyPluginLoaderRequiredPluginData?> RequiredPluginDataProvider { get; }
+	private Func<IPluginPackage<TPluginManifest>, OneOf<AssemblyPluginLoaderRequiredPluginData, Error<string>>> RequiredPluginDataProvider { get; }
 	private IAssemblyPluginLoaderPartAssembler<TPluginManifest, TPluginPart, TPlugin> PartAssembler { get; }
 	private IAssemblyPluginLoaderParameterInjector<TPluginManifest>? ParameterInjector { get; }
 	private IAssemblyEditor? AssemblyEditor { get; }
 
 	public AssemblyPluginLoader(
-		Func<IPluginPackage<TPluginManifest>, AssemblyPluginLoaderRequiredPluginData?> requiredPluginDataProvider,
+		Func<IPluginPackage<TPluginManifest>, OneOf<AssemblyPluginLoaderRequiredPluginData, Error<string>>> requiredPluginDataProvider,
 		IAssemblyPluginLoaderPartAssembler<TPluginManifest, TPluginPart, TPlugin> partAssembler,
 		IAssemblyPluginLoaderParameterInjector<TPluginManifest>? parameterInjector,
 		IAssemblyEditor? assemblyEditor
@@ -28,12 +28,15 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 		this.AssemblyEditor = assemblyEditor;
 	}
 
-	public bool CanLoadPlugin(IPluginPackage<TPluginManifest> package)
-		=> this.RequiredPluginDataProvider(package) is not null;
+	public OneOf<Yes, No, Error<string>> CanLoadPlugin(IPluginPackage<TPluginManifest> package)
+		=> this.RequiredPluginDataProvider(package).Match<OneOf<Yes, No, Error<string>>>(
+			data => new Yes(),
+			error => error
+		);
 
 	public OneOf<TPlugin, Error<string>> LoadPlugin(IPluginPackage<TPluginManifest> package)
 	{
-		if (this.RequiredPluginDataProvider(package) is not { } requiredPluginData)
+		if (!this.RequiredPluginDataProvider(package).TryPickT0(out var requiredPluginData, out _))
 			throw new ArgumentException($"This plugin loader cannot load the plugin package {package}.");
 
 		using var originalStream = package.PackageRoot.GetRelativeFile(requiredPluginData.EntryPointAssembly).OpenRead();

@@ -2,28 +2,36 @@ using OneOf;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Nanoray.PluginManager;
 
 public sealed class ExtendablePluginLoader<TPluginManifest, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 {
-	private List<IPluginLoader<TPluginManifest, TPlugin>> PluginLoaders { get; } = [];
+	private List<IPluginLoader<TPluginManifest, TPlugin>> Loaders { get; } = [];
 
-	public bool CanLoadPlugin(IPluginPackage<TPluginManifest> package)
-		=> this.PluginLoaders.Any(loader => loader.CanLoadPlugin(package));
+	public OneOf<Yes, No, Error<string>> CanLoadPlugin(IPluginPackage<TPluginManifest> package)
+	{
+		foreach (var loader in this.Loaders)
+		{
+			var yesNoOrError = loader.CanLoadPlugin(package);
+			if (yesNoOrError.IsT1)
+				continue;
+			return yesNoOrError;
+		}
+		return new No();
+	}
 
 	public OneOf<TPlugin, Error<string>> LoadPlugin(IPluginPackage<TPluginManifest> package)
 	{
-		foreach (var loader in this.PluginLoaders)
-			if (loader.CanLoadPlugin(package))
+		foreach (var loader in this.Loaders)
+			if (loader.CanLoadPlugin(package).IsT0)
 				return loader.LoadPlugin(package);
 		throw new ArgumentException($"This plugin loader cannot load the plugin package {package}.");
 	}
 
 	public void RegisterPluginLoader(IPluginLoader<TPluginManifest, TPlugin> loader)
-		=> this.PluginLoaders.Add(loader);
+		=> this.Loaders.Add(loader);
 
 	public void UnregisterPluginLoader(IPluginLoader<TPluginManifest, TPlugin> loader)
-		=> this.PluginLoaders.Remove(loader);
+		=> this.Loaders.Remove(loader);
 }

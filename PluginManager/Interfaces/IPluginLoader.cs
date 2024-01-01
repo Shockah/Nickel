@@ -5,7 +5,7 @@ namespace Nanoray.PluginManager;
 
 public interface IPluginLoader<in TPluginManifest, TPlugin>
 {
-	bool CanLoadPlugin(IPluginPackage<TPluginManifest> package);
+	OneOf<Yes, No, Error<string>> CanLoadPlugin(IPluginPackage<TPluginManifest> package);
 
 	OneOf<TPlugin, Error<string>> LoadPlugin(IPluginPackage<TPluginManifest> package);
 }
