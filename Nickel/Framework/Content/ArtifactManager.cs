@@ -19,6 +19,18 @@ internal sealed class ArtifactManager
 	internal void InjectQueuedEntries()
 		=> this.Manager.InjectQueuedEntries();
 
+	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
+	{
+		foreach (var entry in this.UniqueNameToEntry.Values)
+		{
+			var key = entry.Configuration.ArtifactType.Name; // TODO: change this when Artifact.Key gets patched
+			if (entry.Configuration.Name.Localize(locale) is { } name)
+				localizations[$"card.{key}.name"] = name;
+			if (entry.Configuration.Description.Localize(locale) is { } description)
+				localizations[$"card.{key}.desc"] = description;
+		}
+	}
+
 	public IArtifactEntry RegisterArtifact(IModManifest owner, string name, ArtifactConfiguration configuration)
 	{
 		Entry entry = new(owner, $"{owner.UniqueName}::{name}", configuration);

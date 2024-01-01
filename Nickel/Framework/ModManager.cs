@@ -250,7 +250,7 @@ internal sealed class ModManager
 				continue;
 			if (GetModLoadPhaseForManifest(manifest) != phase)
 				continue;
-			
+
 			var displayName = GetModDisplayName(manifest);
 			this.Logger.LogDebug("Loading mod {DisplayName}...", displayName);
 

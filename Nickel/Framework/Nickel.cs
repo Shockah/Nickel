@@ -177,7 +177,10 @@ internal sealed class Nickel
 
 	[EventPriority(double.MaxValue)]
 	private void OnLoadStringsForLocale(object? sender, LoadStringsForLocaleEventArgs e)
-		=> this.ModManager.LegacyDatabase?.InjectLocalizations(e.Locale, e.Localizations);
+	{
+		this.ModManager.LegacyDatabase?.InjectLocalizations(e.Locale, e.Localizations);
+		this.ModManager.ContentManager?.InjectLocalizations(e.Locale, e.Localizations);
+	}
 
 	private static DirectoryInfo GetOrCreateDefaultModLibraryDirectory()
 	{

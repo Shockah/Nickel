@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 
 namespace Nickel;
 
@@ -35,5 +36,15 @@ internal sealed record ContentManager(
 		this.Characters.InjectQueuedEntries();
 		this.Parts.InjectQueuedEntries();
 		this.Ships.InjectQueuedEntries();
+	}
+
+	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
+	{
+		this.Decks.InjectLocalizations(locale, localizations);
+		this.Statuses.InjectLocalizations(locale, localizations);
+		this.Cards.InjectLocalizations(locale, localizations);
+		this.Artifacts.InjectLocalizations(locale, localizations);
+		this.Characters.InjectLocalizations(locale, localizations);
+		this.Ships.InjectLocalizations(locale, localizations);
 	}
 }

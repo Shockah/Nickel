@@ -12,4 +12,5 @@ public readonly struct CharacterConfiguration
 	public CharacterAnimationConfiguration? NeutralAnimation { get; init; }
 	public CharacterAnimationConfiguration? MiniAnimation { get; init; }
 	public bool StartLocked { get; init; }
+	public LocalizationProvider? Description { get; init; }
 }

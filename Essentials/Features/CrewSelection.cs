@@ -1,15 +1,15 @@
 using daisyowl.text;
 using HarmonyLib;
+using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
+using Nanoray.Shrike;
+using Nanoray.Shrike.Harmony;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Reflection;
-using Nanoray.Shrike;
-using Nanoray.Shrike.Harmony;
-using Microsoft.Extensions.Logging;
+using System.Reflection.Emit;
 
 namespace Nickel.Essentials;
 
@@ -169,7 +169,7 @@ internal static class CrewSelection
 
 	private sealed record MouseDownHandler(Action Delegate) : OnMouseDown
 	{
-		public void OnMouseDown(G g, Box b)
+		public void OnMouseDown(G _1, Box _2)
 			=> this.Delegate();
 	}
 }
