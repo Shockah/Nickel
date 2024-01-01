@@ -32,7 +32,9 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 	public IReadOnlyDictionary<string, object> ExtensionData
 		=> this.ModManifest.ExtensionData;
 
-	public string EntryPointAssemblyFileName { get; internal set; } = null!;
+	public string EntryPointAssembly { get; internal set; } = null!;
+
+	public string? EntryPointType { get; internal set; }
 
 	public ModLoadPhase LoadPhase { get; internal set; } = ModLoadPhase.AfterGameAssembly;
 

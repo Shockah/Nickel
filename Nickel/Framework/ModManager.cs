@@ -3,13 +3,14 @@ using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using Nanoray.PluginManager.Implementations;
 using Nickel.Common;
+using Nickel.Framework.Implementations;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using ILegacyModManifest = CobaltCoreModding.Definitions.ModManifests.IModManifest;
+using ILegacyManifest = CobaltCoreModding.Definitions.ModManifests.IManifest;
 
 namespace Nickel;
 
@@ -72,12 +73,14 @@ internal sealed class ModManager
 		);
 
 		var assemblyPluginLoader = new ConditionalPluginLoader<IAssemblyModManifest, Mod>(
-			loader: new AssemblyPluginLoader<IAssemblyModManifest, Mod>(
-				requiredPluginDataProvider: p => new AssemblyPluginLoader<IAssemblyModManifest, Mod>.RequiredPluginData
+			loader: new AssemblyPluginLoader<IAssemblyModManifest, Mod, Mod>(
+				requiredPluginDataProvider: p => new AssemblyPluginLoaderRequiredPluginData
 				{
 					UniqueName = p.Manifest.UniqueName,
-					EntryPointAssemblyFileName = p.Manifest.EntryPointAssemblyFileName
+					EntryPointAssembly = p.Manifest.EntryPointAssembly,
+					EntryPointType = p.Manifest.EntryPointType
 				},
+				partAssembler: new SingleAssemblyPluginPartAssembler<IAssemblyModManifest, Mod>(),
 				parameterInjector: assemblyPluginLoaderParameterInjector,
 				assemblyEditor: extendableAssemblyDefinitionEditor
 			),
@@ -85,24 +88,26 @@ internal sealed class ModManager
 		);
 
 		var legacyAssemblyPluginLoader = new ConditionalPluginLoader<IAssemblyModManifest, Mod>(
-			loader: new LegacyAssemblyPluginLoader(
-				loader: new AssemblyPluginLoader<IAssemblyModManifest, ILegacyModManifest>(
-					requiredPluginDataProvider: p =>
-						new AssemblyPluginLoader<IAssemblyModManifest, ILegacyModManifest>.RequiredPluginData
-						{
-							UniqueName = p.Manifest.UniqueName,
-							EntryPointAssemblyFileName = p.Manifest.EntryPointAssemblyFileName
-						},
-					parameterInjector: assemblyPluginLoaderParameterInjector,
-					assemblyEditor: extendableAssemblyDefinitionEditor
+			loader: new AssemblyPluginLoader<IAssemblyModManifest, ILegacyManifest, Mod>(
+				requiredPluginDataProvider: p =>
+					new AssemblyPluginLoaderRequiredPluginData
+					{
+						UniqueName = p.Manifest.UniqueName,
+						EntryPointAssembly = p.Manifest.EntryPointAssembly,
+						EntryPointType = p.Manifest.EntryPointType
+					},
+				partAssembler: new LegacyAssemblyPluginLoaderPartAssembler(
+					helperProvider: this.ObtainModHelper,
+					loggerProvider: this.ObtainLogger,
+					cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!,
+					databaseProvider: () => this.LegacyDatabase!
 				),
-				helperProvider: this.ObtainModHelper,
-				loggerProvider: this.ObtainLogger,
-				cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!,
-				databaseProvider: () => this.LegacyDatabase!
+				parameterInjector: assemblyPluginLoaderParameterInjector,
+				assemblyEditor: extendableAssemblyDefinitionEditor
 			),
 			condition: package => package.Manifest.ModType == NickelConstants.LegacyModType
 				&& this.CobaltCoreAssembly is not null && this.LegacyDatabase is not null
+				&& package.PackageRoot is IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>
 		);
 
 		this.ExtendablePluginLoader.RegisterPluginLoader(

@@ -10,8 +10,19 @@ public static partial class ManifestExt
 		bool TryParseEntryPointAssemblyFileName([MaybeNullWhen(false)] out string result)
 		{
 			result = default;
-			if (!manifest.ExtensionData.TryGetValue(nameof(IAssemblyModManifest.EntryPointAssemblyFileName), out var raw))
+			if (!manifest.ExtensionData.TryGetValue(nameof(IAssemblyModManifest.EntryPointAssembly), out var raw))
 				return false;
+			if (raw is not string value)
+				return false;
+			result = value;
+			return true;
+		}
+
+		bool TryParseEntryPointTypeFullName(out string? result)
+		{
+			result = null;
+			if (!manifest.ExtensionData.TryGetValue(nameof(IAssemblyModManifest.EntryPointType), out var raw))
+				return true;
 			if (raw is not string value)
 				return false;
 			result = value;
@@ -31,13 +42,16 @@ public static partial class ManifestExt
 			return true;
 		}
 
-		if (!TryParseEntryPointAssemblyFileName(out var entryPointAssemblyFileName))
+		if (!TryParseEntryPointAssemblyFileName(out var entryPointAssembly))
+			return null;
+		if (!TryParseEntryPointTypeFullName(out var entryPointType))
 			return null;
 		if (!TryParseLoadPhase(out var loadPhase))
 			return null;
 		return new AssemblyModManifest(manifest)
 		{
-			EntryPointAssemblyFileName = entryPointAssemblyFileName,
+			EntryPointAssembly = entryPointAssembly,
+			EntryPointType = entryPointType,
 			LoadPhase = loadPhase
 		};
 	}

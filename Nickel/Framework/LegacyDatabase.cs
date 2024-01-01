@@ -25,6 +25,7 @@ internal sealed class LegacyDatabase
 	private Dictionary<string, ExternalStarterShip> GlobalNameToStarterShip { get; } = [];
 
 	private Dictionary<string, ICharacterEntry> GlobalNameToCharacterEntry { get; init; } = [];
+	private Dictionary<string, IShipEntry> GlobalNameToShipEntry { get; } = [];
 
 	public LegacyDatabase(Func<ContentManager> contentManagerProvider)
 	{
@@ -229,6 +230,18 @@ internal sealed class LegacyDatabase
 	public void RegisterShip(Ship value, string globalName)
 		=> this.GlobalNameToVanillaShip[globalName] = value;
 
+	public void RegisterStarterShip(IModManifest mod, ExternalStarterShip value)
+	{
+		ShipConfiguration configuration = new()
+		{
+			Ship = ActualizeExternalStarterShip(value, this.ActualizeShip(value.ShipGlobalName))
+		};
+
+		var entry = this.ContentManagerProvider().Ships.RegisterShip(mod, value.GlobalName, configuration);
+		this.GlobalNameToStarterShip[value.GlobalName] = value;
+		this.GlobalNameToShipEntry[value.GlobalName] = entry;
+	}
+
 	public ExternalSprite GetSprite(string globalName)
 		=> this.GlobalNameToSprite.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
 
@@ -256,8 +269,8 @@ internal sealed class LegacyDatabase
 	public ExternalPart GetPart(string globalName)
 		=> this.GlobalNameToPart.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
 
-	public ExternalStarterShip GetStarterShip(string globalName)
-		=> this.GlobalNameToStarterShip.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
+	public StarterShip GetStarterShip(string globalName)
+		=> this.GlobalNameToShipEntry.TryGetValue(globalName, out var value) ? value.Configuration.Ship : throw new KeyNotFoundException();
 
 	public Ship ActualizeShip(string globalName)
 	{
@@ -266,6 +279,15 @@ internal sealed class LegacyDatabase
 		if (this.GlobalNameToShip.TryGetValue(globalName, out var externalShip))
 			return ActualizeExternalShip(externalShip);
 		throw new KeyNotFoundException();
+	}
+
+	private static Part ActualizeExternalShipPart(ExternalPart externalPart)
+	{
+		var part = externalPart.GetPartObject() is Part partTemplate
+			? Mutil.DeepCopy(partTemplate)
+			: new();
+		part.skin = externalPart.Key;
+		return part;
 	}
 
 	private static Ship ActualizeExternalShip(ExternalShip externalShip)
@@ -286,12 +308,26 @@ internal sealed class LegacyDatabase
 		return ship;
 	}
 
-	private static Part ActualizeExternalShipPart(ExternalPart externalPart)
+	private static StarterShip ActualizeExternalStarterShip(ExternalStarterShip externalStarterShip, Ship ship)
 	{
-		var part = externalPart.GetPartObject() is Part partTemplate
-			? Mutil.DeepCopy(partTemplate)
-			: new();
-		part.skin = externalPart.Key;
-		return part;
+		StarterShip starterShip = new();
+		starterShip.ship = ship;
+		starterShip.ship.key = externalStarterShip.ShipGlobalName;
+
+		starterShip.artifacts = externalStarterShip.StartingArtifacts
+			.Select(a => a.ArtifactType)
+			.Concat(externalStarterShip.NativeStartingArtifact)
+			.Select(Activator.CreateInstance)
+			.OfType<Artifact>()
+			.ToList();
+
+		starterShip.cards = externalStarterShip.StartingCards
+			.Select(c => c.CardType)
+			.Concat(externalStarterShip.NativeStartingCards)
+			.Select(Activator.CreateInstance)
+			.OfType<Card>()
+			.ToList();
+
+		return starterShip;
 	}
 }
