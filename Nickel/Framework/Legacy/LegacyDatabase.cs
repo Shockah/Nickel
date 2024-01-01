@@ -323,7 +323,7 @@ internal sealed class LegacyDatabase
 			: new();
 
 		ship.parts = externalShip.Parts
-			.Select(ActualizeExternalShipPart)
+			.Select(this.ActualizeExternalShipPart)
 			.ToList();
 
 		return ship;

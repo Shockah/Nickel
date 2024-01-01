@@ -50,7 +50,7 @@ public static partial class ManifestExt
 			return new Error<string>($"`{nameof(IAssemblyModManifest.EntryPointType)}` value is invalid.");
 		if (!TryParseLoadPhase(out var loadPhase))
 			return new Error<string>($"`{nameof(IAssemblyModManifest.LoadPhase)}` value is invalid.");
-		
+
 		return new AssemblyModManifest(manifest)
 		{
 			EntryPointAssembly = entryPointAssembly,
