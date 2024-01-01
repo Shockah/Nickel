@@ -59,19 +59,12 @@ internal sealed class StatusManager
 	private static void Inject(Entry entry)
 		=> DB.statuses[entry.Status] = entry.Configuration.Definition;
 
-	private sealed class Entry : IStatusEntry
+	private sealed class Entry(IModManifest modOwner, string uniqueName, Status status, StatusConfiguration configuration)
+		: IStatusEntry
 	{
-		public IModManifest ModOwner { get; }
-		public string UniqueName { get; }
-		public Status Status { get; }
-		public StatusConfiguration Configuration { get; }
-
-		public Entry(IModManifest modOwner, string uniqueName, Status status, StatusConfiguration configuration)
-		{
-			this.ModOwner = modOwner;
-			this.UniqueName = uniqueName;
-			this.Status = status;
-			this.Configuration = configuration;
-		}
+		public IModManifest ModOwner { get; } = modOwner;
+		public string UniqueName { get; } = uniqueName;
+		public Status Status { get; } = status;
+		public StatusConfiguration Configuration { get; } = configuration;
 	}
 }

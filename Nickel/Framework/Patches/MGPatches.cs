@@ -8,7 +8,8 @@ internal static class MGPatches
 	internal static void Apply(Harmony harmony)
 	{
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(MG), "DrawLoadingScreen") ?? throw new InvalidOperationException("Could not patch game methods: missing method `MG.DrawLoadingScreen`"),
+			original: AccessTools.DeclaredMethod(typeof(MG), "DrawLoadingScreen")
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(MG)}.DrawLoadingScreen`"),
 			prefix: new HarmonyMethod(typeof(MGPatches), nameof(DrawLoadingScreen_Prefix)),
 			postfix: new HarmonyMethod(typeof(MGPatches), nameof(DrawLoadingScreen_Postfix))
 		);

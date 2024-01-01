@@ -13,12 +13,12 @@ internal sealed class ModEventManager
 		this.OnModLoadPhaseFinishedEvent = new((handler, mod, exception) =>
 		{
 			var logger = loggerProvider(mod);
-			logger.LogError("Mod failed in event `OnAllModsLoaded`: {Exception}", exception);
+			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnModLoadPhaseFinishedEvent), exception);
 		});
 		this.OnLoadStringsForLocaleEvent = new((handler, mod, exception) =>
 		{
 			var logger = loggerProvider(mod);
-			logger.LogError("Mod failed in event `OnLoadStringsForLocale`: {Exception}", exception);
+			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnLoadStringsForLocaleEvent), exception);
 		});
 	}
 }

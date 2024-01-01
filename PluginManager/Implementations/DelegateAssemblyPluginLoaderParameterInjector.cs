@@ -27,7 +27,7 @@ public sealed class DelegateAssemblyPluginLoaderParameterInjector<TPluginManifes
 
 		if (type.IsAssignableFrom(typeof(Func<IPluginPackage<TPluginManifest>, T>)))
 		{
-			toInject = (Func<IPluginPackage<TPluginManifest>, T>)this.Delegate;
+			toInject = this.Delegate;
 			return true;
 		}
 

@@ -12,7 +12,8 @@ internal static class SpriteLoaderPatches
 	internal static void Apply(Harmony harmony)
 	{
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(SpriteLoader), nameof(SpriteLoader.Get)) ?? throw new InvalidOperationException("Could not patch game methods: missing method `SpriteLoader.Get`"),
+			original: AccessTools.DeclaredMethod(typeof(SpriteLoader), nameof(SpriteLoader.Get))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(SpriteLoader)}.{nameof(SpriteLoader.Get)}`"),
 			prefix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(SpriteLoaderPatches), nameof(Get_Prefix)), priority: Priority.Last)
 		);
 	}

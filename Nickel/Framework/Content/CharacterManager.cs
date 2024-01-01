@@ -153,17 +153,11 @@ internal sealed class CharacterManager
 		}
 	}
 
-	private sealed class CharacterEntry : ICharacterEntry
+	private sealed class CharacterEntry(IModManifest modOwner, string uniqueName, CharacterConfiguration configuration)
+		: ICharacterEntry
 	{
-		public IModManifest ModOwner { get; }
-		public string UniqueName { get; }
-		public CharacterConfiguration Configuration { get; }
-
-		public CharacterEntry(IModManifest modOwner, string uniqueName, CharacterConfiguration configuration)
-		{
-			this.ModOwner = modOwner;
-			this.UniqueName = uniqueName;
-			this.Configuration = configuration;
-		}
+		public IModManifest ModOwner { get; } = modOwner;
+		public string UniqueName { get; } = uniqueName;
+		public CharacterConfiguration Configuration { get; } = configuration;
 	}
 }

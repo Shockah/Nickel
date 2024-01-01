@@ -51,19 +51,12 @@ internal sealed class DeckManager
 			DB.deckBordersOver[entry.Deck] = overBordersSprite;
 	}
 
-	private sealed class Entry : IDeckEntry
+	private sealed class Entry(IModManifest modOwner, string uniqueName, Deck deck, DeckConfiguration configuration)
+		: IDeckEntry
 	{
-		public IModManifest ModOwner { get; }
-		public string UniqueName { get; }
-		public Deck Deck { get; }
-		public DeckConfiguration Configuration { get; }
-
-		public Entry(IModManifest modOwner, string uniqueName, Deck deck, DeckConfiguration configuration)
-		{
-			this.ModOwner = modOwner;
-			this.UniqueName = uniqueName;
-			this.Deck = deck;
-			this.Configuration = configuration;
-		}
+		public IModManifest ModOwner { get; } = modOwner;
+		public string UniqueName { get; } = uniqueName;
+		public Deck Deck { get; } = deck;
+		public DeckConfiguration Configuration { get; } = configuration;
 	}
 }

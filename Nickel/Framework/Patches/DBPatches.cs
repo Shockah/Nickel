@@ -12,7 +12,8 @@ internal static class DBPatches
 	internal static void Apply(Harmony harmony)
 	{
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(DB), nameof(DB.LoadStringsForLocale)) ?? throw new InvalidOperationException("Could not patch game methods: missing method `DB.LoadStringsForLocale`"),
+			original: AccessTools.DeclaredMethod(typeof(DB), nameof(DB.LoadStringsForLocale))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(DB)}.{nameof(DB.LoadStringsForLocale)}`"),
 			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(DBPatches), nameof(LoadStringsForLocale_Postfix)), priority: Priority.Last)
 		);
 	}

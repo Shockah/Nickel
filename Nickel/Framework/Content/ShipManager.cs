@@ -7,7 +7,7 @@ namespace Nickel;
 internal sealed class ShipManager
 {
 	private AfterDbInitManager<Entry> Manager { get; }
-	private Dictionary<string, Entry> UniqueNameToEntry { get; } = new();
+	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 
 	public ShipManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
@@ -54,17 +54,11 @@ internal sealed class ShipManager
 	private static void Inject(Entry entry)
 		=> StarterShip.ships[entry.UniqueName] = entry.Configuration.Ship;
 
-	private sealed class Entry : IShipEntry
+	private sealed class Entry(IModManifest modOwner, string uniqueName, ShipConfiguration configuration)
+		: IShipEntry
 	{
-		public IModManifest ModOwner { get; }
-		public string UniqueName { get; }
-		public ShipConfiguration Configuration { get; }
-
-		public Entry(IModManifest modOwner, string uniqueName, ShipConfiguration configuration)
-		{
-			this.ModOwner = modOwner;
-			this.UniqueName = uniqueName;
-			this.Configuration = configuration;
-		}
+		public IModManifest ModOwner { get; } = modOwner;
+		public string UniqueName { get; } = uniqueName;
+		public ShipConfiguration Configuration { get; } = configuration;
 	}
 }

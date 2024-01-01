@@ -52,17 +52,11 @@ internal sealed class CardManager
 			DB.releasedCards.Add((Card)Activator.CreateInstance(entry.Configuration.CardType)!);
 	}
 
-	private sealed class Entry : ICardEntry
+	private sealed class Entry(IModManifest modOwner, string uniqueName, CardConfiguration configuration)
+		: ICardEntry
 	{
-		public IModManifest ModOwner { get; }
-		public string UniqueName { get; }
-		public CardConfiguration Configuration { get; }
-
-		public Entry(IModManifest modOwner, string uniqueName, CardConfiguration configuration)
-		{
-			this.ModOwner = modOwner;
-			this.UniqueName = uniqueName;
-			this.Configuration = configuration;
-		}
+		public IModManifest ModOwner { get; } = modOwner;
+		public string UniqueName { get; } = uniqueName;
+		public CardConfiguration Configuration { get; } = configuration;
 	}
 }

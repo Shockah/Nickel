@@ -248,7 +248,9 @@ internal sealed class ModManager
 				continue;
 			if (GetModLoadPhaseForManifest(manifest) != phase)
 				continue;
-			this.Logger.LogDebug("Loading mod {UniqueName}...", manifest.UniqueName);
+			
+			var displayName = GetModDisplayName(manifest);
+			this.Logger.LogDebug("Loading mod {DisplayName}...", displayName);
 
 			var failedRequiredDependencies = manifest.Dependencies
 				.Where(d => d.IsRequired && this.FailedMods.Any(m => m.UniqueName == d.UniqueName))
@@ -257,8 +259,8 @@ internal sealed class ModManager
 			{
 				this.FailedMods.Add(manifest);
 				this.Logger.LogError(
-					"Could not load {UniqueName}: Required dependencies failed to load: {Dependencies}",
-					manifest.UniqueName,
+					"Could not load {DisplayName}: Required dependencies failed to load: {Dependencies}",
+					displayName,
 					string.Join(", ", failedRequiredDependencies.Select(d => d.UniqueName))
 				);
 				continue;
@@ -268,8 +270,8 @@ internal sealed class ModManager
 			{
 				this.FailedMods.Add(manifest);
 				this.Logger.LogError(
-					"Could not load {UniqueName}: no registered loader for this kind of mod.",
-					manifest.UniqueName
+					"Could not load {DisplayName}: no registered loader for this kind of mod.",
+					displayName
 				);
 				continue;
 			}
@@ -281,18 +283,30 @@ internal sealed class ModManager
 						this.UniqueNameToPackage[manifest.UniqueName] = package;
 						this.UniqueNameToInstance[manifest.UniqueName] = mod;
 						successfulMods.Add(manifest);
-						this.Logger.LogInformation("Loaded mod {UniqueName}.", manifest.UniqueName);
+						this.Logger.LogInformation("Loaded mod {DisplayName}.", displayName);
 					},
 					error =>
 					{
 						this.FailedMods.Add(manifest);
-						this.Logger.LogError("Could not load {UniqueName}: {Error}", manifest.UniqueName, error.Value);
+						this.Logger.LogError("Could not load {DisplayName}: {Error}", displayName, error.Value);
 					}
 				);
 		}
 
 		this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
 		this.EventManager.OnModLoadPhaseFinishedEvent.Raise(null, phase);
+	}
+
+	private static string GetModDisplayName(IModManifest manifest)
+	{
+		if (string.IsNullOrEmpty(manifest.DisplayName))
+			return string.IsNullOrEmpty(manifest.Author)
+				? manifest.UniqueName
+				: $"{manifest.UniqueName} by {manifest.Author}";
+		else
+			return string.IsNullOrEmpty(manifest.Author)
+				? $"{manifest.DisplayName} [{manifest.UniqueName}]"
+				: $"{manifest.UniqueName} by {manifest.Author} [{manifest.UniqueName}]";
 	}
 
 	internal void ContinueAfterLoadingGameAssembly(Assembly cobaltCoreGameAssembly)

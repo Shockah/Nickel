@@ -52,22 +52,15 @@ internal sealed class SpriteManager
 		e.Texture = entry.ObtainTexture();
 	}
 
-	private sealed class Entry : ISpriteEntry
+	private sealed class Entry(IModManifest modOwner, string uniqueName, Spr sprite, Func<Stream> streamProvider)
+		: ISpriteEntry
 	{
-		public IModManifest ModOwner { get; }
-		public string UniqueName { get; }
-		public Spr Sprite { get; }
+		public IModManifest ModOwner { get; } = modOwner;
+		public string UniqueName { get; } = uniqueName;
+		public Spr Sprite { get; } = sprite;
 
-		private Func<Stream>? StreamProvider { get; set; }
+		private Func<Stream>? StreamProvider { get; set; } = streamProvider;
 		private Texture2D? TextureStorage { get; set; }
-
-		public Entry(IModManifest modOwner, string uniqueName, Spr sprite, Func<Stream> streamProvider)
-		{
-			this.ModOwner = modOwner;
-			this.UniqueName = uniqueName;
-			this.Sprite = sprite;
-			this.StreamProvider = streamProvider;
-		}
 
 		public Texture2D ObtainTexture()
 		{

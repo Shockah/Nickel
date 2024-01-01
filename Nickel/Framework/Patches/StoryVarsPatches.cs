@@ -13,12 +13,14 @@ internal static class StoryVarsPatches
 	internal static void Apply(Harmony harmony)
 	{
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(StoryVars), nameof(StoryVars.GetUnlockedChars)) ?? throw new InvalidOperationException("Could not patch game methods: missing method `StoryVars.GetUnlockedChars`"),
+			original: AccessTools.DeclaredMethod(typeof(StoryVars), nameof(StoryVars.GetUnlockedChars))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(StoryVars)}.{nameof(StoryVars.GetUnlockedChars)}`"),
 			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(StoryVarsPatches), nameof(GetUnlockedChars_Postfix)))
 		);
 
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(StoryVars), nameof(StoryVars.GetUnlockedShips)) ?? throw new InvalidOperationException("Could not patch game methods: missing method `StoryVars.GetUnlockedShips`"),
+			original: AccessTools.DeclaredMethod(typeof(StoryVars), nameof(StoryVars.GetUnlockedShips))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(StoryVars)}.{nameof(StoryVars.GetUnlockedShips)}`"),
 			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(StoryVarsPatches), nameof(GetUnlockedShips_Postfix)))
 		);
 	}

@@ -1,4 +1,3 @@
-using System;
 namespace Nanoray.PluginManager;
 
 public sealed class DirectoryPluginPackage<TPluginManifest> : IPluginPackage<TPluginManifest>

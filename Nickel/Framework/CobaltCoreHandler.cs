@@ -38,6 +38,9 @@ internal sealed class CobaltCoreHandler
 		this.Logger.LogInformation("Loading other assemblies...");
 		foreach (var (name, stream) in resolveResult.OtherDllDataStreams)
 		{
+			if (name == "System.Private.CoreLib.dll") // loading it always throws
+				continue;
+
 			this.Logger.LogDebug("Trying to load (potential) assembly {AssemblyName}...", name);
 			try
 			{
@@ -45,7 +48,7 @@ internal sealed class CobaltCoreHandler
 			}
 			catch (BadImageFormatException e)
 			{
-				this.Logger.LogDebug("Failed to load {AssemblyName}: {Exception}", name, e);
+				this.Logger.LogTrace("Failed to load {AssemblyName}: {Exception}", name, e);
 			}
 			catch (FileLoadException e)
 			{

@@ -53,17 +53,11 @@ internal sealed class ArtifactManager
 			DB.releasedArtifacts.Add(key);
 	}
 
-	private sealed class Entry : IArtifactEntry
+	private sealed class Entry(IModManifest modOwner, string uniqueName, ArtifactConfiguration configuration)
+		: IArtifactEntry
 	{
-		public IModManifest ModOwner { get; }
-		public string UniqueName { get; }
-		public ArtifactConfiguration Configuration { get; }
-
-		public Entry(IModManifest modOwner, string uniqueName, ArtifactConfiguration configuration)
-		{
-			this.ModOwner = modOwner;
-			this.UniqueName = uniqueName;
-			this.Configuration = configuration;
-		}
+		public IModManifest ModOwner { get; } = modOwner;
+		public string UniqueName { get; } = uniqueName;
+		public ArtifactConfiguration Configuration { get; } = configuration;
 	}
 }

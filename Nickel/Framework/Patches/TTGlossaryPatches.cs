@@ -14,12 +14,14 @@ internal static class TTGlossaryPatches
 	internal static void Apply(Harmony harmony)
 	{
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(TTGlossary), nameof(TTGlossary.BuildIconAndText)) ?? throw new InvalidOperationException("Could not patch game methods: missing method `TTGlossary.BuildIconAndText`"),
+			original: AccessTools.DeclaredMethod(typeof(TTGlossary), nameof(TTGlossary.BuildIconAndText))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(TTGlossary)}.{nameof(TTGlossary.BuildIconAndText)}`"),
 			prefix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(TTGlossaryPatches), nameof(BuildIconAndText_Prefix))),
 			finalizer: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(TTGlossaryPatches), nameof(BuildIconAndText_Finalizer)))
 		);
 		harmony.Patch(
-		   original: AccessTools.DeclaredMethod(typeof(TTGlossary), "TryGetIcon") ?? throw new InvalidOperationException("Could not patch game methods: missing method `TTGlossary.TryGetIcon`"),
+		   original: AccessTools.DeclaredMethod(typeof(TTGlossary), "TryGetIcon")
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(TTGlossary)}.TryGetIcon`"),
 		   postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(TTGlossaryPatches), nameof(TryGetIcon_Postfix)))
 	   );
 	}
