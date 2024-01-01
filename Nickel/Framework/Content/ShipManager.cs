@@ -28,6 +28,17 @@ internal sealed class ShipManager
 	internal void InjectQueuedEntries()
 		=> this.Manager.InjectQueuedEntries();
 
+	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
+	{
+		foreach (var entry in this.UniqueNameToEntry.Values)
+		{
+			if (entry.Configuration.Name.Localize(locale) is { } name)
+				localizations[$"ship.{entry.UniqueName}.name"] = name;
+			if (entry.Configuration.Description.Localize(locale) is { } description)
+				localizations[$"ship.{entry.UniqueName}.desc"] = description;
+		}
+	}
+
 	public IShipEntry RegisterShip(IModManifest owner, string name, ShipConfiguration configuration)
 	{
 		var uniqueName = $"{owner.UniqueName}::{name}";

@@ -29,6 +29,17 @@ internal sealed class CharacterManager
 		this.CharManager.InjectQueuedEntries();
 	}
 
+	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
+	{
+		foreach (var entry in this.UniqueNameToCharacterEntry.Values)
+		{
+			if (entry.Configuration.Description.Localize(locale) is not { } description)
+				continue;
+			var key = entry.Configuration.Deck.Key();
+			localizations[$"char.{key}.desc"] = description;
+		}
+	}
+
 	public ICharacterAnimationEntry RegisterCharacterAnimation(IModManifest owner, string name, CharacterAnimationConfiguration configuration)
 	{
 		AnimationEntry entry = new(owner, $"{owner.UniqueName}::{name}", configuration);

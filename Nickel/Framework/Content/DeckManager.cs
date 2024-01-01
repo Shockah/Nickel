@@ -19,6 +19,18 @@ internal sealed class DeckManager
 	internal void InjectQueuedEntries()
 		=> this.Manager.InjectQueuedEntries();
 
+	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
+	{
+		foreach (var entry in this.UniqueNameToEntry.Values)
+		{
+			if (entry.Configuration.Name.Localize(locale) is not { } name)
+				continue;
+			var key = entry.Deck.Key();
+			localizations[$"char.{key}"] = name;
+			localizations[$"char.{key}.name"] = name;
+		}
+	}
+
 	public IDeckEntry RegisterDeck(IModManifest owner, string name, DeckConfiguration configuration)
 	{
 		Entry entry = new(owner, $"{owner.UniqueName}::{name}", (Deck)this.NextId++, configuration);

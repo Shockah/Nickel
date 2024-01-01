@@ -32,6 +32,17 @@ internal sealed class StatusManager
 	internal void InjectQueuedEntries()
 		=> this.Manager.InjectQueuedEntries();
 
+	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
+	{
+		foreach (var entry in this.UniqueNameToEntry.Values)
+		{
+			if (entry.Configuration.Name.Localize(locale) is { } name)
+				localizations[$"status.{entry.UniqueName}.name"] = name;
+			if (entry.Configuration.Description.Localize(locale) is { } description)
+				localizations[$"status.{entry.UniqueName}.desc"] = description;
+		}
+	}
+
 	public IStatusEntry RegisterStatus(IModManifest owner, string name, StatusConfiguration configuration)
 	{
 		Entry entry = new(owner, $"{owner.UniqueName}::{name}", (Status)this.NextId++, configuration);

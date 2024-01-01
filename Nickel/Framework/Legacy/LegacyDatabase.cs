@@ -35,36 +35,9 @@ internal sealed class LegacyDatabase
 
 	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
-		foreach (var status in this.GlobalNameToStatus.Values)
-		{
-			var key = ((Status)status.Id!.Value).Key();
-			status.GetLocalisation(locale, out var name, out var description);
-			if (name is not null)
-				localizations[$"status.{key}.name"] = name;
-			if (description is not null)
-				localizations[$"status.{key}.desc"] = description;
-		}
-		foreach (var card in this.GlobalNameToCard.Values)
-		{
-			var key = card.CardType.Name; // TODO: change this when Card.Key gets patched
-			card.GetLocalisation(locale, out var name, out var description, out var descriptionA, out var descriptionB);
-			if (name is not null)
-				localizations[$"card.{key}.name"] = name;
-			if (description is not null)
-				localizations[$"card.{key}.desc"] = description;
-			if (descriptionA is not null)
-				localizations[$"card.{key}.descA"] = descriptionA;
-			if (descriptionB is not null)
-				localizations[$"card.{key}.descB"] = descriptionB;
-		}
-		foreach (var artifact in this.GlobalNameToArtifact.Values)
-		{
-			if (!artifact.GetLocalisation(locale, out var name, out var description))
-				continue;
-			var key = artifact.ArtifactType.Name; // TODO: change this when Artifact.Key gets patched
-			localizations[$"artifact.{key}.name"] = name;
-			localizations[$"artifact.{key}.desc"] = description;
-		}
+		// separate localization of characters
+		// Nickel localizes Deck names and Character descriptions
+		// legacy mods localize both for Characters only
 		foreach (var character in this.GlobalNameToCharacter.Values)
 		{
 			var key = ((Deck)character.Deck.Id!.Value).Key();
@@ -75,18 +48,6 @@ internal sealed class LegacyDatabase
 			}
 			if (character.GetDesc(locale) is { } description)
 				localizations[$"char.{key}.desc"] = description;
-		}
-		foreach (var starterShip in this.GlobalNameToStarterShip.Values)
-		{
-			if (!this.GlobalNameToShipEntry.TryGetValue(starterShip.GlobalName, out var shipEntry))
-				continue;
-
-			var key = shipEntry.UniqueName;
-			starterShip.GetLocalisations(locale, out var name, out var description);
-			if (name is not null)
-				localizations[$"ship.{key}.name"] = name;
-			if (description is not null)
-				localizations[$"ship.{key}.desc"] = description;
 		}
 	}
 
@@ -131,6 +92,16 @@ internal sealed class LegacyDatabase
 				border = value.BorderColor is { } borderColor ? new((uint)borderColor.ToArgb()) : null,
 				affectedByTimestop = value.AffectedByTimestop,
 				isGood = value.IsGood
+			},
+			Name = locale =>
+			{
+				value.GetLocalisation(locale, out var localized, out _);
+				return localized;
+			},
+			Description = locale =>
+			{
+				value.GetLocalisation(locale, out _, out var localized);
+				return localized;
 			}
 		};
 		var entry = this.ContentManagerProvider().Statuses.RegisterStatus(mod, value.GlobalName, configuration);
@@ -148,7 +119,27 @@ internal sealed class LegacyDatabase
 		{
 			CardType = value.CardType,
 			Meta = meta,
-			Art = (Spr)value.CardArt.Id!.Value
+			Art = (Spr)value.CardArt.Id!.Value,
+			Name = locale =>
+			{
+				value.GetLocalisation(locale, out var localized, out _, out _, out _);
+				return localized;
+			},
+			Description = locale =>
+			{
+				value.GetLocalisation(locale, out _, out var localized, out _, out _);
+				return localized;
+			},
+			DescriptionA = locale =>
+			{
+				value.GetLocalisation(locale, out _, out _, out var localized, out _);
+				return localized;
+			},
+			DescriptionB = locale =>
+			{
+				value.GetLocalisation(locale, out _, out _, out _, out var localized);
+				return localized;
+			}
 		};
 
 		this.ContentManagerProvider().Cards.RegisterCard(mod, value.GlobalName, configuration);
@@ -165,7 +156,9 @@ internal sealed class LegacyDatabase
 		{
 			ArtifactType = value.ArtifactType,
 			Meta = meta,
-			Sprite = (Spr)value.Sprite.Id!.Value
+			Sprite = (Spr)value.Sprite.Id!.Value,
+			Name = locale => value.GetLocalisation(locale, out var localized, out _) ? localized : null,
+			Description = locale => value.GetLocalisation(locale, out _, out var localized) ? localized : null,
 		};
 
 		this.ContentManagerProvider().Artifacts.RegisterArtifact(mod, value.GlobalName, configuration);
@@ -254,7 +247,17 @@ internal sealed class LegacyDatabase
 		{
 			Ship = ActualizeExternalStarterShip(value, this.ActualizeShip(value.ShipGlobalName)),
 			UnderChassisSprite = ship.ChassisUnderSprite is { } underChassisSprite ? (Spr)underChassisSprite.Id!.Value : null,
-			OverChassisSprite = ship.ChassisOverSprite is { } overChassisSprite ? (Spr)overChassisSprite.Id!.Value : null
+			OverChassisSprite = ship.ChassisOverSprite is { } overChassisSprite ? (Spr)overChassisSprite.Id!.Value : null,
+			Name = locale =>
+			{
+				value.GetLocalisations(locale, out var localized, out _);
+				return localized;
+			},
+			Description = locale =>
+			{
+				value.GetLocalisations(locale, out _, out var localized);
+				return localized;
+			}
 		};
 
 		var entry = this.ContentManagerProvider().Ships.RegisterShip(mod, value.GlobalName, configuration);

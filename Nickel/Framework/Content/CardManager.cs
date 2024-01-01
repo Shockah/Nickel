@@ -18,6 +18,22 @@ internal sealed class CardManager
 	internal void InjectQueuedEntries()
 		=> this.Manager.InjectQueuedEntries();
 
+	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
+	{
+		foreach (var entry in this.UniqueNameToEntry.Values)
+		{
+			var key = entry.Configuration.CardType.Name; // TODO: change this when Card.Key gets patched
+			if (entry.Configuration.Name.Localize(locale) is { } name)
+				localizations[$"card.{key}.name"] = name;
+			if (entry.Configuration.Description.Localize(locale) is { } description)
+				localizations[$"card.{key}.desc"] = description;
+			if (entry.Configuration.DescriptionA.Localize(locale) is { } descriptionA)
+				localizations[$"card.{key}.descA"] = descriptionA;
+			if (entry.Configuration.DescriptionB.Localize(locale) is { } descriptionB)
+				localizations[$"card.{key}.descB"] = descriptionB;
+		}
+	}
+
 	public ICardEntry RegisterCard(IModManifest owner, string name, CardConfiguration configuration)
 	{
 		Entry entry = new(owner, $"{owner.UniqueName}::{name}", configuration);
