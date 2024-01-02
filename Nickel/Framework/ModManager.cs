@@ -344,29 +344,25 @@ internal sealed class ModManager
 	{
 		if (!this.UniqueNameToHelper.TryGetValue(manifest.UniqueName, out var helper))
 		{
-			ModRegistry modRegistry = new(manifest, this.UniqueNameToInstance, this.UniqueNameToPackage);
-			ModEvents modEvents = new(manifest, this.EventManager);
-			ModSprites modSprites = new(manifest, () => this.ContentManager!.Sprites);
-			ModDecks modDecks = new(manifest, () => this.ContentManager!.Decks);
-			ModStatuses modStatuses = new(manifest, () => this.ContentManager!.Statuses);
-			ModCards modCards = new(manifest, () => this.ContentManager!.Cards);
-			ModArtifacts modArtifacts = new(manifest, () => this.ContentManager!.Artifacts);
-			ModCharacters modCharacters = new(manifest, () => this.ContentManager!.Characters);
-			ModShips modShips = new(
-				manifest,
-				() => this.ContentManager!.Ships,
-				() => this.ContentManager!.Parts
+			helper = new ModHelper(
+				new ModRegistry(manifest, this.UniqueNameToInstance, this.UniqueNameToPackage),
+				new ModEvents(manifest, this.EventManager),
+				new ModContent(
+					new ModSprites(manifest, () => this.ContentManager!.Sprites),
+					new ModDecks(manifest, () => this.ContentManager!.Decks),
+					new ModStatuses(manifest, () => this.ContentManager!.Statuses),
+					new ModCards(manifest, () => this.ContentManager!.Cards),
+					new ModArtifacts(manifest, () => this.ContentManager!.Artifacts),
+					new ModCharacters(manifest, () => this.ContentManager!.Characters),
+					new ModShips(
+						manifest,
+						() => this.ContentManager!.Ships,
+						() => this.ContentManager!.Parts
+					)
+				),
+				new ModGameAccess(),
+				() => this.CurrentModLoadPhase
 			);
-			ModContent modContent = new(
-				modSprites,
-				modDecks,
-				modStatuses,
-				modCards,
-				modArtifacts,
-				modCharacters,
-				modShips
-			);
-			helper = new ModHelper(modRegistry, modEvents, modContent, () => this.CurrentModLoadPhase);
 			this.UniqueNameToHelper[manifest.UniqueName] = helper;
 		}
 

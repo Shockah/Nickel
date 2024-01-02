@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<RootNamespace>Nickel.Essentials</RootNamespace>
 		<Version>0.1.0</Version>
+		<IncludedModProjectPaths>i18n</IncludedModProjectPaths>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Nickel.ModBuildConfig" Version="0.1.2" />

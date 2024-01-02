@@ -126,14 +126,13 @@ internal static class CrewSelection
 		}
 	}
 
-	[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Hijacking a real method call")]
 	private static Rect NewRunOptions_CharSelect_Transpiler_HijackDrawCrewText(string str, double x, double y, Font? font, Color? color, Color? colorForce, double? progress, double? maxWidth, TAlign? align, bool dontDraw, int? lineHeight, Color? outline, BlendState? blend, SamplerState? samplerState, Effect? effect, bool dontSubstituteLocFont, double letterSpacing, double extraScale, RunConfig runConfig)
 	{
 		var orderedSelectedChars = runConfig.selectedChars.OrderBy(NewRunOptions.allChars.IndexOf).ToList();
 		for (var i = 0; i < 3; i++)
 		{
 			Deck? deck = i < orderedSelectedChars.Count ? orderedSelectedChars[i] : null;
-			var charText = deck is null ? I18n.EmptyCrewSlot : Loc.T($"char.{deck.Value.Key()}");
+			var charText = deck is null ? ModEntry.Instance.Localizations.Localize(["crewSelection", "emptySlot"]) : Loc.T($"char.{deck.Value.Key()}");
 			var charTextColor = deck is null || !DB.decks.TryGetValue(deck.Value, out var deckDef) ? Colors.downside.fadeAlpha(0.4) : deckDef.color;
 			Draw.Text(charText, x, y - 5 + i * 8, font, charTextColor);
 		}
