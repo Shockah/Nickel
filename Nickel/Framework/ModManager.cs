@@ -132,25 +132,7 @@ internal sealed class ModManager
 	{
 		this.Logger.LogInformation("Resolving mods...");
 
-		var pluginDependencyResolver =
-			new MultiPhasePluginDependencyResolver<IModManifest, SemanticVersion, ModLoadPhase>(
-				new PluginDependencyResolver<IModManifest, SemanticVersion>(
-					requiredManifestDataProvider: p =>
-						new PluginDependencyResolver<IModManifest, SemanticVersion>.RequiredManifestData
-						{
-							UniqueName = p.UniqueName,
-							Version = p.Version,
-							Dependencies = p.Dependencies
-								.Select(
-									d => new PluginDependency<SemanticVersion>(d.UniqueName, d.Version, d.IsRequired)
-								)
-								.ToHashSet()
-						}
-				),
-				GetModLoadPhaseForManifest,
-				Enum.GetValues<ModLoadPhase>()
-			);
-		IPluginManifestLoader<IModManifest> pluginManifestLoader = new SpecializedPluginManifestLoader<ModManifest, IModManifest>(new JsonPluginManifestLoader<ModManifest>());
+		var pluginManifestLoader = new SpecializedPluginManifestLoader<ModManifest, IModManifest>(new JsonPluginManifestLoader<ModManifest>());
 
 		IPluginPackageResolver<IModManifest> CreatePluginPackageResolver(IDirectoryInfo directory, bool allowModsInRoot)
 			=> new SubpluginPluginPackageResolver<IModManifest>(
@@ -175,7 +157,10 @@ internal sealed class ModManager
 			);
 
 		var pluginPackageResolver = new ValidatingPluginPackageResolver<IModManifest>(
-			resolver: CreatePluginPackageResolver(new DirectoryInfoImpl(this.ModsDirectory), allowModsInRoot: false),
+			resolver: new DistinctPluginPackageResolver<IModManifest, string>(
+				resolver: CreatePluginPackageResolver(new DirectoryInfoImpl(this.ModsDirectory), allowModsInRoot: false),
+				keyFunction: package => package.Manifest.UniqueName
+			),
 			validator: package =>
 			{
 				if (package.Manifest.RequiredApiVersion > NickelConstants.Version)
@@ -198,6 +183,25 @@ internal sealed class ModManager
 			.ToList();
 
 		this.Logger.LogInformation("Resolving mod load order...");
+
+		var pluginDependencyResolver =
+			new MultiPhasePluginDependencyResolver<IModManifest, SemanticVersion, ModLoadPhase>(
+				new PluginDependencyResolver<IModManifest, SemanticVersion>(
+					requiredManifestDataProvider: p =>
+						new PluginDependencyResolver<IModManifest, SemanticVersion>.RequiredManifestData
+						{
+							UniqueName = p.UniqueName,
+							Version = p.Version,
+							Dependencies = p.Dependencies
+								.Select(
+									d => new PluginDependency<SemanticVersion>(d.UniqueName, d.Version, d.IsRequired)
+								)
+								.ToHashSet()
+						}
+				),
+				GetModLoadPhaseForManifest,
+				Enum.GetValues<ModLoadPhase>()
+			);
 
 		var dependencyResolverResult = pluginDependencyResolver.ResolveDependencies(toLoad.Select(p => p.Manifest));
 		foreach (var (unresolvableManifest, reason) in dependencyResolverResult.Unresolvable)
