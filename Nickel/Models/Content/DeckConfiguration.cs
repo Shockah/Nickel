@@ -6,5 +6,5 @@ public readonly struct DeckConfiguration
 	public Spr DefaultCardArt { get; init; }
 	public Spr BorderSprite { get; init; }
 	public Spr? OverBordersSprite { get; init; }
-	public LocalizationProvider? Name { get; init; }
+	public SingleLocalizationProvider? Name { get; init; }
 }

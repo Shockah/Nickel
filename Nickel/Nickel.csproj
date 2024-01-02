@@ -1,8 +1,15 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="16.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="16.0">
+	<!-- Constants -->
+	<PropertyGroup>
+		<_GameName>Cobalt Core</_GameName>
+		<_GameSteamID>2179850</_GameSteamID>
+		<_ModLoaderName>Nickel</_ModLoaderName>
+	</PropertyGroup>
+
 	<Import Project="..\Configuration.props" />
 	
 	<PropertyGroup>
-		<RootNamespace>Nickel</RootNamespace>
+		<RootNamespace>$(_ModLoaderName)</RootNamespace>
 		<Version>0.1.0</Version>
 		<OutputType>Exe</OutputType>
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
@@ -14,24 +21,24 @@
 
 	<PropertyGroup Condition="'$(EnableGameDllExtract)' And '$(GameExePath)' == '' And ($(OS) == 'Unix' Or $(OS) == 'OSX')">
 		<!-- Linux -->
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.steam/steam/steamapps/common/Cobalt Core</_GamePath>
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.local/share/Steam/steamapps/common/Cobalt Core</_GamePath>
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/common/Cobalt Core</_GamePath>
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.steam/steam/steamapps/common/$(_GameName)</_GamePath>
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.local/share/Steam/steamapps/common/$(_GameName)</_GamePath>
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/common/$(_GameName)</_GamePath>
 
 		<!-- macOS (may be 'Unix' or 'OSX') -->
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/Library/Application Support/Steam/steamapps/common/Cobalt Core/Contents/MacOS</_GamePath>
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/Library/Application Support/Steam/steamapps/common/$(_GameName)/Contents/MacOS</_GamePath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(EnableGameDllExtract)' And '$(GameExePath)' == '' And '$(OS)' == 'Windows_NT'">
 		<!-- registry path -->
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 2179850', 'InstallLocation', null, RegistryView.Registry64, RegistryView.Registry32))</_GamePath>
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App $(_GameSteamID)', 'InstallLocation', null, RegistryView.Registry64, RegistryView.Registry32))</_GamePath>
 
 		<!-- derive from Steam library path -->
 		<_SteamLibraryPath>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\SOFTWARE\Valve\Steam', 'SteamPath', null, RegistryView.Registry32))</_SteamLibraryPath>
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(_SteamLibraryPath)\steamapps\common\Cobalt Core</_GamePath>
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(_SteamLibraryPath)\steamapps\common\$(_GameName)</_GamePath>
 
 		<!-- Steam paths -->
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">C:\Program Files\Steam\steamapps\common\Cobalt Core</_GamePath>
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">C:\Program Files (x86)\Steam\steamapps\common\Cobalt Core</_GamePath>
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">C:\Program Files\Steam\steamapps\common\$(_GameName)</_GamePath>
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">C:\Program Files (x86)\Steam\steamapps\common\$(_GameName)</_GamePath>
 	</PropertyGroup>
 
 	<!-- trying to set GameDllPath and GameExePath based on the found game path -->
@@ -41,30 +48,39 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\NickelCommon\NickelCommon.csproj" />
+		<!-- project references -->
+		<ProjectReference Include="..\$(_ModLoaderName)Common\$(_ModLoaderName)Common.csproj" />
 		<ProjectReference Include="..\PluginManager\PluginManager.csproj" />
 		<ProjectReference Include="..\PluginManager.Cecil\PluginManager.Cecil.csproj" />
 		<ProjectReference Include="..\LegacyModLoader\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj" />
+		
+		<!-- game handling -->
 		<PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" />
-		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
 		<PackageReference Include="SingleFileExtractor.Core" Version="2.2.0" />
 		<PackageReference Include="VdfConverter" Version="1.0.3" />
-		<PackageReference Include="ThomasLevesque.WeakEvent" Version="4.1.0" />
-		<PackageReference Include="Pintail" Version="2.4.0" />
-		<PackageReference Include="Lib.Harmony" Version="2.2.2" />
-		<PackageReference Include="Shrike" Version="3.0.0" />
-		<PackageReference Include="Shrike.Harmony" Version="3.0.0" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" PrivateAssets="all" />
 		<Reference Include="CobaltCore" HintPath="$(GameDllPath)" Private="False" />
+
+		<!-- mod management -->
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+		<PackageReference Include="Lib.Harmony" Version="2.2.2" />
+		<PackageReference Include="Pintail" Version="2.4.0" />
+
+		<!-- mod utilities -->
+		<PackageReference Include="Shrike" Version="3.0.0" />
+		<PackageReference Include="Shrike.Harmony" Version="3.0.0" />
+		
+		<!-- utilities -->
+		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+		<PackageReference Include="ThomasLevesque.WeakEvent" Version="4.1.0" />
 	</ItemGroup>
 
 	<Target Name="ExtractGameDll" BeforeTargets="Build">
-		<Message Importance="high" Text="Nickel: _SteamLibraryPath = '$(_SteamLibraryPath)'" />
-		<Message Importance="high" Text="Nickel: _GamePath = '$(_GamePath)'" />
-		<Message Importance="high" Text="Nickel: GameExePath = '$(GameExePath)'" />
-		<Message Importance="high" Text="Nickel: GameDllPath = '$(GameDllPath)'" />
+		<Message Importance="high" Text="$(_ModLoaderName): _SteamLibraryPath = '$(_SteamLibraryPath)'" />
+		<Message Importance="high" Text="$(_ModLoaderName): _GamePath = '$(_GamePath)'" />
+		<Message Importance="high" Text="$(_ModLoaderName): GameExePath = '$(GameExePath)'" />
+		<Message Importance="high" Text="$(_ModLoaderName): GameDllPath = '$(GameDllPath)'" />
 
 		<ExtractSingleFileApplicationResourceTask Condition="'$(EnableGameDllExtract)'" ExeInputPath="$(GameExePath)" ResourceName="CobaltCore.dll" ResourceOutputPath="$(GameDllPath)" />
 	</Target>

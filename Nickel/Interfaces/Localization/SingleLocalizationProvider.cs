@@ -1,10 +1,10 @@
 namespace Nickel;
 
-public delegate string? LocalizationProvider(string locale);
+public delegate string? SingleLocalizationProvider(string locale);
 
 public static class LocalizationProviderExt
 {
-	public static string? Localize(this LocalizationProvider? provider, string locale)
+	public static string? Localize(this SingleLocalizationProvider? provider, string locale)
 	{
 		if (provider is null)
 			return null;
