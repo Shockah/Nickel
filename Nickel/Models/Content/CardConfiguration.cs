@@ -4,8 +4,8 @@ namespace Nickel;
 
 public readonly struct CardConfiguration
 {
-	public Type CardType { get; init; }
-	public CardMeta Meta { get; init; }
+	public required Type CardType { get; init; }
+	public required CardMeta Meta { get; init; }
 	public Spr? Art { get; init; }
 	public SingleLocalizationProvider? Name { get; init; }
 	public SingleLocalizationProvider? Description { get; init; }

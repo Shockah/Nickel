@@ -5,10 +5,10 @@ namespace Nickel;
 
 public readonly struct CharacterConfiguration
 {
-	public Deck Deck { get; init; }
-	public Spr BorderSprite { get; init; }
-	public IReadOnlyList<Type> StarterArtifactTypes { get; init; }
-	public IReadOnlyList<Type> StarterCardTypes { get; init; }
+	public required Deck Deck { get; init; }
+	public required Spr BorderSprite { get; init; }
+	public required IReadOnlyList<Type> StarterCardTypes { get; init; }
+	public IReadOnlyList<Type>? StarterArtifactTypes { get; init; }
 	public CharacterAnimationConfiguration? NeutralAnimation { get; init; }
 	public CharacterAnimationConfiguration? MiniAnimation { get; init; }
 	public bool StartLocked { get; init; }

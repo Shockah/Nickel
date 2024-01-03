@@ -138,7 +138,7 @@ internal sealed class CharacterManager
 		NewRunOptions.allChars.Add(entry.Configuration.Deck);
 		StarterDeck.starterSets[entry.Configuration.Deck] = new()
 		{
-			artifacts = entry.Configuration.StarterArtifactTypes.Select(t => (Artifact)Activator.CreateInstance(t)!).ToList(),
+			artifacts = entry.Configuration.StarterArtifactTypes?.Select(t => (Artifact)Activator.CreateInstance(t)!)?.ToList() ?? [],
 			cards = entry.Configuration.StarterCardTypes.Select(t => (Card)Activator.CreateInstance(t)!).ToList()
 		};
 	}

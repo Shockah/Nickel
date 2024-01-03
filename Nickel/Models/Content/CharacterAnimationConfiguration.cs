@@ -4,7 +4,7 @@ namespace Nickel;
 
 public readonly struct CharacterAnimationConfiguration
 {
-	public Deck Deck { get; init; }
-	public string LoopTag { get; init; }
-	public IReadOnlyList<Spr> Frames { get; init; }
+	public required Deck Deck { get; init; }
+	public required string LoopTag { get; init; }
+	public required IReadOnlyList<Spr> Frames { get; init; }
 }
