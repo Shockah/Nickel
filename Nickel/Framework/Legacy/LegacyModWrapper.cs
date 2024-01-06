@@ -32,6 +32,7 @@ internal sealed class LegacyModWrapper : Mod
 		helper.Events.OnModLoadPhaseFinished += this.LoadShipPartManifest;
 		helper.Events.OnModLoadPhaseFinished += this.LoadShipManifest;
 		helper.Events.OnModLoadPhaseFinished += this.LoadStarterShipManifest;
+		helper.Events.OnModLoadPhaseFinished += this.LoadStoryManifests;
 		helper.Events.OnModLoadPhaseFinished += this.LoadEventHubManifests;
 		helper.Events.OnModLoadPhaseFinished += this.FinalizePreparations;
 
@@ -185,6 +186,17 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IStartershipManifest modManifest)
+				modManifest.LoadManifest(this.LegacyRegistry);
+	}
+	
+	[EventPriority(-1400)]
+	private void LoadStoryManifests(object? sender, ModLoadPhase phase)
+	{
+		if (phase != ModLoadPhase.AfterGameAssembly)
+			return;
+
+		foreach (var manifest in this.LegacyManifests)
+			if (manifest is IStoryManifest modManifest)
 				modManifest.LoadManifest(this.LegacyRegistry);
 	}
 	

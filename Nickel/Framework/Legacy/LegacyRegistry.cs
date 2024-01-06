@@ -14,7 +14,8 @@ internal sealed class LegacyRegistry
 	: IModLoaderContact, IPrelaunchContactPoint,
 	ISpriteRegistry, IDeckRegistry, IStatusRegistry, ICardRegistry, IArtifactRegistry,
 	IAnimationRegistry, ICharacterRegistry,
-	IPartTypeRegistry, IShipPartRegistry, IShipRegistry, IRawShipRegistry, IStartershipRegistry, IGlossaryRegisty
+	IPartTypeRegistry, IShipPartRegistry, IShipRegistry, IRawShipRegistry, IStartershipRegistry, IGlossaryRegisty,
+	IStoryRegistry
 {
 	public Assembly CobaltCoreAssembly { get; }
 
@@ -209,4 +210,24 @@ internal sealed class LegacyRegistry
 		this.Database.RegisterStarterShip(this.ModManifest, starterShip);
 		return true;
 	}
+
+	public bool RegisterStory(ExternalStory story)
+	{
+		this.Database.RegisterStory(story);
+		return true;
+	}
+
+	public bool RegisterChoice(string key, MethodInfo choice, bool intendedOverride = false)
+	{
+		this.Database.RegisterChoiceOrCommand(key, choice, intendedOverride, true);
+		return true;
+	}
+
+	public bool RegisterCommand(string key, MethodInfo command, bool intendedOverride = false)
+	{
+		this.Database.RegisterChoiceOrCommand(key, command, intendedOverride, false);
+		return true;
+	}
+
+	public bool RegisterInjector(ExternalStoryInjector injector) => throw new NotImplementedException();
 }

@@ -1,4 +1,5 @@
 using CobaltCoreModding.Definitions.ExternalItems;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,31 +29,44 @@ internal sealed class LegacyDatabase
 	private Dictionary<string, IPartEntry> GlobalNameToPartEntry { get; init; } = [];
 	private Dictionary<string, IShipEntry> GlobalNameToShipEntry { get; } = [];
 	private Dictionary<string, ExternalGlossary> GlobalNameToGlossary { get; } = [];
+	private List<ExternalStory> ExternalStories { get; } = [];
+	private List<(string, MethodInfo, bool, bool)> ChoiceAndCommands { get; } = [];
+	
+	// Used to change the return value of EnumExtensions.Key(this Deck deck)
+	private Dictionary<Deck, string>? _reflectedDeckStrings;
 
 	public LegacyDatabase(Func<ContentManager> contentManagerProvider)
 	{
 		this.ContentManagerProvider = contentManagerProvider;
 	}
 
-	internal void InjectCharacterLocalizations(string locale, Dictionary<string, string> localizations)
+	public void InjectLocalization(string locale, Dictionary<string, string> localizations)
+	{
+		this.InjectCharacterLocalizations(locale, localizations);
+		this.InjectGlossaryLocalisations(locale, localizations);
+		this.InjectStoryLocalizations(locale, localizations);
+	}
+	private void InjectCharacterLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		// separate localization of characters
 		// Nickel localizes Deck names and Character descriptions
 		// legacy mods localize both for Characters only
 		foreach (var character in this.GlobalNameToCharacter.Values)
 		{
-			var key = ((Deck)character.Deck.Id!.Value).Key();
+			var deck = (Deck)character.Deck.Id!;
+			var id = deck.ToString()!;
+			var key = deck.Key();
 			if (character.GetCharacterName(locale) is { } name)
 			{
 				localizations[$"char.{key}"] = name;
 				localizations[$"char.{key}.name"] = name;
 			}
 			if (character.GetDesc(locale) is { } description)
-				localizations[$"char.{key}.desc"] = description;
+				localizations[$"char.{id}.desc"] = description;
 		}
 	}
 	
-	internal void InjectGlossaryLocalisations(string locale, Dictionary<string, string> localisations)
+	private void InjectGlossaryLocalisations(string locale, Dictionary<string, string> localisations)
 	{
 		foreach (var glossary in this.GlobalNameToGlossary.Values)
 		{
@@ -81,6 +95,26 @@ internal sealed class LegacyDatabase
 			}
 		}
 	}
+
+	private void InjectStoryLocalizations(string locale, Dictionary<string, string> localisations)
+	{
+		foreach (var story in this.ExternalStories)
+		{
+			story.GetLocalisation(locale, out var storyLoc);
+			foreach (var (key, value) in storyLoc)
+			{
+				Console.WriteLine($"### {key}: {value}");
+				localisations.Add(key, value);
+			}
+		}
+	}
+	public void AfterDbInit()
+	{
+		this.InjectGlossaryIconSprites();
+		this.InjectExternalStory();
+		this.InjectChoiceAndCommands();
+	}
+
 	internal void InjectGlossaryIconSprites()
 	{
 		var iconDict = DB.icons;
@@ -100,6 +134,59 @@ internal sealed class LegacyDatabase
 			{
 				iconDict.Add(glossary.ItemName, sprite);
 			}
+		}
+	}
+
+	private void InjectExternalStory()
+	{
+		foreach (var story in this.ExternalStories)
+		{
+			var node = (StoryNode)story.StoryNode;
+			if (story.Instructions != null)
+			{
+				foreach (var genericInstruction in story.Instructions)
+				{
+					switch (genericInstruction)
+					{
+						case ExternalStory.ExternalSay extSay:
+							node.lines.Add(extSay.ToSay());
+							break;
+						case ExternalStory.ExternalSaySwitch extSaySwitch:
+							node.lines.Add(
+								new SaySwitch { lines = extSaySwitch.lines.Select(say => say.ToSay()).ToList(), }
+							);
+							break;
+						case Instruction instruction:
+							node.lines.Add(instruction);
+							break;
+						default:
+							throw new Exception(
+								$"Cannot add instance of class {
+									genericInstruction.GetType().Name
+								} to Story Node {
+									story.GlobalName
+								} as it does not inherit from class Instruction"
+							);
+					}
+				}
+			}
+
+			DB.story.all.Add(story.GlobalName, node);
+		}
+	}
+	
+	private void InjectChoiceAndCommands()
+	{
+		var choices = DB.eventChoiceFns;
+		var commands = DB.storyCommands;
+		foreach (var (key, methodInfo, intendedOverride, isChoice) in this.ChoiceAndCommands)
+		{
+			var dict = isChoice ? choices : commands;
+			
+			if (dict.TryAdd(key, methodInfo)) continue;
+			if (!intendedOverride) throw new ArgumentException($"Duplicate choice key", nameof(key));
+
+			dict[key] = methodInfo;
 		}
 	}
 	
@@ -131,6 +218,11 @@ internal sealed class LegacyDatabase
 		var entry = this.ContentManagerProvider().Decks.RegisterDeck(mod, value.GlobalName, configuration);
 		value.Id = (int)entry.Deck;
 		this.GlobalNameToDeck[value.GlobalName] = value;
+		
+		this._reflectedDeckStrings ??= AccessTools
+			.DeclaredField(typeof(EnumExtensions), "deckStrs")
+			.EmitStaticGetter<Dictionary<Deck, string>>()();
+		this._reflectedDeckStrings[entry.Deck] = value.GlobalName;
 	}
 
 	public void RegisterStatus(IModManifest mod, ExternalStatus value)
@@ -409,4 +501,9 @@ internal sealed class LegacyDatabase
 
 	public void RegisterGlossary(IModManifest modManifest, ExternalGlossary glossary) => 
 		this.GlobalNameToGlossary[modManifest.UniqueName] = glossary;
+
+	public void RegisterStory(ExternalStory story) => this.ExternalStories.Add(story);
+
+	public void RegisterChoiceOrCommand(string key, MethodInfo methodInfo, bool intendedOverride, bool isChoice) =>
+		this.ChoiceAndCommands.Add((key, methodInfo, intendedOverride, isChoice));
 }
