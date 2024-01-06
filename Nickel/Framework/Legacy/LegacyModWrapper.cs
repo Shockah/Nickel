@@ -21,6 +21,7 @@ internal sealed class LegacyModWrapper : Mod
 		this.LegacyRegistry = legacyRegistry;
 		helper.Events.OnModLoadPhaseFinished += this.BootMod;
 		helper.Events.OnModLoadPhaseFinished += this.LoadSpriteManifest;
+		helper.Events.OnModLoadPhaseFinished += this.LoadGlossaryManifest;
 		helper.Events.OnModLoadPhaseFinished += this.LoadDeckManifest;
 		helper.Events.OnModLoadPhaseFinished += this.LoadStatusManifest;
 		helper.Events.OnModLoadPhaseFinished += this.LoadCardManifest;
@@ -31,7 +32,7 @@ internal sealed class LegacyModWrapper : Mod
 		helper.Events.OnModLoadPhaseFinished += this.LoadShipPartManifest;
 		helper.Events.OnModLoadPhaseFinished += this.LoadShipManifest;
 		helper.Events.OnModLoadPhaseFinished += this.LoadStarterShipManifest;
-		helper.Events.OnModLoadPhaseFinished += this.LoadGlossaryManifest;
+		helper.Events.OnModLoadPhaseFinished += this.LoadEventHubManifests;
 		helper.Events.OnModLoadPhaseFinished += this.FinalizePreparations;
 
 		DirectoryInfo gameRootFolder = new(Directory.GetCurrentDirectory());
@@ -186,6 +187,21 @@ internal sealed class LegacyModWrapper : Mod
 			if (manifest is IStartershipManifest modManifest)
 				modManifest.LoadManifest(this.LegacyRegistry);
 	}
+	
+	[EventPriority(-1600)]
+	private void LoadEventHubManifests(object? sender, ModLoadPhase phase)
+	{
+		if (phase != ModLoadPhase.AfterGameAssembly)
+			return;
+
+		foreach (var manifest in this.LegacyManifests)
+		{
+			if (manifest is not ICustomEventManifest modManifest) continue;
+			var eventHub = new LegacyEventHub(manifest.Logger);
+			modManifest.LoadManifest(eventHub);
+		}
+	}
+
 
 	[EventPriority(-10000)]
 	private void FinalizePreparations(object? sender, ModLoadPhase phase)
