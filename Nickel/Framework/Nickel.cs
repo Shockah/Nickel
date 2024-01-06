@@ -189,12 +189,14 @@ internal sealed class Nickel
 		if (phase != ModLoadPhase.AfterDbInit)
 			return;
 		this.ModManager.ContentManager?.InjectQueuedEntries();
+		this.ModManager.LegacyDatabase?.InjectGlossaryIconSprites();
 	}
 
 	[EventPriority(double.MaxValue)]
 	private void OnLoadStringsForLocale(object? sender, LoadStringsForLocaleEventArgs e)
 	{
-		this.ModManager.LegacyDatabase?.InjectLocalizations(e.Locale, e.Localizations);
+		this.ModManager.LegacyDatabase?.InjectCharacterLocalizations(e.Locale, e.Localizations);
+		this.ModManager.LegacyDatabase?.InjectGlossaryLocalisations(e.Locale, e.Localizations);
 		this.ModManager.ContentManager?.InjectLocalizations(e.Locale, e.Localizations);
 	}
 

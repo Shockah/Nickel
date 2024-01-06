@@ -31,6 +31,7 @@ internal sealed class LegacyModWrapper : Mod
 		helper.Events.OnModLoadPhaseFinished += this.LoadShipPartManifest;
 		helper.Events.OnModLoadPhaseFinished += this.LoadShipManifest;
 		helper.Events.OnModLoadPhaseFinished += this.LoadStarterShipManifest;
+		helper.Events.OnModLoadPhaseFinished += this.LoadGlossaryManifest;
 		helper.Events.OnModLoadPhaseFinished += this.FinalizePreparations;
 
 		DirectoryInfo gameRootFolder = new(Directory.GetCurrentDirectory());
@@ -65,7 +66,7 @@ internal sealed class LegacyModWrapper : Mod
 			if (manifest is ILegacyModManifest modManifest)
 				modManifest.BootMod(this.LegacyRegistry);
 	}
-
+	
 	[EventPriority(-100)]
 	private void LoadSpriteManifest(object? sender, ModLoadPhase phase)
 	{
@@ -73,6 +74,16 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is ISpriteManifest modManifest)
+				modManifest.LoadManifest(this.LegacyRegistry);
+	}
+	
+	[EventPriority(-200)]
+	private void LoadGlossaryManifest(object? sender, ModLoadPhase phase)
+	{
+		if (phase != ModLoadPhase.AfterGameAssembly)
+			return;
+		foreach (var manifest in this.LegacyManifests)
+			if (manifest is IGlossaryManifest modManifest)
 				modManifest.LoadManifest(this.LegacyRegistry);
 	}
 

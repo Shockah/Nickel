@@ -27,13 +27,14 @@ internal sealed class LegacyDatabase
 	private Dictionary<string, ICharacterEntry> GlobalNameToCharacterEntry { get; init; } = [];
 	private Dictionary<string, IPartEntry> GlobalNameToPartEntry { get; init; } = [];
 	private Dictionary<string, IShipEntry> GlobalNameToShipEntry { get; } = [];
+	private Dictionary<string, ExternalGlossary> GlobalNameToGlossary { get; } = [];
 
 	public LegacyDatabase(Func<ContentManager> contentManagerProvider)
 	{
 		this.ContentManagerProvider = contentManagerProvider;
 	}
 
-	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
+	internal void InjectCharacterLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		// separate localization of characters
 		// Nickel localizes Deck names and Character descriptions
@@ -50,7 +51,58 @@ internal sealed class LegacyDatabase
 				localizations[$"char.{key}.desc"] = description;
 		}
 	}
+	
+	internal void InjectGlossaryLocalisations(string locale, Dictionary<string, string> localisations)
+	{
+		foreach (var glossary in this.GlobalNameToGlossary.Values)
+		{
+			if (!glossary.GetLocalisation(locale, out string name, out string desc, out string? altDesc))
+			{
+				continue;
+			}
+			var nameKey = glossary.Head + ".name";
+			var descKey = glossary.Head + ".desc";
+			var altDescKey = glossary.Head + ".altDesc";
+			if (!glossary.IntendedOverwrite)
+			{
+				localisations.Add(nameKey, name);
+				localisations.Add(descKey, desc);
+				if (altDesc != null)
+				{
+					localisations.Add(altDescKey, altDesc);
+				}
+				continue;
+			}
+			localisations[nameKey] = name;
+			localisations[descKey] = desc;
+			if (altDesc != null)
+			{
+				localisations[altDescKey] = altDesc;
+			}
+		}
+	}
+	internal void InjectGlossaryIconSprites()
+	{
+		var iconDict = DB.icons;
+		foreach (var glossary in this.GlobalNameToGlossary.Values)
+		{
+			if (!glossary.Icon.Id.HasValue)
+			{
+				continue;
+			}
+			var sprite = (Spr)glossary.Icon.Id.Value;
 
+			if (glossary.IntendedOverwrite)
+			{
+				iconDict[glossary.ItemName] = sprite;
+			}
+			else
+			{
+				iconDict.Add(glossary.ItemName, sprite);
+			}
+		}
+	}
+	
 	public void RegisterSprite(IModManifest mod, ExternalSprite value)
 	{
 		Func<Stream> GetStreamProvider()
@@ -295,6 +347,9 @@ internal sealed class LegacyDatabase
 	public StarterShip GetStarterShip(string globalName)
 		=> this.GlobalNameToShipEntry.TryGetValue(globalName, out var value) ? value.Configuration.Ship : throw new KeyNotFoundException();
 
+	public ExternalGlossary GetGlossary(string globalName)
+		=> this.GlobalNameToGlossary.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
+
 	public Ship ActualizeShip(string globalName)
 	{
 		if (this.GlobalNameToVanillaShip.TryGetValue(globalName, out var ship))
@@ -351,4 +406,7 @@ internal sealed class LegacyDatabase
 
 		return starterShip;
 	}
+
+	public void RegisterGlossary(IModManifest modManifest, ExternalGlossary glossary) => 
+		this.GlobalNameToGlossary[modManifest.UniqueName] = glossary;
 }

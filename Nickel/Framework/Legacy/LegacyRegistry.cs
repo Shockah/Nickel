@@ -14,7 +14,7 @@ internal sealed class LegacyRegistry
 	: IModLoaderContact, IPrelaunchContactPoint,
 	ISpriteRegistry, IDeckRegistry, IStatusRegistry, ICardRegistry, IArtifactRegistry,
 	IAnimationRegistry, ICharacterRegistry,
-	IPartTypeRegistry, IShipPartRegistry, IShipRegistry, IRawShipRegistry, IStartershipRegistry
+	IPartTypeRegistry, IShipPartRegistry, IShipRegistry, IRawShipRegistry, IStartershipRegistry, IGlossaryRegisty
 {
 	public Assembly CobaltCoreAssembly { get; }
 
@@ -76,7 +76,14 @@ internal sealed class LegacyRegistry
 	}
 
 	public ExternalGlossary LookupGlossary(string globalName)
-		=> throw new NotImplementedException(); // TODO: implement
+		=> this.Database.GetGlossary(globalName);
+
+
+	public bool RegisterGlossary(ExternalGlossary glossary)
+	{
+		this.Database.RegisterGlossary(this.ModManifest, glossary);
+		return true;
+	}
 
 	public ExternalSprite LookupSprite(string globalName)
 		=> this.Database.GetSprite(globalName);
