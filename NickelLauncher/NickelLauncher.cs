@@ -11,7 +11,6 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 
 namespace Nickel.Launcher;
 
