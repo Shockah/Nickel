@@ -84,51 +84,82 @@ internal class NickelLauncher
 			categoryLogger.Log(e.LogLevel, "{Message}", e.Message);
 		});
 
-		Process process = new();
-		process.StartInfo.FileName = launchPath.FullName;
-		process.StartInfo.CreateNoWindow = true;
-		process.StartInfo.ErrorDialog = false;
-		process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-		process.StartInfo.RedirectStandardOutput = true;
-		process.StartInfo.RedirectStandardError = true;
-		process.StartInfo.WorkingDirectory = launchPath.Directory?.FullName;
-
-		var launchedLogger = loggerFactory.CreateLogger(NickelConstants.Name);
-		process.OutputDataReceived += (_, e) => launchedLogger.LogInformation("{Message}", e.Data);
-		process.ErrorDataReceived += (_, e) => launchedLogger.LogError("{Message}", e.Data);
+		var psi = new ProcessStartInfo
+		{
+			FileName = launchPath.FullName,
+			CreateNoWindow = true,
+			ErrorDialog = false,
+			WindowStyle = ProcessWindowStyle.Hidden,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+			WorkingDirectory = launchPath.Directory?.FullName,
+		};
 
 		if (!string.IsNullOrEmpty(pipeName))
 		{
-			process.StartInfo.ArgumentList.Add("--logPipeName");
-			process.StartInfo.ArgumentList.Add(pipeName);
+			psi.ArgumentList.Add("--logPipeName");
+			psi.ArgumentList.Add(pipeName);
 		}
 		foreach (var unmatchedArgument in launchArguments.UnmatchedArguments)
-			process.StartInfo.ArgumentList.Add(unmatchedArgument);
+			psi.ArgumentList.Add(unmatchedArgument);
 
 		// Handle the AppDomain.ProcessExit event to terminate the child process when the parent process exits
 		Console.WriteLine("Hello World!");
-		AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
-		{
-			Console.WriteLine("Goodnight World!");
-			if (process.HasExited) return;
-			// Terminate the child process
-			process.Close();
-			process.WaitForExit(1000); // Wait for the process to exit
 
-			if (process.HasExited) return;
-			process.Kill();
-			process.WaitForExit(1000); // Wait for the process to exit
-		};
-		
 		try
 		{
-			process.Start();
-			process.WaitForExit();
+			StartAndLogProcess(psi, logger, loggerFactory);
 		}
 		catch (Exception ex)
 		{
 			logger.LogCritical("{Name} threw an exception: {Exception}", NickelConstants.Name, ex);
 		}
+	}
+
+	private static void StartAndLogProcess(ProcessStartInfo psi, ILogger logger, ILoggerFactory loggerFactory)
+	{
+		var process = Process.Start(psi);
+		if (process == null)
+		{
+			logger.LogCritical($"Process.Start returned null");
+			return;
+		}
+
+		var pid = process.Id;
+		logger.LogInformation($"Launched Nickel with pid {process.Id}");
+
+		// Detect if parent process is killed
+		void OnExited(object? sender, EventArgs e)
+		{
+			if (process.HasExited) return;
+			logger.LogInformation($"Attempting to close Nickel gracefully");
+			process.CloseMainWindow();
+			process.WaitForExit(1000);
+			
+			if (process.HasExited) return;
+			logger.LogInformation($"Killing Nickel");
+			process.Kill();
+		}
+		var parentProcess = Process.GetCurrentProcess();
+		Console.CancelKeyPress += OnExited;
+		parentProcess.EnableRaisingEvents = true;
+		parentProcess.Exited += OnExited;
+		AppDomain.CurrentDomain.ProcessExit += OnExited;
+
+		// Subscribe to logging
+		var launchedLogger = loggerFactory.CreateLogger(NickelConstants.Name);
+		process.OutputDataReceived += (_, e) => launchedLogger.LogInformation("{Message}", e.Data);
+		process.ErrorDataReceived += (_, e) => launchedLogger.LogError("{Message}", e.Data);
+		process.BeginErrorReadLine();
+		process.BeginOutputReadLine();
+
+		process.WaitForExit();
+
+		logger.LogInformation("Child process closed gracefully");
+		// Unsubscribe
+		Console.CancelKeyPress -= OnExited;
+		parentProcess.Exited -= OnExited;
+		AppDomain.CurrentDomain.ProcessExit -= OnExited;
 	}
 
 	private static DirectoryInfo GetOrCreateDefaultLogDirectory()
