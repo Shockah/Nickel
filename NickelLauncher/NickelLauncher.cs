@@ -91,6 +91,7 @@ internal class NickelLauncher
 		process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
 		process.StartInfo.RedirectStandardOutput = true;
 		process.StartInfo.RedirectStandardError = true;
+		process.StartInfo.WorkingDirectory = launchPath.Directory?.FullName;
 
 		var launchedLogger = loggerFactory.CreateLogger(NickelConstants.Name);
 		process.OutputDataReceived += (_, e) => launchedLogger.LogInformation("{Message}", e.Data);
@@ -104,6 +105,21 @@ internal class NickelLauncher
 		foreach (var unmatchedArgument in launchArguments.UnmatchedArguments)
 			process.StartInfo.ArgumentList.Add(unmatchedArgument);
 
+		// Handle the AppDomain.ProcessExit event to terminate the child process when the parent process exits
+		Console.WriteLine("Hello World!");
+		AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
+		{
+			Console.WriteLine("Goodnight World!");
+			if (process.HasExited) return;
+			// Terminate the child process
+			process.Close();
+			process.WaitForExit(1000); // Wait for the process to exit
+
+			if (process.HasExited) return;
+			process.Kill();
+			process.WaitForExit(1000); // Wait for the process to exit
+		};
+		
 		try
 		{
 			process.Start();
@@ -117,7 +133,7 @@ internal class NickelLauncher
 
 	private static DirectoryInfo GetOrCreateDefaultLogDirectory()
 	{
-		var directoryInfo = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Logs"));
+		var directoryInfo = new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
 		if (!directoryInfo.Exists)
 			directoryInfo.Create();
 		return directoryInfo;

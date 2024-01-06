@@ -154,7 +154,7 @@ internal sealed class Nickel
 		var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? handlerResult.WorkingDirectory;
 		logger.LogInformation("GameWorkingDirectory: {Path}", gameWorkingDirectory.FullName);
 
-		var savePath = launchArguments.SavePath?.FullName ?? Path.Combine(Directory.GetCurrentDirectory(), "ModSaves");
+		var savePath = launchArguments.SavePath?.FullName ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModSaves");
 		logger.LogInformation("SavePath: {Path}", savePath);
 
 		instance.ModManager.LoadMods(ModLoadPhase.AfterGameAssembly);
@@ -200,7 +200,7 @@ internal sealed class Nickel
 
 	private static DirectoryInfo GetOrCreateDefaultModLibraryDirectory()
 	{
-		var directoryInfo = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "ModLibrary"));
+		var directoryInfo = new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModLibrary"));
 		if (!directoryInfo.Exists)
 			directoryInfo.Create();
 		return directoryInfo;
@@ -208,7 +208,7 @@ internal sealed class Nickel
 
 	private static DirectoryInfo GetOrCreateDefaultLogDirectory()
 	{
-		var directoryInfo = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Logs"));
+		var directoryInfo = new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
 		if (!directoryInfo.Exists)
 			directoryInfo.Create();
 		return directoryInfo;
