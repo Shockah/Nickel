@@ -4,12 +4,14 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.Console;
 using Nickel.Common;
+using Nickel.Framework.Utilities;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace Nickel.Launcher;
 
@@ -21,22 +23,28 @@ internal class NickelLauncher
 			name: "--launchPath",
 			description: $"The path of the application to launch."
 		);
-		Option<bool?> pipeLogsOption = new(
-			name: "--pipeLogs",
-			description: $"Whether the launcher should ask {NickelConstants.Name} to pipe its logs, instead of outputting them to the console and/or file."
+		Option<DirectoryInfo?> logPathOption = new(
+			name: "--logPath",
+			description: "The folder logs will be stored in."
+		);
+		Option<bool?> timestampedLogFiles = new(
+			name: "--keepLogs",
+			description: "Uses timestamps for log filenames."
 		);
 
 		RootCommand rootCommand = new(NickelConstants.IntroMessage);
 		rootCommand.AddOption(launchPathOption);
-		rootCommand.AddOption(pipeLogsOption);
+		rootCommand.AddOption(logPathOption);
+		rootCommand.AddOption(timestampedLogFiles);
 
 		rootCommand.SetHandler((InvocationContext context) =>
 		{
 			LaunchArguments launchArguments = new()
 			{
 				LaunchPath = context.ParseResult.GetValueForOption(launchPathOption),
-				PipeLogs = context.ParseResult.GetValueForOption(pipeLogsOption),
-				UnmatchedArguments = context.ParseResult.UnmatchedTokens
+				UnmatchedArguments = context.ParseResult.UnmatchedTokens,
+				LogPath = context.ParseResult.GetValueForOption(logPathOption),
+				TimestampedLogFiles = context.ParseResult.GetValueForOption(timestampedLogFiles),
 			};
 			CreateAndStartInstance(launchArguments);
 		});
@@ -47,9 +55,14 @@ internal class NickelLauncher
 	{
 		var loggerFactory = LoggerFactory.Create(builder =>
 		{
+			var fileLogDirectory = launchArguments.LogPath ?? GetOrCreateDefaultLogDirectory();
+			var timestampedLogFiles = launchArguments.TimestampedLogFiles ?? false;
+			builder.AddProvider(FileLoggerProvider.CreateNewLog(fileLogDirectory, timestampedLogFiles));
+
 			builder.AddConfiguration();
 			builder.AddConsoleFormatter<CustomConsoleFormatter, ConsoleFormatterOptions>();
 			builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, ConsoleLoggerProvider>());
+
 			LoggerProviderOptions.RegisterProviderOptions<ConsoleLoggerOptions, ConsoleLoggerProvider>(builder.Services);
 		});
 		var logger = loggerFactory.CreateLogger($"{NickelConstants.Name}Launcher");
@@ -59,8 +72,8 @@ internal class NickelLauncher
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
 
 		var launchPath = launchArguments.LaunchPath ?? new("Nickel.exe"); // TODO: this probably doesn't work on non-Windows machines; make sure it does
-		var pipeLogs = launchArguments.PipeLogs ?? true;
-		var pipeName = pipeLogs ? $"{Guid.NewGuid()}" : null;
+		var pipeName = Guid.NewGuid().ToString();
+
 		using var logNamedPipeServer = string.IsNullOrEmpty(pipeName) ? null : new LogNamedPipeServer(pipeName, logger, e =>
 		{
 			if (!categoryLoggers.TryGetValue(e.CategoryName, out var categoryLogger))
@@ -100,5 +113,13 @@ internal class NickelLauncher
 		{
 			logger.LogCritical("{Name} threw an exception: {Exception}", NickelConstants.Name, ex);
 		}
+	}
+
+	private static DirectoryInfo GetOrCreateDefaultLogDirectory()
+	{
+		var directoryInfo = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Logs"));
+		if (!directoryInfo.Exists)
+			directoryInfo.Create();
+		return directoryInfo;
 	}
 }

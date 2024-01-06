@@ -38,6 +38,14 @@ internal sealed class Nickel
 			name: "--savePath",
 			description: "The path that will store the save data."
 		);
+		Option<DirectoryInfo?> logPathOption = new(
+			name: "--logPath",
+			description: "The folder logs will be stored in."
+		);
+		Option<bool?> timestampedLogFiles = new(
+			name: "--keepLogs",
+			description: "Uses timestamps for log filenames."
+		);
 		Option<string?> logPipeNameOption = new(
 			name: "--logPipeName"
 		)
@@ -48,6 +56,8 @@ internal sealed class Nickel
 		rootCommand.AddOption(gamePathOption);
 		rootCommand.AddOption(modsPathOption);
 		rootCommand.AddOption(savePathOption);
+		rootCommand.AddOption(logPathOption);
+		rootCommand.AddOption(timestampedLogFiles);
 		rootCommand.AddOption(logPipeNameOption);
 
 		rootCommand.SetHandler((InvocationContext context) =>
@@ -58,6 +68,8 @@ internal sealed class Nickel
 				GamePath = context.ParseResult.GetValueForOption(gamePathOption),
 				ModsPath = context.ParseResult.GetValueForOption(modsPathOption),
 				SavePath = context.ParseResult.GetValueForOption(savePathOption),
+				LogPath = context.ParseResult.GetValueForOption(logPathOption),
+				TimestampedLogFiles = context.ParseResult.GetValueForOption(timestampedLogFiles),
 				LogPipeName = context.ParseResult.GetValueForOption(logPipeNameOption),
 				UnmatchedArguments = context.ParseResult.UnmatchedTokens
 			};
@@ -74,6 +86,10 @@ internal sealed class Nickel
 
 			if (string.IsNullOrEmpty(launchArguments.LogPipeName))
 			{
+				var fileLogDirectory = launchArguments.LogPath ?? GetOrCreateDefaultLogDirectory();
+				var timestampedLogFiles = launchArguments.TimestampedLogFiles ?? false;
+				builder.AddProvider(FileLoggerProvider.CreateNewLog(fileLogDirectory, timestampedLogFiles));
+
 				builder.AddConsoleFormatter<CustomConsoleFormatter, ConsoleFormatterOptions>();
 				builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, ConsoleLoggerProvider>());
 				LoggerProviderOptions.RegisterProviderOptions<ConsoleLoggerOptions, ConsoleLoggerProvider>(builder.Services);
@@ -185,6 +201,14 @@ internal sealed class Nickel
 	private static DirectoryInfo GetOrCreateDefaultModLibraryDirectory()
 	{
 		var directoryInfo = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "ModLibrary"));
+		if (!directoryInfo.Exists)
+			directoryInfo.Create();
+		return directoryInfo;
+	}
+
+	private static DirectoryInfo GetOrCreateDefaultLogDirectory()
+	{
+		var directoryInfo = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Logs"));
 		if (!directoryInfo.Exists)
 			directoryInfo.Create();
 		return directoryInfo;
