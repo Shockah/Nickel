@@ -37,9 +37,9 @@ internal sealed class StatusManager
 		foreach (var entry in this.UniqueNameToEntry.Values)
 		{
 			if (entry.Configuration.Name.Localize(locale) is { } name)
-				localizations[$"status.{entry.UniqueName}.name"] = name;
+				localizations[$"status.{entry.Status.Key()}.name"] = name;
 			if (entry.Configuration.Description.Localize(locale) is { } description)
-				localizations[$"status.{entry.UniqueName}.desc"] = description;
+				localizations[$"status.{entry.Status.Key()}.desc"] = description;
 		}
 	}
 
