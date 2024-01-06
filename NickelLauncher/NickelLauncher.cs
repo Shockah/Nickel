@@ -135,7 +135,7 @@ internal class NickelLauncher
 			logger.LogInformation($"Attempting to close Nickel gracefully");
 			process.CloseMainWindow();
 			process.WaitForExit(1000);
-			
+
 			if (process.HasExited) return;
 			logger.LogInformation($"Killing Nickel");
 			process.Kill();
