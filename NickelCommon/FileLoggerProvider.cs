@@ -30,8 +30,7 @@ public sealed class FileLoggerProvider(string filePath) : ILoggerProvider
 
 		return new FileLoggerProvider(currentFilePath);
 	}
-	
-	
+
 	private FileStream? Client { get; set; }
 	private bool IsClientRunning { get; set; } = false;
 
@@ -45,7 +44,8 @@ public sealed class FileLoggerProvider(string filePath) : ILoggerProvider
 			Mode = FileMode.CreateNew,
 			Options = FileOptions.Asynchronous,
 		}
-	) { AutoFlush = true };
+	)
+	{ AutoFlush = true };
 
 	public void Dispose()
 	{

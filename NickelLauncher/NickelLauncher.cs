@@ -31,7 +31,7 @@ internal class NickelLauncher
 			name: "--keepLogs",
 			description: "Uses timestamps for log filenames."
 		);
-		
+
 		RootCommand rootCommand = new(NickelConstants.IntroMessage);
 		rootCommand.AddOption(launchPathOption);
 		rootCommand.AddOption(logPathOption);
@@ -58,11 +58,11 @@ internal class NickelLauncher
 			var fileLogDirectory = launchArguments.LogPath ?? GetOrCreateDefaultLogDirectory();
 			var timestampedLogFiles = launchArguments.TimestampedLogFiles ?? false;
 			builder.AddProvider(FileLoggerProvider.CreateNewLog(fileLogDirectory, timestampedLogFiles));
-			
+
 			builder.AddConfiguration();
 			builder.AddConsoleFormatter<CustomConsoleFormatter, ConsoleFormatterOptions>();
 			builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, ConsoleLoggerProvider>());
-            
+
 			LoggerProviderOptions.RegisterProviderOptions<ConsoleLoggerOptions, ConsoleLoggerProvider>(builder.Services);
 		});
 		var logger = loggerFactory.CreateLogger($"{NickelConstants.Name}Launcher");
@@ -114,7 +114,7 @@ internal class NickelLauncher
 			logger.LogCritical("{Name} threw an exception: {Exception}", NickelConstants.Name, ex);
 		}
 	}
-	
+
 	private static DirectoryInfo GetOrCreateDefaultLogDirectory()
 	{
 		var directoryInfo = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Logs"));

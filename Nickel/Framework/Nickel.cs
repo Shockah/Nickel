@@ -89,7 +89,7 @@ internal sealed class Nickel
 				var fileLogDirectory = launchArguments.LogPath ?? GetOrCreateDefaultLogDirectory();
 				var timestampedLogFiles = launchArguments.TimestampedLogFiles ?? false;
 				builder.AddProvider(FileLoggerProvider.CreateNewLog(fileLogDirectory, timestampedLogFiles));
-				
+
 				builder.AddConsoleFormatter<CustomConsoleFormatter, ConsoleFormatterOptions>();
 				builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, ConsoleLoggerProvider>());
 				LoggerProviderOptions.RegisterProviderOptions<ConsoleLoggerOptions, ConsoleLoggerProvider>(builder.Services);
@@ -205,7 +205,7 @@ internal sealed class Nickel
 			directoryInfo.Create();
 		return directoryInfo;
 	}
-	
+
 	private static DirectoryInfo GetOrCreateDefaultLogDirectory()
 	{
 		var directoryInfo = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Logs"));
