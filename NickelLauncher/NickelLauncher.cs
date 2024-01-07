@@ -11,7 +11,6 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 
 namespace Nickel.Launcher;
 
@@ -84,30 +83,28 @@ internal class NickelLauncher
 			categoryLogger.Log(e.LogLevel, "{Message}", e.Message);
 		});
 
-		Process process = new();
-		process.StartInfo.FileName = launchPath.FullName;
-		process.StartInfo.CreateNoWindow = true;
-		process.StartInfo.ErrorDialog = false;
-		process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-		process.StartInfo.RedirectStandardOutput = true;
-		process.StartInfo.RedirectStandardError = true;
-
-		var launchedLogger = loggerFactory.CreateLogger(NickelConstants.Name);
-		process.OutputDataReceived += (_, e) => launchedLogger.LogInformation("{Message}", e.Data);
-		process.ErrorDataReceived += (_, e) => launchedLogger.LogError("{Message}", e.Data);
+		var psi = new ProcessStartInfo
+		{
+			FileName = launchPath.FullName,
+			CreateNoWindow = true,
+			ErrorDialog = false,
+			WindowStyle = ProcessWindowStyle.Hidden,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+			WorkingDirectory = launchPath.Directory?.FullName,
+		};
 
 		if (!string.IsNullOrEmpty(pipeName))
 		{
-			process.StartInfo.ArgumentList.Add("--logPipeName");
-			process.StartInfo.ArgumentList.Add(pipeName);
+			psi.ArgumentList.Add("--logPipeName");
+			psi.ArgumentList.Add(pipeName);
 		}
 		foreach (var unmatchedArgument in launchArguments.UnmatchedArguments)
-			process.StartInfo.ArgumentList.Add(unmatchedArgument);
+			psi.ArgumentList.Add(unmatchedArgument);
 
 		try
 		{
-			process.Start();
-			process.WaitForExit();
+			StartAndLogProcess(psi, logger, loggerFactory);
 		}
 		catch (Exception ex)
 		{
@@ -115,9 +112,57 @@ internal class NickelLauncher
 		}
 	}
 
+	private static void StartAndLogProcess(ProcessStartInfo psi, ILogger logger, ILoggerFactory loggerFactory)
+	{
+		var process = Process.Start(psi);
+		if (process is null)
+		{
+			logger.LogCritical("Could not start {ModLoaderName}: no process was started.", NickelConstants.Name);
+			return;
+		}
+
+		logger.LogDebug("Launched Nickel with PID {PID}.", process.Id);
+
+		// Detect if parent process is killed
+		void OnExited(object? sender, EventArgs e)
+		{
+			if (process.HasExited)
+				return;
+			logger.LogInformation("Attempting to close {ModLoaderName} gracefully.", NickelConstants.Name);
+			process.CloseMainWindow();
+			process.WaitForExit(1000);
+
+			if (process.HasExited)
+				return;
+			logger.LogInformation("Killing {ModLoaderName}.", NickelConstants.Name);
+			process.Kill();
+		}
+
+		var launcherProcess = Process.GetCurrentProcess();
+		launcherProcess.EnableRaisingEvents = true;
+		launcherProcess.Exited += OnExited;
+		Console.CancelKeyPress += OnExited;
+		AppDomain.CurrentDomain.ProcessExit += OnExited;
+
+		// Subscribe to logging
+		var launchedLogger = loggerFactory.CreateLogger(NickelConstants.Name);
+		process.OutputDataReceived += (_, e) => launchedLogger.LogInformation("{Message}", e.Data);
+		process.ErrorDataReceived += (_, e) => launchedLogger.LogError("{Message}", e.Data);
+		process.BeginErrorReadLine();
+		process.BeginOutputReadLine();
+
+		process.WaitForExit();
+
+		logger.LogDebug("{ModLoaderName} process closed gracefully.", NickelConstants.Name);
+		// Unsubscribe
+		launcherProcess.Exited -= OnExited;
+		Console.CancelKeyPress -= OnExited;
+		AppDomain.CurrentDomain.ProcessExit -= OnExited;
+	}
+
 	private static DirectoryInfo GetOrCreateDefaultLogDirectory()
 	{
-		var directoryInfo = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Logs"));
+		var directoryInfo = new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
 		if (!directoryInfo.Exists)
 			directoryInfo.Create();
 		return directoryInfo;
