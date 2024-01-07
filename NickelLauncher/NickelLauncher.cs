@@ -102,9 +102,6 @@ internal class NickelLauncher
 		foreach (var unmatchedArgument in launchArguments.UnmatchedArguments)
 			psi.ArgumentList.Add(unmatchedArgument);
 
-		// Handle the AppDomain.ProcessExit event to terminate the child process when the parent process exits
-		Console.WriteLine("Hello World!");
-
 		try
 		{
 			StartAndLogProcess(psi, logger, loggerFactory);
@@ -118,31 +115,33 @@ internal class NickelLauncher
 	private static void StartAndLogProcess(ProcessStartInfo psi, ILogger logger, ILoggerFactory loggerFactory)
 	{
 		var process = Process.Start(psi);
-		if (process == null)
+		if (process is null)
 		{
-			logger.LogCritical($"Process.Start returned null");
+			logger.LogCritical("Could not start {ModLoaderName}: no process was started.", NickelConstants.Name);
 			return;
 		}
 
-		var pid = process.Id;
-		logger.LogInformation($"Launched Nickel with pid {process.Id}");
+		logger.LogDebug("Launched Nickel with PID {PID}.", process.Id);
 
 		// Detect if parent process is killed
 		void OnExited(object? sender, EventArgs e)
 		{
-			if (process.HasExited) return;
-			logger.LogInformation($"Attempting to close Nickel gracefully");
+			if (process.HasExited)
+				return;
+			logger.LogInformation("Attempting to close {ModLoaderName} gracefully.", NickelConstants.Name);
 			process.CloseMainWindow();
 			process.WaitForExit(1000);
 
-			if (process.HasExited) return;
-			logger.LogInformation($"Killing Nickel");
+			if (process.HasExited)
+				return;
+			logger.LogInformation("Killing {ModLoaderName}.", NickelConstants.Name);
 			process.Kill();
 		}
-		var parentProcess = Process.GetCurrentProcess();
+
+		var launcherProcess = Process.GetCurrentProcess();
+		launcherProcess.EnableRaisingEvents = true;
+		launcherProcess.Exited += OnExited;
 		Console.CancelKeyPress += OnExited;
-		parentProcess.EnableRaisingEvents = true;
-		parentProcess.Exited += OnExited;
 		AppDomain.CurrentDomain.ProcessExit += OnExited;
 
 		// Subscribe to logging
@@ -154,10 +153,10 @@ internal class NickelLauncher
 
 		process.WaitForExit();
 
-		logger.LogInformation("Child process closed gracefully");
+		logger.LogDebug("{ModLoaderName} process closed gracefully.", NickelConstants.Name);
 		// Unsubscribe
+		launcherProcess.Exited -= OnExited;
 		Console.CancelKeyPress -= OnExited;
-		parentProcess.Exited -= OnExited;
 		AppDomain.CurrentDomain.ProcessExit -= OnExited;
 	}
 
