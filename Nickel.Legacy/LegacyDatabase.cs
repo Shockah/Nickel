@@ -386,6 +386,7 @@ internal sealed class LegacyDatabase(
 			Ship = ActualizeExternalStarterShip(value, this.ActualizeShip(value.ShipGlobalName)),
 			UnderChassisSprite = ship.ChassisUnderSprite is { } underChassisSprite ? (Spr)underChassisSprite.Id!.Value : null,
 			OverChassisSprite = ship.ChassisOverSprite is { } overChassisSprite ? (Spr)overChassisSprite.Id!.Value : null,
+			ExclusiveArtifactTypes = value.ExclusiveArtifacts.Select(a => a.ArtifactType).Concat(value.ExclusiveNativeArtifacts).ToHashSet(),
 			Name = locale =>
 			{
 				value.GetLocalisations(locale, out var localized, out _);
@@ -495,7 +496,7 @@ internal sealed class LegacyDatabase(
 
 	public void RegisterStory(ExternalStory story)
 	{
-		if (story.StoryNode is not StoryNode node)
+		if (story.StoryNode is not StoryNode)
 			throw new ArgumentException($"Provided story node is not of type {typeof(StoryNode)}");
 		if (story.Instructions is not { } rawInstructions)
 		{

@@ -141,6 +141,7 @@ internal sealed class Nickel
 		instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderModManifest);
 		instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderModManifest);
 
+		ArtifactRewardPatches.Apply(harmony);
 		DBPatches.Apply(harmony);
 		MGPatches.Apply(harmony);
 		SpriteLoaderPatches.Apply(harmony);

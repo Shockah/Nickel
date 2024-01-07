@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Nickel;
 
@@ -12,16 +13,28 @@ internal sealed class ShipManager
 	public ShipManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
-		StoryVarsPatches.OnGetUnlockedShips.Subscribe(this.GetUnlockedShips);
+		StoryVarsPatches.OnGetUnlockedShips.Subscribe(this.OnGetUnlockedShips);
+		ArtifactRewardPatches.OnGetBlockedArtifacts.Subscribe(this.OnGetBlockedArtifacts);
 	}
 
-	private void GetUnlockedShips(object? sender, HashSet<string> unlockedShips)
+	private void OnGetUnlockedShips(object? sender, HashSet<string> unlockedShips)
 	{
 		foreach (var (uniqueName, entry) in this.UniqueNameToEntry)
 		{
 			if (entry.Configuration.StartLocked)
 				continue;
 			unlockedShips.Add(uniqueName);
+		}
+	}
+
+	private void OnGetBlockedArtifacts(object? sender, ArtifactRewardPatches.GetBlockedArtifactsEventArgs e)
+	{
+		foreach (var (uniqueName, entry) in this.UniqueNameToEntry)
+		{
+			if (e.State.ship.key == entry.UniqueName)
+				continue;
+			foreach (var artifactType in entry.Configuration.ExclusiveArtifactTypes ?? Enumerable.Empty<Type>())
+				e.BlockedArtifacts.Add(artifactType);
 		}
 	}
 
