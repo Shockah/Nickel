@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.Console;
 using Nickel.Common;
-using Nickel.Framework.Utilities;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;

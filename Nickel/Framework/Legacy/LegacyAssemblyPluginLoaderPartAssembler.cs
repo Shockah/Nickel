@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using ILegacyManifest = CobaltCoreModding.Definitions.ModManifests.IManifest;
 
-namespace Nickel.Framework.Implementations;
+namespace Nickel;
 
 internal sealed class LegacyAssemblyPluginLoaderPartAssembler : IAssemblyPluginLoaderPartAssembler<IAssemblyModManifest, ILegacyManifest, Mod>
 {

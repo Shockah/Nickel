@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.Console;
 using Nanoray.PluginManager.Cecil;
 using Nickel.Common;
-using Nickel.Framework.Utilities;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
@@ -189,6 +188,7 @@ internal sealed class Nickel
 		if (phase != ModLoadPhase.AfterDbInit)
 			return;
 		this.ModManager.ContentManager?.InjectQueuedEntries();
+		this.ModManager.LegacyDatabase?.AfterDbInit();
 	}
 
 	[EventPriority(double.MaxValue)]

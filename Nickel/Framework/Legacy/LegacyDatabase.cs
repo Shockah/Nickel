@@ -1,4 +1,5 @@
 using CobaltCoreModding.Definitions.ExternalItems;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,30 +25,159 @@ internal sealed class LegacyDatabase
 	private Dictionary<string, Ship> GlobalNameToVanillaShip { get; } = [];
 	private Dictionary<string, ExternalStarterShip> GlobalNameToStarterShip { get; } = [];
 
-	private Dictionary<string, ICharacterEntry> GlobalNameToCharacterEntry { get; init; } = [];
-	private Dictionary<string, IPartEntry> GlobalNameToPartEntry { get; init; } = [];
+	private Dictionary<string, ICharacterEntry> GlobalNameToCharacterEntry { get; } = [];
+	private Dictionary<string, IPartEntry> GlobalNameToPartEntry { get; } = [];
 	private Dictionary<string, IShipEntry> GlobalNameToShipEntry { get; } = [];
+	private Dictionary<string, ExternalGlossary> GlobalNameToGlossary { get; } = [];
+	private List<ExternalStory> ExternalStories { get; } = [];
+	private List<(string, MethodInfo, bool, bool)> ChoiceAndCommands { get; } = [];
+
+	// Used to change the return value of EnumExtensions.Key(this Deck deck)
+	private Dictionary<Deck, string>? _reflectedDeckStrings;
 
 	public LegacyDatabase(Func<ContentManager> contentManagerProvider)
 	{
 		this.ContentManagerProvider = contentManagerProvider;
 	}
 
-	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
+	public void InjectLocalizations(string locale, Dictionary<string, string> localizations)
+	{
+		this.InjectCharacterLocalizations(locale, localizations);
+		this.InjectGlossaryLocalisations(locale, localizations);
+		this.InjectStoryLocalizations(locale, localizations);
+	}
+
+	public void AfterDbInit()
+	{
+		this.InjectGlossaryIconSprites();
+		this.InjectExternalStory();
+		this.InjectChoiceAndCommands();
+	}
+
+	private void InjectCharacterLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		// separate localization of characters
 		// Nickel localizes Deck names and Character descriptions
 		// legacy mods localize both for Characters only
 		foreach (var character in this.GlobalNameToCharacter.Values)
 		{
-			var key = ((Deck)character.Deck.Id!.Value).Key();
+			var deck = (Deck)character.Deck.Id!;
+			var id = deck.ToString()!;
+			var key = deck.Key();
+
 			if (character.GetCharacterName(locale) is { } name)
 			{
 				localizations[$"char.{key}"] = name;
 				localizations[$"char.{key}.name"] = name;
 			}
 			if (character.GetDesc(locale) is { } description)
+			{
 				localizations[$"char.{key}.desc"] = description;
+				localizations[$"char.{id}.desc"] = description;
+			}
+		}
+	}
+
+	private void InjectGlossaryLocalisations(string locale, Dictionary<string, string> localisations)
+	{
+		foreach (var glossary in this.GlobalNameToGlossary.Values)
+		{
+			if (!glossary.GetLocalisation(locale, out var name, out var desc, out var altDesc))
+				continue;
+
+			var nameKey = glossary.Head + ".name";
+			var descKey = glossary.Head + ".desc";
+			var altDescKey = glossary.Head + ".altDesc";
+
+			if (glossary.IntendedOverwrite)
+			{
+				localisations[nameKey] = name;
+				localisations[descKey] = desc;
+				if (altDesc is not null)
+					localisations[altDescKey] = altDesc;
+			}
+			else
+			{
+				localisations.Add(nameKey, name);
+				localisations.Add(descKey, desc);
+				if (altDesc is not null)
+					localisations.Add(altDescKey, altDesc);
+			}
+		}
+	}
+
+	private void InjectStoryLocalizations(string locale, Dictionary<string, string> localisations)
+	{
+		foreach (var story in this.ExternalStories)
+		{
+			story.GetLocalisation(locale, out var storyLoc);
+			foreach (var (key, value) in storyLoc)
+				localisations.Add(key, value);
+		}
+	}
+
+	internal void InjectGlossaryIconSprites()
+	{
+		foreach (var glossary in this.GlobalNameToGlossary.Values)
+		{
+			if (!glossary.Icon.Id.HasValue)
+				continue;
+			var sprite = (Spr)glossary.Icon.Id.Value;
+
+			if (glossary.IntendedOverwrite)
+				DB.icons[glossary.ItemName] = sprite;
+			else
+				DB.icons.Add(glossary.ItemName, sprite);
+		}
+	}
+
+	private void InjectExternalStory()
+	{
+		foreach (var story in this.ExternalStories)
+		{
+			var node = (StoryNode)story.StoryNode; // validated on registration
+			if (story.Instructions is not { } rawInstructions)
+			{
+				DB.story.all.Add(story.GlobalName, node);
+				continue;
+			}
+
+			foreach (var rawInstruction in rawInstructions)
+			{
+				switch (rawInstruction)
+				{
+					case ExternalStory.ExternalSay extSay:
+						node.lines.Add(extSay.ToSay());
+						break;
+					case ExternalStory.ExternalSaySwitch extSaySwitch:
+						node.lines.Add(
+							new SaySwitch { lines = extSaySwitch.lines.Select(say => say.ToSay()).ToList() }
+						);
+						break;
+					case Instruction instruction:
+						node.lines.Add(instruction);
+						break;
+					default:
+						// validated on registration, shouldn't happen
+						throw new InvalidOperationException();
+				}
+			}
+
+			DB.story.all.Add(story.GlobalName, node);
+		}
+	}
+
+	private void InjectChoiceAndCommands()
+	{
+		foreach (var (key, methodInfo, intendedOverride, isChoice) in this.ChoiceAndCommands)
+		{
+			var dict = isChoice ? DB.eventChoiceFns : DB.storyCommands;
+			if (dict.TryAdd(key, methodInfo))
+				continue;
+			// TODO: log instead of throwing, it's too late to throw now, this breaks other mods
+			if (!intendedOverride)
+				throw new ArgumentException($"Duplicate choice key", nameof(key));
+			dict[key] = methodInfo;
 		}
 	}
 
@@ -67,6 +197,9 @@ internal sealed class LegacyDatabase
 		this.GlobalNameToSprite[value.GlobalName] = value;
 	}
 
+	public void RegisterGlossary(IModManifest modManifest, ExternalGlossary glossary) =>
+		this.GlobalNameToGlossary[modManifest.UniqueName] = glossary;
+
 	public void RegisterDeck(IModManifest mod, ExternalDeck value)
 	{
 		DeckConfiguration configuration = new()
@@ -79,6 +212,11 @@ internal sealed class LegacyDatabase
 		var entry = this.ContentManagerProvider().Decks.RegisterDeck(mod, value.GlobalName, configuration);
 		value.Id = (int)entry.Deck;
 		this.GlobalNameToDeck[value.GlobalName] = value;
+
+		this._reflectedDeckStrings ??= AccessTools
+			.DeclaredField(typeof(EnumExtensions), "deckStrs")
+			.EmitStaticGetter<Dictionary<Deck, string>>()();
+		this._reflectedDeckStrings[entry.Deck] = value.GlobalName;
 	}
 
 	public void RegisterStatus(IModManifest mod, ExternalStatus value)
@@ -268,6 +406,9 @@ internal sealed class LegacyDatabase
 	public ExternalSprite GetSprite(string globalName)
 		=> this.GlobalNameToSprite.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
 
+	public ExternalGlossary GetGlossary(string globalName)
+		=> this.GlobalNameToGlossary.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
+
 	public ExternalDeck GetDeck(string globalName)
 		=> this.GlobalNameToDeck.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
 
@@ -351,4 +492,29 @@ internal sealed class LegacyDatabase
 
 		return starterShip;
 	}
+
+	public void RegisterStory(ExternalStory story)
+	{
+		if (story.StoryNode is not StoryNode node)
+			throw new ArgumentException($"Provided story node is not of type {typeof(StoryNode)}");
+		if (story.Instructions is not { } rawInstructions)
+		{
+			this.ExternalStories.Add(story);
+			return;
+		}
+
+		foreach (var rawInstruction in rawInstructions)
+		{
+			if (rawInstruction is ExternalStory.ExternalSay or ExternalStory.ExternalSaySwitch or Instruction)
+				continue;
+			throw new ArgumentException(
+				$"Cannot add instance of class {rawInstruction.GetType()} to Story Node {story.GlobalName} as it does not inherit from class Instruction",
+			);
+		}
+
+		this.ExternalStories.Add(story);
+	}
+
+	public void RegisterChoiceOrCommand(string key, MethodInfo methodInfo, bool intendedOverride, bool isChoice)
+		=> this.ChoiceAndCommands.Add((key, methodInfo, intendedOverride, isChoice));
 }

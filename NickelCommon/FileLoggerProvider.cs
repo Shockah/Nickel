@@ -1,12 +1,10 @@
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Nickel.Common;
 using System;
 using System.IO;
-using System.IO.Pipes;
 using System.Text;
 
-namespace Nickel.Framework.Utilities;
+namespace Nickel;
 
 public sealed class FileLoggerProvider(string filePath) : ILoggerProvider
 {
@@ -24,17 +22,12 @@ public sealed class FileLoggerProvider(string filePath) : ILoggerProvider
 		var prevFilePath = Path.Combine(directoryInfo.FullName, "Nickel.prev.log");
 
 		if (File.Exists(currentFilePath))
-		{
 			File.Move(currentFilePath, prevFilePath, true);
-		}
 
 		return new FileLoggerProvider(currentFilePath);
 	}
 
-	private FileStream? Client { get; set; }
-	private bool IsClientRunning { get; set; } = false;
-
-	private readonly StreamWriter _streamWriter = new(
+	private StreamWriter StreamWriter { get; } = new(
 		filePath,
 		Encoding.UTF8,
 		new FileStreamOptions
@@ -49,10 +42,8 @@ public sealed class FileLoggerProvider(string filePath) : ILoggerProvider
 
 	public void Dispose()
 	{
-		if (!this.IsClientRunning) return;
-		this.IsClientRunning = false;
-		this._streamWriter.Flush();
-		this._streamWriter.Dispose();
+		this.StreamWriter.Flush();
+		this.StreamWriter.Dispose();
 	}
 
 	public ILogger CreateLogger(string categoryName) =>
@@ -61,7 +52,7 @@ public sealed class FileLoggerProvider(string filePath) : ILoggerProvider
 			logEntry =>
 			{
 				var timeString = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-				this._streamWriter.WriteLine($"[{timeString}][{logEntry.LogLevel}][{categoryName}] {logEntry.Message}");
+				this.StreamWriter.WriteLine($"[{timeString}][{logEntry.LogLevel}][{categoryName}] {logEntry.Message}");
 			}
 		);
 
