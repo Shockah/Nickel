@@ -33,6 +33,9 @@ internal sealed class ModManifest : IModManifest
 	public string ModType { get; internal set; } = NickelConstants.AssemblyModType;
 
 	[JsonProperty]
+	public ModLoadPhase LoadPhase { get; internal set; } = ModLoadPhase.AfterGameAssembly;
+
+	[JsonProperty]
 	[JsonConverter(typeof(ConcreteTypeConverter<IReadOnlyList<SubmodEntry>>))]
 	public IReadOnlyList<ISubmodEntry> Submods { get; internal set; } = new List<ISubmodEntry>();
 

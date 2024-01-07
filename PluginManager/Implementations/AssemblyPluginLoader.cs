@@ -4,25 +4,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Loader;
 
 namespace Nanoray.PluginManager;
 
 public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 {
 	private Func<IPluginPackage<TPluginManifest>, OneOf<AssemblyPluginLoaderRequiredPluginData, Error<string>>> RequiredPluginDataProvider { get; }
+	private IAssemblyPluginLoaderLoadContextProvider<TPluginManifest> LoadContextProvider { get; }
+	private IAssemblyPluginLoaderReferenceResolver<TPluginManifest>? ReferenceResolver { get; }
 	private IAssemblyPluginLoaderPartAssembler<TPluginManifest, TPluginPart, TPlugin> PartAssembler { get; }
 	private IAssemblyPluginLoaderParameterInjector<TPluginManifest>? ParameterInjector { get; }
 	private IAssemblyEditor? AssemblyEditor { get; }
 
 	public AssemblyPluginLoader(
 		Func<IPluginPackage<TPluginManifest>, OneOf<AssemblyPluginLoaderRequiredPluginData, Error<string>>> requiredPluginDataProvider,
+		IAssemblyPluginLoaderLoadContextProvider<TPluginManifest> loadContextProvider,
+		IAssemblyPluginLoaderReferenceResolver<TPluginManifest>? referenceResolver,
 		IAssemblyPluginLoaderPartAssembler<TPluginManifest, TPluginPart, TPlugin> partAssembler,
 		IAssemblyPluginLoaderParameterInjector<TPluginManifest>? parameterInjector,
 		IAssemblyEditor? assemblyEditor
 	)
 	{
 		this.RequiredPluginDataProvider = requiredPluginDataProvider;
+		this.LoadContextProvider = loadContextProvider;
+		this.ReferenceResolver = referenceResolver;
 		this.PartAssembler = partAssembler;
 		this.ParameterInjector = parameterInjector;
 		this.AssemblyEditor = assemblyEditor;
@@ -39,13 +44,21 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 		if (!this.RequiredPluginDataProvider(package).TryPickT0(out var requiredPluginData, out _))
 			throw new ArgumentException($"This plugin loader cannot load the plugin package {package}.");
 
-		using var originalStream = package.PackageRoot.GetRelativeFile(requiredPluginData.EntryPointAssembly).OpenRead();
-		using var stream = this.AssemblyEditor?.EditAssemblyStream(requiredPluginData.EntryPointAssembly, originalStream) ?? originalStream;
+		Assembly assembly;
+		try
+		{
+			var assemblyFile = package.PackageRoot.GetRelativeFile(requiredPluginData.EntryPointAssembly);
+			using var originalStream = assemblyFile.OpenRead();
+			using var stream = this.AssemblyEditor?.EditAssemblyStream(assemblyFile.Name, originalStream) ?? originalStream;
+			var context = this.LoadContextProvider.GetLoadContext(package);
+			assembly = context.LoadFromStream(stream);
+		}
+		catch (Exception ex)
+		{
+			return new Error<string>($"There was a problem while loading assemblies: {ex}");
+		}
 
-		AssemblyLoadContext context = new(requiredPluginData.UniqueName);
-		var assembly = context.LoadFromStream(stream);
 		HashSet<Type> pluginPartTypes;
-
 		if (string.IsNullOrEmpty(requiredPluginData.EntryPointType))
 		{
 			pluginPartTypes = assembly.GetTypes()

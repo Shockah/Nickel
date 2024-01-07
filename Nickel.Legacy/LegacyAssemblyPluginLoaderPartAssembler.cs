@@ -13,20 +13,17 @@ internal sealed class LegacyAssemblyPluginLoaderPartAssembler : IAssemblyPluginL
 {
 	private Func<IModManifest, IModHelper> HelperProvider { get; }
 	private Func<IModManifest, ILogger> LoggerProvider { get; }
-	private Func<Assembly> CobaltCoreAssemblyProvider { get; }
-	private Func<LegacyDatabase> DatabaseProvider { get; }
+	private LegacyDatabase Database { get; }
 
 	public LegacyAssemblyPluginLoaderPartAssembler(
 		Func<IModManifest, IModHelper> helperProvider,
 		Func<IModManifest, ILogger> loggerProvider,
-		Func<Assembly> cobaltCoreAssemblyProvider,
-		Func<LegacyDatabase> databaseProvider
+		LegacyDatabase database
 	)
 	{
 		this.HelperProvider = helperProvider;
 		this.LoggerProvider = loggerProvider;
-		this.CobaltCoreAssemblyProvider = cobaltCoreAssemblyProvider;
-		this.DatabaseProvider = databaseProvider;
+		this.Database = database;
 	}
 
 	public Error<string>? ValidatePluginParts(IPluginPackage<IAssemblyModManifest> package, Assembly assembly, IReadOnlySet<Type> partTypes)
@@ -42,7 +39,7 @@ internal sealed class LegacyAssemblyPluginLoaderPartAssembler : IAssemblyPluginL
 			return new Error<string>($"The assembly {assembly} does not include any {typeof(ILegacyManifest)} subclasses.");
 		var helper = this.HelperProvider(package.Manifest);
 		var logger = this.LoggerProvider(package.Manifest);
-		LegacyRegistry registry = new(package.Manifest, helper, logger, this.CobaltCoreAssemblyProvider(), this.DatabaseProvider());
+		LegacyRegistry registry = new(package.Manifest, helper, logger, this.Database);
 		return new LegacyModWrapper(parts, registry, package.PackageRoot, helper, logger);
 	}
 }

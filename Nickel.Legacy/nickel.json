@@ -1,0 +1,12 @@
+{
+	"UniqueName": "Nickel.Legacy",
+	"Version": "0.1.0",
+	"RequiredApiVersion": "0.1.0",
+	"EntryPointAssembly": "Nickel.Legacy.dll",
+	"EntryPointType": "Nickel.Legacy.ModEntry",
+	"AssemblyReferences": [
+		{
+			"Name": "CobaltCoreModding.Definitions"
+		}
+	]
+}

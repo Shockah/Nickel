@@ -18,5 +18,4 @@ public static class NickelConstants
 	public static SemanticVersion Version => LazyVersion.Value;
 	public static string IntroMessage { get; } = $"{Name} {Version} -- A modding API / modloader for the game Cobalt Core.";
 	public static string AssemblyModType { get; } = $"{typeof(Nickel).Namespace!}.Assembly";
-	public static string LegacyModType { get; } = $"{typeof(Nickel).Namespace!}.Legacy";
 }

@@ -1,6 +1,7 @@
+using Newtonsoft.Json;
 using OneOf;
 using OneOf.Types;
-using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Nickel;
@@ -31,16 +32,19 @@ public static partial class ManifestExt
 			return true;
 		}
 
-		bool TryParseLoadPhase([MaybeNullWhen(false)] out ModLoadPhase result)
+		bool TryParseAssemblyReferences(out IReadOnlyList<ModAssemblyReference>? result)
 		{
-			result = ModLoadPhase.AfterGameAssembly;
-			if (!manifest.ExtensionData.TryGetValue(nameof(IAssemblyModManifest.LoadPhase), out var raw))
+			var settings = new JsonSerializerSettings
+			{
+				ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
+			};
+			result = null;
+			if (!manifest.ExtensionData.TryGetValue(nameof(IAssemblyModManifest.AssemblyReferences), out var raw))
 				return true;
-			if (raw is not string stringValue)
+			var nullableResult = JsonConvert.DeserializeObject<List<ModAssemblyReference>>(JsonConvert.SerializeObject(raw, settings), settings);
+			if (nullableResult is null)
 				return false;
-			if (!Enum.TryParse<ModLoadPhase>(stringValue, ignoreCase: true, out var value))
-				return false;
-			result = value;
+			result = nullableResult;
 			return true;
 		}
 
@@ -48,14 +52,14 @@ public static partial class ManifestExt
 			return new Error<string>($"`{nameof(IAssemblyModManifest.EntryPointAssembly)}` value is invalid.");
 		if (!TryParseEntryPointTypeFullName(out var entryPointType))
 			return new Error<string>($"`{nameof(IAssemblyModManifest.EntryPointType)}` value is invalid.");
-		if (!TryParseLoadPhase(out var loadPhase))
-			return new Error<string>($"`{nameof(IAssemblyModManifest.LoadPhase)}` value is invalid.");
+		if (!TryParseAssemblyReferences(out var assemblyReferences))
+			return new Error<string>($"`{nameof(IAssemblyModManifest.AssemblyReferences)}` value is invalid.");
 
 		return new AssemblyModManifest(manifest)
 		{
 			EntryPointAssembly = entryPointAssembly,
 			EntryPointType = entryPointType,
-			LoadPhase = loadPhase
+			AssemblyReferences = assemblyReferences ?? []
 		};
 	}
 }

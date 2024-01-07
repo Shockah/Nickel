@@ -26,6 +26,9 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 	public string ModType
 		=> this.ModManifest.ModType;
 
+	public ModLoadPhase LoadPhase
+		=> this.ModManifest.LoadPhase;
+
 	public IReadOnlyList<ISubmodEntry> Submods
 		=> this.ModManifest.Submods;
 
@@ -36,7 +39,7 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 
 	public string? EntryPointType { get; internal set; }
 
-	public ModLoadPhase LoadPhase { get; internal set; } = ModLoadPhase.AfterGameAssembly;
+	public IReadOnlyList<ModAssemblyReference> AssemblyReferences { get; internal set; } = [];
 
 	private IModManifest ModManifest { get; }
 

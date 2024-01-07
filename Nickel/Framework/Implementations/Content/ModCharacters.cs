@@ -15,4 +15,7 @@ internal sealed class ModCharacters : IModCharacters
 
 	public ICharacterAnimationEntry RegisterCharacterAnimation(string name, CharacterAnimationConfiguration configuration)
 		=> this.CharacterManagerProvider().RegisterCharacterAnimation(this.ModManifest, name, configuration);
+
+	public ICharacterEntry RegisterCharacter(string name, CharacterConfiguration configuration)
+		=> this.CharacterManagerProvider().RegisterCharacter(this.ModManifest, name, configuration);
 }

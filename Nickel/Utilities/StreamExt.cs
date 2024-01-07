@@ -2,7 +2,7 @@ using System.IO;
 
 namespace Nickel;
 
-internal static class StreamExt
+public static class StreamExt
 {
 	public static MemoryStream ToMemoryStream(this Stream stream, bool closeStream = true)
 	{

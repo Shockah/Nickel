@@ -25,9 +25,9 @@ internal sealed class ArtifactManager
 		{
 			var key = entry.Configuration.ArtifactType.Name; // TODO: change this when Artifact.Key gets patched
 			if (entry.Configuration.Name.Localize(locale) is { } name)
-				localizations[$"card.{key}.name"] = name;
+				localizations[$"artifact.{key}.name"] = name;
 			if (entry.Configuration.Description.Localize(locale) is { } description)
-				localizations[$"card.{key}.desc"] = description;
+				localizations[$"artifact.{key}.desc"] = description;
 		}
 	}
 

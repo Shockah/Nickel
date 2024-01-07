@@ -19,6 +19,8 @@ public interface IModManifest
 
 	string ModType { get; }
 
+	ModLoadPhase LoadPhase { get; }
+
 	IReadOnlyList<ISubmodEntry> Submods { get; }
 
 	IReadOnlyDictionary<string, object> ExtensionData { get; }

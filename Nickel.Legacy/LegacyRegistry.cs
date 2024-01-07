@@ -18,24 +18,17 @@ internal sealed class LegacyRegistry
 	IPartTypeRegistry, IShipPartRegistry, IShipRegistry, IRawShipRegistry, IStartershipRegistry,
 	IStoryRegistry
 {
-	public Assembly CobaltCoreAssembly { get; }
-	public LegacyEventHub GlobalEventHub { get; } = new();
+	public Assembly CobaltCoreAssembly
+		=> typeof(DB).Assembly;
+
+	public IEnumerable<ILegacyManifest> LoadedManifests
+		=> this.Database.LegacyManifests;
+
+	internal LegacyEventHub GlobalEventHub { get; } = new();
 
 	private IModManifest ModManifest { get; }
 	private IModHelper Helper { get; }
 	private ILogger Logger { get; }
-
-	public IEnumerable<ILegacyManifest> LoadedManifests
-	{
-		get
-		{
-			if (this.Helper.ModRegistry is not ModRegistry modRegistry)
-				return [];
-			return modRegistry.ModUniqueNameToInstance.Values
-				.OfType<LegacyModWrapper>()
-				.SelectMany(mod => mod.LegacyManifests);
-		}
-	}
 
 	public Func<object> GetCobaltCoreGraphicsDeviceFunc
 		=> () => MG.inst.GraphicsDevice;
@@ -46,14 +39,12 @@ internal sealed class LegacyRegistry
 		IModManifest modManifest,
 		IModHelper helper,
 		ILogger logger,
-		Assembly cobaltCoreAssembly,
 		LegacyDatabase database
 	)
 	{
 		this.ModManifest = modManifest;
 		this.Helper = helper;
 		this.Logger = logger;
-		this.CobaltCoreAssembly = cobaltCoreAssembly;
 		this.Database = database;
 	}
 
@@ -64,19 +55,7 @@ internal sealed class LegacyRegistry
 		=> this.Helper.ModRegistry.GetApi<TApi>(modName);
 
 	public ILegacyManifest LookupManifest(string globalName)
-	{
-		if (this.Helper.ModRegistry is not ModRegistry modRegistry)
-			throw new KeyNotFoundException();
-		foreach (var mod in modRegistry.ModUniqueNameToInstance.Values)
-		{
-			if (mod is not LegacyModWrapper legacyModWrapper)
-				continue;
-			foreach (var manifest in legacyModWrapper.LegacyManifests)
-				if (manifest.Name == globalName)
-					return manifest;
-		}
-		throw new KeyNotFoundException();
-	}
+		=> this.LoadedManifests.FirstOrDefault(m => m.Name == globalName) ?? throw new KeyNotFoundException();
 
 	public ExternalSprite LookupSprite(string globalName)
 		=> this.Database.GetSprite(globalName);

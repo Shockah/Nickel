@@ -57,10 +57,7 @@ internal sealed class LegacyModWrapper : Mod
 			return null;
 
 		var legacyRequestingManifest = this.Registry.LoadedManifests.FirstOrDefault(m => m.Name == requestingMod.UniqueName);
-		if (legacyRequestingManifest is not null)
-			return apiProvider.GetApi(legacyRequestingManifest);
-
-		return new NewToLegacyManifestStub(requestingMod);
+		return apiProvider.GetApi(legacyRequestingManifest ?? new NewToLegacyManifestStub(requestingMod));
 	}
 
 	[EventPriority(0)]

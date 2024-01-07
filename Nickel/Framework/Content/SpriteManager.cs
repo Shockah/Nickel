@@ -69,7 +69,8 @@ internal sealed class SpriteManager
 			if (this.StreamProvider is not { } streamProvider)
 				throw new InvalidOperationException();
 
-			texture = Texture2D.FromStream(MG.inst.GraphicsDevice, streamProvider());
+			using var stream = streamProvider();
+			texture = Texture2D.FromStream(MG.inst.GraphicsDevice, stream);
 			this.TextureStorage = texture;
 			this.StreamProvider = null;
 			return texture;

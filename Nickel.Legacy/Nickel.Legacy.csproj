@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\Configuration.props" />
+	<PropertyGroup>
+		<RootNamespace>Nickel.Legacy</RootNamespace>
+		<Version>0.1.0</Version>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\LegacyModLoader\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj" />
+		<PackageReference Include="Nickel.ModBuildConfig" Version="0.1.2" />
+		<PackageReference Include="OneOf" Version="3.0.263" PrivateAssets="all" />
+		<PackageReference Include="OneOf.SourceGenerator" Version="3.0.263" PrivateAssets="all" />
+	</ItemGroup>
+</Project>

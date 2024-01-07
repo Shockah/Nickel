@@ -1,15 +1,17 @@
+using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using Nanoray.PluginManager.Implementations;
+using Nanoray.Shrike.Harmony;
+using Nanoray.Shrike;
 using Nickel.Common;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using ILegacyManifest = CobaltCoreModding.Definitions.ModManifests.IManifest;
+using System.Runtime.Loader;
 
 namespace Nickel;
 
@@ -22,9 +24,6 @@ internal sealed class ModManager
 
 	internal IModManifest ModLoaderModManifest { get; private init; }
 	internal ModLoadPhase CurrentModLoadPhase { get; private set; } = ModLoadPhase.BeforeGameAssembly;
-
-	private Assembly? CobaltCoreAssembly { get; set; }
-	internal LegacyDatabase? LegacyDatabase { get; private set; }
 	internal ContentManager? ContentManager { get; private set; }
 
 	private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; } = new();
@@ -56,18 +55,56 @@ internal sealed class ModManager
 			RequiredApiVersion = NickelConstants.Version
 		};
 
-		var assemblyPluginLoaderParameterInjector = new CompoundAssemblyPluginLoaderParameterInjector<IModManifest>(
-			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, ILogger>(
-				package => this.ObtainLogger(package.Manifest)
-			),
-			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, IModHelper>(
-				package => this.ObtainModHelper(package.Manifest)
-			),
+		var loadContextProvider = new AssemblyModLoadContextProvider(AssemblyLoadContext.GetLoadContext(
+			this.GetType().Assembly) ?? AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default
+		);
+		var referenceResolver = new ReferencedAssembliesAssemblyPluginLoaderReferenceResolver<IAssemblyModManifest>();
+
+		var assemblyPluginLoaderParameterInjector = new ExtendableAssemblyPluginLoaderParameterInjector<IModManifest>();
+		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
 			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendablePluginLoader<IModManifest, Mod>>(
 				this.ExtendablePluginLoader
-			),
+			)
+		);
+		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
+			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendableAssemblyPluginLoaderParameterInjector<IModManifest>>(
+				assemblyPluginLoaderParameterInjector
+			)
+		);
+		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
 			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, ExtendableAssemblyDefinitionEditor>(
 				extendableAssemblyDefinitionEditor
+			)
+		);
+		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
+			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, IAssemblyPluginLoaderLoadContextProvider<IAssemblyModManifest>>(
+				loadContextProvider
+			)
+		);
+		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
+			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, IAssemblyPluginLoaderReferenceResolver<IAssemblyModManifest>>(
+				referenceResolver
+			)
+		);
+
+		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
+			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, ILogger>(
+				package => this.ObtainLogger(package.Manifest)
+			)
+		);
+		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
+			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, Func<IModManifest, ILogger>>(
+				this.ObtainLogger
+			)
+		);
+		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
+			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, IModHelper>(
+				package => this.ObtainModHelper(package.Manifest)
+			)
+		);
+		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
+			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, Func<IModManifest, IModHelper>>(
+				this.ObtainModHelper
 			)
 		);
 
@@ -80,6 +117,8 @@ internal sealed class ModManager
 						EntryPointAssembly = p.Manifest.EntryPointAssembly,
 						EntryPointType = p.Manifest.EntryPointType
 					},
+					loadContextProvider: loadContextProvider,
+					referenceResolver: referenceResolver,
 					partAssembler: new SingleAssemblyPluginPartAssembler<IAssemblyModManifest, Mod>(),
 					parameterInjector: assemblyPluginLoaderParameterInjector,
 					assemblyEditor: extendableAssemblyDefinitionEditor
@@ -90,42 +129,13 @@ internal sealed class ModManager
 				? new Yes() : new No()
 		);
 
-		var legacyAssemblyPluginLoader = new ConditionalPluginLoader<IModManifest, Mod>(
-			loader: new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
-				loader: new AssemblyPluginLoader<IAssemblyModManifest, ILegacyManifest, Mod>(
-					requiredPluginDataProvider: p =>
-						new AssemblyPluginLoaderRequiredPluginData
-						{
-							UniqueName = p.Manifest.UniqueName,
-							EntryPointAssembly = p.Manifest.EntryPointAssembly,
-							EntryPointType = p.Manifest.EntryPointType
-						},
-					partAssembler: new LegacyAssemblyPluginLoaderPartAssembler(
-						helperProvider: this.ObtainModHelper,
-						loggerProvider: this.ObtainLogger,
-						cobaltCoreAssemblyProvider: () => this.CobaltCoreAssembly!,
-						databaseProvider: () => this.LegacyDatabase!
-					),
-					parameterInjector: assemblyPluginLoaderParameterInjector,
-					assemblyEditor: extendableAssemblyDefinitionEditor
-				),
-				converter: m => m.AsAssemblyModManifest()
-			),
-			condition: package => package.Manifest.ModType == NickelConstants.LegacyModType
-				? new Yes() : new No()
-		);
-
 		this.ExtendablePluginLoader.RegisterPluginLoader(assemblyPluginLoader);
-		this.ExtendablePluginLoader.RegisterPluginLoader(legacyAssemblyPluginLoader);
 
 		DBPatches.OnLoadStringsForLocale.Subscribe(this.OnLoadStringsForLocale);
 	}
 
 	private void OnLoadStringsForLocale(object? sender, LoadStringsForLocaleEventArgs e)
 		=> this.EventManager.OnLoadStringsForLocaleEvent.Raise(sender, e);
-
-	private static ModLoadPhase GetModLoadPhaseForManifest(IModManifest manifest)
-		=> (manifest as IAssemblyModManifest)?.LoadPhase ?? ModLoadPhase.AfterGameAssembly;
 
 	public void ResolveMods()
 	{
@@ -198,7 +208,7 @@ internal sealed class ModManager
 								.ToHashSet()
 						}
 				),
-				GetModLoadPhaseForManifest,
+				manifest => manifest.LoadPhase,
 				Enum.GetValues<ModLoadPhase>()
 			);
 
@@ -240,6 +250,10 @@ internal sealed class ModManager
 
 	public void LoadMods(ModLoadPhase phase)
 	{
+		// force-referencing Shrike assemblies, otherwise none dependent mods will load
+		_ = typeof(ISequenceMatcher<CodeInstruction>).Name;
+		_ = typeof(ILMatches).Name;
+
 		this.Logger.LogInformation("Loading {Phase} phase mods...", phase);
 		this.CurrentModLoadPhase = phase;
 
@@ -251,7 +265,7 @@ internal sealed class ModManager
 				continue;
 			if (this.FailedMods.Contains(manifest))
 				continue;
-			if (GetModLoadPhaseForManifest(manifest) != phase)
+			if (manifest.LoadPhase != phase)
 				continue;
 
 			var displayName = GetModDisplayName(manifest);
@@ -321,12 +335,8 @@ internal sealed class ModManager
 				: $"{manifest.UniqueName} by {manifest.Author} [{manifest.UniqueName}]";
 	}
 
-	internal void ContinueAfterLoadingGameAssembly(Assembly cobaltCoreGameAssembly)
-	{
-		this.CobaltCoreAssembly = cobaltCoreGameAssembly;
-		this.ContentManager = new(() => this.CurrentModLoadPhase, this.ObtainLogger);
-		this.LegacyDatabase = new(() => this.ContentManager);
-	}
+	internal void ContinueAfterLoadingGameAssembly()
+		=> this.ContentManager = new(() => this.CurrentModLoadPhase, this.ObtainLogger);
 
 	private ILogger ObtainLogger(IModManifest manifest)
 	{

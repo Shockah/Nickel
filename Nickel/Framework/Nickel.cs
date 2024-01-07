@@ -137,7 +137,7 @@ internal sealed class Nickel
 
 	private static void ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony harmony, ILogger logger, CobaltCoreHandlerResult handlerResult)
 	{
-		instance.ModManager.ContinueAfterLoadingGameAssembly(handlerResult.GameAssembly);
+		instance.ModManager.ContinueAfterLoadingGameAssembly();
 		instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderModManifest);
 		instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderModManifest);
 
@@ -188,15 +188,11 @@ internal sealed class Nickel
 		if (phase != ModLoadPhase.AfterDbInit)
 			return;
 		this.ModManager.ContentManager?.InjectQueuedEntries();
-		this.ModManager.LegacyDatabase?.AfterDbInit();
 	}
 
 	[EventPriority(double.MaxValue)]
 	private void OnLoadStringsForLocale(object? sender, LoadStringsForLocaleEventArgs e)
-	{
-		this.ModManager.LegacyDatabase?.InjectLocalizations(e.Locale, e.Localizations);
-		this.ModManager.ContentManager?.InjectLocalizations(e.Locale, e.Localizations);
-	}
+		=> this.ModManager.ContentManager?.InjectLocalizations(e.Locale, e.Localizations);
 
 	private static DirectoryInfo GetOrCreateDefaultModLibraryDirectory()
 	{

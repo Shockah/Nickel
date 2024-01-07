@@ -52,7 +52,6 @@
 		<ProjectReference Include="..\$(_ModLoaderName)Common\$(_ModLoaderName)Common.csproj" />
 		<ProjectReference Include="..\PluginManager\PluginManager.csproj" />
 		<ProjectReference Include="..\PluginManager.Cecil\PluginManager.Cecil.csproj" />
-		<ProjectReference Include="..\LegacyModLoader\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj" />
 		
 		<!-- game handling -->
 		<PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" />
