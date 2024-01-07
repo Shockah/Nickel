@@ -79,7 +79,6 @@ internal sealed class LegacyRegistry
 	public ExternalGlossary LookupGlossary(string globalName)
 		=> this.Database.GetGlossary(globalName);
 
-
 	public bool RegisterGlossary(ExternalGlossary glossary)
 	{
 		this.Database.RegisterGlossary(this.ModManifest, glossary);

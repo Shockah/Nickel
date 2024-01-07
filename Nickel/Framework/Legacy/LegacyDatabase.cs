@@ -31,7 +31,7 @@ internal sealed class LegacyDatabase
 	private Dictionary<string, ExternalGlossary> GlobalNameToGlossary { get; } = [];
 	private List<ExternalStory> ExternalStories { get; } = [];
 	private List<(string, MethodInfo, bool, bool)> ChoiceAndCommands { get; } = [];
-	
+
 	// Used to change the return value of EnumExtensions.Key(this Deck deck)
 	private Dictionary<Deck, string>? _reflectedDeckStrings;
 
@@ -65,7 +65,7 @@ internal sealed class LegacyDatabase
 				localizations[$"char.{id}.desc"] = description;
 		}
 	}
-	
+
 	private void InjectGlossaryLocalisations(string locale, Dictionary<string, string> localisations)
 	{
 		foreach (var glossary in this.GlobalNameToGlossary.Values)
@@ -161,11 +161,7 @@ internal sealed class LegacyDatabase
 							break;
 						default:
 							throw new Exception(
-								$"Cannot add instance of class {
-									genericInstruction.GetType().Name
-								} to Story Node {
-									story.GlobalName
-								} as it does not inherit from class Instruction"
+								$"Cannot add instance of class {genericInstruction.GetType().Name} to Story Node {story.GlobalName} as it does not inherit from class Instruction"
 							);
 					}
 				}
@@ -174,7 +170,7 @@ internal sealed class LegacyDatabase
 			DB.story.all.Add(story.GlobalName, node);
 		}
 	}
-	
+
 	private void InjectChoiceAndCommands()
 	{
 		var choices = DB.eventChoiceFns;
@@ -182,14 +178,14 @@ internal sealed class LegacyDatabase
 		foreach (var (key, methodInfo, intendedOverride, isChoice) in this.ChoiceAndCommands)
 		{
 			var dict = isChoice ? choices : commands;
-			
+
 			if (dict.TryAdd(key, methodInfo)) continue;
 			if (!intendedOverride) throw new ArgumentException($"Duplicate choice key", nameof(key));
 
 			dict[key] = methodInfo;
 		}
 	}
-	
+
 	public void RegisterSprite(IModManifest mod, ExternalSprite value)
 	{
 		Func<Stream> GetStreamProvider()
@@ -218,7 +214,7 @@ internal sealed class LegacyDatabase
 		var entry = this.ContentManagerProvider().Decks.RegisterDeck(mod, value.GlobalName, configuration);
 		value.Id = (int)entry.Deck;
 		this.GlobalNameToDeck[value.GlobalName] = value;
-		
+
 		this._reflectedDeckStrings ??= AccessTools
 			.DeclaredField(typeof(EnumExtensions), "deckStrs")
 			.EmitStaticGetter<Dictionary<Deck, string>>()();
@@ -499,7 +495,7 @@ internal sealed class LegacyDatabase
 		return starterShip;
 	}
 
-	public void RegisterGlossary(IModManifest modManifest, ExternalGlossary glossary) => 
+	public void RegisterGlossary(IModManifest modManifest, ExternalGlossary glossary) =>
 		this.GlobalNameToGlossary[modManifest.UniqueName] = glossary;
 
 	public void RegisterStory(ExternalStory story) => this.ExternalStories.Add(story);

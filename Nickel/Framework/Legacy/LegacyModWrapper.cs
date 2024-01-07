@@ -68,7 +68,7 @@ internal sealed class LegacyModWrapper : Mod
 			if (manifest is ILegacyModManifest modManifest)
 				modManifest.BootMod(this.LegacyRegistry);
 	}
-	
+
 	[EventPriority(-100)]
 	private void LoadSpriteManifest(object? sender, ModLoadPhase phase)
 	{
@@ -78,7 +78,7 @@ internal sealed class LegacyModWrapper : Mod
 			if (manifest is ISpriteManifest modManifest)
 				modManifest.LoadManifest(this.LegacyRegistry);
 	}
-	
+
 	[EventPriority(-200)]
 	private void LoadGlossaryManifest(object? sender, ModLoadPhase phase)
 	{
@@ -188,7 +188,7 @@ internal sealed class LegacyModWrapper : Mod
 			if (manifest is IStartershipManifest modManifest)
 				modManifest.LoadManifest(this.LegacyRegistry);
 	}
-	
+
 	[EventPriority(-1400)]
 	private void LoadStoryManifests(object? sender, ModLoadPhase phase)
 	{
@@ -199,7 +199,7 @@ internal sealed class LegacyModWrapper : Mod
 			if (manifest is IStoryManifest modManifest)
 				modManifest.LoadManifest(this.LegacyRegistry);
 	}
-	
+
 	[EventPriority(-1600)]
 	private void LoadEventHubManifests(object? sender, ModLoadPhase phase)
 	{
@@ -213,7 +213,6 @@ internal sealed class LegacyModWrapper : Mod
 			modManifest.LoadManifest(eventHub);
 		}
 	}
-
 
 	[EventPriority(-10000)]
 	private void FinalizePreparations(object? sender, ModLoadPhase phase)
