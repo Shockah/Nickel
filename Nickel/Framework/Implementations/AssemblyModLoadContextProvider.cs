@@ -15,7 +15,14 @@ internal sealed class AssemblyModLoadContextProvider(
 	private ConditionalWeakTable<IPluginPackage<IAssemblyModManifest>, WeakReference<AssemblyLoadContext>> ContextCache { get; } = [];
 
 	private static bool ShouldShare(IPluginPackage<IAssemblyModManifest> package, AssemblyName assemblyName)
-		=> package.Manifest.AssemblyReferences.Any(r => r.Name == (assemblyName.Name ?? assemblyName.FullName) && r.IsShared);
+	{
+		var reference = package.Manifest.AssemblyReferences.FirstOrDefault(r => r.Name == (assemblyName.Name ?? assemblyName.FullName));
+		if (reference is not null)
+			return reference.IsShared;
+		if (typeof(Nickel).Assembly.GetReferencedAssemblies().Any(a => (a.Name ?? a.FullName) == (assemblyName.Name ?? assemblyName.FullName)))
+			return true;
+		return false;
+	}
 
 	public AssemblyLoadContext GetLoadContext(IPluginPackage<IAssemblyModManifest> package)
 	{

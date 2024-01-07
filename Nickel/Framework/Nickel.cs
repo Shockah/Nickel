@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.Console;
 using Nanoray.PluginManager.Cecil;
+using Nanoray.Shrike;
+using Nanoray.Shrike.Harmony;
 using Nickel.Common;
 using System;
 using System.Collections.Generic;
@@ -79,6 +81,10 @@ internal sealed class Nickel
 
 	private static void CreateAndStartInstance(LaunchArguments launchArguments)
 	{
+		// force-referencing Shrike assemblies, as Nickel doesn't use them directly (at least yet)
+		_ = typeof(ISequenceMatcher<CodeInstruction>).Name;
+		_ = typeof(ILMatches).Name;
+
 		var loggerFactory = LoggerFactory.Create(builder =>
 		{
 			builder.AddConfiguration();

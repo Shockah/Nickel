@@ -55,8 +55,8 @@ internal sealed class ModManager
 			RequiredApiVersion = NickelConstants.Version
 		};
 
-		var loadContextProvider = new AssemblyModLoadContextProvider(AssemblyLoadContext.GetLoadContext(
-			this.GetType().Assembly) ?? AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default
+		var loadContextProvider = new AssemblyModLoadContextProvider(
+			AssemblyLoadContext.GetLoadContext(this.GetType().Assembly) ?? AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default
 		);
 		var referenceResolver = new ReferencedAssembliesAssemblyPluginLoaderReferenceResolver<IAssemblyModManifest>();
 
@@ -250,10 +250,6 @@ internal sealed class ModManager
 
 	public void LoadMods(ModLoadPhase phase)
 	{
-		// force-referencing Shrike assemblies, otherwise none dependent mods will load
-		_ = typeof(ISequenceMatcher<CodeInstruction>).Name;
-		_ = typeof(ILMatches).Name;
-
 		this.Logger.LogInformation("Loading {Phase} phase mods...", phase);
 		this.CurrentModLoadPhase = phase;
 
