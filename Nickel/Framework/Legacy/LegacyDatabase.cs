@@ -135,30 +135,31 @@ internal sealed class LegacyDatabase
 	{
 		foreach (var story in this.ExternalStories)
 		{
-			var node = (StoryNode)story.StoryNode; // TODO: validate on registration
-			if (story.Instructions is { } instructions)
+			var node = (StoryNode)story.StoryNode; // validated on registration
+			if (story.Instructions is not { } rawInstructions)
 			{
-				foreach (var genericInstruction in instructions)
+				DB.story.all.Add(story.GlobalName, node);
+				continue;
+			}
+
+			foreach (var rawInstruction in rawInstructions)
+			{
+				switch (rawInstruction)
 				{
-					switch (genericInstruction)
-					{
-						case ExternalStory.ExternalSay extSay:
-							node.lines.Add(extSay.ToSay());
-							break;
-						case ExternalStory.ExternalSaySwitch extSaySwitch:
-							node.lines.Add(
-								new SaySwitch { lines = extSaySwitch.lines.Select(say => say.ToSay()).ToList() }
-							);
-							break;
-						case Instruction instruction:
-							node.lines.Add(instruction);
-							break;
-						default:
-							// TODO: validate on registration
-							throw new Exception(
-								$"Cannot add instance of class {genericInstruction.GetType().Name} to Story Node {story.GlobalName} as it does not inherit from class Instruction"
-							);
-					}
+					case ExternalStory.ExternalSay extSay:
+						node.lines.Add(extSay.ToSay());
+						break;
+					case ExternalStory.ExternalSaySwitch extSaySwitch:
+						node.lines.Add(
+							new SaySwitch { lines = extSaySwitch.lines.Select(say => say.ToSay()).ToList() }
+						);
+						break;
+					case Instruction instruction:
+						node.lines.Add(instruction);
+						break;
+					default:
+						// validated on registration, shouldn't happen
+						throw new InvalidOperationException();
 				}
 			}
 
@@ -173,6 +174,7 @@ internal sealed class LegacyDatabase
 			var dict = isChoice ? DB.eventChoiceFns : DB.storyCommands;
 			if (dict.TryAdd(key, methodInfo))
 				continue;
+			// TODO: log instead of throwing, it's too late to throw now, this breaks other mods
 			if (!intendedOverride)
 				throw new ArgumentException($"Duplicate choice key", nameof(key));
 			dict[key] = methodInfo;
@@ -492,7 +494,26 @@ internal sealed class LegacyDatabase
 	}
 
 	public void RegisterStory(ExternalStory story)
-		=> this.ExternalStories.Add(story);
+	{
+		if (story.StoryNode is not StoryNode node)
+			throw new ArgumentException($"Provided story node is not of type {typeof(StoryNode)}");
+		if (story.Instructions is not { } rawInstructions)
+		{
+			this.ExternalStories.Add(story);
+			return;
+		}
+
+		foreach (var rawInstruction in rawInstructions)
+		{
+			if (rawInstruction is ExternalStory.ExternalSay or ExternalStory.ExternalSaySwitch or Instruction)
+				continue;
+			throw new ArgumentException(
+				$"Cannot add instance of class {rawInstruction.GetType()} to Story Node {story.GlobalName} as it does not inherit from class Instruction",
+			);
+		}
+
+		this.ExternalStories.Add(story);
+	}
 
 	public void RegisterChoiceOrCommand(string key, MethodInfo methodInfo, bool intendedOverride, bool isChoice)
 		=> this.ChoiceAndCommands.Add((key, methodInfo, intendedOverride, isChoice));
