@@ -22,13 +22,7 @@ internal sealed class ArtifactManager
 	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		foreach (var entry in this.UniqueNameToEntry.Values)
-		{
-			var key = entry.Configuration.ArtifactType.Name; // TODO: change this when Artifact.Key gets patched
-			if (entry.Configuration.Name.Localize(locale) is { } name)
-				localizations[$"artifact.{key}.name"] = name;
-			if (entry.Configuration.Description.Localize(locale) is { } description)
-				localizations[$"artifact.{key}.desc"] = description;
-		}
+			InjectLocalization(locale, localizations, entry);
 	}
 
 	public IArtifactEntry RegisterArtifact(IModManifest owner, string name, ArtifactConfiguration configuration)
@@ -63,6 +57,17 @@ internal sealed class ArtifactManager
 			DB.artifactSprites[key] = sprite;
 		if (!entry.Configuration.Meta.pools.Contains(ArtifactPool.Unreleased))
 			DB.releasedArtifacts.Add(key);
+
+		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+	}
+
+	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
+	{
+		var key = entry.Configuration.ArtifactType.Name; // TODO: change this when Artifact.Key gets patched
+		if (entry.Configuration.Name.Localize(locale) is { } name)
+			localizations[$"artifact.{key}.name"] = name;
+		if (entry.Configuration.Description.Localize(locale) is { } description)
+			localizations[$"artifact.{key}.desc"] = description;
 	}
 
 	private sealed class Entry(IModManifest modOwner, string uniqueName, ArtifactConfiguration configuration)

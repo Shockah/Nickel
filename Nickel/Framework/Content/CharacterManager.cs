@@ -32,12 +32,7 @@ internal sealed class CharacterManager
 	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		foreach (var entry in this.UniqueNameToCharacterEntry.Values)
-		{
-			if (entry.Configuration.Description.Localize(locale) is not { } description)
-				continue;
-			var key = entry.Configuration.Deck.Key();
-			localizations[$"char.{key}.desc"] = description;
-		}
+			InjectLocalization(locale, localizations, entry);
 	}
 
 	public ICharacterAnimationEntry RegisterCharacterAnimation(IModManifest owner, string name, CharacterAnimationConfiguration configuration)
@@ -141,6 +136,16 @@ internal sealed class CharacterManager
 			artifacts = entry.Configuration.StarterArtifactTypes?.Select(t => (Artifact)Activator.CreateInstance(t)!)?.ToList() ?? [],
 			cards = entry.Configuration.StarterCardTypes.Select(t => (Card)Activator.CreateInstance(t)!).ToList()
 		};
+
+		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+	}
+
+	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, CharacterEntry entry)
+	{
+		if (entry.Configuration.Description.Localize(locale) is not { } description)
+			return;
+		var key = entry.Configuration.Deck.Key();
+		localizations[$"char.{key}.desc"] = description;
 	}
 
 	private void OnGetUnlockedChars(object? sender, HashSet<Deck> unlockedCharacters)

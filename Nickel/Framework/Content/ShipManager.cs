@@ -44,12 +44,7 @@ internal sealed class ShipManager
 	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		foreach (var entry in this.UniqueNameToEntry.Values)
-		{
-			if (entry.Configuration.Name.Localize(locale) is { } name)
-				localizations[$"ship.{entry.UniqueName}.name"] = name;
-			if (entry.Configuration.Description.Localize(locale) is { } description)
-				localizations[$"ship.{entry.UniqueName}.desc"] = description;
-		}
+			InjectLocalization(locale, localizations, entry);
 	}
 
 	public IShipEntry RegisterShip(IModManifest owner, string name, ShipConfiguration configuration)
@@ -92,6 +87,15 @@ internal sealed class ShipManager
 		}
 
 		StarterShip.ships[entry.UniqueName] = entry.Configuration.Ship;
+		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+	}
+
+	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
+	{
+		if (entry.Configuration.Name.Localize(locale) is { } name)
+			localizations[$"ship.{entry.UniqueName}.name"] = name;
+		if (entry.Configuration.Description.Localize(locale) is { } description)
+			localizations[$"ship.{entry.UniqueName}.desc"] = description;
 	}
 
 	private sealed class Entry(IModManifest modOwner, string uniqueName, ShipConfiguration configuration)

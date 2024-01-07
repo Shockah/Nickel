@@ -22,13 +22,7 @@ internal sealed class DeckManager
 	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		foreach (var entry in this.UniqueNameToEntry.Values)
-		{
-			if (entry.Configuration.Name.Localize(locale) is not { } name)
-				continue;
-			var key = entry.Deck.Key();
-			localizations[$"char.{key}"] = name;
-			localizations[$"char.{key}.name"] = name;
-		}
+			InjectLocalization(locale, localizations, entry);
 	}
 
 	public IDeckEntry RegisterDeck(IModManifest owner, string name, DeckConfiguration configuration)
@@ -61,6 +55,17 @@ internal sealed class DeckManager
 		DB.deckBorders[entry.Deck] = entry.Configuration.BorderSprite;
 		if (entry.Configuration.OverBordersSprite is { } overBordersSprite)
 			DB.deckBordersOver[entry.Deck] = overBordersSprite;
+
+		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+	}
+
+	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
+	{
+		if (entry.Configuration.Name.Localize(locale) is not { } name)
+			return;
+		var key = entry.Deck.Key();
+		localizations[$"char.{key}"] = name;
+		localizations[$"char.{key}.name"] = name;
 	}
 
 	private sealed class Entry(IModManifest modOwner, string uniqueName, Deck deck, DeckConfiguration configuration)

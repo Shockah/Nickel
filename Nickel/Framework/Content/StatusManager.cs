@@ -35,13 +35,7 @@ internal sealed class StatusManager
 	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		foreach (var entry in this.UniqueNameToEntry.Values)
-		{
-			var key = entry.Status.Key();
-			if (entry.Configuration.Name.Localize(locale) is { } name)
-				localizations[$"status.{key}.name"] = name;
-			if (entry.Configuration.Description.Localize(locale) is { } description)
-				localizations[$"status.{key}.desc"] = description;
-		}
+			InjectLocalization(locale, localizations, entry);
 	}
 
 	public IStatusEntry RegisterStatus(IModManifest owner, string name, StatusConfiguration configuration)
@@ -68,7 +62,19 @@ internal sealed class StatusManager
 	}
 
 	private static void Inject(Entry entry)
-		=> DB.statuses[entry.Status] = entry.Configuration.Definition;
+	{
+		DB.statuses[entry.Status] = entry.Configuration.Definition;
+		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+	}
+
+	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
+	{
+		var key = entry.Status.Key();
+		if (entry.Configuration.Name.Localize(locale) is { } name)
+			localizations[$"status.{key}.name"] = name;
+		if (entry.Configuration.Description.Localize(locale) is { } description)
+			localizations[$"status.{key}.desc"] = description;
+	}
 
 	private sealed class Entry(IModManifest modOwner, string uniqueName, Status status, StatusConfiguration configuration)
 		: IStatusEntry
