@@ -58,7 +58,6 @@ internal sealed class ModManager
 		var loadContextProvider = new AssemblyModLoadContextProvider(
 			AssemblyLoadContext.GetLoadContext(this.GetType().Assembly) ?? AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default
 		);
-		var referenceResolver = new ReferencedAssembliesAssemblyPluginLoaderReferenceResolver<IAssemblyModManifest>();
 
 		var assemblyPluginLoaderParameterInjector = new ExtendableAssemblyPluginLoaderParameterInjector<IModManifest>();
 		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
@@ -79,11 +78,6 @@ internal sealed class ModManager
 		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
 			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, IAssemblyPluginLoaderLoadContextProvider<IAssemblyModManifest>>(
 				loadContextProvider
-			)
-		);
-		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
-			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, IAssemblyPluginLoaderReferenceResolver<IAssemblyModManifest>>(
-				referenceResolver
 			)
 		);
 
@@ -118,7 +112,6 @@ internal sealed class ModManager
 						EntryPointType = p.Manifest.EntryPointType
 					},
 					loadContextProvider: loadContextProvider,
-					referenceResolver: referenceResolver,
 					partAssembler: new SingleAssemblyPluginPartAssembler<IAssemblyModManifest, Mod>(),
 					parameterInjector: assemblyPluginLoaderParameterInjector,
 					assemblyEditor: extendableAssemblyDefinitionEditor

@@ -20,7 +20,6 @@ public sealed class ModEntry : Mod
 		Func<IModManifest, IModHelper> helperProvider,
 		Func<IModManifest, ILogger> loggerProvider,
 		IAssemblyPluginLoaderLoadContextProvider<IAssemblyModManifest> loadContextProvider,
-		IAssemblyPluginLoaderReferenceResolver<IAssemblyModManifest> referenceResolver,
 		IAssemblyPluginLoaderParameterInjector<IModManifest> assemblyPluginLoaderParameterInjector,
 		IAssemblyEditor assemblyEditor
 	)
@@ -41,7 +40,6 @@ public sealed class ModEntry : Mod
 								EntryPointType = p.Manifest.EntryPointType
 							},
 						loadContextProvider: loadContextProvider,
-						referenceResolver: referenceResolver,
 						partAssembler: new LegacyAssemblyPluginLoaderPartAssembler(
 							helperProvider: helperProvider,
 							loggerProvider: loggerProvider,

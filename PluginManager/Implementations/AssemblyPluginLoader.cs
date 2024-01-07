@@ -11,7 +11,6 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 {
 	private Func<IPluginPackage<TPluginManifest>, OneOf<AssemblyPluginLoaderRequiredPluginData, Error<string>>> RequiredPluginDataProvider { get; }
 	private IAssemblyPluginLoaderLoadContextProvider<TPluginManifest> LoadContextProvider { get; }
-	private IAssemblyPluginLoaderReferenceResolver<TPluginManifest>? ReferenceResolver { get; }
 	private IAssemblyPluginLoaderPartAssembler<TPluginManifest, TPluginPart, TPlugin> PartAssembler { get; }
 	private IAssemblyPluginLoaderParameterInjector<TPluginManifest>? ParameterInjector { get; }
 	private IAssemblyEditor? AssemblyEditor { get; }
@@ -19,7 +18,6 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 	public AssemblyPluginLoader(
 		Func<IPluginPackage<TPluginManifest>, OneOf<AssemblyPluginLoaderRequiredPluginData, Error<string>>> requiredPluginDataProvider,
 		IAssemblyPluginLoaderLoadContextProvider<TPluginManifest> loadContextProvider,
-		IAssemblyPluginLoaderReferenceResolver<TPluginManifest>? referenceResolver,
 		IAssemblyPluginLoaderPartAssembler<TPluginManifest, TPluginPart, TPlugin> partAssembler,
 		IAssemblyPluginLoaderParameterInjector<TPluginManifest>? parameterInjector,
 		IAssemblyEditor? assemblyEditor
@@ -27,7 +25,6 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 	{
 		this.RequiredPluginDataProvider = requiredPluginDataProvider;
 		this.LoadContextProvider = loadContextProvider;
-		this.ReferenceResolver = referenceResolver;
 		this.PartAssembler = partAssembler;
 		this.ParameterInjector = parameterInjector;
 		this.AssemblyEditor = assemblyEditor;

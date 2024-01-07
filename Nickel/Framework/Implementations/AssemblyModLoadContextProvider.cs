@@ -1,5 +1,6 @@
 using Nanoray.PluginManager;
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -20,6 +21,10 @@ internal sealed class AssemblyModLoadContextProvider(
 		if (reference is not null)
 			return reference.IsShared;
 		if (typeof(Nickel).Assembly.GetReferencedAssemblies().Any(a => (a.Name ?? a.FullName) == (assemblyName.Name ?? assemblyName.FullName)))
+			return true;
+		if (package.PackageRoot.GetRelativeFile($"{assemblyName.Name ?? assemblyName.FullName}.dll").Exists)
+			return false;
+		if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{assemblyName.Name ?? assemblyName.FullName}.dll")))
 			return true;
 		return false;
 	}
