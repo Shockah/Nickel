@@ -508,7 +508,7 @@ internal sealed class LegacyDatabase
 			if (rawInstruction is ExternalStory.ExternalSay or ExternalStory.ExternalSaySwitch or Instruction)
 				continue;
 			throw new ArgumentException(
-				$"Cannot add instance of class {rawInstruction.GetType()} to Story Node {story.GlobalName} as it does not inherit from class Instruction",
+				$"Cannot add instance of class {rawInstruction.GetType()} to Story Node {story.GlobalName} as it does not inherit from class Instruction"
 			);
 		}
 
