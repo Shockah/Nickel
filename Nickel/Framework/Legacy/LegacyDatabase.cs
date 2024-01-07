@@ -25,8 +25,8 @@ internal sealed class LegacyDatabase
 	private Dictionary<string, Ship> GlobalNameToVanillaShip { get; } = [];
 	private Dictionary<string, ExternalStarterShip> GlobalNameToStarterShip { get; } = [];
 
-	private Dictionary<string, ICharacterEntry> GlobalNameToCharacterEntry { get; init; } = [];
-	private Dictionary<string, IPartEntry> GlobalNameToPartEntry { get; init; } = [];
+	private Dictionary<string, ICharacterEntry> GlobalNameToCharacterEntry { get; } = [];
+	private Dictionary<string, IPartEntry> GlobalNameToPartEntry { get; } = [];
 	private Dictionary<string, IShipEntry> GlobalNameToShipEntry { get; } = [];
 	private Dictionary<string, ExternalGlossary> GlobalNameToGlossary { get; } = [];
 	private List<ExternalStory> ExternalStories { get; } = [];
@@ -40,12 +40,20 @@ internal sealed class LegacyDatabase
 		this.ContentManagerProvider = contentManagerProvider;
 	}
 
-	public void InjectLocalization(string locale, Dictionary<string, string> localizations)
+	public void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		this.InjectCharacterLocalizations(locale, localizations);
 		this.InjectGlossaryLocalisations(locale, localizations);
 		this.InjectStoryLocalizations(locale, localizations);
 	}
+
+	public void AfterDbInit()
+	{
+		this.InjectGlossaryIconSprites();
+		this.InjectExternalStory();
+		this.InjectChoiceAndCommands();
+	}
+
 	private void InjectCharacterLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		// separate localization of characters
@@ -56,13 +64,17 @@ internal sealed class LegacyDatabase
 			var deck = (Deck)character.Deck.Id!;
 			var id = deck.ToString()!;
 			var key = deck.Key();
+
 			if (character.GetCharacterName(locale) is { } name)
 			{
 				localizations[$"char.{key}"] = name;
 				localizations[$"char.{key}.name"] = name;
 			}
 			if (character.GetDesc(locale) is { } description)
+			{
+				localizations[$"char.{key}.desc"] = description;
 				localizations[$"char.{id}.desc"] = description;
+			}
 		}
 	}
 
@@ -70,28 +82,26 @@ internal sealed class LegacyDatabase
 	{
 		foreach (var glossary in this.GlobalNameToGlossary.Values)
 		{
-			if (!glossary.GetLocalisation(locale, out string name, out string desc, out string? altDesc))
-			{
+			if (!glossary.GetLocalisation(locale, out var name, out var desc, out var altDesc))
 				continue;
-			}
+
 			var nameKey = glossary.Head + ".name";
 			var descKey = glossary.Head + ".desc";
 			var altDescKey = glossary.Head + ".altDesc";
-			if (!glossary.IntendedOverwrite)
+
+			if (glossary.IntendedOverwrite)
+			{
+				localisations[nameKey] = name;
+				localisations[descKey] = desc;
+				if (altDesc is not null)
+					localisations[altDescKey] = altDesc;
+			}
+			else
 			{
 				localisations.Add(nameKey, name);
 				localisations.Add(descKey, desc);
-				if (altDesc != null)
-				{
+				if (altDesc is not null)
 					localisations.Add(altDescKey, altDesc);
-				}
-				continue;
-			}
-			localisations[nameKey] = name;
-			localisations[descKey] = desc;
-			if (altDesc != null)
-			{
-				localisations[altDescKey] = altDesc;
 			}
 		}
 	}
@@ -102,38 +112,22 @@ internal sealed class LegacyDatabase
 		{
 			story.GetLocalisation(locale, out var storyLoc);
 			foreach (var (key, value) in storyLoc)
-			{
-				Console.WriteLine($"### {key}: {value}");
 				localisations.Add(key, value);
-			}
 		}
-	}
-	public void AfterDbInit()
-	{
-		this.InjectGlossaryIconSprites();
-		this.InjectExternalStory();
-		this.InjectChoiceAndCommands();
 	}
 
 	internal void InjectGlossaryIconSprites()
 	{
-		var iconDict = DB.icons;
 		foreach (var glossary in this.GlobalNameToGlossary.Values)
 		{
 			if (!glossary.Icon.Id.HasValue)
-			{
 				continue;
-			}
 			var sprite = (Spr)glossary.Icon.Id.Value;
 
 			if (glossary.IntendedOverwrite)
-			{
-				iconDict[glossary.ItemName] = sprite;
-			}
+				DB.icons[glossary.ItemName] = sprite;
 			else
-			{
-				iconDict.Add(glossary.ItemName, sprite);
-			}
+				DB.icons.Add(glossary.ItemName, sprite);
 		}
 	}
 
@@ -141,10 +135,10 @@ internal sealed class LegacyDatabase
 	{
 		foreach (var story in this.ExternalStories)
 		{
-			var node = (StoryNode)story.StoryNode;
-			if (story.Instructions != null)
+			var node = (StoryNode)story.StoryNode; // TODO: validate on registration
+			if (story.Instructions is { } instructions)
 			{
-				foreach (var genericInstruction in story.Instructions)
+				foreach (var genericInstruction in instructions)
 				{
 					switch (genericInstruction)
 					{
@@ -153,13 +147,14 @@ internal sealed class LegacyDatabase
 							break;
 						case ExternalStory.ExternalSaySwitch extSaySwitch:
 							node.lines.Add(
-								new SaySwitch { lines = extSaySwitch.lines.Select(say => say.ToSay()).ToList(), }
+								new SaySwitch { lines = extSaySwitch.lines.Select(say => say.ToSay()).ToList() }
 							);
 							break;
 						case Instruction instruction:
 							node.lines.Add(instruction);
 							break;
 						default:
+							// TODO: validate on registration
 							throw new Exception(
 								$"Cannot add instance of class {genericInstruction.GetType().Name} to Story Node {story.GlobalName} as it does not inherit from class Instruction"
 							);
@@ -173,15 +168,13 @@ internal sealed class LegacyDatabase
 
 	private void InjectChoiceAndCommands()
 	{
-		var choices = DB.eventChoiceFns;
-		var commands = DB.storyCommands;
 		foreach (var (key, methodInfo, intendedOverride, isChoice) in this.ChoiceAndCommands)
 		{
-			var dict = isChoice ? choices : commands;
-
-			if (dict.TryAdd(key, methodInfo)) continue;
-			if (!intendedOverride) throw new ArgumentException($"Duplicate choice key", nameof(key));
-
+			var dict = isChoice ? DB.eventChoiceFns : DB.storyCommands;
+			if (dict.TryAdd(key, methodInfo))
+				continue;
+			if (!intendedOverride)
+				throw new ArgumentException($"Duplicate choice key", nameof(key));
 			dict[key] = methodInfo;
 		}
 	}
@@ -201,6 +194,9 @@ internal sealed class LegacyDatabase
 		value.Id = (int)entry.Sprite;
 		this.GlobalNameToSprite[value.GlobalName] = value;
 	}
+
+	public void RegisterGlossary(IModManifest modManifest, ExternalGlossary glossary) =>
+		this.GlobalNameToGlossary[modManifest.UniqueName] = glossary;
 
 	public void RegisterDeck(IModManifest mod, ExternalDeck value)
 	{
@@ -408,6 +404,9 @@ internal sealed class LegacyDatabase
 	public ExternalSprite GetSprite(string globalName)
 		=> this.GlobalNameToSprite.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
 
+	public ExternalGlossary GetGlossary(string globalName)
+		=> this.GlobalNameToGlossary.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
+
 	public ExternalDeck GetDeck(string globalName)
 		=> this.GlobalNameToDeck.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
 
@@ -434,9 +433,6 @@ internal sealed class LegacyDatabase
 
 	public StarterShip GetStarterShip(string globalName)
 		=> this.GlobalNameToShipEntry.TryGetValue(globalName, out var value) ? value.Configuration.Ship : throw new KeyNotFoundException();
-
-	public ExternalGlossary GetGlossary(string globalName)
-		=> this.GlobalNameToGlossary.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
 
 	public Ship ActualizeShip(string globalName)
 	{
@@ -495,11 +491,9 @@ internal sealed class LegacyDatabase
 		return starterShip;
 	}
 
-	public void RegisterGlossary(IModManifest modManifest, ExternalGlossary glossary) =>
-		this.GlobalNameToGlossary[modManifest.UniqueName] = glossary;
+	public void RegisterStory(ExternalStory story)
+		=> this.ExternalStories.Add(story);
 
-	public void RegisterStory(ExternalStory story) => this.ExternalStories.Add(story);
-
-	public void RegisterChoiceOrCommand(string key, MethodInfo methodInfo, bool intendedOverride, bool isChoice) =>
-		this.ChoiceAndCommands.Add((key, methodInfo, intendedOverride, isChoice));
+	public void RegisterChoiceOrCommand(string key, MethodInfo methodInfo, bool intendedOverride, bool isChoice)
+		=> this.ChoiceAndCommands.Add((key, methodInfo, intendedOverride, isChoice));
 }

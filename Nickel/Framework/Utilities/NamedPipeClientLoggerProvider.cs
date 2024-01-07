@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.IO.Pipes;
 
-namespace Nickel.Framework.Utilities;
+namespace Nickel;
 
 internal sealed class NamedPipeClientLoggerProvider : ILoggerProvider
 {

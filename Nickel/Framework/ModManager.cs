@@ -3,7 +3,6 @@ using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using Nanoray.PluginManager.Implementations;
 using Nickel.Common;
-using Nickel.Framework.Implementations;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;

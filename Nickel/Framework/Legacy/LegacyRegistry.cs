@@ -8,16 +8,18 @@ using System.Linq;
 using System.Reflection;
 using ILegacyManifest = CobaltCoreModding.Definitions.ModManifests.IManifest;
 
-namespace Nickel.Framework;
+namespace Nickel;
 
 internal sealed class LegacyRegistry
 	: IModLoaderContact, IPrelaunchContactPoint,
-	ISpriteRegistry, IDeckRegistry, IStatusRegistry, ICardRegistry, IArtifactRegistry,
+	ISpriteRegistry, IGlossaryRegisty,
+	IDeckRegistry, IStatusRegistry, ICardRegistry, IArtifactRegistry,
 	IAnimationRegistry, ICharacterRegistry,
-	IPartTypeRegistry, IShipPartRegistry, IShipRegistry, IRawShipRegistry, IStartershipRegistry, IGlossaryRegisty,
+	IPartTypeRegistry, IShipPartRegistry, IShipRegistry, IRawShipRegistry, IStartershipRegistry,
 	IStoryRegistry
 {
 	public Assembly CobaltCoreAssembly { get; }
+	public LegacyEventHub GlobalEventHub { get; } = new();
 
 	private IModManifest ModManifest { get; }
 	private IModHelper Helper { get; }
@@ -76,15 +78,6 @@ internal sealed class LegacyRegistry
 		throw new KeyNotFoundException();
 	}
 
-	public ExternalGlossary LookupGlossary(string globalName)
-		=> this.Database.GetGlossary(globalName);
-
-	public bool RegisterGlossary(ExternalGlossary glossary)
-	{
-		this.Database.RegisterGlossary(this.ModManifest, glossary);
-		return true;
-	}
-
 	public ExternalSprite LookupSprite(string globalName)
 		=> this.Database.GetSprite(globalName);
 
@@ -93,6 +86,15 @@ internal sealed class LegacyRegistry
 		if (overwrite_value is not null)
 			throw new NotImplementedException($"This method is not supported in {NickelConstants.Name}");
 		this.Database.RegisterSprite(this.ModManifest, sprite_data);
+		return true;
+	}
+
+	public ExternalGlossary LookupGlossary(string globalName)
+		=> this.Database.GetGlossary(globalName);
+
+	public bool RegisterGlossary(ExternalGlossary glossary)
+	{
+		this.Database.RegisterGlossary(this.ModManifest, glossary);
 		return true;
 	}
 
@@ -228,5 +230,6 @@ internal sealed class LegacyRegistry
 		return true;
 	}
 
-	public bool RegisterInjector(ExternalStoryInjector injector) => throw new NotImplementedException();
+	public bool RegisterInjector(ExternalStoryInjector injector)
+		=> throw new NotImplementedException($"This method is not supported in {NickelConstants.Name}");
 }

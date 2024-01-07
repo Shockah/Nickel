@@ -4,17 +4,14 @@ namespace Nickel;
 
 public static class LegacyExtensions
 {
-	public static Say ToSay(this ExternalStory.ExternalSay extSay)
+	public static Say ToSay(this ExternalStory.ExternalSay extSay) => new()
 	{
-		return new Say
-		{
-			hash = extSay.Hash,
-			who = extSay.Who,
-			loopTag = extSay.LoopTag,
-			ifCrew = extSay.IfCrew,
-			delay = extSay.Delay,
-			choiceFunc = extSay.ChoiceFunc,
-			flipped = extSay.Flipped,
-		};
-	}
+		hash = extSay.Hash,
+		who = extSay.Who,
+		loopTag = extSay.LoopTag,
+		ifCrew = extSay.IfCrew,
+		delay = extSay.Delay,
+		choiceFunc = extSay.ChoiceFunc,
+		flipped = extSay.Flipped,
+	};
 }

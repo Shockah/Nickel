@@ -1,4 +1,5 @@
 using CobaltCoreModding.Definitions;
+using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
@@ -8,17 +9,20 @@ using System.Linq;
 using ILegacyManifest = CobaltCoreModding.Definitions.ModManifests.IManifest;
 using ILegacyModManifest = CobaltCoreModding.Definitions.ModManifests.IModManifest;
 
-namespace Nickel.Framework;
+namespace Nickel;
 
 internal sealed class LegacyModWrapper : Mod
 {
 	internal IReadOnlySet<ILegacyManifest> LegacyManifests { get; }
-	private LegacyRegistry LegacyRegistry { get; }
+	private ICustomEventHub EventHub { get; }
+	private LegacyRegistry Registry { get; }
 
 	public LegacyModWrapper(IReadOnlySet<ILegacyManifest> legacyManifests, LegacyRegistry legacyRegistry, IDirectoryInfo directory, IModHelper helper, ILogger logger)
 	{
 		this.LegacyManifests = legacyManifests;
-		this.LegacyRegistry = legacyRegistry;
+		this.Registry = legacyRegistry;
+		this.EventHub = new LegacyPerModEventHub(legacyRegistry.GlobalEventHub, logger);
+
 		helper.Events.OnModLoadPhaseFinished += this.BootMod;
 		helper.Events.OnModLoadPhaseFinished += this.LoadSpriteManifest;
 		helper.Events.OnModLoadPhaseFinished += this.LoadGlossaryManifest;
@@ -52,7 +56,7 @@ internal sealed class LegacyModWrapper : Mod
 		if (this.LegacyManifests.OfType<IApiProviderManifest>().SingleOrDefault() is not { } apiProvider)
 			return null;
 
-		var legacyRequestingManifest = this.LegacyRegistry.LoadedManifests.FirstOrDefault(m => m.Name == requestingMod.UniqueName);
+		var legacyRequestingManifest = this.Registry.LoadedManifests.FirstOrDefault(m => m.Name == requestingMod.UniqueName);
 		if (legacyRequestingManifest is not null)
 			return apiProvider.GetApi(legacyRequestingManifest);
 
@@ -66,7 +70,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is ILegacyModManifest modManifest)
-				modManifest.BootMod(this.LegacyRegistry);
+				modManifest.BootMod(this.Registry);
 	}
 
 	[EventPriority(-100)]
@@ -76,7 +80,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is ISpriteManifest modManifest)
-				modManifest.LoadManifest(this.LegacyRegistry);
+				modManifest.LoadManifest(this.Registry);
 	}
 
 	[EventPriority(-200)]
@@ -86,7 +90,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IGlossaryManifest modManifest)
-				modManifest.LoadManifest(this.LegacyRegistry);
+				modManifest.LoadManifest(this.Registry);
 	}
 
 	[EventPriority(-300)]
@@ -96,7 +100,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IDeckManifest modManifest)
-				modManifest.LoadManifest(this.LegacyRegistry);
+				modManifest.LoadManifest(this.Registry);
 	}
 
 	[EventPriority(-400)]
@@ -106,7 +110,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IStatusManifest modManifest)
-				modManifest.LoadManifest(this.LegacyRegistry);
+				modManifest.LoadManifest(this.Registry);
 	}
 
 	[EventPriority(-500)]
@@ -116,7 +120,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is ICardManifest modManifest)
-				modManifest.LoadManifest(this.LegacyRegistry);
+				modManifest.LoadManifest(this.Registry);
 	}
 
 	[EventPriority(-600)]
@@ -126,7 +130,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IArtifactManifest modManifest)
-				modManifest.LoadManifest(this.LegacyRegistry);
+				modManifest.LoadManifest(this.Registry);
 	}
 
 	[EventPriority(-700)]
@@ -136,7 +140,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IAnimationManifest modManifest)
-				modManifest.LoadManifest(this.LegacyRegistry);
+				modManifest.LoadManifest(this.Registry);
 	}
 
 	[EventPriority(-800)]
@@ -146,7 +150,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is ICharacterManifest modManifest)
-				modManifest.LoadManifest(this.LegacyRegistry);
+				modManifest.LoadManifest(this.Registry);
 	}
 
 	[EventPriority(-900)]
@@ -156,7 +160,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IPartTypeManifest modManifest)
-				modManifest.LoadManifest(this.LegacyRegistry);
+				modManifest.LoadManifest(this.Registry);
 	}
 
 	[EventPriority(-1000)]
@@ -166,7 +170,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IShipPartManifest modManifest)
-				modManifest.LoadManifest(this.LegacyRegistry);
+				modManifest.LoadManifest(this.Registry);
 	}
 
 	[EventPriority(-1100)]
@@ -176,7 +180,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IShipManifest modManifest)
-				modManifest.LoadManifest(this.LegacyRegistry);
+				modManifest.LoadManifest(this.Registry);
 	}
 
 	[EventPriority(-1200)]
@@ -186,32 +190,27 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IStartershipManifest modManifest)
-				modManifest.LoadManifest(this.LegacyRegistry);
+				modManifest.LoadManifest(this.Registry);
 	}
 
-	[EventPriority(-1400)]
+	[EventPriority(-1300)]
 	private void LoadStoryManifests(object? sender, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
-
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IStoryManifest modManifest)
-				modManifest.LoadManifest(this.LegacyRegistry);
+				modManifest.LoadManifest(this.Registry);
 	}
 
-	[EventPriority(-1600)]
+	[EventPriority(-1400)]
 	private void LoadEventHubManifests(object? sender, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
-
 		foreach (var manifest in this.LegacyManifests)
-		{
-			if (manifest is not ICustomEventManifest modManifest) continue;
-			var eventHub = new LegacyEventHub(manifest.Logger);
-			modManifest.LoadManifest(eventHub);
-		}
+			if (manifest is ICustomEventManifest modManifest)
+				modManifest.LoadManifest(this.EventHub);
 	}
 
 	[EventPriority(-10000)]
@@ -221,7 +220,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IPrelaunchManifest modManifest)
-				modManifest.FinalizePreperations(this.LegacyRegistry);
+				modManifest.FinalizePreperations(this.Registry);
 	}
 
 	private sealed class NewToLegacyManifestStub : ILegacyManifest
