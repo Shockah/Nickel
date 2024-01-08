@@ -16,7 +16,6 @@ public sealed class HookableSubclassGenerator
 	private ByParameterDelegateMapper ByParameterDelegateMapper { get; } = new();
 	private ObjectifiedDelegateMapper ObjectifiedDelegateMapper { get; } = new();
 
-	private int HookSubclassCounter { get; set; } = 0;
 	private HashSet<Assembly> IgnoresAccessChecksToAssemblies { get; } = [];
 
 	public HookableSubclassGenerator()
@@ -51,7 +50,7 @@ public sealed class HookableSubclassGenerator
 
 		var parentType = typeof(T).IsClass ? typeof(T) : typeof(object);
 		var typeBuilder = this.ModuleBuilder.DefineType(
-			name: $"HookSubclass{this.HookSubclassCounter++}_{typeof(T).Name}",
+			name: $"HookSubclass_{Guid.NewGuid()}_{typeof(T).Name}",
 			attr: TypeAttributes.Public | TypeAttributes.Class,
 			parent: parentType
 		);
@@ -70,7 +69,7 @@ public sealed class HookableSubclassGenerator
 			attributes: FieldAttributes.Private | FieldAttributes.InitOnly
 		);
 
-		// generate constructor
+		// generate proper constructor
 		{
 			var constructorBuilder = typeBuilder.DefineConstructor(
 				attributes: MethodAttributes.Public,
@@ -92,6 +91,23 @@ public sealed class HookableSubclassGenerator
 			il.Emit(OpCodes.Ret);
 		}
 
+		// generate empty constructor for game instantiation purposes
+		{
+			var constructorBuilder = typeBuilder.DefineConstructor(
+				attributes: MethodAttributes.Public,
+				callingConvention: CallingConventions.Standard | CallingConventions.HasThis,
+				parameterTypes: []
+			);
+
+			var il = constructorBuilder.GetILGenerator();
+
+			// call base constructor
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Call, parentType.GetConstructor([])!);
+
+			il.Emit(OpCodes.Ret);
+		}
+
 		// generate `IHookable.RegisterMethodHook`
 		{
 			var methodBuilder = typeBuilder.DefineMethod(
@@ -106,6 +122,14 @@ public sealed class HookableSubclassGenerator
 			methodBuilder.SetParameters([typeof(MethodInfo), tHookDelegateGenericType, typeof(double)]);
 
 			var il = methodBuilder.GetILGenerator();
+			var glueIsSetLabel = il.DefineLabel();
+
+			// early return if we don't have the glue field set
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldfld, glueField);
+			il.Emit(OpCodes.Brtrue, glueIsSetLabel);
+			il.Emit(OpCodes.Ret);
+			il.MarkLabel(glueIsSetLabel);
 
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldfld, glueField);
@@ -130,6 +154,14 @@ public sealed class HookableSubclassGenerator
 			methodBuilder.SetParameters([typeof(MethodInfo), tHookDelegateGenericType]);
 
 			var il = methodBuilder.GetILGenerator();
+			var glueIsSetLabel = il.DefineLabel();
+
+			// early return if we don't have the glue field set
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldfld, glueField);
+			il.Emit(OpCodes.Brtrue, glueIsSetLabel);
+			il.Emit(OpCodes.Ret);
+			il.MarkLabel(glueIsSetLabel);
 
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldfld, glueField);

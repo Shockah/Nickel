@@ -68,6 +68,14 @@ internal sealed class ModEventManager
 				return null;
 			});
 			this.HookableArtifactSubclassStorage = subclass;
+			DB.artifacts[subclass.Type.Name] = subclass.Type;
+			DB.artifactMetas[subclass.Type.Name] = new()
+			{
+				owner = Deck.colorless,
+				unremovable = true,
+				pools = [ArtifactPool.Unreleased]
+			};
+			DB.artifactSprites[subclass.Type.Name] = Enum.GetValues<Spr>()[0];
 			return subclass;
 		}
 	}
