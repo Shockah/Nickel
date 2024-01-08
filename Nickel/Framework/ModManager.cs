@@ -1,10 +1,7 @@
-using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using Nanoray.PluginManager.Implementations;
-using Nanoray.Shrike.Harmony;
-using Nanoray.Shrike;
 using Nickel.Common;
 using OneOf.Types;
 using System;
@@ -93,7 +90,7 @@ internal sealed class ModManager
 		);
 		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
 			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, IModHelper>(
-				package => this.ObtainModHelper(package.Manifest)
+				this.ObtainModHelper
 			)
 		);
 		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
@@ -340,20 +337,29 @@ internal sealed class ModManager
 
 	private IModHelper ObtainModHelper(IModManifest manifest)
 	{
-		if (!this.UniqueNameToHelper.TryGetValue(manifest.UniqueName, out var helper))
+		if (this.UniqueNameToHelper.TryGetValue(manifest.UniqueName, out var helper))
+			return helper;
+		if (!this.UniqueNameToPackage.TryGetValue(manifest.UniqueName, out var package))
+			throw new InvalidOperationException();
+		return this.ObtainModHelper(package);
+	}
+
+	private IModHelper ObtainModHelper(IPluginPackage<IModManifest> package)
+	{
+		if (!this.UniqueNameToHelper.TryGetValue(package.Manifest.UniqueName, out var helper))
 		{
 			helper = new ModHelper(
-				new ModRegistry(manifest, this.UniqueNameToInstance, this.UniqueNameToPackage),
-				new ModEvents(manifest, this.EventManager),
+				new ModRegistry(package.Manifest, this.UniqueNameToInstance, this.UniqueNameToPackage),
+				new ModEvents(package.Manifest, this.EventManager),
 				new ModContent(
-					new ModSprites(manifest, () => this.ContentManager!.Sprites),
-					new ModDecks(manifest, () => this.ContentManager!.Decks),
-					new ModStatuses(manifest, () => this.ContentManager!.Statuses),
-					new ModCards(manifest, () => this.ContentManager!.Cards),
-					new ModArtifacts(manifest, () => this.ContentManager!.Artifacts),
-					new ModCharacters(manifest, () => this.ContentManager!.Characters),
+					new ModSprites(package, () => this.ContentManager!.Sprites),
+					new ModDecks(package.Manifest, () => this.ContentManager!.Decks),
+					new ModStatuses(package.Manifest, () => this.ContentManager!.Statuses),
+					new ModCards(package.Manifest, () => this.ContentManager!.Cards),
+					new ModArtifacts(package.Manifest, () => this.ContentManager!.Artifacts),
+					new ModCharacters(package.Manifest, () => this.ContentManager!.Characters),
 					new ModShips(
-						manifest,
+						package.Manifest,
 						() => this.ContentManager!.Ships,
 						() => this.ContentManager!.Parts
 					)
@@ -361,7 +367,7 @@ internal sealed class ModManager
 				new ModGameAccess(),
 				() => this.CurrentModLoadPhase
 			);
-			this.UniqueNameToHelper[manifest.UniqueName] = helper;
+			this.UniqueNameToHelper[package.Manifest.UniqueName] = helper;
 		}
 
 		return helper;

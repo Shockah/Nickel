@@ -17,14 +17,15 @@ public sealed class ModEntry : Mod
 		IModHelper helper,
 		ILogger logger,
 		ExtendablePluginLoader<IModManifest, Mod> extendablePluginLoader,
-		Func<IModManifest, IModHelper> helperProvider,
+		Func<IPluginPackage<IModManifest>, IModHelper> byPackageHelperProvider,
+		Func<IModManifest, IModHelper> byManifestHelperProvider,
 		Func<IModManifest, ILogger> loggerProvider,
 		IAssemblyPluginLoaderLoadContextProvider<IAssemblyModManifest> loadContextProvider,
 		IAssemblyPluginLoaderParameterInjector<IModManifest> assemblyPluginLoaderParameterInjector,
 		IAssemblyEditor assemblyEditor
 	)
 	{
-		this.Database = new(helperProvider);
+		this.Database = new(byManifestHelperProvider);
 		helper.Events.OnModLoadPhaseFinished += this.OnModLoadPhaseFinished;
 		helper.Events.OnLoadStringsForLocale += this.OnLoadStringsForLocale;
 
@@ -41,7 +42,7 @@ public sealed class ModEntry : Mod
 							},
 						loadContextProvider: loadContextProvider,
 						partAssembler: new LegacyAssemblyPluginLoaderPartAssembler(
-							helperProvider: helperProvider,
+							helperProvider: byPackageHelperProvider,
 							loggerProvider: loggerProvider,
 							this.Database
 						),

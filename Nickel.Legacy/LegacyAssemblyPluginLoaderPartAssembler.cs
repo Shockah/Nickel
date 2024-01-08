@@ -11,12 +11,12 @@ namespace Nickel;
 
 internal sealed class LegacyAssemblyPluginLoaderPartAssembler : IAssemblyPluginLoaderPartAssembler<IAssemblyModManifest, ILegacyManifest, Mod>
 {
-	private Func<IModManifest, IModHelper> HelperProvider { get; }
+	private Func<IPluginPackage<IModManifest>, IModHelper> HelperProvider { get; }
 	private Func<IModManifest, ILogger> LoggerProvider { get; }
 	private LegacyDatabase Database { get; }
 
 	public LegacyAssemblyPluginLoaderPartAssembler(
-		Func<IModManifest, IModHelper> helperProvider,
+		Func<IPluginPackage<IModManifest>, IModHelper> helperProvider,
 		Func<IModManifest, ILogger> loggerProvider,
 		LegacyDatabase database
 	)
@@ -37,7 +37,7 @@ internal sealed class LegacyAssemblyPluginLoaderPartAssembler : IAssemblyPluginL
 	{
 		if (parts.Count <= 0)
 			return new Error<string>($"The assembly {assembly} does not include any {typeof(ILegacyManifest)} subclasses.");
-		var helper = this.HelperProvider(package.Manifest);
+		var helper = this.HelperProvider(package);
 		var logger = this.LoggerProvider(package.Manifest);
 		LegacyRegistry registry = new(package.Manifest, helper, logger, this.Database);
 		return new LegacyModWrapper(parts, registry, package.PackageRoot, helper, logger);
