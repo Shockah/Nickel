@@ -145,6 +145,7 @@ internal sealed class Nickel
 		DBPatches.Apply(harmony);
 		MGPatches.Apply(harmony);
 		SpriteLoaderPatches.Apply(harmony);
+		StatePatches.Apply(harmony);
 		StoryVarsPatches.Apply(harmony);
 		TTGlossaryPatches.Apply(harmony);
 

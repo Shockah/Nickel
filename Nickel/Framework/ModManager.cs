@@ -43,7 +43,6 @@ internal sealed class ModManager
 		this.ModsDirectory = modsDirectory;
 		this.LoggerFactory = loggerFactory;
 		this.Logger = logger;
-		this.EventManager = new(this.ObtainLogger);
 
 		this.ModLoaderModManifest = new ModManifest()
 		{
@@ -51,6 +50,12 @@ internal sealed class ModManager
 			Version = NickelConstants.Version,
 			RequiredApiVersion = NickelConstants.Version
 		};
+
+		this.EventManager = new(
+			() => this.CurrentModLoadPhase,
+			this.ObtainLogger,
+			this.ModLoaderModManifest
+		);
 
 		var loadContextProvider = new AssemblyModLoadContextProvider(
 			AssemblyLoadContext.GetLoadContext(this.GetType().Assembly) ?? AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default
