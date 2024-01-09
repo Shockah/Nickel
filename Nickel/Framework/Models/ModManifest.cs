@@ -27,6 +27,9 @@ internal sealed class ModManifest : IModManifest
 	public string? DisplayName { get; internal set; } = null;
 
 	[JsonProperty]
+	public string? Description { get; internal set; } = null;
+
+	[JsonProperty]
 	public string? Author { get; internal set; } = null;
 
 	[JsonProperty]

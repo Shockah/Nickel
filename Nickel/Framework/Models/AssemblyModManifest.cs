@@ -20,6 +20,9 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 	public string? DisplayName
 		=> this.ModManifest.DisplayName;
 
+	public string? Description
+		=> this.ModManifest.Description;
+
 	public string? Author
 		=> this.ModManifest.Author;
 

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Loader;
+using System.Text;
 
 namespace Nickel;
 
@@ -259,7 +260,7 @@ internal sealed class ModManager
 			if (manifest.LoadPhase != phase)
 				continue;
 
-			var displayName = GetModDisplayName(manifest);
+			var displayName = GetModDisplayName(manifest, @long: false);
 			this.Logger.LogDebug("Loading mod {DisplayName}...", displayName);
 
 			var failedRequiredDependencies = manifest.Dependencies
@@ -300,7 +301,7 @@ internal sealed class ModManager
 						this.UniqueNameToPackage[manifest.UniqueName] = package;
 						this.UniqueNameToInstance[manifest.UniqueName] = mod;
 						successfulMods.Add(manifest);
-						this.Logger.LogInformation("Loaded mod {DisplayName}.", displayName);
+						this.Logger.LogInformation("Loaded mod {DisplayName}", GetModDisplayName(manifest, @long: true));
 					},
 					error =>
 					{
@@ -314,16 +315,19 @@ internal sealed class ModManager
 		this.EventManager.OnModLoadPhaseFinishedEvent.Raise(null, phase);
 	}
 
-	private static string GetModDisplayName(IModManifest manifest)
+	private static string GetModDisplayName(IModManifest manifest, bool @long)
 	{
-		if (string.IsNullOrEmpty(manifest.DisplayName))
-			return string.IsNullOrEmpty(manifest.Author)
-				? manifest.UniqueName
-				: $"{manifest.UniqueName} by {manifest.Author}";
-		else
-			return string.IsNullOrEmpty(manifest.Author)
-				? $"{manifest.DisplayName} [{manifest.UniqueName}]"
-				: $"{manifest.UniqueName} by {manifest.Author} [{manifest.UniqueName}]";
+		StringBuilder sb = new();
+		sb.Append(string.IsNullOrEmpty(manifest.DisplayName) ? manifest.UniqueName : $"{manifest.DisplayName} ({manifest.UniqueName})");
+		sb.Append($" {manifest.Version}");
+		if (@long)
+		{
+			if (!string.IsNullOrEmpty(manifest.Author))
+				sb.Append($" by {manifest.Author}");
+			if (!string.IsNullOrEmpty(manifest.Description))
+				sb.Append($": {manifest.Description}");
+		}
+		return sb.ToString();
 	}
 
 	internal void ContinueAfterLoadingGameAssembly()

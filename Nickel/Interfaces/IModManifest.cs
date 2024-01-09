@@ -15,6 +15,8 @@ public interface IModManifest
 
 	string? DisplayName { get; }
 
+	string? Description { get; }
+
 	string? Author { get; }
 
 	string ModType { get; }

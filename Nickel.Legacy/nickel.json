@@ -1,6 +1,9 @@
 {
 	"UniqueName": "Nickel.Legacy",
 	"Version": "0.1.0",
+	"DisplayName": "Nickel.Legacy",
+	"Description": "Loads and manages legacy mods.",
+	"Author": "Nickel",
 	"RequiredApiVersion": "0.1.0",
 	"EntryPointAssembly": "Nickel.Legacy.dll",
 	"EntryPointType": "Nickel.Legacy.ModEntry",
