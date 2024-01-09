@@ -30,7 +30,10 @@ internal class NickelLauncher
 			description: "Uses timestamps for log filenames."
 		);
 
-		RootCommand rootCommand = new(NickelConstants.IntroMessage);
+		RootCommand rootCommand = new(NickelConstants.IntroMessage)
+		{
+			TreatUnmatchedTokensAsErrors = false
+		};
 		rootCommand.AddOption(launchPathOption);
 		rootCommand.AddOption(logPathOption);
 		rootCommand.AddOption(timestampedLogFiles);
@@ -69,7 +72,7 @@ internal class NickelLauncher
 		Dictionary<string, ILogger> categoryLoggers = [];
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
 
-		var launchPath = launchArguments.LaunchPath ?? new("Nickel.exe"); // TODO: this probably doesn't work on non-Windows machines; make sure it does
+		var launchPath = launchArguments.LaunchPath ?? new($"{NickelConstants.Name}.exe"); // TODO: this probably doesn't work on non-Windows machines; make sure it does
 		var pipeName = Guid.NewGuid().ToString();
 
 		using var logNamedPipeServer = string.IsNullOrEmpty(pipeName) ? null : new LogNamedPipeServer(pipeName, logger, e =>
@@ -87,7 +90,6 @@ internal class NickelLauncher
 			FileName = launchPath.FullName,
 			CreateNoWindow = true,
 			ErrorDialog = false,
-			WindowStyle = ProcessWindowStyle.Hidden,
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
 			WorkingDirectory = launchPath.Directory?.FullName,
