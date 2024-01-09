@@ -1,3 +1,4 @@
+using HarmonyLib;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,9 @@ internal sealed class DeckManager
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 	private Dictionary<string, Deck> ReservedNameToDeck { get; } = [];
 	private Dictionary<Deck, string> ReservedDeckToName { get; } = [];
+
+	// Used to change the return value of EnumExtensions.Key(this Deck deck)
+	private Dictionary<Deck, string>? ReflectedDeckStrings { get; set; }
 
 	public DeckManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
@@ -71,6 +75,11 @@ internal sealed class DeckManager
 		var deck = this.ReservedNameToDeck.TryGetValue(uniqueName, out var reservedStatus) ? reservedStatus : (Deck)this.NextId++;
 		this.ReservedNameToDeck.Remove(uniqueName);
 		this.ReservedDeckToName.Remove(deck);
+
+		this.ReflectedDeckStrings ??= AccessTools
+			.DeclaredField(typeof(EnumExtensions), "deckStrs")
+			.EmitStaticGetter<Dictionary<Deck, string>>()();
+		this.ReflectedDeckStrings[deck] = uniqueName;
 
 		Entry entry = new(owner, $"{owner.UniqueName}::{name}", deck, configuration);
 		this.DeckToEntry[entry.Deck] = entry;

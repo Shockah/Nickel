@@ -144,8 +144,8 @@ internal sealed class CharacterManager
 	{
 		if (entry.Configuration.Description.Localize(locale) is not { } description)
 			return;
-		var key = entry.Configuration.Deck.Key();
-		localizations[$"char.{key}.desc"] = description;
+		localizations[$"char.{entry.Configuration.Deck.Key()}.desc"] = description;
+		localizations[$"char.{entry.Configuration.Deck}.desc"] = description;
 	}
 
 	private void OnGetUnlockedChars(object? sender, HashSet<Deck> unlockedCharacters)
