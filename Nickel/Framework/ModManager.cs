@@ -327,7 +327,17 @@ internal sealed class ModManager
 	}
 
 	internal void ContinueAfterLoadingGameAssembly()
-		=> this.ContentManager = new(() => this.CurrentModLoadPhase, this.ObtainLogger);
+	{
+		this.ContentManager = new(() => this.CurrentModLoadPhase, this.ObtainLogger);
+		JSONSettings.indented.ContractResolver = new ModificatingContractResolver(
+			contractModificator: this.ContentManager.ModifyJsonContract,
+			wrapped: JSONSettings.indented.ContractResolver
+		);
+		JSONSettings.serializer.ContractResolver = new ModificatingContractResolver(
+			contractModificator: this.ContentManager.ModifyJsonContract,
+			wrapped: JSONSettings.serializer.ContractResolver
+		);
+	}
 
 	private ILogger ObtainLogger(IModManifest manifest)
 	{

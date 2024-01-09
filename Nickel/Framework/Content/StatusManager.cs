@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -10,6 +11,8 @@ internal sealed class StatusManager
 	private AfterDbInitManager<Entry> Manager { get; }
 	private Dictionary<Status, Entry> StatusToEntry { get; } = [];
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
+	private Dictionary<string, Status> ReservedNameToStatus { get; } = [];
+	private Dictionary<Status, string> ReservedStatusToName { get; } = [];
 
 	public StatusManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
@@ -29,6 +32,43 @@ internal sealed class StatusManager
 		e.Sprite = entry.Configuration.Definition.icon;
 	}
 
+	internal void ModifyJsonContract(Type type, JsonContract contract)
+	{
+		if (type == typeof(Status) || type == typeof(Status?))
+		{
+			contract.Converter = new ModStringEnumConverter<Status>(
+				modStringToEnumProvider: s =>
+				{
+					if (this.UniqueNameToEntry.TryGetValue(s, out var entry))
+						return entry.Status;
+					if (this.ReservedNameToStatus.TryGetValue(s, out var @enum))
+						return @enum;
+
+					@enum = (Status)this.NextId++;
+					this.ReservedNameToStatus[s] = @enum;
+					this.ReservedStatusToName[@enum] = s;
+					return @enum;
+				},
+				modEnumToStringProvider: v =>
+				{
+					if (this.StatusToEntry.TryGetValue(v, out var entry))
+						return entry.UniqueName;
+					if (this.ReservedStatusToName.TryGetValue(v, out var name))
+						return name;
+
+					name = v.ToString();
+					this.ReservedNameToStatus[name] = v;
+					this.ReservedStatusToName[v] = name;
+					return name;
+				}
+			);
+		}
+		else if (type.IsConstructedGenericType && (type.GetGenericTypeDefinition() == typeof(IDictionary<,>) || type.GetGenericTypeDefinition() == typeof(Dictionary<,>)) && type.GetGenericArguments()[0] == typeof(Status))
+		{
+			contract.Converter = new CustomDictionaryConverter<Status>();
+		}
+	}
+
 	internal void InjectQueuedEntries()
 		=> this.Manager.InjectQueuedEntries();
 
@@ -40,7 +80,12 @@ internal sealed class StatusManager
 
 	public IStatusEntry RegisterStatus(IModManifest owner, string name, StatusConfiguration configuration)
 	{
-		Entry entry = new(owner, $"{owner.UniqueName}::{name}", (Status)this.NextId++, configuration);
+		var uniqueName = $"{owner.UniqueName}::{name}";
+		var status = this.ReservedNameToStatus.TryGetValue(uniqueName, out var reservedStatus) ? reservedStatus : (Status)this.NextId++;
+		this.ReservedNameToStatus.Remove(uniqueName);
+		this.ReservedStatusToName.Remove(status);
+
+		Entry entry = new(owner, $"{owner.UniqueName}::{name}", status, configuration);
 		this.StatusToEntry[entry.Status] = entry;
 		this.UniqueNameToEntry[entry.UniqueName] = entry;
 		this.Manager.QueueOrInject(entry);

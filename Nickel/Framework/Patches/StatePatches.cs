@@ -1,5 +1,4 @@
 using HarmonyLib;
-using Nanoray.Shrike;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +8,7 @@ namespace Nickel;
 
 internal static class StatePatches
 {
-	internal static WeakEventSource<ObjectRef<List<Artifact>>> OnEnumerateAllArtifacts { get; } = new();
+	internal static WeakEventSource<EnumerateAllArtifactsEventArgs> OnEnumerateAllArtifacts { get; } = new();
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -20,10 +19,16 @@ internal static class StatePatches
 		);
 	}
 
-	private static void EnumerateAllArtifacts_Postfix(ref List<Artifact> __result)
+	private static void EnumerateAllArtifacts_Postfix(State __instance, ref List<Artifact> __result)
 	{
-		var eventArgs = new ObjectRef<List<Artifact>>(__result.ToList());
+		var eventArgs = new EnumerateAllArtifactsEventArgs { State = __instance, BlockedArtifacts = __result.ToList() };
 		OnEnumerateAllArtifacts.Raise(null, eventArgs);
-		__result = eventArgs.Value;
+		__result = eventArgs.BlockedArtifacts;
+	}
+
+	internal sealed class EnumerateAllArtifactsEventArgs
+	{
+		public required State State { get; init; }
+		public required List<Artifact> BlockedArtifacts { get; set; }
 	}
 }

@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Nickel;
@@ -41,13 +42,23 @@ public sealed class JsonLocalizationProvider(
 
 	private string? Localize(JToken localization, IReadOnlyList<string> key, int keyIndex, object? tokens)
 	{
-		if (localization is JValue value && keyIndex >= key.Count && value.Value<string>() is string localizationString)
-			return this.Localize(localizationString, tokens);
-		if (localization is JObject @object)
-			return this.Localize(@object, key, keyIndex, tokens);
-		if (localization is JArray array)
-			return this.Localize(array, key, keyIndex, tokens);
-		return null;
+		if (keyIndex >= key.Count)
+		{
+			if (localization is JValue value && value.Value<string>() is string localizationString)
+				return this.Localize(localizationString, tokens);
+			else if (localization is JArray array)
+				return this.Localize(string.Join("\n", array.Select(v => v.Value<string>()).OfType<string>()), tokens);
+			else
+				return null;
+		}
+		else
+		{
+			if (localization is JObject @object)
+				return this.Localize(@object, key, keyIndex, tokens);
+			if (localization is JArray array)
+				return this.Localize(array, key, keyIndex, tokens);
+			return null;
+		}
 	}
 
 	private string? Localize(JObject localization, IReadOnlyList<string> key, int keyIndex, object? tokens)

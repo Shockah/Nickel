@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 
@@ -46,5 +47,11 @@ internal sealed record ContentManager(
 		this.Artifacts.InjectLocalizations(locale, localizations);
 		this.Characters.InjectLocalizations(locale, localizations);
 		this.Ships.InjectLocalizations(locale, localizations);
+	}
+
+	internal void ModifyJsonContract(Type type, JsonContract contract)
+	{
+		this.Decks.ModifyJsonContract(type, contract);
+		this.Statuses.ModifyJsonContract(type, contract);
 	}
 }
