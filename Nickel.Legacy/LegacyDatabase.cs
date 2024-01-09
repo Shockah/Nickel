@@ -43,6 +43,7 @@ internal sealed class LegacyDatabase(
 	public void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		this.InjectCharacterLocalizations(locale, localizations);
+		this.InjectCardLocalizations(locale, localizations);
 		this.InjectGlossaryLocalisations(locale, localizations);
 		this.InjectStoryLocalizations(locale, localizations);
 	}
@@ -75,6 +76,22 @@ internal sealed class LegacyDatabase(
 				localizations[$"char.{key}.desc"] = description;
 				localizations[$"char.{id}.desc"] = description;
 			}
+		}
+	}
+
+	private void InjectCardLocalizations(string locale, Dictionary<string, string> localizations)
+	{
+		// Nickel handles name localization, but legacy mods can also expect desc/descA/descB
+		foreach (var card in this.GlobalNameToCard.Values)
+		{
+			var key = card.CardType.Name; // TODO: change this when Card.Key gets patched
+			card.GetLocalisation(locale, out _, out var description, out var descriptionA, out var descriptionB);
+			if (description is not null)
+				localizations[$"card.{key}.desc"] = description;
+			if (descriptionA is not null)
+				localizations[$"card.{key}.descA"] = descriptionA;
+			if (descriptionB is not null)
+				localizations[$"card.{key}.descB"] = descriptionB;
 		}
 	}
 
@@ -261,21 +278,6 @@ internal sealed class LegacyDatabase(
 			Name = locale =>
 			{
 				value.GetLocalisation(locale, out var localized, out _, out _, out _);
-				return localized;
-			},
-			Description = locale =>
-			{
-				value.GetLocalisation(locale, out _, out var localized, out _, out _);
-				return localized;
-			},
-			DescriptionA = locale =>
-			{
-				value.GetLocalisation(locale, out _, out _, out var localized, out _);
-				return localized;
-			},
-			DescriptionB = locale =>
-			{
-				value.GetLocalisation(locale, out _, out _, out _, out var localized);
 				return localized;
 			}
 		};
