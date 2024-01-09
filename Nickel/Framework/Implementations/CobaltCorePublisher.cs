@@ -11,7 +11,7 @@ public class CobaltCorePublisher : IAssemblyDefinitionEditor
 	public void EditAssemblyDefinition(AssemblyDefinition definition)
 	{
 		var jsonIgnoreCtor = definition.MainModule.ImportReference(typeof(JsonIgnoreAttribute).GetConstructor([]));
-		foreach(var type in definition.MainModule.Types)
+		foreach (var type in definition.MainModule.Types)
 		{
 			type.IsPublic = true;
 			PublishContents(type, jsonIgnoreCtor);
