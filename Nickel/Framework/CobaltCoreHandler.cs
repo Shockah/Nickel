@@ -2,9 +2,7 @@ using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using OneOf;
 using OneOf.Types;
-using System;
 using System.IO;
-using System.Reflection;
 using System.Runtime.Loader;
 
 namespace Nickel;
@@ -29,7 +27,7 @@ internal sealed class CobaltCoreHandler
 			return new Error<string>($"Could not resolve Cobalt Core: {error.Value}");
 
 		this.Logger.LogInformation("Loading game assembly...");
-		var gameAssembly = this.LoadAssembly(
+		this.ResolveAssembly(
 			name: "CobaltCore.dll",
 			assemblyStream: resolveResult.GameAssemblyDataStream,
 			symbolsStream: resolveResult.GamePdbDataStream
@@ -38,23 +36,16 @@ internal sealed class CobaltCoreHandler
 		this.Logger.LogInformation("Loading other assemblies...");
 		foreach (var (name, stream) in resolveResult.OtherDllDataStreams)
 		{
-			if (name == "System.Private.CoreLib.dll") // loading it always throws
-				continue;
-
 			this.Logger.LogDebug("Trying to load (potential) assembly {AssemblyName}...", name);
-			try
-			{
-				this.LoadAssembly(name, stream);
-			}
-			catch (BadImageFormatException e)
-			{
-				this.Logger.LogTrace("Failed to load {AssemblyName}: {Exception}", name, e);
-			}
-			catch (FileLoadException e)
-			{
-				this.Logger.LogWarning("Failed to load {AssemblyName}: {Exception}", name, e);
-			}
+			this.ResolveAssembly(name, stream);
 		}
+
+		return ContinueGameSetupAfterResolvingAssemblies(resolveResult);
+	}
+
+	private static OneOf<CobaltCoreHandlerResult, Error<string>> ContinueGameSetupAfterResolvingAssemblies(CobaltCoreResolveResult resolveResult)
+	{
+		var gameAssembly = typeof(MG).Assembly;
 
 		if (gameAssembly.EntryPoint is not { } entryPoint)
 			return new Error<string>($"The Cobalt Core assembly does not contain an entry point.");
@@ -66,13 +57,15 @@ internal sealed class CobaltCoreHandler
 		};
 	}
 
-	private Assembly LoadAssembly(string name, Stream assemblyStream, Stream? symbolsStream = null)
+	private void ResolveAssembly(string name, Stream assemblyStream, Stream? symbolsStream = null)
 	{
-		var context = AssemblyLoadContext.GetLoadContext(this.GetType().Assembly)
-			?? AssemblyLoadContext.CurrentContextualReflectionContext
-			?? AssemblyLoadContext.Default;
 		if (this.AssemblyEditor is { } assemblyEditor)
 			assemblyStream = assemblyEditor.EditAssemblyStream(name, assemblyStream);
-		return context.LoadFromStream(assemblyStream, symbolsStream);
+		AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
+		{
+			if ($"{assemblyName.Name ?? assemblyName.FullName}.dll" == name)
+				return context.LoadFromStream(assemblyStream, symbolsStream);
+			return null;
+		};
 	}
 }
