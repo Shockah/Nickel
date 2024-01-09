@@ -18,6 +18,7 @@ internal sealed class LegacyDatabase(
 	internal List<ILegacyManifest> LegacyManifests { get; } = new();
 
 	private Dictionary<string, ExternalSprite> GlobalNameToSprite { get; } = [];
+	private Dictionary<string, ExternalGlossary> GlobalNameToGlossary { get; } = [];
 	private Dictionary<string, ExternalDeck> GlobalNameToDeck { get; } = [];
 	private Dictionary<string, ExternalStatus> GlobalNameToStatus { get; } = [];
 	private Dictionary<string, ExternalCard> GlobalNameToCard { get; } = [];
@@ -33,7 +34,9 @@ internal sealed class LegacyDatabase(
 	private Dictionary<string, ICharacterEntry> GlobalNameToCharacterEntry { get; } = [];
 	private Dictionary<string, IPartEntry> GlobalNameToPartEntry { get; } = [];
 	private Dictionary<string, IShipEntry> GlobalNameToShipEntry { get; } = [];
-	private Dictionary<string, ExternalGlossary> GlobalNameToGlossary { get; } = [];
+
+	private Dictionary<string, ExternalGlossary> ItemNameToGlossary { get; } = [];
+
 	private List<ExternalStory> ExternalStories { get; } = [];
 	private List<(string, MethodInfo, bool, bool)> ChoiceAndCommands { get; } = [];
 
@@ -97,7 +100,7 @@ internal sealed class LegacyDatabase(
 
 	private void InjectGlossaryLocalisations(string locale, Dictionary<string, string> localisations)
 	{
-		foreach (var glossary in this.GlobalNameToGlossary.Values)
+		foreach (var glossary in this.ItemNameToGlossary.Values)
 		{
 			if (!glossary.GetLocalisation(locale, out var name, out var desc, out var altDesc))
 				continue;
@@ -135,7 +138,7 @@ internal sealed class LegacyDatabase(
 
 	internal void InjectGlossaryIconSprites()
 	{
-		foreach (var glossary in this.GlobalNameToGlossary.Values)
+		foreach (var glossary in this.ItemNameToGlossary.Values)
 		{
 			if (!glossary.Icon.Id.HasValue)
 				continue;
@@ -214,8 +217,11 @@ internal sealed class LegacyDatabase(
 		this.GlobalNameToSprite[value.GlobalName] = value;
 	}
 
-	public void RegisterGlossary(IModManifest modManifest, ExternalGlossary glossary) =>
-		this.GlobalNameToGlossary[modManifest.UniqueName] = glossary;
+	public void RegisterGlossary(ExternalGlossary glossary)
+	{
+		this.GlobalNameToGlossary[glossary.GlobalName] = glossary;
+		this.ItemNameToGlossary[glossary.ItemName] = glossary;
+	}
 
 	public void RegisterDeck(IModManifest mod, ExternalDeck value)
 	{
@@ -410,7 +416,14 @@ internal sealed class LegacyDatabase(
 		=> this.GlobalNameToSprite.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
 
 	public ExternalGlossary GetGlossary(string globalName)
-		=> this.GlobalNameToGlossary.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();
+	{
+		if (this.GlobalNameToGlossary.TryGetValue(globalName, out var value))
+			return value;
+		// fallback: this makes no sense, but it was broken in the legacy modloader in this exact way
+		if (this.ItemNameToGlossary.TryGetValue(globalName, out value))
+			return value;
+		throw new KeyNotFoundException();
+	}
 
 	public ExternalDeck GetDeck(string globalName)
 		=> this.GlobalNameToDeck.TryGetValue(globalName, out var value) ? value : throw new KeyNotFoundException();

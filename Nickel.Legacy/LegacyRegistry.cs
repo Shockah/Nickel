@@ -73,7 +73,7 @@ internal sealed class LegacyRegistry
 
 	public bool RegisterGlossary(ExternalGlossary glossary)
 	{
-		this.Database.RegisterGlossary(this.ModManifest, glossary);
+		this.Database.RegisterGlossary(glossary);
 		return true;
 	}
 
