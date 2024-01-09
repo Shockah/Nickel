@@ -6,6 +6,7 @@ namespace Nickel;
 internal readonly struct LaunchArguments
 {
 	public bool? Debug { get; init; }
+	public bool? SaveInDebug { get; init; }
 	public FileInfo? GamePath { get; init; }
 	public DirectoryInfo? ModsPath { get; init; }
 	public DirectoryInfo? SavePath { get; init; }

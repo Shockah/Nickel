@@ -72,7 +72,6 @@ internal sealed class CustomDictionaryConverter<TKey, TValue> : JsonConverter
 		var rawDictionary = JToken.Load(reader).Value<IDictionary<string, JToken>>();
 		if (rawDictionary is null)
 			return null;
-		Console.WriteLine(rawDictionary);
 
 		Dictionary<TKey, TValue> results = [];
 		foreach (var (rawKey, rawValue) in rawDictionary)

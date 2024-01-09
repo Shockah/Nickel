@@ -25,6 +25,10 @@ internal sealed class Nickel
 			name: "--debug",
 			description: "Whether the game should be ran in debug mode."
 		);
+		Option<bool?> saveInDebugOption = new(
+			name: "--saveInDebug",
+			description: "Whether the game should be auto-saved even in debug mode."
+		);
 		Option<FileInfo?> gamePathOption = new(
 			name: "--gamePath",
 			description: "The path to CobaltCore.exe."
@@ -52,6 +56,7 @@ internal sealed class Nickel
 
 		RootCommand rootCommand = new(NickelConstants.IntroMessage);
 		rootCommand.AddOption(debugOption);
+		rootCommand.AddOption(saveInDebugOption);
 		rootCommand.AddOption(gamePathOption);
 		rootCommand.AddOption(modsPathOption);
 		rootCommand.AddOption(savePathOption);
@@ -64,6 +69,7 @@ internal sealed class Nickel
 			LaunchArguments launchArguments = new()
 			{
 				Debug = context.ParseResult.GetValueForOption(debugOption),
+				SaveInDebug = context.ParseResult.GetValueForOption(saveInDebugOption),
 				GamePath = context.ParseResult.GetValueForOption(gamePathOption),
 				ModsPath = context.ParseResult.GetValueForOption(modsPathOption),
 				SavePath = context.ParseResult.GetValueForOption(savePathOption),
@@ -141,22 +147,25 @@ internal sealed class Nickel
 		instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderModManifest);
 		instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderModManifest);
 
-		ArtifactRewardPatches.Apply(harmony);
-		DBPatches.Apply(harmony);
-		MGPatches.Apply(harmony);
-		SpriteLoaderPatches.Apply(harmony);
-		StatePatches.Apply(harmony);
-		StoryVarsPatches.Apply(harmony);
-		TTGlossaryPatches.Apply(harmony);
-
 		var debug = launchArguments.Debug ?? true;
 		logger.LogInformation("Debug: {Value}", debug);
+
+		var saveInDebug = launchArguments.SaveInDebug ?? true;
+		logger.LogInformation("SaveInDebug: {Value}", saveInDebug);
 
 		var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? handlerResult.WorkingDirectory;
 		logger.LogInformation("GameWorkingDirectory: {Path}", gameWorkingDirectory.FullName);
 
 		var savePath = launchArguments.SavePath?.FullName ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModSaves");
 		logger.LogInformation("SavePath: {Path}", savePath);
+
+		ArtifactRewardPatches.Apply(harmony);
+		DBPatches.Apply(harmony);
+		MGPatches.Apply(harmony);
+		SpriteLoaderPatches.Apply(harmony);
+		StatePatches.Apply(harmony, saveInDebug);
+		StoryVarsPatches.Apply(harmony);
+		TTGlossaryPatches.Apply(harmony);
 
 		instance.ModManager.LoadMods(ModLoadPhase.AfterGameAssembly);
 
