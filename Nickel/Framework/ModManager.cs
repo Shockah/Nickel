@@ -130,7 +130,7 @@ internal sealed class ModManager
 		DBPatches.OnLoadStringsForLocale.Subscribe(this.OnLoadStringsForLocale);
 	}
 
-	private void OnLoadStringsForLocale(object? _, LoadStringsForLocaleEventArgs e)
+	private void OnLoadStringsForLocale(object? sender, LoadStringsForLocaleEventArgs e)
 		=> this.EventManager.OnLoadStringsForLocaleEvent.Raise(sender, e);
 
 	public void ResolveMods()
