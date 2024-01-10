@@ -6,6 +6,7 @@ namespace Nickel;
 
 public interface IModRegistry
 {
+	IModManifest VanillaModManifest { get; }
 	IReadOnlyDictionary<string, IModManifest> LoadedMods { get; }
 
 	bool TryProxy<TProxy>(object @object, [MaybeNullWhen(false)] out TProxy proxy) where TProxy : class;

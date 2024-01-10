@@ -1,8 +1,7 @@
-using HarmonyLib;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Nickel;
 
@@ -10,14 +9,16 @@ internal sealed class DeckManager
 {
 	private int NextId { get; set; } = 10_000_001;
 	private AfterDbInitManager<Entry> Manager { get; }
+	private IModManifest VanillaModManifest { get; }
 	private Dictionary<Deck, Entry> DeckToEntry { get; } = [];
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 	private Dictionary<string, Deck> ReservedNameToDeck { get; } = [];
 	private Dictionary<Deck, string> ReservedDeckToName { get; } = [];
 
-	public DeckManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
+	public DeckManager(Func<ModLoadPhase> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		this.VanillaModManifest = vanillaModManifest;
 	}
 
 	internal void ModifyJsonContract(Type type, JsonContract contract)
@@ -82,19 +83,30 @@ internal sealed class DeckManager
 		return entry;
 	}
 
-	public bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IDeckEntry entry)
+	public IDeckEntry? LookupByDeck(Deck deck)
 	{
-		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry))
-		{
-			entry = typedEntry;
-			return true;
-		}
-		else
-		{
-			entry = default;
-			return false;
-		}
+		if (this.DeckToEntry.TryGetValue(deck, out var entry))
+			return entry;
+		if (!Enum.GetValues<Deck>().Contains(deck))
+			return null;
+
+		return new Entry(
+			modOwner: this.VanillaModManifest,
+			uniqueName: Enum.GetName(deck)!,
+			deck: deck,
+			configuration: new()
+			{
+				Definition = DB.decks[deck],
+				DefaultCardArt = DB.cardArtDeckDefault[deck],
+				BorderSprite = DB.deckBorders[deck],
+				OverBordersSprite = DB.deckBordersOver.TryGetValue(deck, out var overBordersSprite) ? overBordersSprite : null,
+				Name = locale => DB.currentLocale.strings[$"char.{deck}.name"]
+			}
+		);
 	}
+
+	public IDeckEntry? LookupByUniqueName(string uniqueName)
+		=> this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry) ? typedEntry : null;
 
 	private static void Inject(Entry entry)
 	{

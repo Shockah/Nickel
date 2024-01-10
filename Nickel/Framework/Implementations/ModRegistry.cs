@@ -12,6 +12,8 @@ namespace Nickel;
 
 internal sealed class ModRegistry : IModRegistry
 {
+	public IModManifest VanillaModManifest { get; }
+
 	public IReadOnlyDictionary<string, IModManifest> LoadedMods
 		=> this.ModUniqueNameToPackage
 			.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Manifest);
@@ -24,11 +26,13 @@ internal sealed class ModRegistry : IModRegistry
 
 	public ModRegistry(
 		IModManifest modManifest,
+		IModManifest vanillaModManifest,
 		IReadOnlyDictionary<string, Mod> modUniqueNameToInstance,
 		IReadOnlyDictionary<string, IPluginPackage<IModManifest>> modUniqueNameToPackage
 	)
 	{
 		this.ModManifest = modManifest;
+		this.VanillaModManifest = vanillaModManifest;
 		this.ModUniqueNameToInstance = modUniqueNameToInstance;
 		this.ModUniqueNameToPackage = modUniqueNameToPackage;
 

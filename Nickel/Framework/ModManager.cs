@@ -21,6 +21,7 @@ internal sealed class ModManager
 	internal ModEventManager EventManager { get; }
 
 	internal IModManifest ModLoaderModManifest { get; private init; }
+	internal IModManifest VanillaModManifest { get; private init; }
 	internal ModLoadPhase CurrentModLoadPhase { get; private set; } = ModLoadPhase.BeforeGameAssembly;
 	internal ContentManager? ContentManager { get; private set; }
 
@@ -49,6 +50,16 @@ internal sealed class ModManager
 		{
 			UniqueName = NickelConstants.Name,
 			Version = NickelConstants.Version,
+			DisplayName = NickelConstants.Name,
+			Author = NickelConstants.Name,
+			RequiredApiVersion = NickelConstants.Version
+		};
+		this.VanillaModManifest = new ModManifest()
+		{
+			UniqueName = "CobaltCore",
+			Version = SemanticVersionParser.TryParse(CCBuildVars.VERSION, out var gameVersion) ? gameVersion : NickelConstants.FallbackGameVersion,
+			DisplayName = "Cobalt Core",
+			Author = "Rocket Rat Games",
 			RequiredApiVersion = NickelConstants.Version
 		};
 
@@ -332,7 +343,7 @@ internal sealed class ModManager
 
 	internal void ContinueAfterLoadingGameAssembly()
 	{
-		this.ContentManager = new(() => this.CurrentModLoadPhase, this.ObtainLogger);
+		this.ContentManager = new(() => this.CurrentModLoadPhase, this.ObtainLogger, this.VanillaModManifest);
 		JSONSettings.indented.ContractResolver = new ModificatingContractResolver(
 			contractModificator: this.ContentManager.ModifyJsonContract,
 			wrapped: JSONSettings.indented.ContractResolver
@@ -368,7 +379,7 @@ internal sealed class ModManager
 		if (!this.UniqueNameToHelper.TryGetValue(package.Manifest.UniqueName, out var helper))
 		{
 			helper = new ModHelper(
-				new ModRegistry(package.Manifest, this.UniqueNameToInstance, this.UniqueNameToPackage),
+				new ModRegistry(package.Manifest, this.VanillaModManifest, this.UniqueNameToInstance, this.UniqueNameToPackage),
 				new ModEvents(package.Manifest, this.EventManager),
 				new ModContent(
 					new ModSprites(package, () => this.ContentManager!.Sprites),

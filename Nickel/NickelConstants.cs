@@ -16,6 +16,7 @@ public static class NickelConstants
 
 	public static string Name { get; } = "Nickel";
 	public static SemanticVersion Version => LazyVersion.Value;
+	public static SemanticVersion FallbackGameVersion { get; } = new SemanticVersion(1, 0, 6);
 	public static string IntroMessage { get; } = $"{Name} {Version} -- A modding API / modloader for the game Cobalt Core.";
 	public static string AssemblyModType { get; } = $"{typeof(Nickel).Namespace!}.Assembly";
 }

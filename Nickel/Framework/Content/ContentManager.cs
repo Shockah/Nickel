@@ -16,9 +16,9 @@ internal sealed record ContentManager(
 	ShipManager Ships
 )
 {
-	public ContentManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider) : this(
+	public ContentManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest) : this(
 		new SpriteManager(),
-		new DeckManager(currentModLoadPhaseProvider),
+		new DeckManager(currentModLoadPhaseProvider, vanillaModManifest),
 		new StatusManager(currentModLoadPhaseProvider),
 		new CardManager(currentModLoadPhaseProvider),
 		new ArtifactManager(currentModLoadPhaseProvider),
