@@ -19,6 +19,9 @@ internal sealed class ModShips : IModShips
 		this.PartManagerProvider = partManagerProvider;
 	}
 
+	public IShipEntry? LookupByUniqueName(string uniqueName)
+		=> this.ShipManagerProvider().LookupByUniqueName(uniqueName);
+
 	public IShipEntry RegisterShip(string name, ShipConfiguration configuration)
 		=> this.ShipManagerProvider().RegisterShip(this.ModManifest, name, configuration);
 

@@ -58,17 +58,8 @@ internal sealed class ShipManager
 		return entry;
 	}
 
-	public bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IShipEntry entry)
-	{
-		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry))
-		{
-			entry = typedEntry;
-			return true;
-		}
-
-		entry = default;
-		return false;
-	}
+	public IShipEntry? LookupByUniqueName(string uniqueName)
+		=> this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry) ? typedEntry : null;
 
 	private static void Inject(Entry entry)
 	{
