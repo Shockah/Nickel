@@ -1,18 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Nickel;
 
 internal sealed class CardManager
 {
 	private AfterDbInitManager<Entry> Manager { get; }
+	private IModManifest VanillaModManifest { get; }
 	private Dictionary<Type, Entry> CardTypeToEntry { get; } = [];
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 
-	public CardManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
+	public CardManager(Func<ModLoadPhase> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		this.VanillaModManifest = vanillaModManifest;
 	}
 
 	internal void InjectQueuedEntries()
@@ -33,19 +36,28 @@ internal sealed class CardManager
 		return entry;
 	}
 
-	public bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out ICardEntry entry)
+	public ICardEntry? LookupByCardType(Type type)
 	{
-		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry))
-		{
-			entry = typedEntry;
-			return true;
-		}
-		else
-		{
-			entry = default;
-			return false;
-		}
+		if (this.CardTypeToEntry.TryGetValue(type, out var entry))
+			return entry;
+		if (type.Assembly != typeof(Card).Assembly)
+			return null;
+
+		return new Entry(
+			modOwner: this.VanillaModManifest,
+			uniqueName: type.Name,
+			configuration: new()
+			{
+				CardType = type,
+				Meta = DB.cardMetas[type.Name],
+				Art = DB.cardArt.TryGetValue(type.Name, out var art) ? art : null,
+				Name = locale => DB.currentLocale.strings[$"card.{type.Name}.name"]
+			}
+		);
 	}
+
+	public ICardEntry? LookupByUniqueName(string uniqueName)
+		=> this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry) ? typedEntry : null;
 
 	private static void Inject(Entry entry)
 	{

@@ -13,6 +13,12 @@ internal sealed class ModCards : IModCards
 		this.CardManagerProvider = cardManagerProvider;
 	}
 
+	public ICardEntry? LookupByCardType(Type cardType)
+		=> this.CardManagerProvider().LookupByCardType(cardType);
+
+	public ICardEntry? LookupByUniqueName(string uniqueName)
+		=> this.CardManagerProvider().LookupByUniqueName(uniqueName);
+
 	public ICardEntry RegisterCard(string name, CardConfiguration configuration)
 		=> this.CardManagerProvider().RegisterCard(this.ModManifest, name, configuration);
 }

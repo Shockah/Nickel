@@ -20,7 +20,7 @@ internal sealed record ContentManager(
 		new SpriteManager(),
 		new DeckManager(currentModLoadPhaseProvider, vanillaModManifest),
 		new StatusManager(currentModLoadPhaseProvider),
-		new CardManager(currentModLoadPhaseProvider),
+		new CardManager(currentModLoadPhaseProvider, vanillaModManifest),
 		new ArtifactManager(currentModLoadPhaseProvider),
 		new CharacterManager(currentModLoadPhaseProvider, loggerProvider),
 		new PartManager(currentModLoadPhaseProvider),
