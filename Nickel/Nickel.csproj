@@ -10,7 +10,7 @@
 	
 	<PropertyGroup>
 		<RootNamespace>$(_ModLoaderName)</RootNamespace>
-		<Version>0.1.0</Version>
+		<Version>$(NickelVersion)</Version>
 		<OutputType>Exe</OutputType>
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 		<NoWarn>$(NoWarn);CS0436</NoWarn>

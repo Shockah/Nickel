@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\Configuration.props" />
 	<PropertyGroup>
 		<RootNamespace>Nickel.Launcher</RootNamespace>
-		<Version>0.1.0</Version>
+		<Version>$(NickelVersion)</Version>
 		<OutputType>Exe</OutputType>
 	</PropertyGroup>
 	<ItemGroup>
