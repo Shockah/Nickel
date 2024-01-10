@@ -124,6 +124,7 @@
 		<Reference Include="PluginManager.Cecil" Private="False" HintPath="$(ModLoaderPath)\PluginManager.Cecil.dll"/>
 		<Reference Include="Shrike" Private="False" HintPath="$(ModLoaderPath)\Shrike.dll"/>
 		<Reference Include="Shrike.Harmony" Private="False" HintPath="$(ModLoaderPath)\Shrike.Harmony.dll"/>
+		<Reference Include="OneOf" Private="False" HintPath="$(ModLoaderPath)\OneOf.dll" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" IncludeAssets="compile" PrivateAssets="all" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" IncludeAssets="compile" PrivateAssets="all" />
 	</ItemGroup>
