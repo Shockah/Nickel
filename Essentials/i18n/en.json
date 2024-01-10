@@ -1,5 +1,6 @@
 {
 	"crewSelection": {
 		"emptySlot": "-- NONE --"
-	}
+	},
+	"modDescription": "<c=keyword>Mod:</c> {{ModName}}"
 }

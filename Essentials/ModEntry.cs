@@ -5,19 +5,14 @@ using System.Collections.Generic;
 
 namespace Nickel.Essentials;
 
-public sealed class ModEntry : Mod
+public sealed class ModEntry : SimpleMod
 {
 	internal static ModEntry Instance { get; private set; } = null!;
-	internal IModManifest Manifest { get; }
-	internal ILogger Logger { get; }
 	internal ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations { get; }
 
-	public ModEntry(IPluginPackage<IModManifest> package, ILogger logger)
+	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
 		Instance = this;
-		this.Manifest = package.Manifest;
-		this.Logger = logger;
-
 		this.Localizations = new MissingPlaceholderLocalizationProvider<IReadOnlyList<string>>(
 			new CurrentLocaleOrEnglishLocalizationProvider<IReadOnlyList<string>>(
 				new JsonLocalizationProvider(
@@ -29,5 +24,6 @@ public sealed class ModEntry : Mod
 
 		Harmony harmony = new(package.Manifest.UniqueName);
 		CrewSelection.ApplyPatches(harmony);
+		ModDescriptions.ApplyPatches(harmony);
 	}
 }
