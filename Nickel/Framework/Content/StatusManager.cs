@@ -1,7 +1,7 @@
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Nickel;
 
@@ -9,14 +9,16 @@ internal sealed class StatusManager
 {
 	private int NextId { get; set; } = 10_000_001;
 	private AfterDbInitManager<Entry> Manager { get; }
+	private IModManifest VanillaModManifest { get; }
 	private Dictionary<Status, Entry> StatusToEntry { get; } = [];
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 	private Dictionary<string, Status> ReservedNameToStatus { get; } = [];
 	private Dictionary<Status, string> ReservedStatusToName { get; } = [];
 
-	public StatusManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
+	public StatusManager(Func<ModLoadPhase> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		this.VanillaModManifest = vanillaModManifest;
 		TTGlossaryPatches.OnTryGetIcon.Subscribe(this.OnTryGetIcon);
 	}
 
@@ -92,19 +94,28 @@ internal sealed class StatusManager
 		return entry;
 	}
 
-	public bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IStatusEntry entry)
+	public IStatusEntry? LookupByStatus(Status status)
 	{
-		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry))
-		{
-			entry = typedEntry;
-			return true;
-		}
-		else
-		{
-			entry = default;
-			return false;
-		}
+		if (this.StatusToEntry.TryGetValue(status, out var entry))
+			return entry;
+		if (!Enum.GetValues<Status>().Contains(status))
+			return null;
+
+		return new Entry(
+			modOwner: this.VanillaModManifest,
+			uniqueName: Enum.GetName(status)!,
+			status: status,
+			configuration: new()
+			{
+				Definition = DB.statuses[status],
+				Name = locale => DB.currentLocale.strings[$"status.{status}.name"],
+				Description = locale => DB.currentLocale.strings[$"status.{status}.name"]
+			}
+		);
 	}
+
+	public IStatusEntry? LookupByUniqueName(string uniqueName)
+		=> this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry) ? typedEntry : null;
 
 	private static void Inject(Entry entry)
 	{

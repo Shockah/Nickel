@@ -13,6 +13,12 @@ internal sealed class ModStatuses : IModStatuses
 		this.StatusManagerProvider = statusManagerProvider;
 	}
 
+	public IStatusEntry? LookupByStatus(Status status)
+		=> this.StatusManagerProvider().LookupByStatus(status);
+
+	public IStatusEntry? LookupByUniqueName(string uniqueName)
+		=> this.StatusManagerProvider().LookupByUniqueName(uniqueName);
+
 	public IStatusEntry RegisterStatus(string name, StatusConfiguration configuration)
 		=> this.StatusManagerProvider().RegisterStatus(this.ModManifest, name, configuration);
 }

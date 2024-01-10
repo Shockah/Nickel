@@ -19,7 +19,7 @@ internal sealed record ContentManager(
 	public ContentManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest) : this(
 		new SpriteManager(),
 		new DeckManager(currentModLoadPhaseProvider, vanillaModManifest),
-		new StatusManager(currentModLoadPhaseProvider),
+		new StatusManager(currentModLoadPhaseProvider, vanillaModManifest),
 		new CardManager(currentModLoadPhaseProvider, vanillaModManifest),
 		new ArtifactManager(currentModLoadPhaseProvider),
 		new CharacterManager(currentModLoadPhaseProvider, loggerProvider),
