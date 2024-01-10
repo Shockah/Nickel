@@ -62,7 +62,7 @@ internal sealed class ModEventManager
 	}
 
 	[EventPriority(double.MinValue)]
-	private void OnModLoadPhaseFinished(object? sender, ModLoadPhase phase)
+	private void OnModLoadPhaseFinished(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -72,7 +72,7 @@ internal sealed class ModEventManager
 	private void SubscribeAfterGameAssembly()
 		=> StatePatches.OnEnumerateAllArtifacts.Subscribe(this, this.OnEnumerateAllArtifacts);
 
-	private void OnEnumerateAllArtifacts(object? sender, StatePatches.EnumerateAllArtifactsEventArgs e)
+	private void OnEnumerateAllArtifacts(object? _, StatePatches.EnumerateAllArtifactsEventArgs e)
 	{
 		if (e.State.IsOutsideRun())
 			return;

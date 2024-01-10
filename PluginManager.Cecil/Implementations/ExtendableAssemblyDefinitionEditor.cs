@@ -1,20 +1,22 @@
 using Mono.Cecil;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Nanoray.PluginManager.Cecil;
 
 public sealed class ExtendableAssemblyDefinitionEditor : IAssemblyEditor
 {
-	private List<IAssemblyDefinitionEditor> DefinitionEditors { get; } = [];
+	private readonly List<IAssemblyDefinitionEditor> DefinitionEditors = [];
 
 	public Stream EditAssemblyStream(string name, Stream assemblyStream)
 	{
-		if (this.DefinitionEditors.Count <= 0)
+		var interestedEditors = this.DefinitionEditors.Where(x => x.WillEditAssembly(name)).ToList();
+		if (interestedEditors.Count <= 0)
 			return assemblyStream;
 
 		var definition = AssemblyDefinition.ReadAssembly(assemblyStream);
-		foreach (var definitionEditor in this.DefinitionEditors)
+		foreach (var definitionEditor in interestedEditors)
 			definitionEditor.EditAssemblyDefinition(definition);
 
 		MemoryStream newStream = new();

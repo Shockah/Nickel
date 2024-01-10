@@ -119,6 +119,7 @@ internal sealed class Nickel
 		logger.LogInformation("ModsPath: {Path}", modsDirectory.FullName);
 
 		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor = new();
+		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new CobaltCorePublisher());
 		instance.ModManager = new(modsDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
 		instance.ModManager.ResolveMods();
 		instance.ModManager.LoadMods(ModLoadPhase.BeforeGameAssembly);
@@ -194,7 +195,7 @@ internal sealed class Nickel
 	}
 
 	[EventPriority(double.MaxValue)]
-	private void OnModLoadPhaseFinished(object? sender, ModLoadPhase phase)
+	private void OnModLoadPhaseFinished(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterDbInit)
 			return;
@@ -202,7 +203,7 @@ internal sealed class Nickel
 	}
 
 	[EventPriority(double.MaxValue)]
-	private void OnLoadStringsForLocale(object? sender, LoadStringsForLocaleEventArgs e)
+	private void OnLoadStringsForLocale(object? _, LoadStringsForLocaleEventArgs e)
 		=> this.ModManager.ContentManager?.InjectLocalizations(e.Locale, e.Localizations);
 
 	private static DirectoryInfo GetOrCreateDefaultModLibraryDirectory()

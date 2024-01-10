@@ -26,7 +26,7 @@ internal sealed class LegacyAssemblyPluginLoaderPartAssembler : IAssemblyPluginL
 		this.Database = database;
 	}
 
-	public Error<string>? ValidatePluginParts(IPluginPackage<IAssemblyModManifest> package, Assembly assembly, IReadOnlySet<Type> partTypes)
+	public Error<string>? ValidatePluginParts(IPluginPackage<IAssemblyModManifest> _, Assembly assembly, IReadOnlySet<Type> partTypes)
 	{
 		if (partTypes.Count <= 0)
 			return new($"The assembly {assembly} does not include any {typeof(ILegacyManifest)} subclasses.");

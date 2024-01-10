@@ -48,7 +48,7 @@ internal sealed class SpriteManager
 		}
 	}
 
-	private void OnGetTexture(object? sender, SpriteLoaderPatches.GetTextureEventArgs e)
+	private void OnGetTexture(object? _, SpriteLoaderPatches.GetTextureEventArgs e)
 	{
 		if (e.Texture is not null)
 			return;
