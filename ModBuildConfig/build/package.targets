@@ -41,6 +41,7 @@
 		<EnableModZip Condition="'$(EnableModZip)' == ''">false</EnableModZip>
 		<IncludedModProjectPaths Condition="'$(IncludedModProjectPaths)' == ''"></IncludedModProjectPaths>
 		<EnableGameDebugging Condition="'$(EnableGameDebugging)' == ''">true</EnableGameDebugging>
+		<IgnoreAccessChecks>true</IgnoreAccessChecks>
 	</PropertyGroup>
 
 	<!-- Trying to find the game path - needed if ModLoaderPath, GameDllPath or GameExePath is not set -->
@@ -115,15 +116,16 @@
 
 	<!-- Add assembly references -->
 	<ItemGroup>
-		<Reference Include="CobaltCore" Private="False" HintPath="$(GameDllPath)"/>
-		<Reference Include="$(_ModLoaderName)Common" Private="False" HintPath="$(ModLoaderPath)\$(_ModLoaderName)Common.dll"/>
-		<Reference Include="$(_ModLoaderName)" Private="False" HintPath="$(ModLoaderPath)\$(_ModLoaderName).dll"/>
-		<Reference Include="0Harmony" Private="False" HintPath="$(ModLoaderPath)\0Harmony.dll"/>
-		<Reference Include="Microsoft.Extensions.Logging.Abstractions" Private="False" HintPath="$(ModLoaderPath)\Microsoft.Extensions.Logging.Abstractions.dll"/>
-		<Reference Include="PluginManager" Private="False" HintPath="$(ModLoaderPath)\PluginManager.dll"/>
-		<Reference Include="PluginManager.Cecil" Private="False" HintPath="$(ModLoaderPath)\PluginManager.Cecil.dll"/>
-		<Reference Include="Shrike" Private="False" HintPath="$(ModLoaderPath)\Shrike.dll"/>
-		<Reference Include="Shrike.Harmony" Private="False" HintPath="$(ModLoaderPath)\Shrike.Harmony.dll"/>
+		<PackageReference Include="MakeTypesPublic" Version="1.0.3" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+		<Reference Include="CobaltCore" Private="False" HintPath="$(GameDllPath)" IgnoreAccessChecks="true" />
+		<Reference Include="$(_ModLoaderName)Common" Private="False" HintPath="$(ModLoaderPath)\$(_ModLoaderName)Common.dll" />
+		<Reference Include="$(_ModLoaderName)" Private="False" HintPath="$(ModLoaderPath)\$(_ModLoaderName).dll" />
+		<Reference Include="0Harmony" Private="False" HintPath="$(ModLoaderPath)\0Harmony.dll" />
+		<Reference Include="Microsoft.Extensions.Logging.Abstractions" Private="False" HintPath="$(ModLoaderPath)\Microsoft.Extensions.Logging.Abstractions.dll" />
+		<Reference Include="PluginManager" Private="False" HintPath="$(ModLoaderPath)\PluginManager.dll" />
+		<Reference Include="PluginManager.Cecil" Private="False" HintPath="$(ModLoaderPath)\PluginManager.Cecil.dll" />
+		<Reference Include="Shrike" Private="False" HintPath="$(ModLoaderPath)\Shrike.dll" />
+		<Reference Include="Shrike.Harmony" Private="False" HintPath="$(ModLoaderPath)\Shrike.Harmony.dll" />
 		<Reference Include="OneOf" Private="False" HintPath="$(ModLoaderPath)\OneOf.dll" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" IncludeAssets="compile" PrivateAssets="all" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" IncludeAssets="compile" PrivateAssets="all" />

@@ -12,8 +12,8 @@ internal static class ArtifactRewardPatches
 	internal static void Apply(Harmony harmony)
 	{
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(ArtifactReward), "GetBlockedArtifacts")
-				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(ArtifactReward)}.GetBlockedArtifacts`"),
+			original: AccessTools.DeclaredMethod(typeof(ArtifactReward), nameof(ArtifactReward.GetBlockedArtifacts))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(ArtifactReward)}.{nameof(ArtifactReward.GetBlockedArtifacts)}`"),
 			postfix: new HarmonyMethod(typeof(ArtifactRewardPatches), nameof(GetBlockedArtifacts_Postfix))
 		);
 	}

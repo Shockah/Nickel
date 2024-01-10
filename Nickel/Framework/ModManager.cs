@@ -383,7 +383,6 @@ internal sealed class ModManager
 						() => this.ContentManager!.Parts
 					)
 				),
-				new ModGameAccess(),
 				() => this.CurrentModLoadPhase
 			);
 			this.UniqueNameToHelper[package.Manifest.UniqueName] = helper;

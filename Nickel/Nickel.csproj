@@ -13,6 +13,8 @@
 		<Version>0.1.0</Version>
 		<OutputType>Exe</OutputType>
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+		<NoWarn>$(NoWarn);CS0436</NoWarn>
+		<IgnoreAccessChecks>true</IgnoreAccessChecks>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -58,7 +60,8 @@
 		<PackageReference Include="SingleFileExtractor.Core" Version="2.2.0" />
 		<PackageReference Include="VdfConverter" Version="1.0.3" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" PrivateAssets="all" />
-		<Reference Include="CobaltCore" HintPath="$(GameDllPath)" Private="False" />
+		<PackageReference Include="MakeTypesPublic" Version="1.0.3" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+		<Reference Include="CobaltCore" HintPath="$(GameDllPath)" Private="False" IgnoreAccessChecks="true" />
 
 		<!-- mod management -->
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />

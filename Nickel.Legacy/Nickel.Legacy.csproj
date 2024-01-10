@@ -6,8 +6,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\LegacyModLoader\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj" />
-		<PackageReference Include="Nickel.ModBuildConfig" Version="0.1.2" />
-		<PackageReference Include="OneOf" Version="3.0.263" PrivateAssets="all" />
+		<PackageReference Include="Nickel.ModBuildConfig" Version="0.1.3" />
 		<PackageReference Include="OneOf.SourceGenerator" Version="3.0.263" PrivateAssets="all" />
 	</ItemGroup>
 </Project>

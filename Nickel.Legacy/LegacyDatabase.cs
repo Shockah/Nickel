@@ -40,9 +40,6 @@ internal sealed class LegacyDatabase(
 	private List<ExternalStory> ExternalStories { get; } = [];
 	private List<(string, MethodInfo, bool, bool)> ChoiceAndCommands { get; } = [];
 
-	// Used to change the return value of EnumExtensions.Key(this Deck deck)
-	private Dictionary<Deck, string>? ReflectedDeckStrings { get; set; }
-
 	public void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		this.InjectCharacterLocalizations(locale, localizations);
@@ -236,10 +233,7 @@ internal sealed class LegacyDatabase(
 		value.Id = (int)entry.Deck;
 		this.GlobalNameToDeck[value.GlobalName] = value;
 
-		this.ReflectedDeckStrings ??= AccessTools
-			.DeclaredField(typeof(EnumExtensions), "deckStrs")
-			.EmitStaticGetter<Dictionary<Deck, string>>()();
-		this.ReflectedDeckStrings[entry.Deck] = value.GlobalName;
+		EnumExtensions.deckStrs[entry.Deck] = value.GlobalName;
 	}
 
 	public void RegisterStatus(IModManifest mod, ExternalStatus value)

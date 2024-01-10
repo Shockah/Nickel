@@ -20,8 +20,8 @@ internal static class TTGlossaryPatches
 			finalizer: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(TTGlossaryPatches), nameof(BuildIconAndText_Finalizer)))
 		);
 		harmony.Patch(
-		   original: AccessTools.DeclaredMethod(typeof(TTGlossary), "TryGetIcon")
-				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(TTGlossary)}.TryGetIcon`"),
+		   original: AccessTools.DeclaredMethod(typeof(TTGlossary), nameof(TTGlossary.TryGetIcon))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(TTGlossary)}.{nameof(TTGlossary.TryGetIcon)}`"),
 		   postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(TTGlossaryPatches), nameof(TryGetIcon_Postfix)))
 	   );
 	}

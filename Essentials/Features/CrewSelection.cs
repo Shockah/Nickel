@@ -18,8 +18,6 @@ internal static class CrewSelection
 	private const int CharactersPerRow = 2;
 	private const int MaxCharactersOnScreen = 8;
 
-	private static readonly Lazy<Func<Rect>> CharSelectPosGetter = new(() => AccessTools.DeclaredField(typeof(NewRunOptions), "charSelectPos").EmitStaticGetter<Rect>());
-
 	private static int ScrollPosition = 0;
 
 	private static int MaxScroll
@@ -53,7 +51,7 @@ internal static class CrewSelection
 			prefix: new HarmonyMethod(typeof(CrewSelection), nameof(NewRunOptions_Render_Prefix))
 		);
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(NewRunOptions), "CharSelect"),
+			original: AccessTools.DeclaredMethod(typeof(NewRunOptions), nameof(NewRunOptions.CharSelect)),
 			postfix: new HarmonyMethod(typeof(CrewSelection), nameof(NewRunOptions_CharSelect_Postfix)),
 			transpiler: new HarmonyMethod(typeof(CrewSelection), nameof(NewRunOptions_CharSelect_Transpiler))
 		);
@@ -74,18 +72,15 @@ internal static class CrewSelection
 	private static void NewRunOptions_CharSelect_Postfix(G g)
 	{
 		// rendering character list scrolling arrow buttons
-		var charSelectPos = CharSelectPosGetter.Value();
-
 		if (ScrollPosition > 0)
 		{
-			Rect rect = new(charSelectPos.x + 18, charSelectPos.y - 52, 33, 24);
+			Rect rect = new(NewRunOptions.charSelectPos.x + 18, NewRunOptions.charSelectPos.y - 52, 33, 24);
 			OnMouseDown onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Max(0, ScrollPosition - MaxCharactersOnScreen));
 			RotatedButtonSprite(g, rect, StableUK.btn_move_left, StableSpr.buttons_move, StableSpr.buttons_move_on, null, null, inactive: false, flipX: true, flipY: false, onMouseDown, autoFocus: false, noHover: false, gamepadUntargetable: true);
 		}
-
 		if (ScrollPosition < MaxScroll)
 		{
-			Rect rect = new(charSelectPos.x + 18, charSelectPos.y + 140, 33, 24);
+			Rect rect = new(NewRunOptions.charSelectPos.x + 18, NewRunOptions.charSelectPos.y + 140, 33, 24);
 			OnMouseDown onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Clamp(ScrollPosition + MaxCharactersOnScreen, 0, MaxPageByPageScroll));
 			RotatedButtonSprite(g, rect, StableUK.btn_move_right, StableSpr.buttons_move, StableSpr.buttons_move_on, null, null, inactive: false, flipX: false, flipY: false, onMouseDown, autoFocus: false, noHover: false, gamepadUntargetable: true);
 		}
