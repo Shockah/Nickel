@@ -21,7 +21,7 @@ internal sealed record ContentManager(
 		new DeckManager(currentModLoadPhaseProvider, vanillaModManifest),
 		new StatusManager(currentModLoadPhaseProvider, vanillaModManifest),
 		new CardManager(currentModLoadPhaseProvider, vanillaModManifest),
-		new ArtifactManager(currentModLoadPhaseProvider),
+		new ArtifactManager(currentModLoadPhaseProvider, vanillaModManifest),
 		new CharacterManager(currentModLoadPhaseProvider, loggerProvider),
 		new PartManager(currentModLoadPhaseProvider),
 		new ShipManager(currentModLoadPhaseProvider)

@@ -109,7 +109,7 @@ internal sealed class StatusManager
 			{
 				Definition = DB.statuses[status],
 				Name = locale => DB.currentLocale.strings[$"status.{status}.name"],
-				Description = locale => DB.currentLocale.strings[$"status.{status}.name"]
+				Description = locale => DB.currentLocale.strings[$"status.{status}.desc"]
 			}
 		);
 	}

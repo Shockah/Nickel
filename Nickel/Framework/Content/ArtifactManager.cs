@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Nickel;
@@ -8,12 +7,14 @@ namespace Nickel;
 internal sealed class ArtifactManager
 {
 	private AfterDbInitManager<Entry> Manager { get; }
+	private IModManifest VanillaModManifest { get; }
 	private Dictionary<Type, Entry> ArtifactTypeToEntry { get; } = [];
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 
-	public ArtifactManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
+	public ArtifactManager(Func<ModLoadPhase> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		this.VanillaModManifest = vanillaModManifest;
 	}
 
 	internal void InjectQueuedEntries()
@@ -34,19 +35,29 @@ internal sealed class ArtifactManager
 		return entry;
 	}
 
-	public bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IArtifactEntry entry)
+	public IArtifactEntry? LookupByArtifactType(Type type)
 	{
-		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry))
-		{
-			entry = typedEntry;
-			return true;
-		}
-		else
-		{
-			entry = default;
-			return false;
-		}
+		if (this.ArtifactTypeToEntry.TryGetValue(type, out var entry))
+			return entry;
+		if (type.Assembly != typeof(Artifact).Assembly)
+			return null;
+
+		return new Entry(
+			modOwner: this.VanillaModManifest,
+			uniqueName: type.Name,
+			configuration: new()
+			{
+				ArtifactType = type,
+				Meta = DB.artifactMetas[type.Name],
+				Sprite = DB.artifactSprites[type.Name],
+				Name = locale => DB.currentLocale.strings[$"artifact.{type.Name}.name"],
+				Description = locale => DB.currentLocale.strings[$"artifact.{type.Name}.desc"]
+			}
+		);
 	}
+
+	public IArtifactEntry? LookupByUniqueName(string uniqueName)
+		=> this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry) ? typedEntry : null;
 
 	private static void Inject(Entry entry)
 	{
