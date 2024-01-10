@@ -66,9 +66,18 @@ internal sealed class AssemblyModLoadContextProvider(
 					return this.SharedContext.LoadFromStream(assemblyStream);
 				}
 			}
-
-			using var assemblyStream2 = this.Package.PackageRoot.GetRelativeFile($"{assemblyName.Name ?? assemblyName.FullName}.dll").OpenRead();
-			return this.LoadFromStream(assemblyStream2);
+			else
+			{
+				try
+				{
+					using var assemblyStream = this.Package.PackageRoot.GetRelativeFile($"{assemblyName.Name ?? assemblyName.FullName}.dll").OpenRead();
+					return this.SharedContext.LoadFromStream(assemblyStream);
+				}
+				catch
+				{
+					return this.SharedContext.LoadFromAssemblyName(assemblyName);
+				}
+			}
 		}
 	}
 }
