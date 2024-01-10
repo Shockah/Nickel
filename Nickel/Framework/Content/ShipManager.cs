@@ -17,7 +17,7 @@ internal sealed class ShipManager
 		ArtifactRewardPatches.OnGetBlockedArtifacts.Subscribe(this.OnGetBlockedArtifacts);
 	}
 
-	private void OnGetUnlockedShips(object? sender, HashSet<string> unlockedShips)
+	private void OnGetUnlockedShips(object? _, HashSet<string> unlockedShips)
 	{
 		foreach (var (uniqueName, entry) in this.UniqueNameToEntry)
 		{
@@ -27,7 +27,7 @@ internal sealed class ShipManager
 		}
 	}
 
-	private void OnGetBlockedArtifacts(object? sender, ArtifactRewardPatches.GetBlockedArtifactsEventArgs e)
+	private void OnGetBlockedArtifacts(object? _, ArtifactRewardPatches.GetBlockedArtifactsEventArgs e)
 	{
 		foreach (var (uniqueName, entry) in this.UniqueNameToEntry)
 		{

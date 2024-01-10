@@ -20,7 +20,7 @@ internal sealed class StatusManager
 		TTGlossaryPatches.OnTryGetIcon.Subscribe(this.OnTryGetIcon);
 	}
 
-	private void OnTryGetIcon(object? sender, TTGlossaryPatches.TryGetIconEventArgs e)
+	private void OnTryGetIcon(object? _, TTGlossaryPatches.TryGetIconEventArgs e)
 	{
 		var keySplit = e.Glossary.key.Split(".");
 		if (keySplit.Length < 2)

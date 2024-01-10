@@ -66,7 +66,7 @@ public sealed class ModEntry : Mod
 	}
 
 	[EventPriority(double.MaxValue)]
-	private void OnModLoadPhaseFinished(object? sender, ModLoadPhase phase)
+	private void OnModLoadPhaseFinished(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterDbInit)
 			return;
@@ -74,6 +74,6 @@ public sealed class ModEntry : Mod
 	}
 
 	[EventPriority(double.MaxValue)]
-	private void OnLoadStringsForLocale(object? sender, LoadStringsForLocaleEventArgs e)
+	private void OnLoadStringsForLocale(object? _, LoadStringsForLocaleEventArgs e)
 		=> this.Database.InjectLocalizations(e.Locale, e.Localizations);
 }

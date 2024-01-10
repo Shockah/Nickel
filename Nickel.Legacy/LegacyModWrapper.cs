@@ -61,7 +61,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(0)]
-	private void BootMod(object? sender, ModLoadPhase phase)
+	private void BootMod(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -71,7 +71,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-100)]
-	private void LoadSpriteManifest(object? sender, ModLoadPhase phase)
+	private void LoadSpriteManifest(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -81,7 +81,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-200)]
-	private void LoadGlossaryManifest(object? sender, ModLoadPhase phase)
+	private void LoadGlossaryManifest(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -91,7 +91,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-300)]
-	private void LoadDeckManifest(object? sender, ModLoadPhase phase)
+	private void LoadDeckManifest(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -101,7 +101,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-400)]
-	private void LoadStatusManifest(object? sender, ModLoadPhase phase)
+	private void LoadStatusManifest(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -111,7 +111,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-500)]
-	private void LoadCardManifest(object? sender, ModLoadPhase phase)
+	private void LoadCardManifest(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -121,7 +121,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-600)]
-	private void LoadArtifactManifest(object? sender, ModLoadPhase phase)
+	private void LoadArtifactManifest(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -131,7 +131,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-700)]
-	private void LoadAnimationManifest(object? sender, ModLoadPhase phase)
+	private void LoadAnimationManifest(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -141,7 +141,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-800)]
-	private void LoadCharacterManifest(object? sender, ModLoadPhase phase)
+	private void LoadCharacterManifest(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -151,7 +151,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-900)]
-	private void LoadPartTypeManifest(object? sender, ModLoadPhase phase)
+	private void LoadPartTypeManifest(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -161,7 +161,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-1000)]
-	private void LoadShipPartManifest(object? sender, ModLoadPhase phase)
+	private void LoadShipPartManifest(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -171,7 +171,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-1100)]
-	private void LoadShipManifest(object? sender, ModLoadPhase phase)
+	private void LoadShipManifest(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -181,7 +181,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-1200)]
-	private void LoadStarterShipManifest(object? sender, ModLoadPhase phase)
+	private void LoadStarterShipManifest(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -191,7 +191,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-1300)]
-	private void LoadStoryManifests(object? sender, ModLoadPhase phase)
+	private void LoadStoryManifests(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -201,7 +201,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-1400)]
-	private void LoadEventHubManifests(object? sender, ModLoadPhase phase)
+	private void LoadEventHubManifests(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;
@@ -211,7 +211,7 @@ internal sealed class LegacyModWrapper : Mod
 	}
 
 	[EventPriority(-10000)]
-	private void FinalizePreparations(object? sender, ModLoadPhase phase)
+	private void FinalizePreparations(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterGameAssembly)
 			return;

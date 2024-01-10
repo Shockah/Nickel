@@ -148,7 +148,7 @@ internal sealed class CharacterManager
 		localizations[$"char.{key}.desc"] = description;
 	}
 
-	private void OnGetUnlockedChars(object? sender, HashSet<Deck> unlockedCharacters)
+	private void OnGetUnlockedChars(object? _, HashSet<Deck> unlockedCharacters)
 	{
 		foreach (var entry in this.UniqueNameToCharacterEntry.Values)
 			if (!entry.Configuration.StartLocked)

@@ -1,5 +1,4 @@
 using Mono.Cecil;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,11 +7,11 @@ namespace Nanoray.PluginManager.Cecil;
 
 public sealed class ExtendableAssemblyDefinitionEditor : IAssemblyEditor
 {
-	private readonly List<IAssemblyDefinitionEditor> definitionEditors = [];
+	private readonly List<IAssemblyDefinitionEditor> DefinitionEditors = [];
 
 	public Stream EditAssemblyStream(string name, Stream assemblyStream)
 	{
-		var interestedEditors = this.definitionEditors.Where(x => x.WillEditAssembly(name)).ToList();
+		var interestedEditors = this.DefinitionEditors.Where(x => x.WillEditAssembly(name)).ToList();
 		if (interestedEditors.Count <= 0)
 			return assemblyStream;
 
@@ -27,8 +26,8 @@ public sealed class ExtendableAssemblyDefinitionEditor : IAssemblyEditor
 	}
 
 	public void RegisterDefinitionEditor(IAssemblyDefinitionEditor definitionEditor)
-		=> this.definitionEditors.Add(definitionEditor);
+		=> this.DefinitionEditors.Add(definitionEditor);
 
 	public void UnregisterDefinitionEditor(IAssemblyDefinitionEditor definitionEditor)
-		=> this.definitionEditors.Remove(definitionEditor);
+		=> this.DefinitionEditors.Remove(definitionEditor);
 }

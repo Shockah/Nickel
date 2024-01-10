@@ -125,7 +125,7 @@ internal class NickelLauncher
 		logger.LogDebug("Launched Nickel with PID {PID}.", process.Id);
 
 		// Detect if parent process is killed
-		void OnExited(object? sender, EventArgs e)
+		void OnExited(object? _, EventArgs e)
 		{
 			if (process.HasExited)
 				return;

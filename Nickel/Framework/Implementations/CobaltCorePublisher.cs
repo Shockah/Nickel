@@ -6,7 +6,8 @@ namespace Nickel;
 
 public class CobaltCorePublisher : IAssemblyDefinitionEditor
 {
-	public bool WillEditAssembly(string assemblyName) => assemblyName == "CobaltCore.dll";
+	public bool WillEditAssembly(string fileBaseName)
+		=> fileBaseName == "CobaltCore.dll";
 
 	public void EditAssemblyDefinition(AssemblyDefinition definition)
 	{
@@ -28,19 +29,17 @@ public class CobaltCorePublisher : IAssemblyDefinitionEditor
 
 		foreach (var field in type.Fields)
 		{
-			if (!field.IsPublic)
-			{
-				field.CustomAttributes.Add(new CustomAttribute(jsonIgnoreCtor));
-				field.IsPublic = true;
-			}
+			if (field.IsPublic)
+				continue;
+			field.CustomAttributes.Add(new CustomAttribute(jsonIgnoreCtor));
+			field.IsPublic = true;
 		}
 
 		foreach (var property in type.Properties)
 		{
-			if (!property.GetMethod.IsPublic && !property.SetMethod.IsPublic)
-			{
-				property.CustomAttributes.Add(new CustomAttribute(jsonIgnoreCtor));
-			}
+			if (property.GetMethod.IsPublic || property.SetMethod.IsPublic)
+				continue;
+			property.CustomAttributes.Add(new CustomAttribute(jsonIgnoreCtor));
 		}
 
 		foreach (var method in type.Methods)
