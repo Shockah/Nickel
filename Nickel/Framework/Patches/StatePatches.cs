@@ -28,9 +28,9 @@ internal static class StatePatches
 
 	private static void EnumerateAllArtifacts_Postfix(State __instance, ref List<Artifact> __result)
 	{
-		var eventArgs = new EnumerateAllArtifactsEventArgs { State = __instance, BlockedArtifacts = __result.ToList() };
+		var eventArgs = new EnumerateAllArtifactsEventArgs { State = __instance, Artifacts = __result.ToList() };
 		OnEnumerateAllArtifacts.Raise(null, eventArgs);
-		__result = eventArgs.BlockedArtifacts;
+		__result = eventArgs.Artifacts;
 	}
 
 	private static void SaveIfRelease_Postfix(State __instance)
@@ -42,6 +42,6 @@ internal static class StatePatches
 	internal sealed class EnumerateAllArtifactsEventArgs
 	{
 		public required State State { get; init; }
-		public required List<Artifact> BlockedArtifacts { get; set; }
+		public required List<Artifact> Artifacts { get; set; }
 	}
 }

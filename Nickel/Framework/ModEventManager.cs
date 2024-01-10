@@ -74,9 +74,9 @@ internal sealed class ModEventManager
 
 	private void OnEnumerateAllArtifacts(object? _, StatePatches.EnumerateAllArtifactsEventArgs e)
 	{
-		if (e.State.IsOutsideRun())
+		if (e.State.IsOutsideRun() || RunSummaryPatches.IsDuringRunSummarySaveFromState)
 			return;
-		e.BlockedArtifacts = e.BlockedArtifacts.Prepend(this.PrefixArtifact).Append(this.SuffixArtifact).ToList();
+		e.Artifacts = e.Artifacts.Prepend(this.PrefixArtifact).Append(this.SuffixArtifact).ToList();
 	}
 
 	private GeneratedHookableSubclass<Artifact> CreateHookableArtifactSubclass()

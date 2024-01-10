@@ -163,6 +163,7 @@ internal sealed class Nickel
 		ArtifactRewardPatches.Apply(harmony);
 		DBPatches.Apply(harmony);
 		GPatches.Apply(harmony);
+		RunSummaryPatches.Apply(harmony);
 		SpriteLoaderPatches.Apply(harmony);
 		StatePatches.Apply(harmony, saveInDebug);
 		StoryVarsPatches.Apply(harmony);
