@@ -158,6 +158,7 @@ internal sealed class LegacyDatabase(
 				DB.story.all.Add(story.GlobalName, node);
 				continue;
 			}
+			node.lines.Clear();
 
 			foreach (var rawInstruction in rawInstructions)
 			{
