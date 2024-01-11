@@ -1,15 +1,20 @@
 using Microsoft.Extensions.Logging;
+using Nanoray.Pintail;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using Nanoray.PluginManager.Implementations;
+using Newtonsoft.Json.Serialization;
 using Nickel.Common;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Emit;
+using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
+using System.Diagnostics;
 
 namespace Nickel;
 
@@ -34,6 +39,7 @@ internal sealed class ModManager
 	private Dictionary<string, IModHelper> UniqueNameToHelper { get; } = [];
 	private Dictionary<string, Mod> UniqueNameToInstance { get; } = [];
 	private Dictionary<string, IPluginPackage<IModManifest>> UniqueNameToPackage { get; } = [];
+	private IProxyManager<string> ProxyManager { get; }
 
 	public ModManager(
 		DirectoryInfo modsDirectory,
@@ -68,6 +74,14 @@ internal sealed class ModManager
 			this.ObtainLogger,
 			this.ModLoaderModManifest
 		);
+
+		var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"{this.GetType().Namespace}.Proxies, Version={this.GetType().Assembly.GetName().Version}, Culture=neutral"), AssemblyBuilderAccess.Run);
+		var moduleBuilder = assemblyBuilder.DefineDynamicModule($"{this.GetType().Namespace}.Proxies");
+		this.ProxyManager = new ProxyManager<string>(moduleBuilder, new ProxyManagerConfiguration<string>(
+			proxyPrepareBehavior: ProxyManagerProxyPrepareBehavior.Eager,
+			proxyObjectInterfaceMarking: ProxyObjectInterfaceMarking.MarkerWithProperty,
+			accessLevelChecking: AccessLevelChecking.DisabledButOnlyAllowPublicMembers
+		));
 
 		var loadContextProvider = new AssemblyModLoadContextProvider(
 			AssemblyLoadContext.GetLoadContext(this.GetType().Assembly) ?? AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default
@@ -344,14 +358,26 @@ internal sealed class ModManager
 	internal void ContinueAfterLoadingGameAssembly()
 	{
 		this.ContentManager = new(() => this.CurrentModLoadPhase, this.ObtainLogger, this.VanillaModManifest);
+		JSONSettings.indented.Converters.Add(new ProxyContractResolver<string>(this.ProxyManager));
 		JSONSettings.indented.ContractResolver = new ModificatingContractResolver(
-			contractModificator: this.ContentManager.ModifyJsonContract,
+			contractModificator: this.ModifyJsonContract,
 			wrapped: JSONSettings.indented.ContractResolver
 		);
+		JSONSettings.serializer.Converters.Add(new ProxyContractResolver<string>(this.ProxyManager));
 		JSONSettings.serializer.ContractResolver = new ModificatingContractResolver(
-			contractModificator: this.ContentManager.ModifyJsonContract,
+			contractModificator: this.ModifyJsonContract,
 			wrapped: JSONSettings.serializer.ContractResolver
 		);
+	}
+
+	private void ModifyJsonContract(Type type, JsonContract contract)
+	{
+		if (type.IsAssignableTo(typeof(IProxyObject.IWithProxyTargetInstanceProperty)))
+		{
+			contract.Converter = new ProxyContractResolver<string>(this.ProxyManager);
+			return;
+		}
+		this.ContentManager!.ModifyJsonContract(type, contract);
 	}
 
 	private ILogger ObtainLogger(IModManifest manifest)
@@ -361,7 +387,6 @@ internal sealed class ModManager
 			logger = this.LoggerFactory.CreateLogger(manifest.UniqueName);
 			this.UniqueNameToLogger[manifest.UniqueName] = logger;
 		}
-
 		return logger;
 	}
 
@@ -379,7 +404,7 @@ internal sealed class ModManager
 		if (!this.UniqueNameToHelper.TryGetValue(package.Manifest.UniqueName, out var helper))
 		{
 			helper = new ModHelper(
-				new ModRegistry(package.Manifest, this.VanillaModManifest, this.UniqueNameToInstance, this.UniqueNameToPackage),
+				new ModRegistry(package.Manifest, this.VanillaModManifest, this.UniqueNameToInstance, this.UniqueNameToPackage, this.ProxyManager),
 				new ModEvents(package.Manifest, this.EventManager),
 				new ModContent(
 					new ModSprites(package, () => this.ContentManager!.Sprites),

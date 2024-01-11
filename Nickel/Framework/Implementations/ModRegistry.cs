@@ -5,8 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
 
 namespace Nickel;
 
@@ -28,20 +26,15 @@ internal sealed class ModRegistry : IModRegistry
 		IModManifest modManifest,
 		IModManifest vanillaModManifest,
 		IReadOnlyDictionary<string, Mod> modUniqueNameToInstance,
-		IReadOnlyDictionary<string, IPluginPackage<IModManifest>> modUniqueNameToPackage
+		IReadOnlyDictionary<string, IPluginPackage<IModManifest>> modUniqueNameToPackage,
+		IProxyManager<string> proxyManager
 	)
 	{
 		this.ModManifest = modManifest;
 		this.VanillaModManifest = vanillaModManifest;
 		this.ModUniqueNameToInstance = modUniqueNameToInstance;
 		this.ModUniqueNameToPackage = modUniqueNameToPackage;
-
-		var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"{this.GetType().Namespace}.Proxies, Version={this.GetType().Assembly.GetName().Version}, Culture=neutral"), AssemblyBuilderAccess.Run);
-		var moduleBuilder = assemblyBuilder.DefineDynamicModule($"{this.GetType().Namespace}.Proxies");
-		this.ProxyManager = new ProxyManager<string>(moduleBuilder, new ProxyManagerConfiguration<string>(
-			proxyPrepareBehavior: ProxyManagerProxyPrepareBehavior.Eager,
-			accessLevelChecking: AccessLevelChecking.DisabledButOnlyAllowPublicMembers
-		));
+		this.ProxyManager = proxyManager;
 	}
 
 	public bool TryProxy<TProxy>(object @object, [MaybeNullWhen(false)] out TProxy proxy) where TProxy : class

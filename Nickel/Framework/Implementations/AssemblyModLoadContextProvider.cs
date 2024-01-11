@@ -39,13 +39,19 @@ internal sealed class AssemblyModLoadContextProvider(
 		return context;
 	}
 
-	private sealed class CustomContext(
-		AssemblyLoadContext sharedContext,
-		IPluginPackage<IAssemblyModManifest> package
-	) : AssemblyLoadContext
+	private sealed class CustomContext : AssemblyLoadContext
 	{
-		private AssemblyLoadContext SharedContext { get; } = sharedContext;
-		private IPluginPackage<IAssemblyModManifest> Package { get; } = package;
+		private AssemblyLoadContext SharedContext { get; }
+		private IPluginPackage<IAssemblyModManifest> Package { get; }
+
+		public CustomContext(
+			AssemblyLoadContext sharedContext,
+			IPluginPackage<IAssemblyModManifest> package
+		) : base(package.Manifest.UniqueName)
+		{
+			this.SharedContext = sharedContext;
+			this.Package = package;
+		}
 
 		protected override Assembly? Load(AssemblyName assemblyName)
 		{
