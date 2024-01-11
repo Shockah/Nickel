@@ -64,8 +64,7 @@ internal sealed class ArtifactManager
 		var key = entry.Configuration.ArtifactType.Name; // TODO: change this when Artifact.Key gets patched
 		DB.artifacts[key] = entry.Configuration.ArtifactType;
 		DB.artifactMetas[key] = entry.Configuration.Meta;
-		if (entry.Configuration.Sprite is { } sprite)
-			DB.artifactSprites[key] = sprite;
+		DB.artifactSprites[key] = entry.Configuration.Sprite;
 		if (!entry.Configuration.Meta.pools.Contains(ArtifactPool.Unreleased))
 			DB.releasedArtifacts.Add(key);
 
