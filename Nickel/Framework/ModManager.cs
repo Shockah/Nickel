@@ -358,12 +358,20 @@ internal sealed class ModManager
 	internal void ContinueAfterLoadingGameAssembly()
 	{
 		this.ContentManager = new(() => this.CurrentModLoadPhase, this.ObtainLogger, this.VanillaModManifest);
-		JSONSettings.indented.Converters.Add(new ProxyContractResolver<string>(this.ProxyManager));
+		this.PrepareJsonSerialization();
+	}
+
+	private void PrepareJsonSerialization()
+	{
+		var proxyContractResolver = new ProxyContractResolver<string>(this.ProxyManager);
+
+		JSONSettings.indented.Converters.Add(proxyContractResolver);
 		JSONSettings.indented.ContractResolver = new ModificatingContractResolver(
 			contractModificator: this.ModifyJsonContract,
 			wrapped: JSONSettings.indented.ContractResolver
 		);
-		JSONSettings.serializer.Converters.Add(new ProxyContractResolver<string>(this.ProxyManager));
+
+		JSONSettings.serializer.Converters.Add(proxyContractResolver);
 		JSONSettings.serializer.ContractResolver = new ModificatingContractResolver(
 			contractModificator: this.ModifyJsonContract,
 			wrapped: JSONSettings.serializer.ContractResolver
