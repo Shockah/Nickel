@@ -108,8 +108,8 @@ internal sealed class StatusManager
 			configuration: new()
 			{
 				Definition = DB.statuses[status],
-				Name = locale => DB.currentLocale.strings[$"status.{status}.name"],
-				Description = locale => DB.currentLocale.strings[$"status.{status}.desc"]
+				Name = _ => Loc.T($"status.{status}.name"),
+				Description = _ => Loc.T($"status.{status}.desc")
 			}
 		);
 	}

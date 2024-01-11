@@ -50,8 +50,8 @@ internal sealed class ArtifactManager
 				ArtifactType = type,
 				Meta = DB.artifactMetas[type.Name],
 				Sprite = DB.artifactSprites[type.Name],
-				Name = locale => DB.currentLocale.strings[$"artifact.{type.Name}.name"],
-				Description = locale => DB.currentLocale.strings[$"artifact.{type.Name}.desc"]
+				Name = _ => Loc.T($"artifact.{type.Name}.name"),
+				Description = _ => Loc.T($"artifact.{type.Name}.desc")
 			}
 		);
 	}

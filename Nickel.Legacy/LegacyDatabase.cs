@@ -70,6 +70,7 @@ internal sealed class LegacyDatabase(
 			{
 				localizations[$"char.{key}"] = name;
 				localizations[$"char.{key}.name"] = name;
+				localizations[$"char.{key}.desc.missing"] = $"<c={new Color((uint)character.Deck.DeckColor.ToArgb())}>{name.ToUpper()}..?</c>\n{name} is missing.";
 			}
 			if (character.GetDesc(locale) is { } description)
 			{
@@ -228,7 +229,14 @@ internal sealed class LegacyDatabase(
 			Definition = new() { color = new((uint)value.DeckColor.ToArgb()), titleColor = new((uint)value.TitleColor.ToArgb()) },
 			DefaultCardArt = (Spr)value.CardArtDefault.Id!.Value,
 			BorderSprite = (Spr)value.BorderSprite.Id!.Value,
-			OverBordersSprite = value.BordersOverSprite is null ? null : (Spr)value.BordersOverSprite.Id!.Value
+			OverBordersSprite = value.BordersOverSprite is null ? null : (Spr)value.BordersOverSprite.Id!.Value,
+			Name = locale =>
+			{
+				foreach (var character in this.GlobalNameToCharacter.Values)
+					if (character.Deck.Id == value.Id)
+						return character.GetCharacterName(locale);
+				return null;
+			}
 		};
 		var entry = this.HelperProvider(mod).Content.Decks.RegisterDeck(value.GlobalName, configuration);
 		value.Id = (int)entry.Deck;

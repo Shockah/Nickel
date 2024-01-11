@@ -100,7 +100,7 @@ internal sealed class DeckManager
 				DefaultCardArt = DB.cardArtDeckDefault[deck],
 				BorderSprite = DB.deckBorders[deck],
 				OverBordersSprite = DB.deckBordersOver.TryGetValue(deck, out var overBordersSprite) ? overBordersSprite : null,
-				Name = locale => DB.currentLocale.strings[$"char.{deck}.name"]
+				Name = _ => Loc.T($"char.{deck}.name")
 			}
 		);
 	}

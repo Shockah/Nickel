@@ -168,6 +168,7 @@ internal sealed class Nickel
 		StatePatches.Apply(harmony, saveInDebug);
 		StoryVarsPatches.Apply(harmony);
 		TTGlossaryPatches.Apply(harmony);
+		WizardPatches.Apply(harmony);
 
 		instance.ModManager.LoadMods(ModLoadPhase.AfterGameAssembly);
 

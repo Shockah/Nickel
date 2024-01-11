@@ -356,7 +356,7 @@ internal sealed class ModManager
 
 	internal void ContinueAfterLoadingGameAssembly()
 	{
-		this.ContentManager = new(() => this.CurrentModLoadPhase, this.ObtainLogger, this.VanillaModManifest);
+		this.ContentManager = ContentManager.Create(() => this.CurrentModLoadPhase, this.ObtainLogger, this.VanillaModManifest);
 		this.PrepareJsonSerialization();
 	}
 

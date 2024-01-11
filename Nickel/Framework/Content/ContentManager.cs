@@ -16,17 +16,18 @@ internal sealed record ContentManager(
 	ShipManager Ships
 )
 {
-	public ContentManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest) : this(
-		new SpriteManager(),
-		new DeckManager(currentModLoadPhaseProvider, vanillaModManifest),
-		new StatusManager(currentModLoadPhaseProvider, vanillaModManifest),
-		new CardManager(currentModLoadPhaseProvider, vanillaModManifest),
-		new ArtifactManager(currentModLoadPhaseProvider, vanillaModManifest),
-		new CharacterManager(currentModLoadPhaseProvider, loggerProvider),
-		new PartManager(currentModLoadPhaseProvider),
-		new ShipManager(currentModLoadPhaseProvider)
-	)
-	{ }
+	public static ContentManager Create(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
+	{
+		var sprites = new SpriteManager();
+		var decks = new DeckManager(currentModLoadPhaseProvider, vanillaModManifest);
+		var statuses = new StatusManager(currentModLoadPhaseProvider, vanillaModManifest);
+		var cards = new CardManager(currentModLoadPhaseProvider, vanillaModManifest);
+		var artifacts = new ArtifactManager(currentModLoadPhaseProvider, vanillaModManifest);
+		var characters = new CharacterManager(currentModLoadPhaseProvider, loggerProvider, sprites, decks, statuses);
+		var parts = new PartManager(currentModLoadPhaseProvider);
+		var ships = new ShipManager(currentModLoadPhaseProvider);
+		return new(sprites, decks, statuses, cards, artifacts, characters, parts, ships);
+	}
 
 	internal void InjectQueuedEntries()
 	{

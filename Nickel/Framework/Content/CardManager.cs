@@ -49,7 +49,7 @@ internal sealed class CardManager
 				CardType = type,
 				Meta = DB.cardMetas[type.Name],
 				Art = DB.cardArt.TryGetValue(type.Name, out var art) ? art : null,
-				Name = locale => DB.currentLocale.strings[$"card.{type.Name}.name"]
+				Name = _ => Loc.T($"card.{type.Name}.name")
 			}
 		);
 	}
