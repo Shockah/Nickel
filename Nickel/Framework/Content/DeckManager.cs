@@ -116,6 +116,7 @@ internal sealed class DeckManager
 		if (entry.Configuration.OverBordersSprite is { } overBordersSprite)
 			DB.deckBordersOver[entry.Deck] = overBordersSprite;
 		Colors.colorDict[entry.Deck.Key()] = entry.Configuration.Definition.color.ToInt();
+		Colors.colorDict[entry.Deck.ToString()] = entry.Configuration.Definition.color.ToInt();
 
 		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 	}
