@@ -66,7 +66,7 @@
 		<!-- mod management -->
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
-		<PackageReference Include="Lib.Harmony" Version="2.3.0-prerelease.4" />
+		<PackageReference Include="Lib.Harmony" Version="2.3.0-prerelease.5" />
 		<PackageReference Include="Pintail" Version="2.4.0" />
 
 		<!-- mod utilities -->
