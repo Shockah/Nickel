@@ -365,16 +365,39 @@ internal sealed class ModManager
 		var proxyContractResolver = new ProxyContractResolver<string>(this.ProxyManager);
 
 		JSONSettings.indented.Converters.Add(proxyContractResolver);
+		JSONSettings.indented.Error += this.OnJsonError;
 		JSONSettings.indented.ContractResolver = new ModificatingContractResolver(
 			contractModificator: this.ModifyJsonContract,
 			wrapped: JSONSettings.indented.ContractResolver
 		);
 
 		JSONSettings.serializer.Converters.Add(proxyContractResolver);
+		JSONSettings.serializer.Error += this.OnJsonError;
 		JSONSettings.serializer.ContractResolver = new ModificatingContractResolver(
 			contractModificator: this.ModifyJsonContract,
 			wrapped: JSONSettings.serializer.ContractResolver
 		);
+	}
+
+	private void OnJsonError(object? sender, Newtonsoft.Json.Serialization.ErrorEventArgs e)
+	{
+		if (e.CurrentObject is State state && e.ErrorContext.Path.StartsWith("deck["))
+		{
+			try
+			{
+				StatePatches.StopSavingOverride = true;
+				state.characters.Clear();
+				state.deck.Clear();
+				state.runConfig.selectedChars.Clear();
+				state.ChangeRoute(() => new NewRunOptions());
+				e.ErrorContext.Handled = true;
+			}
+			finally
+			{
+				StatePatches.StopSavingOverride = false;
+			}
+			return;
+		}
 	}
 
 	private void ModifyJsonContract(Type type, JsonContract contract)
