@@ -81,7 +81,7 @@ internal sealed class AssemblyModLoadContextProvider(
 				}
 				catch
 				{
-					return this.LoadFromAssemblyName(assemblyName);
+					return this.SharedContext.LoadFromAssemblyName(assemblyName);
 				}
 			}
 		}
