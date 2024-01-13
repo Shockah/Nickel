@@ -18,21 +18,20 @@ public sealed class ByParameterDelegateMapper
 		this.ModuleBuilder = assemblyBuilder.DefineDynamicModule($"{this.GetType().Namespace}.ByParameterDelegateMappers");
 	}
 
-	public TLongDelegate Map<TShortDelegate, TLongDelegate>(TShortDelegate @delegate)
+	public TLongDelegate Map<TShortDelegate, TLongDelegate>(TShortDelegate @delegate, ParameterInfo[] longDelegateParameters)
 		where TShortDelegate : Delegate
 		where TLongDelegate : Delegate
 	{
 		if (this.Cache.TryGetValue(typeof(TLongDelegate), out var longDelegateTypeCache) && longDelegateTypeCache.TryGetValue(typeof(TShortDelegate), out var compiledFactory))
 			return (TLongDelegate)compiledFactory(@delegate);
 
-		var shortDelegateInvokeMethod = typeof(TShortDelegate).GetMethod("Invoke")!;
+		var shortDelegateInvokeMethod = @delegate.GetMethodInfo();
 		var longDelegateInvokeMethod = typeof(TLongDelegate).GetMethod("Invoke")!;
 
 		if (shortDelegateInvokeMethod.ReturnType != longDelegateInvokeMethod.ReturnType)
 			throw new ArgumentException($"Delegate `{typeof(TShortDelegate)}` has a return type `{shortDelegateInvokeMethod.ReturnType}` that does not match the return type `{longDelegateInvokeMethod.ReturnType}` for delegate `{typeof(TLongDelegate)}`", nameof(@delegate));
 
 		var shortDelegateParameters = shortDelegateInvokeMethod.GetParameters();
-		var longDelegateParameters = longDelegateInvokeMethod.GetParameters();
 		var parameterMapping = new int[shortDelegateParameters.Length];
 
 		if (shortDelegateParameters.Length > parameterMapping.Length)
@@ -78,7 +77,7 @@ public sealed class ByParameterDelegateMapper
 					throw new ArgumentException($"Delegate `{@delegate}` specifies a method parameter #{i} which does not match any parameters on delegate `{typeof(TLongDelegate)}`", nameof(@delegate));
 			}
 
-			parameterMapping[longDelegateParameterIndex.Value] = i;
+			parameterMapping[i] = longDelegateParameterIndex.Value;
 		}
 
 		// start generating type

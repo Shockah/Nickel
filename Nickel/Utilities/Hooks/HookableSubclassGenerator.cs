@@ -476,7 +476,7 @@ file sealed class HookSubclassGlue(
 		where TMethodDelegate : Delegate
 		where THookDelegate : Delegate
 	{
-		var compiledDelegate = this.StaticGlue.ByParameterDelegateMapper.Map<THookDelegate, TMethodDelegate>(hookDelegate);
+		var compiledDelegate = this.StaticGlue.ByParameterDelegateMapper.Map<THookDelegate, TMethodDelegate>(hookDelegate, method.GetParameters());
 		var objectifiedDelegate = this.StaticGlue.ObjectifiedDelegateMapper.Map(compiledDelegate);
 
 		if (!this.OriginalToCompiledDelegates.TryGetValue(method, out var originalToCompiledDelegates))
