@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 
 namespace Nickel;
 
@@ -131,6 +132,12 @@ public sealed class ByParameterDelegateMapper
 			il.Emit(OpCodes.Call, shortDelegateInvokeMethod);
 			il.Emit(OpCodes.Ret);
 		}
+
+		(this.ModuleBuilder.Assembly as AssemblyBuilder)?.SetCustomAttribute(new CustomAttributeBuilder
+		(
+			typeof(IgnoresAccessChecksToAttribute).GetConstructor(new Type[] { typeof(string) })!,
+			new object[] { shortDelegateInvokeMethod.DeclaringType!.Assembly.GetName().Name! }
+		));
 
 		var builtType = typeBuilder.CreateType()!;
 		var actualConstructor = builtType.GetConstructor([typeof(TShortDelegate)])!;
