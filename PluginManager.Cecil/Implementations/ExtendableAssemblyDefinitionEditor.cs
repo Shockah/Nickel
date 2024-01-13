@@ -15,7 +15,7 @@ public sealed class ExtendableAssemblyDefinitionEditor : IAssemblyEditor
 		if (interestedEditors.Count <= 0)
 			return assemblyStream;
 
-		var definition = AssemblyDefinition.ReadAssembly(assemblyStream);
+		using var definition = AssemblyDefinition.ReadAssembly(assemblyStream);
 		foreach (var definitionEditor in interestedEditors)
 			definitionEditor.EditAssemblyDefinition(definition);
 
