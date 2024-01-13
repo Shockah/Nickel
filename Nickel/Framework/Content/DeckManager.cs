@@ -97,8 +97,8 @@ internal sealed class DeckManager
 			configuration: new()
 			{
 				Definition = DB.decks[deck],
-				DefaultCardArt = DB.cardArtDeckDefault[deck],
-				BorderSprite = DB.deckBorders[deck],
+				DefaultCardArt = DB.cardArtDeckDefault.TryGetValue(deck, out var defaultCardArt) ? defaultCardArt : Enum.Parse<Spr>(deck == Deck.trash ? "cards_ColorlessTrash" : "cards_colorless"),
+				BorderSprite = DB.deckBorders.TryGetValue(deck, out var borderSprite) ? borderSprite : Enum.Parse<Spr>("cardShared_border_colorless"),
 				OverBordersSprite = DB.deckBordersOver.TryGetValue(deck, out var overBordersSprite) ? overBordersSprite : null,
 				Name = _ => Loc.T($"char.{deck}.name")
 			}
