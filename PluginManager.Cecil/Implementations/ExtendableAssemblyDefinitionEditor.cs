@@ -1,11 +1,12 @@
 using Mono.Cecil;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
 namespace Nanoray.PluginManager.Cecil;
 
-public sealed class ExtendableAssemblyDefinitionEditor : IAssemblyEditor
+public sealed class ExtendableAssemblyDefinitionEditor(Func<IAssemblyResolver> cecilAssemblyResolverProducer) : IAssemblyEditor
 {
 	private readonly List<IAssemblyDefinitionEditor> DefinitionEditors = [];
 
@@ -15,7 +16,8 @@ public sealed class ExtendableAssemblyDefinitionEditor : IAssemblyEditor
 		if (interestedEditors.Count <= 0)
 			return assemblyStream;
 
-		using var definition = AssemblyDefinition.ReadAssembly(assemblyStream);
+		using var assemblyResolver = cecilAssemblyResolverProducer();
+		using var definition = AssemblyDefinition.ReadAssembly(assemblyStream, new ReaderParameters { AssemblyResolver = assemblyResolver });
 		foreach (var definitionEditor in interestedEditors)
 			definitionEditor.EditAssemblyDefinition(definition);
 
