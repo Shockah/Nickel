@@ -12,7 +12,6 @@ internal class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest
 	private readonly List<Stream> openStreams = [];
 	private readonly DefaultAssemblyResolver fallbackResolver = new();
 
-
 	public void Dispose()
 	{
 		foreach (var assembly in this.cache.Values)
@@ -50,17 +49,19 @@ internal class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest
 
 	private Stream? GetStreamForAssembly(AssemblyNameReference name)
 	{
-		foreach(var package in packages)
+		foreach (var package in packages)
 		{
 			try
 			{
 				return package.PackageRoot.GetRelativeFile(name.Name + ".dll").OpenRead();
-			} catch(FileNotFoundException) {}
+			}
+			catch (FileNotFoundException) { }
 
 			try
 			{
 				return package.PackageRoot.GetRelativeFile(name.Name + ".exe").OpenRead();
-			} catch(FileNotFoundException) {}
+			}
+			catch (FileNotFoundException) { }
 		}
 
 		return null;
