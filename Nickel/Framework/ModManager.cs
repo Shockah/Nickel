@@ -232,7 +232,11 @@ internal sealed class ModManager
 				Enum.GetValues<ModLoadPhase>()
 			);
 
-		var dependencyResolverResult = pluginDependencyResolver.ResolveDependencies(toLoad.Select(p => p.Manifest));
+		var dependencyResolverResult = pluginDependencyResolver.ResolveDependencies(
+			toLoad
+				.Select(p => p.Manifest)
+				.OrderBy(m => m.UniqueName)
+		);
 		foreach (var (unresolvableManifest, reason) in dependencyResolverResult.Unresolvable)
 		{
 			if (this.OptionalSubmods.Contains(unresolvableManifest))
