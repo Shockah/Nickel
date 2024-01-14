@@ -138,14 +138,9 @@ internal sealed class LegacyDatabase(
 	{
 		foreach (var glossary in this.ItemNameToGlossary.Values)
 		{
-			if (!glossary.Icon.Id.HasValue)
+			if (glossary.Icon.Id is not { } spriteId)
 				continue;
-			var sprite = (Spr)glossary.Icon.Id.Value;
-
-			if (glossary.IntendedOverwrite)
-				DB.icons[glossary.ItemName] = sprite;
-			else
-				DB.icons.Add(glossary.ItemName, sprite);
+			DB.icons[glossary.ItemName] = (Spr)spriteId;
 		}
 	}
 

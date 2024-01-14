@@ -3,6 +3,7 @@ using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -67,7 +68,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is ILegacyModManifest modManifest)
-				modManifest.BootMod(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(BootMod), m => m.BootMod(this.Registry));
 	}
 
 	[EventPriority(-100)]
@@ -77,7 +78,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is ISpriteManifest modManifest)
-				modManifest.LoadManifest(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(LoadSpriteManifest), m => m.LoadManifest(this.Registry));
 	}
 
 	[EventPriority(-200)]
@@ -87,7 +88,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IGlossaryManifest modManifest)
-				modManifest.LoadManifest(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(LoadGlossaryManifest), m => m.LoadManifest(this.Registry));
 	}
 
 	[EventPriority(-300)]
@@ -97,7 +98,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IDeckManifest modManifest)
-				modManifest.LoadManifest(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(LoadDeckManifest), m => m.LoadManifest(this.Registry));
 	}
 
 	[EventPriority(-400)]
@@ -107,7 +108,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IStatusManifest modManifest)
-				modManifest.LoadManifest(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(LoadStatusManifest), m => m.LoadManifest(this.Registry));
 	}
 
 	[EventPriority(-500)]
@@ -117,7 +118,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is ICardManifest modManifest)
-				modManifest.LoadManifest(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(LoadCardManifest), m => m.LoadManifest(this.Registry));
 	}
 
 	[EventPriority(-600)]
@@ -127,7 +128,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IArtifactManifest modManifest)
-				modManifest.LoadManifest(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(LoadArtifactManifest), m => m.LoadManifest(this.Registry));
 	}
 
 	[EventPriority(-700)]
@@ -137,7 +138,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IAnimationManifest modManifest)
-				modManifest.LoadManifest(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(LoadAnimationManifest), m => m.LoadManifest(this.Registry));
 	}
 
 	[EventPriority(-800)]
@@ -147,7 +148,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is ICharacterManifest modManifest)
-				modManifest.LoadManifest(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(LoadCharacterManifest), m => m.LoadManifest(this.Registry));
 	}
 
 	[EventPriority(-900)]
@@ -157,7 +158,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IPartTypeManifest modManifest)
-				modManifest.LoadManifest(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(LoadPartTypeManifest), m => m.LoadManifest(this.Registry));
 	}
 
 	[EventPriority(-1000)]
@@ -167,7 +168,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IShipPartManifest modManifest)
-				modManifest.LoadManifest(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(LoadShipPartManifest), m => m.LoadManifest(this.Registry));
 	}
 
 	[EventPriority(-1100)]
@@ -177,7 +178,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IShipManifest modManifest)
-				modManifest.LoadManifest(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(LoadShipManifest), m => m.LoadManifest(this.Registry));
 	}
 
 	[EventPriority(-1200)]
@@ -187,7 +188,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IStartershipManifest modManifest)
-				modManifest.LoadManifest(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(LoadStarterShipManifest), m => m.LoadManifest(this.Registry));
 	}
 
 	[EventPriority(-1300)]
@@ -197,7 +198,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IStoryManifest modManifest)
-				modManifest.LoadManifest(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(LoadStoryManifests), m => m.LoadManifest(this.Registry));
 	}
 
 	[EventPriority(-1400)]
@@ -207,7 +208,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is ICustomEventManifest modManifest)
-				modManifest.LoadManifest(this.EventHub);
+				modManifest.CatchIntoManifestLogger(nameof(LoadEventHubManifests), m => m.LoadManifest(this.EventHub));
 	}
 
 	[EventPriority(-10000)]
@@ -217,7 +218,7 @@ internal sealed class LegacyModWrapper : Mod
 			return;
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is IPrelaunchManifest modManifest)
-				modManifest.FinalizePreperations(this.Registry);
+				modManifest.CatchIntoManifestLogger(nameof(FinalizePreparations), m => m.FinalizePreperations(this.Registry));
 	}
 
 	private sealed class NewToLegacyManifestStub : ILegacyManifest
@@ -251,6 +252,25 @@ internal sealed class LegacyModWrapper : Mod
 		public NewToLegacyManifestStub(IModManifest modManifest)
 		{
 			this.ModManifest = modManifest;
+		}
+	}
+}
+
+file static class Extensions
+{
+	public static void CatchIntoManifestLogger<TLegacyManifest>(this TLegacyManifest manifest, string methodName, Action<TLegacyManifest> action)
+		where TLegacyManifest : ILegacyManifest
+	{
+		try
+		{
+			action(manifest);
+		}
+		catch (Exception ex)
+		{
+			if (manifest.Logger is { } logger)
+				logger.LogError("Mod failed in `{MethodName}`: {Exception}", methodName, ex);
+			else
+				throw;
 		}
 	}
 }
