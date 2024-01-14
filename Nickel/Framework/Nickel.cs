@@ -118,7 +118,9 @@ internal sealed class Nickel
 		var modsDirectory = launchArguments.ModsPath ?? GetOrCreateDefaultModLibraryDirectory();
 		logger.LogInformation("ModsPath: {Path}", modsDirectory.FullName);
 
-		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor = new();
+		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor = new(() =>
+			new PackageAssemblyResolver(instance.ModManager.ResolvedMods)
+		);
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new CobaltCorePublisher());
 		instance.ModManager = new(modsDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
 		instance.ModManager.ResolveMods();

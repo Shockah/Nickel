@@ -30,7 +30,7 @@ internal sealed class ModManager
 	internal ContentManager? ContentManager { get; private set; }
 
 	private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; } = new();
-	private List<IPluginPackage<IModManifest>> ResolvedMods { get; } = [];
+	internal List<IPluginPackage<IModManifest>> ResolvedMods { get; } = [];
 	private List<IModManifest> FailedMods { get; } = [];
 	private HashSet<IModManifest> OptionalSubmods { get; } = [];
 
