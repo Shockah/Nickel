@@ -51,8 +51,14 @@ public sealed class ModEntry : Mod
 					),
 					converter: m => m.AsAssemblyModManifest()
 				),
-				condition: package => package.Manifest.ModType == LegacyModType
-					? new Yes() : new No()
+				condition: package =>
+				{
+					if (package.Manifest.ModType != LegacyModType)
+						return new No();
+					return package.PackageRoot is IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>
+						? new Yes()
+						: new Error<string>($"Found a legacy mod, but it is not stored directly on disk (is it in a ZIP file?).");
+				}
 			),
 			callback: (Mod mod) =>
 			{
