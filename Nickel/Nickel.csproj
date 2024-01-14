@@ -79,7 +79,7 @@
 		<PackageReference Include="PolySharp" Version="1.14.1" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 	</ItemGroup>
 
-	<Target Name="ExtractGameDll1" BeforeTargets="CoreCompile">
+	<Target Name="ExtractGameDll" BeforeTargets="CoreCompile">
 		<Message Importance="high" Text="$(_ModLoaderName): _SteamLibraryPath = '$(_SteamLibraryPath)'" />
 		<Message Importance="high" Text="$(_ModLoaderName): _GamePath = '$(_GamePath)'" />
 		<Message Importance="high" Text="$(_ModLoaderName): GameExePath = '$(GameExePath)'" />
