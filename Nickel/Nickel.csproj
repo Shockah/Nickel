@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="16.0" InitialTargets="ExtractGameDll">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="16.0">
 	<!-- Constants -->
 	<PropertyGroup>
 		<_GameName>Cobalt Core</_GameName>
@@ -15,6 +15,7 @@
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 		<NoWarn>$(NoWarn);CS0436</NoWarn>
 		<IgnoreAccessChecks>true</IgnoreAccessChecks>
+		<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -79,7 +80,7 @@
 		<PackageReference Include="PolySharp" Version="1.14.1" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 	</ItemGroup>
 
-	<Target Name="ExtractGameDll">
+	<Target Name="ExtractGameDll1" BeforeTargets="CoreCompile">
 		<Message Importance="high" Text="$(_ModLoaderName): _SteamLibraryPath = '$(_SteamLibraryPath)'" />
 		<Message Importance="high" Text="$(_ModLoaderName): _GamePath = '$(_GamePath)'" />
 		<Message Importance="high" Text="$(_ModLoaderName): GameExePath = '$(GameExePath)'" />
