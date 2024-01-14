@@ -26,12 +26,8 @@ public sealed class DistinctPluginPackageResolver<TPluginManifest, TKey> : IPlug
 		foreach (var packageOrError in this.Resolver.ResolvePluginPackages())
 		{
 			results.Add(packageOrError);
-
-			if (packageOrError.TryPickT1(out var error, out var package))
-			{
-				results.Add(error);
+			if (packageOrError.TryPickT1(out _, out var package))
 				continue;
-			}
 
 			var key = this.KeyFunction(package);
 			if (!keyToPackages.TryGetValue(key, out var packagesForKey))
