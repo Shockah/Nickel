@@ -23,7 +23,8 @@ internal class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest
 
 	public AssemblyDefinition Resolve(AssemblyNameReference name)
 	{
-		if (this.cache.TryGetValue(name.FullName, out var cached)) return cached;
+		if (this.cache.TryGetValue(name.FullName, out var cached))
+			return cached;
 		return this.cache[name.FullName] = this.Resolve(name, new ReaderParameters());
 	}
 
@@ -38,7 +39,11 @@ internal class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest
 		{
 			this.openStreams.Add(stream);
 		}
-		catch (Exception) { stream.Dispose(); throw; }
+		catch (Exception)
+		{
+			stream.Dispose();
+			throw;
+		}
 
 		/* `DefaultAssemblyResolver` does this as well.
 		 * `AssemblyDefinition.ReadAssembly` does a similar thing internally, too.
