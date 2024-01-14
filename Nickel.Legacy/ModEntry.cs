@@ -193,7 +193,7 @@ public sealed class ModEntry : Mod
 			var serializer = JsonSerializer.Create(new()
 			{
 				Formatting = Formatting.Indented,
-				DefaultValueHandling = DefaultValueHandling.Ignore,
+				NullValueHandling = NullValueHandling.Ignore,
 			});
 			var manifestFile = new FileInfo(Path.Combine(directory.FullName, ManifestFileName));
 			using var stream = manifestFile.OpenWrite();
