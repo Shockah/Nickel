@@ -157,7 +157,8 @@ internal sealed class ModManager
 				),
 				converter: m => m.AsAssemblyModManifest()
 			),
-			condition: package => package.Manifest.ModType == NickelConstants.AssemblyModType
+			// TODO: add a warning about a mod using a deprecated mod type
+			condition: package => package.Manifest.ModType == NickelConstants.ModType || package.Manifest.ModType == NickelConstants.DeprecatedModType
 				? new Yes() : new No()
 		);
 

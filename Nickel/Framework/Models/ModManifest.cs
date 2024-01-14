@@ -33,7 +33,7 @@ internal sealed class ModManifest : IModManifest
 	public string? Author { get; internal set; } = null;
 
 	[JsonProperty]
-	public string ModType { get; internal set; } = NickelConstants.AssemblyModType;
+	public string ModType { get; internal set; } = NickelConstants.ModType;
 
 	[JsonProperty]
 	public ModLoadPhase LoadPhase { get; internal set; } = ModLoadPhase.AfterGameAssembly;
