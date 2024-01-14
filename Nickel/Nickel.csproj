@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="16.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="16.0" InitialTargets="ExtractGameDll">
 	<!-- Constants -->
 	<PropertyGroup>
 		<_GameName>Cobalt Core</_GameName>
@@ -79,7 +79,7 @@
 		<PackageReference Include="PolySharp" Version="1.14.1" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 	</ItemGroup>
 
-	<Target Name="ExtractGameDll" BeforeTargets="Build">
+	<Target Name="ExtractGameDll">
 		<Message Importance="high" Text="$(_ModLoaderName): _SteamLibraryPath = '$(_SteamLibraryPath)'" />
 		<Message Importance="high" Text="$(_ModLoaderName): _GamePath = '$(_GamePath)'" />
 		<Message Importance="high" Text="$(_ModLoaderName): GameExePath = '$(GameExePath)'" />
