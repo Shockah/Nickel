@@ -56,13 +56,13 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 		}
 
 		foreach (var file in directory.Files)
-			if ((!file.Name.StartsWith(".") || !this.IgnoreDotNames) && this.FileResolverFactory?.Invoke(file) is { } fileResolver)
+			if ((!file.Name.StartsWith('.') || !this.IgnoreDotNames) && this.FileResolverFactory?.Invoke(file) is { } fileResolver)
 				foreach (var package in fileResolver.ResolvePluginPackages())
 					yield return package;
 
 		foreach (var childDirectory in directory.Directories)
 		{
-			if (childDirectory.Name.StartsWith(".") && this.IgnoreDotNames)
+			if (childDirectory.Name.StartsWith('.') && this.IgnoreDotNames)
 				continue;
 
 			var hadAnyChildPackages = false;

@@ -451,7 +451,14 @@ internal sealed class ModManager
 		if (!this.UniqueNameToHelper.TryGetValue(package.Manifest.UniqueName, out var helper))
 		{
 			helper = new ModHelper(
-				new ModRegistry(package.Manifest, this.VanillaModManifest, this.UniqueNameToInstance, this.UniqueNameToPackage, this.ProxyManager),
+				new ModRegistry(
+					package.Manifest,
+					this.VanillaModManifest,
+					this.ModsDirectory,
+					this.UniqueNameToInstance,
+					this.UniqueNameToPackage,
+					this.ProxyManager
+				),
 				new ModEvents(package.Manifest, this.EventManager),
 				new ModContent(
 					new ModSprites(package, () => this.ContentManager!.Sprites),

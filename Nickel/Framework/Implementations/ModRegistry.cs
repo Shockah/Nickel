@@ -4,6 +4,7 @@ using Nickel.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 
 namespace Nickel;
@@ -16,6 +17,8 @@ internal sealed class ModRegistry : IModRegistry
 		=> this.ModUniqueNameToPackage
 			.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Manifest);
 
+	public DirectoryInfo ModsDirectory { get; }
+
 	private IModManifest ModManifest { get; }
 	private IReadOnlyDictionary<string, Mod> ModUniqueNameToInstance { get; }
 	private IReadOnlyDictionary<string, IPluginPackage<IModManifest>> ModUniqueNameToPackage { get; }
@@ -25,6 +28,7 @@ internal sealed class ModRegistry : IModRegistry
 	public ModRegistry(
 		IModManifest modManifest,
 		IModManifest vanillaModManifest,
+		DirectoryInfo modsDirectory,
 		IReadOnlyDictionary<string, Mod> modUniqueNameToInstance,
 		IReadOnlyDictionary<string, IPluginPackage<IModManifest>> modUniqueNameToPackage,
 		IProxyManager<string> proxyManager
@@ -32,6 +36,7 @@ internal sealed class ModRegistry : IModRegistry
 	{
 		this.ModManifest = modManifest;
 		this.VanillaModManifest = vanillaModManifest;
+		this.ModsDirectory = modsDirectory;
 		this.ModUniqueNameToInstance = modUniqueNameToInstance;
 		this.ModUniqueNameToPackage = modUniqueNameToPackage;
 		this.ProxyManager = proxyManager;
