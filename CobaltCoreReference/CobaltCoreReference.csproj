@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\Configuration.props" />
+	
+	<PropertyGroup>
+		<FinalOutputPath>$(MSBuildProjectDirectory)/out/CobaltCore.public.reference.dll</FinalOutputPath>
+	</PropertyGroup>
+	
+	<!-- Required for the SDK to not throw errors.
+	     If there's a way to add `PackageReference`s without adding the C# build process, this can be removed.
+     -->
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+	</PropertyGroup>
+
+	
+	<ItemGroup>
+		<PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" />
+		<PackageReference Include="Fayti1703.AssemblyTasks" Version="1.0.5-beta" />
+	</ItemGroup>
+	
+	<!-- TODO: Move this to a common file -->
+	<PropertyGroup Condition="'$(GameExePath)' == '' And ($(OS) == 'Unix' Or $(OS) == 'OSX')">
+		<!-- Linux -->
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.steam/steam/steamapps/common/$(_GameName)</_GamePath>
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.local/share/Steam/steamapps/common/$(_GameName)</_GamePath>
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/common/$(_GameName)</_GamePath>
+
+		<!-- macOS (may be 'Unix' or 'OSX') -->
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/Library/Application Support/Steam/steamapps/common/$(_GameName)/Contents/MacOS</_GamePath>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(GameExePath)' == '' And '$(OS)' == 'Windows_NT'">
+		<!-- registry path -->
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App $(_GameSteamID)', 'InstallLocation', null, RegistryView.Registry64, RegistryView.Registry32))</_GamePath>
+
+		<!-- derive from Steam library path -->
+		<_SteamLibraryPath>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\SOFTWARE\Valve\Steam', 'SteamPath', null, RegistryView.Registry32))</_SteamLibraryPath>
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(_SteamLibraryPath)\steamapps\common\$(_GameName)</_GamePath>
+
+		<!-- Steam paths -->
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">C:\Program Files\Steam\steamapps\common\$(_GameName)</_GamePath>
+		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">C:\Program Files (x86)\Steam\steamapps\common\$(_GameName)</_GamePath>
+	</PropertyGroup>
+
+	<!-- trying to set GameDllPath and GameExePath based on the found game path -->
+	<PropertyGroup Condition="Exists('$(_GamePath)')">
+		<GameExePath Condition="!Exists('$(GameExePath)')">$(_GamePath)\CobaltCore.exe</GameExePath>
+		<GameDllPath Condition="!Exists('$(GameDllPath)')">$(MSBuildProjectDirectory)\..\CobaltCore.dll</GameDllPath>
+	</PropertyGroup>
+	
+	<Target Name="ExtractGameAssembly">
+		<ExtractSingleFileApplicationResourceTask ExeInputPath="$(GameExePath)" ResourceName="CobaltCore.dll" ResourceOutputPath="$(BaseIntermediateOutputPath)/CobaltCore.dll" />
+		<Fayti1703.AssemblyTasks.PublishAllTypes SourceFilePath="$(BaseIntermediateOutputPath)/CobaltCore.dll" TargetFilePath="$(BaseOutputPath)/CobaltCore.public.dll" />
+		<Fayti1703.AssemblyTasks.MakeReferenceAssembly SourceFilePath="$(BaseOutputPath)/CobaltCore.public.dll" TargetFilePath="$(BaseOutputPath)/CobaltCore.public.reference.dll" />
+	</Target>
+	
+	<Target Name="AutoUpdateReferenceAssembly" DependsOnTargets="ExtractGameAssembly" BeforeTargets="Build">
+		<CallTarget Condition="!Exists(FinalOutputPath)" Targets="UpdateReferenceAssembly" />
+	</Target>
+	
+	<Target Name="UpdateReferenceAssembly" DependsOnTargets="ExtractGameAssembly" BeforeTargets="Build">
+		<Copy SourceFiles="$(BaseOutputPath)/CobaltCore.public.reference.dll" DestinationFiles="$(FinalOutputPath)" /> 
+	</Target>
+	
+</Project>
