@@ -14,6 +14,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Loader;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Nickel;
 
@@ -59,10 +60,21 @@ internal sealed class ModManager
 			Author = NickelConstants.Name,
 			RequiredApiVersion = NickelConstants.Version
 		};
+
+		var vanillaVersionMatch = Regex.Match(CCBuildVars.VERSION, "(\\d+)\\.(\\d+)\\.(\\d+)(?: (.+))?");
 		this.VanillaModManifest = new ModManifest()
 		{
 			UniqueName = "CobaltCore",
-			Version = SemanticVersionParser.TryParse(CCBuildVars.VERSION, out var gameVersion) ? gameVersion : NickelConstants.FallbackGameVersion,
+			Version = vanillaVersionMatch.Success
+				? new SemanticVersion(
+					int.Parse(vanillaVersionMatch.Groups[1].Value),
+					int.Parse(vanillaVersionMatch.Groups[2].Value),
+					int.Parse(vanillaVersionMatch.Groups[3].Value),
+					// the prerelease tag probably won't always match semver, but oh well
+					vanillaVersionMatch.Groups.Count >= 5 && !string.IsNullOrEmpty(vanillaVersionMatch.Groups[4].Value)
+						? vanillaVersionMatch.Groups[4].Value : null
+				)
+				: NickelConstants.FallbackGameVersion,
 			DisplayName = "Cobalt Core",
 			Author = "Rocket Rat Games",
 			RequiredApiVersion = NickelConstants.Version
