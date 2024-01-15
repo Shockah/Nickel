@@ -76,13 +76,13 @@ internal static class CrewSelection
 		{
 			Rect rect = new(NewRunOptions.charSelectPos.x + 18, NewRunOptions.charSelectPos.y - 52, 33, 24);
 			OnMouseDown onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Max(0, ScrollPosition - MaxCharactersOnScreen));
-			RotatedButtonSprite(g, rect, StableUK.btn_move_left, StableSpr.buttons_move, StableSpr.buttons_move_on, null, null, inactive: false, flipX: true, flipY: false, onMouseDown, autoFocus: false, noHover: false, gamepadUntargetable: true);
+			RotatedButtonSprite(g, rect, StableUK.btn_move_left, StableSpr.buttons_move, StableSpr.buttons_move_on, flipX: true, onMouseDown: onMouseDown);
 		}
 		if (ScrollPosition < MaxScroll)
 		{
 			Rect rect = new(NewRunOptions.charSelectPos.x + 18, NewRunOptions.charSelectPos.y + 140, 33, 24);
 			OnMouseDown onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Clamp(ScrollPosition + MaxCharactersOnScreen, 0, MaxPageByPageScroll));
-			RotatedButtonSprite(g, rect, StableUK.btn_move_right, StableSpr.buttons_move, StableSpr.buttons_move_on, null, null, inactive: false, flipX: false, flipY: false, onMouseDown, autoFocus: false, noHover: false, gamepadUntargetable: true);
+			RotatedButtonSprite(g, rect, StableUK.btn_move_right, StableSpr.buttons_move, StableSpr.buttons_move_on, flipX: false, onMouseDown: onMouseDown);
 		}
 	}
 
