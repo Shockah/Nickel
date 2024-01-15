@@ -17,13 +17,16 @@ internal sealed class NoInliningDefinitionEditor : IAssemblyDefinitionEditor
 
 		void AddAttribute(MethodDefinition methodDefinition)
 		{
+			methodDefinition.IsVirtual = true;
 			var attribute = new CustomAttribute(methodImplAttributeCtor);
 			attribute.ConstructorArguments.Add(new CustomAttributeArgument(methodImplOptionsTypeReference, MethodImplOptions.NoInlining));
 			methodDefinition.CustomAttributes.Add(attribute);
 		}
 
 		AddAttribute(definition.MainModule.GetType("Card").Methods.Single(m => m.Name == "Key"));
+		AddAttribute(definition.MainModule.GetType("Card").Methods.Single(m => m.Name == "GetMeta"));
 		AddAttribute(definition.MainModule.GetType("Artifact").Methods.Single(m => m.Name == "Key"));
+		AddAttribute(definition.MainModule.GetType("Artifact").Methods.Single(m => m.Name == "GetMeta"));
 		AddAttribute(definition.MainModule.GetType("CardAction").Methods.Single(m => m.Name == "Key"));
 		AddAttribute(definition.MainModule.GetType("FightModifier").Methods.Single(m => m.Name == "Key"));
 		AddAttribute(definition.MainModule.GetType("MapBase").Methods.Single(m => m.Name == "Key"));
