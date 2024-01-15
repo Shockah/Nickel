@@ -1,5 +1,4 @@
 using CobaltCoreModding.Definitions.ExternalItems;
-using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,7 +30,7 @@ internal sealed class LegacyDatabase(
 	private Dictionary<string, Ship> GlobalNameToVanillaShip { get; } = [];
 	private Dictionary<string, ExternalStarterShip> GlobalNameToStarterShip { get; } = [];
 
-	private Dictionary<string, ICharacterEntry> GlobalNameToCharacterEntry { get; } = [];
+	private Dictionary<string, ICardEntry> GlobalNameToCardEntry { get; } = [];
 	private Dictionary<string, IPartEntry> GlobalNameToPartEntry { get; } = [];
 	private Dictionary<string, IShipEntry> GlobalNameToShipEntry { get; } = [];
 
@@ -83,16 +82,17 @@ internal sealed class LegacyDatabase(
 	private void InjectCardLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		// Nickel handles name localization, but legacy mods can also expect desc/descA/descB
-		foreach (var card in this.GlobalNameToCard.Values)
+		foreach (var (globalName, card) in this.GlobalNameToCard)
 		{
-			var key = card.CardType.Name; // TODO: change this when Card.Key gets patched
+			if (!this.GlobalNameToCardEntry.TryGetValue(globalName, out var entry))
+				continue;
 			card.GetLocalisation(locale, out _, out var description, out var descriptionA, out var descriptionB);
 			if (description is not null)
-				localizations[$"card.{key}.desc"] = description;
+				localizations[$"card.{entry.UniqueName}.desc"] = description;
 			if (descriptionA is not null)
-				localizations[$"card.{key}.descA"] = descriptionA;
+				localizations[$"card.{entry.UniqueName}.descA"] = descriptionA;
 			if (descriptionB is not null)
-				localizations[$"card.{key}.descB"] = descriptionB;
+				localizations[$"card.{entry.UniqueName}.descB"] = descriptionB;
 		}
 	}
 
@@ -286,8 +286,9 @@ internal sealed class LegacyDatabase(
 			}
 		};
 
-		this.HelperProvider(mod).Content.Cards.RegisterCard(value.GlobalName, configuration);
+		var entry = this.HelperProvider(mod).Content.Cards.RegisterCard(value.GlobalName, configuration);
 		this.GlobalNameToCard[value.GlobalName] = value;
+		this.GlobalNameToCardEntry[value.GlobalName] = entry;
 	}
 
 	public void RegisterArtifact(IModManifest mod, ExternalArtifact value)

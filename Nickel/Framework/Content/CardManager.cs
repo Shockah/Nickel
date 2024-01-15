@@ -14,6 +14,8 @@ internal sealed class CardManager
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
 		this.VanillaModManifest = vanillaModManifest;
+
+		CardPatches.OnKey.Subscribe(this.OnKey);
 	}
 
 	internal void InjectQueuedEntries()
@@ -59,11 +61,10 @@ internal sealed class CardManager
 
 	private static void Inject(Entry entry)
 	{
-		var key = entry.Configuration.CardType.Name; // TODO: change this when Card.Key gets patched
-		DB.cards[key] = entry.Configuration.CardType;
-		DB.cardMetas[key] = entry.Configuration.Meta;
+		DB.cards[entry.UniqueName] = entry.Configuration.CardType;
+		DB.cardMetas[entry.UniqueName] = entry.Configuration.Meta;
 		if (entry.Configuration.Art is { } art)
-			DB.cardArt[key] = art;
+			DB.cardArt[entry.UniqueName] = art;
 		if (!entry.Configuration.Meta.unreleased)
 			DB.releasedCards.Add((Card)Activator.CreateInstance(entry.Configuration.CardType)!);
 
@@ -72,9 +73,17 @@ internal sealed class CardManager
 
 	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
 	{
-		var key = entry.Configuration.CardType.Name; // TODO: change this when Card.Key gets patched
 		if (entry.Configuration.Name.Localize(locale) is { } name)
-			localizations[$"card.{key}.name"] = name;
+			localizations[$"card.{entry.UniqueName}.name"] = name;
+	}
+
+	private void OnKey(object? _, CardPatches.KeyEventArgs e)
+	{
+		if (e.Card.GetType().Assembly == typeof(Card).Assembly)
+			return;
+		if (this.LookupByCardType(e.Card.GetType()) is not { } entry)
+			return;
+		e.Key = entry.UniqueName;
 	}
 
 	private sealed class Entry(IModManifest modOwner, string uniqueName, CardConfiguration configuration)

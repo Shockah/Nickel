@@ -121,6 +121,7 @@ internal sealed class Nickel
 		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor = new(() =>
 			new PackageAssemblyResolver(instance.ModManager.ResolvedMods)
 		);
+		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new CobaltCorePublisher());
 		instance.ModManager = new(modsDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
 		instance.ModManager.ResolveMods();
@@ -162,16 +163,7 @@ internal sealed class Nickel
 		var savePath = launchArguments.SavePath?.FullName ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModSaves");
 		logger.LogInformation("SavePath: {Path}", savePath);
 
-		ArtifactRewardPatches.Apply(harmony);
-		DBPatches.Apply(harmony);
-		GPatches.Apply(harmony);
-		RunSummaryPatches.Apply(harmony);
-		SpriteLoaderPatches.Apply(harmony);
-		StatePatches.Apply(harmony, saveInDebug);
-		StoryVarsPatches.Apply(harmony);
-		TTGlossaryPatches.Apply(harmony);
-		WizardPatches.Apply(harmony);
-
+		ApplyHarmonyPatches(harmony, saveInDebug);
 		instance.ModManager.LoadMods(ModLoadPhase.AfterGameAssembly);
 
 		var oldWorkingDirectory = Directory.GetCurrentDirectory();
@@ -196,6 +188,26 @@ internal sealed class Nickel
 			logger.LogCritical("Cobalt Core threw an exception: {e}", e);
 		}
 		Directory.SetCurrentDirectory(oldWorkingDirectory);
+	}
+
+	private static void ApplyHarmonyPatches(Harmony harmony, bool saveInDebug)
+	{
+		ArtifactPatches.Apply(harmony);
+		ArtifactRewardPatches.Apply(harmony);
+		CardPatches.Apply(harmony);
+		DBPatches.Apply(harmony);
+		GPatches.Apply(harmony);
+		RunSummaryPatches.Apply(harmony);
+		SpriteLoaderPatches.Apply(harmony);
+		StatePatches.Apply(harmony, saveInDebug);
+		StoryVarsPatches.Apply(harmony);
+		TTGlossaryPatches.Apply(harmony);
+		WizardPatches.Apply(harmony);
+
+		GenericKeyPatches.Apply<CardAction>(harmony);
+		GenericKeyPatches.Apply<FightModifier>(harmony);
+		GenericKeyPatches.Apply<MapBase>(harmony);
+		GenericKeyPatches.Apply<AI>(harmony);
 	}
 
 	[EventPriority(double.MaxValue)]

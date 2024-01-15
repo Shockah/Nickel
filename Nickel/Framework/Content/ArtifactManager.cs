@@ -15,6 +15,8 @@ internal sealed class ArtifactManager
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
 		this.VanillaModManifest = vanillaModManifest;
+
+		ArtifactPatches.OnKey.Subscribe(this.OnKey);
 	}
 
 	internal void InjectQueuedEntries()
@@ -61,23 +63,30 @@ internal sealed class ArtifactManager
 
 	private static void Inject(Entry entry)
 	{
-		var key = entry.Configuration.ArtifactType.Name; // TODO: change this when Artifact.Key gets patched
-		DB.artifacts[key] = entry.Configuration.ArtifactType;
-		DB.artifactMetas[key] = entry.Configuration.Meta;
-		DB.artifactSprites[key] = entry.Configuration.Sprite;
+		DB.artifacts[entry.UniqueName] = entry.Configuration.ArtifactType;
+		DB.artifactMetas[entry.UniqueName] = entry.Configuration.Meta;
+		DB.artifactSprites[entry.UniqueName] = entry.Configuration.Sprite;
 		if (!entry.Configuration.Meta.pools.Contains(ArtifactPool.Unreleased))
-			DB.releasedArtifacts.Add(key);
+			DB.releasedArtifacts.Add(entry.UniqueName);
 
 		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 	}
 
 	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
 	{
-		var key = entry.Configuration.ArtifactType.Name; // TODO: change this when Artifact.Key gets patched
 		if (entry.Configuration.Name.Localize(locale) is { } name)
-			localizations[$"artifact.{key}.name"] = name;
+			localizations[$"artifact.{entry.UniqueName}.name"] = name;
 		if (entry.Configuration.Description.Localize(locale) is { } description)
-			localizations[$"artifact.{key}.desc"] = description;
+			localizations[$"artifact.{entry.UniqueName}.desc"] = description;
+	}
+
+	private void OnKey(object? _, ArtifactPatches.KeyEventArgs e)
+	{
+		if (e.Artifact.GetType().Assembly == typeof(Artifact).Assembly)
+			return;
+		if (this.LookupByArtifactType(e.Artifact.GetType()) is not { } entry)
+			return;
+		e.Key = entry.UniqueName;
 	}
 
 	private sealed class Entry(IModManifest modOwner, string uniqueName, ArtifactConfiguration configuration)
