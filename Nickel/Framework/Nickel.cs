@@ -179,7 +179,7 @@ internal sealed class Nickel
 				gameArguments.Add("--debug");
 			gameArguments.AddRange(launchArguments.UnmatchedArguments);
 
-			var result = handlerResult.EntryPoint.Invoke(null, new object[] { gameArguments.ToArray() });
+			var result = handlerResult.EntryPoint.Invoke(null, System.Reflection.BindingFlags.DoNotWrapExceptions, null, [gameArguments.ToArray()], null);
 			if (result is not null)
 				logger.LogInformation("Cobalt Core closed with result: {Result}", result);
 		}
