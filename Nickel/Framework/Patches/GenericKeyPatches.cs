@@ -15,5 +15,8 @@ internal static class GenericKeyPatches
 	}
 
 	private static void Key_Postfix(object __instance, ref string __result)
-		=> __result = __instance.GetType().FullName ?? __instance.GetType().Name;
+	{
+		if (__instance.GetType().Assembly != typeof(G).Assembly)
+			__result = __instance.GetType().FullName ?? __instance.GetType().Name;
+	}
 }

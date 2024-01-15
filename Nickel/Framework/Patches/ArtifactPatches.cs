@@ -12,7 +12,7 @@ internal static class ArtifactPatches
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Artifact), nameof(Artifact.Key))
-				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Artifact)}.{nameof(Card.Key)}`"),
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Artifact)}.{nameof(Artifact.Key)}`"),
 			postfix: new HarmonyMethod(typeof(ArtifactPatches), nameof(Key_Postfix))
 		);
 	}

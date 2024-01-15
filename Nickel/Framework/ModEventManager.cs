@@ -70,13 +70,23 @@ internal sealed class ModEventManager
 	}
 
 	private void SubscribeAfterGameAssembly()
-		=> StatePatches.OnEnumerateAllArtifacts.Subscribe(this, this.OnEnumerateAllArtifacts);
+	{
+		StatePatches.OnEnumerateAllArtifacts.Subscribe(this, this.OnEnumerateAllArtifacts);
+		ArtifactPatches.OnKey.Subscribe(this.OnArtifactKey);
+	}
 
 	private void OnEnumerateAllArtifacts(object? _, StatePatches.EnumerateAllArtifactsEventArgs e)
 	{
 		if (e.State.IsOutsideRun() || RunSummaryPatches.IsDuringRunSummarySaveFromState)
 			return;
 		e.Artifacts = e.Artifacts.Prepend(this.PrefixArtifact).Append(this.SuffixArtifact).ToList();
+	}
+
+	[EventPriority(-1)]
+	private void OnArtifactKey(object? _, ArtifactPatches.KeyEventArgs e)
+	{
+		if (ReferenceEquals(e.Artifact, this.PrefixArtifact) || ReferenceEquals(e.Artifact, this.SuffixArtifact))
+			e.Key = e.Artifact.GetType().Name;
 	}
 
 	private GeneratedHookableSubclass<Artifact> CreateHookableArtifactSubclass()

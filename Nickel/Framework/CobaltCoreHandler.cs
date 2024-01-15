@@ -60,7 +60,7 @@ internal sealed class CobaltCoreHandler
 	private void ResolveAssembly(string name, Stream assemblyStream, Stream? symbolsStream = null)
 	{
 		if (this.AssemblyEditor is { } assemblyEditor)
-			assemblyStream = assemblyEditor.EditAssemblyStream(name, assemblyStream);
+			assemblyEditor.EditAssemblyStream(name, ref assemblyStream, ref symbolsStream);
 		AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
 		{
 			if ($"{assemblyName.Name ?? assemblyName.FullName}.dll" == name)

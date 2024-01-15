@@ -4,5 +4,14 @@ namespace Nanoray.PluginManager;
 
 public interface IAssemblyEditor
 {
-	Stream EditAssemblyStream(string name, Stream assemblyStream);
+	void EditAssemblyStream(string name, ref Stream assemblyStream, ref Stream? symbolsStream);
+}
+
+public static class IAssemblyEditorExt
+{
+	public static void EditAssemblyStream(this IAssemblyEditor editor, string name, ref Stream assemblyStream)
+	{
+		Stream? symbolsStream = null;
+		editor.EditAssemblyStream(name, ref assemblyStream, ref symbolsStream);
+	}
 }

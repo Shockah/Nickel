@@ -46,7 +46,11 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 		{
 			var assemblyFile = package.PackageRoot.GetRelativeFile(requiredPluginData.EntryPointAssembly);
 			using var originalStream = assemblyFile.OpenRead();
-			using var stream = this.AssemblyEditor?.EditAssemblyStream(assemblyFile.Name, originalStream) ?? originalStream;
+			var refStream = originalStream;
+
+			this.AssemblyEditor?.EditAssemblyStream(assemblyFile.Name, ref refStream);
+			using var stream = refStream;
+
 			var context = this.LoadContextProvider.GetLoadContext(package);
 			assembly = context.LoadFromStream(stream);
 		}
