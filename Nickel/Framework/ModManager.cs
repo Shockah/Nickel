@@ -22,7 +22,7 @@ internal sealed class ModManager
 {
 	private DirectoryInfo ModsDirectory { get; }
 	private ILoggerFactory LoggerFactory { get; }
-	private ILogger Logger { get; }
+	internal ILogger Logger { get; }
 	internal ModEventManager EventManager { get; }
 
 	internal IModManifest ModLoaderModManifest { get; private init; }
