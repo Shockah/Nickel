@@ -12,6 +12,7 @@
 		<RootNamespace>$(_ModLoaderName)</RootNamespace>
 		<Version>$(NickelVersion)</Version>
 		<OutputType>Exe</OutputType>
+		<ApplicationIcon>../Icon.ico</ApplicationIcon>
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 		<NoWarn>$(NoWarn);CS0436</NoWarn>
 		<IgnoreAccessChecks>true</IgnoreAccessChecks>
@@ -77,6 +78,15 @@
 		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
 		<PackageReference Include="ThomasLevesque.WeakEvent" Version="4.1.0" />
 		<PackageReference Include="PolySharp" Version="1.14.1" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<EmbeddedResource Include="../Icon.ico">
+			<LogicalName>Icon.ico</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="../Icon.bmp">
+			<LogicalName>Icon.bmp</LogicalName>
+		</EmbeddedResource>
 	</ItemGroup>
 
 	<Target Name="ExtractGameDll" BeforeTargets="CoreCompile">

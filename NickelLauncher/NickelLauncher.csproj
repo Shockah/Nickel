@@ -4,7 +4,16 @@
 		<RootNamespace>Nickel.Launcher</RootNamespace>
 		<Version>$(NickelVersion)</Version>
 		<OutputType>Exe</OutputType>
+		<ApplicationIcon>../Icon.ico</ApplicationIcon>
 	</PropertyGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="../Icon.ico">
+			<LogicalName>Icon.ico</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="../Icon.bmp">
+			<LogicalName>Icon.bmp</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\NickelCommon\NickelCommon.csproj" />
 		<ProjectReference Include="..\Nickel\Nickel.csproj" ReferenceOutputAssembly="false" />
