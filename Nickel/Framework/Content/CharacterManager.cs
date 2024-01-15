@@ -217,6 +217,10 @@ internal sealed class CharacterManager
 
 	private void OnGetUnlockedChars(object? _, HashSet<Deck> unlockedCharacters)
 	{
+		foreach (var deck in unlockedCharacters.ToList())
+			if (this.Decks.LookupByDeck(deck) is null)
+				unlockedCharacters.Remove(deck);
+
 		foreach (var entry in this.UniqueNameToCharacterEntry.Values)
 			if (!entry.Configuration.StartLocked)
 				unlockedCharacters.Add(entry.Configuration.Deck);
