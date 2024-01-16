@@ -218,6 +218,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		{
 			logger.LogCritical("Cobalt Core threw an exception: {e}", e);
 			instance.ModManager.LogHarmonyPatchesOnce();
+			Console.ReadLine();
 		}
 		Directory.SetCurrentDirectory(oldWorkingDirectory);
 	}
