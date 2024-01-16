@@ -346,7 +346,7 @@ internal sealed class ModManager
 
 		var allMethodPatchInfoString = string.Join(
 			"\n",
-			Harmony.GetAllPatchedMethods().OrderBy(m => $"{m.DeclaringType}::{m.Name}").Select(m =>
+			Harmony.GetAllPatchedMethods().OrderBy(m => $"{m.DeclaringType?.FullName ?? m.DeclaringType?.Name}::{m.Name}").Select(m =>
 			{
 				var patchInfo = Harmony.GetPatchInfo(m);
 				var patchInfoString = string.Join(
@@ -365,7 +365,7 @@ internal sealed class ModManager
 						return $"\t\t{owner} ({string.Join(", ", patchTypeStrings)})";
 					})
 				);
-				return $"\t{m.DeclaringType}::{m.Name}\n{patchInfoString}";
+				return $"\t{m.DeclaringType?.FullName ?? m.DeclaringType?.Name}::{m.Name}\n{patchInfoString}";
 			})
 		);
 		this.Logger.LogDebug("Methods patched with Harmony:\n{Methods}", allMethodPatchInfoString);
