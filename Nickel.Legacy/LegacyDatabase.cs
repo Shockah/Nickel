@@ -86,13 +86,24 @@ internal sealed class LegacyDatabase(
 		{
 			if (!this.GlobalNameToCardEntry.TryGetValue(globalName, out var entry))
 				continue;
-			card.GetLocalisation(locale, out _, out var description, out var descriptionA, out var descriptionB);
+			card.GetLocalisation(locale, out var name, out var description, out var descriptionA, out var descriptionB);
+			if (name is not null)
+				localizations[card.NameLocKey] = name;
 			if (description is not null)
+			{
 				localizations[$"card.{entry.UniqueName}.desc"] = description;
+				localizations[card.DescLocKey] = description;
+			}
 			if (descriptionA is not null)
+			{
 				localizations[$"card.{entry.UniqueName}.descA"] = descriptionA;
+				localizations[card.DescALocKey] = descriptionA;
+			}
 			if (descriptionB is not null)
+			{
 				localizations[$"card.{entry.UniqueName}.descB"] = descriptionB;
+				localizations[card.DescBLocKey] = descriptionB;
+			}
 		}
 	}
 
