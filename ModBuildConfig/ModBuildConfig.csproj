@@ -23,6 +23,10 @@
 	<Import Project="Configuration.props.user" Condition="Exists('Configuration.props.user')" />
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.11" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" IncludeAssets="compile" />
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" IncludeAssets="compile" />
+		<!-- currently disabled because this package doesn't support Linux -->
+		<!-- <PackageReference Include="MakeTypesPublic" Version="1.0.3" IncludeAssets="runtime; build; native; contentfiles; analyzers" /> -->
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="$(MSBuildProjectDirectory)\..\.editorconfig" Link=".editorconfig" />
