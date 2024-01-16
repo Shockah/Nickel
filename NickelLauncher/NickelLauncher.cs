@@ -104,10 +104,12 @@ internal class NickelLauncher
 		{
 			logger.LogCritical("{Name} threw an exception: {Exception}", NickelConstants.Name, ex);
 		}
+		loggerFactory.Dispose();
 	}
 
 	private static void StartAndLogProcess(ProcessStartInfo psi, ILogger logger, ILoggerFactory loggerFactory)
 	{
+		var exitingLauncher = false;
 		var process = Process.Start(psi);
 		if (process is null)
 		{
@@ -120,6 +122,7 @@ internal class NickelLauncher
 		// Detect if parent process is killed
 		void OnExited(object? _, EventArgs e)
 		{
+			exitingLauncher = true;
 			if (process.HasExited)
 				return;
 			logger.LogInformation("Attempting to close {ModLoaderName} gracefully.", NickelConstants.Name);
@@ -140,14 +143,24 @@ internal class NickelLauncher
 
 		// Subscribe to logging
 		var launchedLogger = loggerFactory.CreateLogger(NickelConstants.Name);
-		process.OutputDataReceived += (_, e) => launchedLogger.LogInformation("{Message}", e.Data);
-		process.ErrorDataReceived += (_, e) => launchedLogger.LogError("{Message}", e.Data);
+		process.OutputDataReceived += (_, e) =>
+		{
+			if (!string.IsNullOrEmpty(e.Data))
+				launchedLogger.LogInformation("{Message}", e.Data);
+		};
+		process.ErrorDataReceived += (_, e) =>
+		{
+			if (!string.IsNullOrEmpty(e.Data))
+				launchedLogger.LogError("{Message}", e.Data);
+		};
 		process.BeginErrorReadLine();
 		process.BeginOutputReadLine();
 
 		process.WaitForExit();
+		logger.Log(process.ExitCode == 0 ? LogLevel.Debug : LogLevel.Error, "{ModLoaderName} exited with code {Code}.", NickelConstants.Name, process.ExitCode);
+		if (process.ExitCode != 0 && !exitingLauncher)
+			Console.ReadLine();
 
-		logger.LogDebug("{ModLoaderName} process closed gracefully.", NickelConstants.Name);
 		// Unsubscribe
 		launcherProcess.Exited -= OnExited;
 		Console.CancelKeyPress -= OnExited;

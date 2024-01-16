@@ -84,12 +84,12 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 				LogPipeName = context.ParseResult.GetValueForOption(logPipeNameOption),
 				UnmatchedArguments = context.ParseResult.UnmatchedTokens
 			};
-			CreateAndStartInstance(launchArguments);
+			context.ExitCode = CreateAndStartInstance(launchArguments);
 		});
 		return rootCommand.Invoke(args);
 	}
 
-	private static void CreateAndStartInstance(LaunchArguments launchArguments)
+	private static int CreateAndStartInstance(LaunchArguments launchArguments)
 	{
 		var realOut = Console.Out;
 		var loggerFactory = LoggerFactory.Create(builder =>
@@ -139,7 +139,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		if (resolveResultOrError.TryPickT1(out var error, out var resolveResult))
 		{
 			logger.LogCritical("Could not resolve Cobalt Core: {Error}", error.Value);
-			return;
+			return -1;
 		}
 
 		var exeBytes = File.ReadAllBytes(resolveResult.ExePath.FullName);
@@ -151,10 +151,12 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		if (handlerResultOrError.TryPickT1(out error, out var handlerResult))
 		{
 			logger.LogCritical("Could not start the game: {Error}", error.Value);
-			return;
+			return -2;
 		}
 
-		ContinueAfterLoadingGameAssembly(instance, launchArguments, harmony, logger, handlerResult);
+		var exitCode = ContinueAfterLoadingGameAssembly(instance, launchArguments, harmony, logger, handlerResult);
+		loggerFactory.Dispose();
+		return exitCode;
 	}
 
 	private static SemanticVersion GetVanillaVersion()
@@ -172,7 +174,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			: NickelConstants.FallbackGameVersion;
 	}
 
-	private static void ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony harmony, ILogger logger, CobaltCoreHandlerResult handlerResult)
+	private static int ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony harmony, ILogger logger, CobaltCoreHandlerResult handlerResult)
 	{
 		var version = GetVanillaVersion();
 		logger.LogInformation("Game version: {Version}", version);
@@ -213,14 +215,20 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			var result = handlerResult.EntryPoint.Invoke(null, System.Reflection.BindingFlags.DoNotWrapExceptions, null, [gameArguments.ToArray()], null);
 			if (result is not null)
 				logger.LogInformation("Cobalt Core closed with result: {Result}", result);
+			return 0;
 		}
 		catch (Exception e)
 		{
 			logger.LogCritical("Cobalt Core threw an exception: {e}", e);
 			instance.ModManager.LogHarmonyPatchesOnce();
-			Console.ReadLine();
+			if (instance.LaunchArguments.LogPipeName is null)
+				Console.ReadLine();
+			return 1;
 		}
-		Directory.SetCurrentDirectory(oldWorkingDirectory);
+		finally
+		{
+			Directory.SetCurrentDirectory(oldWorkingDirectory);
+		}
 	}
 
 	private static void ApplyHarmonyPatches(Harmony harmony, bool saveInDebug)
