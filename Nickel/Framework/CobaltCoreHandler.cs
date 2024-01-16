@@ -10,22 +10,16 @@ namespace Nickel;
 internal sealed class CobaltCoreHandler
 {
 	private ILogger Logger { get; }
-	private ICobaltCoreResolver Resolver { get; }
 	private IAssemblyEditor? AssemblyEditor { get; }
 
-	public CobaltCoreHandler(ILogger logger, ICobaltCoreResolver resolver, IAssemblyEditor? assemblyEditor)
+	public CobaltCoreHandler(ILogger logger, IAssemblyEditor? assemblyEditor)
 	{
 		this.Logger = logger;
-		this.Resolver = resolver;
 		this.AssemblyEditor = assemblyEditor;
 	}
 
-	public OneOf<CobaltCoreHandlerResult, Error<string>> SetupGame()
+	public OneOf<CobaltCoreHandlerResult, Error<string>> SetupGame(CobaltCoreResolveResult resolveResult)
 	{
-		var resolveResultOrError = this.Resolver.ResolveCobaltCore();
-		if (resolveResultOrError.TryPickT1(out var error, out var resolveResult))
-			return new Error<string>($"Could not resolve Cobalt Core: {error.Value}");
-
 		this.Logger.LogInformation("Loading game assembly...");
 		this.ResolveAssembly(
 			name: "CobaltCore.dll",

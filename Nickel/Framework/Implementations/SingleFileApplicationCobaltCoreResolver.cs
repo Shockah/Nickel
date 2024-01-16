@@ -43,6 +43,7 @@ internal sealed class SingleFileApplicationCobaltCoreResolver : ICobaltCoreResol
 
 		return new CobaltCoreResolveResult
 		{
+			ExePath = this.ExePath,
 			GameAssemblyDataStream = gameAssemblyDataStream,
 			GamePdbDataStream = gamePdbDataStream,
 			OtherDllDataStreams = otherDllDataStreams,

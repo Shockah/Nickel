@@ -11,7 +11,15 @@ namespace Nickel;
 
 internal sealed class ModRegistry : IModRegistry
 {
-	public IModManifest VanillaModManifest { get; }
+	public IModManifest VanillaModManifest
+	{
+		get
+		{
+			if (this.VanillaModManifestProvider() is not { } manifest)
+				throw new InvalidOperationException("Cannot access game manifest before the game assembly is loaded.");
+			return manifest;
+		}
+	}
 
 	public IReadOnlyDictionary<string, IModManifest> LoadedMods
 		=> this.ModUniqueNameToPackage
@@ -24,10 +32,11 @@ internal sealed class ModRegistry : IModRegistry
 	private IReadOnlyDictionary<string, IPluginPackage<IModManifest>> ModUniqueNameToPackage { get; }
 	private Dictionary<string, object?> ApiCache { get; } = [];
 	private IProxyManager<string> ProxyManager { get; }
+	private Func<IModManifest?> VanillaModManifestProvider { get; }
 
 	public ModRegistry(
 		IModManifest modManifest,
-		IModManifest vanillaModManifest,
+		Func<IModManifest?> vanillaModManifestProvider,
 		DirectoryInfo modsDirectory,
 		IReadOnlyDictionary<string, Mod> modUniqueNameToInstance,
 		IReadOnlyDictionary<string, IPluginPackage<IModManifest>> modUniqueNameToPackage,
@@ -35,7 +44,7 @@ internal sealed class ModRegistry : IModRegistry
 	)
 	{
 		this.ModManifest = modManifest;
-		this.VanillaModManifest = vanillaModManifest;
+		this.VanillaModManifestProvider = vanillaModManifestProvider;
 		this.ModsDirectory = modsDirectory;
 		this.ModUniqueNameToInstance = modUniqueNameToInstance;
 		this.ModUniqueNameToPackage = modUniqueNameToPackage;

@@ -7,10 +7,12 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace Nickel;
 
-internal sealed class Nickel
+internal sealed partial class Nickel
 {
 	internal static Nickel Instance { get; private set; } = null!;
 	internal ModManager ModManager { get; private set; } = null!;
@@ -121,16 +123,24 @@ internal sealed class Nickel
 		instance.ModManager.ResolveMods();
 		instance.ModManager.LoadMods(ModLoadPhase.BeforeGameAssembly);
 
-		CobaltCoreHandler handler = new(
-			logger,
-			launchArguments.GamePath is { } gamePath
-				? new SingleFileApplicationCobaltCoreResolver(gamePath, new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb")))
-				: new SteamCobaltCoreResolver((exe, pdb) => new SingleFileApplicationCobaltCoreResolver(exe, pdb)),
-			extendableAssemblyDefinitionEditor
-		);
+		ICobaltCoreResolver cobaltCoreResolver = launchArguments.GamePath is { } gamePath
+			? new SingleFileApplicationCobaltCoreResolver(gamePath, new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb")))
+			: new SteamCobaltCoreResolver((exe, pdb) => new SingleFileApplicationCobaltCoreResolver(exe, pdb));
 
-		var handlerResultOrError = handler.SetupGame();
-		if (handlerResultOrError.TryPickT1(out var error, out var handlerResult))
+		var resolveResultOrError = cobaltCoreResolver.ResolveCobaltCore();
+		if (resolveResultOrError.TryPickT1(out var error, out var resolveResult))
+		{
+			logger.LogCritical("Could not resolve Cobalt Core: {Error}", error.Value);
+			return;
+		}
+
+		var exeBytes = File.ReadAllBytes(resolveResult.ExePath.FullName);
+		var hashBytes = MD5.HashData(exeBytes);
+		logger.LogDebug("Game EXE hash: {Hash}", Convert.ToHexString(hashBytes));
+
+		var handler = new CobaltCoreHandler(logger, extendableAssemblyDefinitionEditor);
+		var handlerResultOrError = handler.SetupGame(resolveResult);
+		if (handlerResultOrError.TryPickT1(out error, out var handlerResult))
 		{
 			logger.LogCritical("Could not start the game: {Error}", error.Value);
 			return;
@@ -139,9 +149,27 @@ internal sealed class Nickel
 		ContinueAfterLoadingGameAssembly(instance, launchArguments, harmony, logger, handlerResult);
 	}
 
+	private static SemanticVersion GetVanillaVersion()
+	{
+		var vanillaVersionMatch = GameVersionRegex().Match((string)AccessTools.DeclaredField(typeof(CCBuildVars), nameof(CCBuildVars.VERSION)).GetValue(null)!);
+		return vanillaVersionMatch.Success
+			? new SemanticVersion(
+				int.Parse(vanillaVersionMatch.Groups[1].Value),
+				int.Parse(vanillaVersionMatch.Groups[2].Value),
+				int.Parse(vanillaVersionMatch.Groups[3].Value),
+				// the prerelease tag probably won't always match semver, but oh well
+				vanillaVersionMatch.Groups.Count >= 5 && !string.IsNullOrEmpty(vanillaVersionMatch.Groups[4].Value)
+					? vanillaVersionMatch.Groups[4].Value : null
+			)
+			: NickelConstants.FallbackGameVersion;
+	}
+
 	private static void ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony harmony, ILogger logger, CobaltCoreHandlerResult handlerResult)
 	{
-		instance.ModManager.ContinueAfterLoadingGameAssembly();
+		var version = GetVanillaVersion();
+		logger.LogInformation("Game version: {Version}", version);
+
+		instance.ModManager.ContinueAfterLoadingGameAssembly(version);
 		instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderModManifest);
 		instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderModManifest);
 
@@ -232,4 +260,7 @@ internal sealed class Nickel
 			directoryInfo.Create();
 		return directoryInfo;
 	}
+
+	[GeneratedRegex("(\\d+)\\.(\\d+)\\.(\\d+)(?: (.+))?")]
+	private static partial Regex GameVersionRegex();
 }

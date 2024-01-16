@@ -15,11 +15,10 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Loader;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Nickel;
 
-internal sealed partial class ModManager
+internal sealed class ModManager
 {
 	private DirectoryInfo ModsDirectory { get; }
 	private ILoggerFactory LoggerFactory { get; }
@@ -27,9 +26,9 @@ internal sealed partial class ModManager
 	internal ModEventManager EventManager { get; }
 
 	internal IModManifest ModLoaderModManifest { get; private init; }
-	internal IModManifest VanillaModManifest { get; private init; }
 	internal ModLoadPhase CurrentModLoadPhase { get; private set; } = ModLoadPhase.BeforeGameAssembly;
 	internal ContentManager? ContentManager { get; private set; }
+	internal IModManifest? VanillaModManifest { get; private set; }
 
 	private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; } = new();
 	private IProxyManager<string> ProxyManager { get; }
@@ -60,25 +59,6 @@ internal sealed partial class ModManager
 			Version = NickelConstants.Version,
 			DisplayName = NickelConstants.Name,
 			Author = NickelConstants.Name,
-			RequiredApiVersion = NickelConstants.Version
-		};
-
-		var vanillaVersionMatch = GameVersionRegex().Match(CCBuildVars.VERSION);
-		this.VanillaModManifest = new ModManifest()
-		{
-			UniqueName = "CobaltCore",
-			Version = vanillaVersionMatch.Success
-				? new SemanticVersion(
-					int.Parse(vanillaVersionMatch.Groups[1].Value),
-					int.Parse(vanillaVersionMatch.Groups[2].Value),
-					int.Parse(vanillaVersionMatch.Groups[3].Value),
-					// the prerelease tag probably won't always match semver, but oh well
-					vanillaVersionMatch.Groups.Count >= 5 && !string.IsNullOrEmpty(vanillaVersionMatch.Groups[4].Value)
-						? vanillaVersionMatch.Groups[4].Value : null
-				)
-				: NickelConstants.FallbackGameVersion,
-			DisplayName = "Cobalt Core",
-			Author = "Rocket Rat Games",
 			RequiredApiVersion = NickelConstants.Version
 		};
 
@@ -406,8 +386,17 @@ internal sealed partial class ModManager
 		return sb.ToString();
 	}
 
-	internal void ContinueAfterLoadingGameAssembly()
+	internal void ContinueAfterLoadingGameAssembly(SemanticVersion gameVersion)
 	{
+		this.VanillaModManifest = new ModManifest()
+		{
+			UniqueName = "CobaltCore",
+			Version = gameVersion,
+			DisplayName = "Cobalt Core",
+			Author = "Rocket Rat Games",
+			RequiredApiVersion = NickelConstants.Version
+		};
+
 		this.ContentManager = ContentManager.Create(() => this.CurrentModLoadPhase, this.ObtainLogger, this.VanillaModManifest);
 		this.PrepareJsonSerialization();
 	}
@@ -488,7 +477,7 @@ internal sealed partial class ModManager
 			helper = new ModHelper(
 				new ModRegistry(
 					package.Manifest,
-					this.VanillaModManifest,
+					() => this.VanillaModManifest,
 					this.ModsDirectory,
 					this.UniqueNameToInstance,
 					this.UniqueNameToPackage,
@@ -515,7 +504,4 @@ internal sealed partial class ModManager
 
 		return helper;
 	}
-
-	[GeneratedRegex("(\\d+)\\.(\\d+)\\.(\\d+)(?: (.+))?")]
-	private static partial Regex GameVersionRegex();
 }
