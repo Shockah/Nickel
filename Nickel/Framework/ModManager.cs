@@ -1,3 +1,4 @@
+using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Nanoray.Pintail;
 using Nanoray.PluginManager;
@@ -18,7 +19,7 @@ using System.Text.RegularExpressions;
 
 namespace Nickel;
 
-internal sealed class ModManager
+internal sealed partial class ModManager
 {
 	private DirectoryInfo ModsDirectory { get; }
 	private ILoggerFactory LoggerFactory { get; }
@@ -31,15 +32,16 @@ internal sealed class ModManager
 	internal ContentManager? ContentManager { get; private set; }
 
 	private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; } = new();
+	private IProxyManager<string> ProxyManager { get; }
 	internal List<IPluginPackage<IModManifest>> ResolvedMods { get; } = [];
 	private List<IModManifest> FailedMods { get; } = [];
 	private HashSet<IModManifest> OptionalSubmods { get; } = [];
+	private bool DidLogHarmonyPatchesOnce = false;
 
 	private Dictionary<string, ILogger> UniqueNameToLogger { get; } = [];
 	private Dictionary<string, IModHelper> UniqueNameToHelper { get; } = [];
 	private Dictionary<string, Mod> UniqueNameToInstance { get; } = [];
 	private Dictionary<string, IPluginPackage<IModManifest>> UniqueNameToPackage { get; } = [];
-	private IProxyManager<string> ProxyManager { get; }
 
 	public ModManager(
 		DirectoryInfo modsDirectory,
@@ -61,7 +63,7 @@ internal sealed class ModManager
 			RequiredApiVersion = NickelConstants.Version
 		};
 
-		var vanillaVersionMatch = Regex.Match(CCBuildVars.VERSION, "(\\d+)\\.(\\d+)\\.(\\d+)(?: (.+))?");
+		var vanillaVersionMatch = GameVersionRegex().Match(CCBuildVars.VERSION);
 		this.VanillaModManifest = new ModManifest()
 		{
 			UniqueName = "CobaltCore",
@@ -356,6 +358,39 @@ internal sealed class ModManager
 		this.EventManager.OnModLoadPhaseFinishedEvent.Raise(null, phase);
 	}
 
+	public void LogHarmonyPatchesOnce()
+	{
+		if (this.DidLogHarmonyPatchesOnce)
+			return;
+		this.DidLogHarmonyPatchesOnce = true;
+
+		var allMethodPatchInfoString = string.Join(
+			"\n",
+			Harmony.GetAllPatchedMethods().OrderBy(m => $"{m.DeclaringType}::{m.Name}").Select(m =>
+			{
+				var patchInfo = Harmony.GetPatchInfo(m);
+				var patchInfoString = string.Join(
+					"\n",
+					patchInfo.Owners.OrderBy(owner => owner).Select(owner =>
+					{
+						var patchTypeStrings = new List<string>();
+						if (patchInfo.Prefixes.Any(p => p.owner == owner))
+							patchTypeStrings.Add("prefix");
+						if (patchInfo.Postfixes.Any(p => p.owner == owner))
+							patchTypeStrings.Add("postfix");
+						if (patchInfo.Finalizers.Any(p => p.owner == owner))
+							patchTypeStrings.Add("finalizer");
+						if (patchInfo.Transpilers.Any(p => p.owner == owner))
+							patchTypeStrings.Add("transpiler");
+						return $"\t\t{owner} ({string.Join(", ", patchTypeStrings)})";
+					})
+				);
+				return $"\t{m.DeclaringType}::{m.Name}\n{patchInfoString}";
+			})
+		);
+		this.Logger.LogDebug("Methods patched with Harmony:\n{Methods}", allMethodPatchInfoString);
+	}
+
 	private static string GetModDisplayName(IModManifest manifest, bool @long)
 	{
 		StringBuilder sb = new();
@@ -480,4 +515,7 @@ internal sealed class ModManager
 
 		return helper;
 	}
+
+	[GeneratedRegex("(\\d+)\\.(\\d+)\\.(\\d+)(?: (.+))?")]
+	private static partial Regex GameVersionRegex();
 }

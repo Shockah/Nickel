@@ -15,5 +15,8 @@ internal static class GPatches
 	}
 
 	private static void LoadSavegameOnStartup_Prefix()
-		=> Nickel.Instance.ModManager.LoadMods(ModLoadPhase.AfterDbInit);
+	{
+		Nickel.Instance.ModManager.LoadMods(ModLoadPhase.AfterDbInit);
+		Nickel.Instance.ModManager.LogHarmonyPatchesOnce();
+	}
 }

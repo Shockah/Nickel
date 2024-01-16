@@ -180,6 +180,7 @@ internal sealed class Nickel
 		catch (Exception e)
 		{
 			logger.LogCritical("Cobalt Core threw an exception: {e}", e);
+			instance.ModManager.LogHarmonyPatchesOnce();
 		}
 		Directory.SetCurrentDirectory(oldWorkingDirectory);
 	}
