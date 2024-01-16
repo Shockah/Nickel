@@ -54,7 +54,7 @@
 		<Fayti1703.AssemblyTasks.MakeReferenceAssembly SourceFilePath="$(BaseOutputPath)/CobaltCore.public.dll" TargetFilePath="$(BaseOutputPath)/CobaltCore.public.reference.dll" />
 	</Target>
 	
-	<Target Name="AutoUpdateReferenceAssembly" DependsOnTargets="ExtractGameAssembly" BeforeTargets="Build">
+	<Target Name="AutoUpdateReferenceAssembly" BeforeTargets="Build">
 		<CallTarget Condition="!Exists(FinalOutputPath)" Targets="UpdateReferenceAssembly" />
 	</Target>
 	
