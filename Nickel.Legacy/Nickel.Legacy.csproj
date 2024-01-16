@@ -6,7 +6,9 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\LegacyModLoader\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj" />
-		<PackageReference Include="Nickel.ModBuildConfig" Version="0.2.0" />
+		<PackageReference Include="Nickel.ModBuildConfig" Version="0.4.0-prerelease1" />
+		<PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" PrivateAssets="All" ExcludeAssets="runtime" />
+		<PackageReference Include="MakeTypesPublic" Version="1.0.3" PrivateAssets="All" ExcludeAssets="runtime" />
 		<PackageReference Include="OneOf.SourceGenerator" Version="3.0.263" PrivateAssets="all" />
 	</ItemGroup>
 </Project>

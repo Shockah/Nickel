@@ -60,7 +60,7 @@
 		<PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" />
 		<PackageReference Include="SingleFileExtractor.Core" Version="2.2.0" />
 		<PackageReference Include="VdfConverter" Version="1.0.3" />
-		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" PrivateAssets="all" />
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
 		<PackageReference Include="MakeTypesPublic" Version="1.0.3" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 		<Reference Include="CobaltCore" HintPath="$(GameDllPath)" Private="False" IgnoreAccessChecks="true" />
 

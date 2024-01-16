@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<RootNamespace>Nickel.ModBuildConfig</RootNamespace>
 		<!-- TODO: Use proper versioning after Nickel is 1.0.0 -->
-		<Version>0.2.0</Version>
+		<Version>0.4.0-prerelease1</Version>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<LangVersion>12.0</LangVersion>
 		<ImplicitUsings>disable</ImplicitUsings>
@@ -22,7 +22,7 @@
 	</PropertyGroup>
 	<Import Project="Configuration.props.user" Condition="Exists('Configuration.props.user')" />
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.10" />
+		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.11" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="$(MSBuildProjectDirectory)\..\.editorconfig" Link=".editorconfig" />
