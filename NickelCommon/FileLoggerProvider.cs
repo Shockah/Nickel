@@ -6,16 +6,16 @@ using System.Text;
 
 namespace Nickel;
 
-public sealed class FileLoggerProvider(string filePath) : ILoggerProvider
+public sealed class FileLoggerProvider(LogLevel level, string filePath) : ILoggerProvider
 {
-	public static FileLoggerProvider CreateNewLog(DirectoryInfo directoryInfo, bool timestampedLogFiles)
+	public static FileLoggerProvider CreateNewLog(LogLevel level, DirectoryInfo directoryInfo, bool timestampedLogFiles)
 	{
 		if (timestampedLogFiles)
 		{
 			var now = DateTime.Now;
 			var formattedDatetime = now.ToString("yyyy-MM-dd_HH-mm-ss");
 			var timestampedFilePath = Path.Combine(directoryInfo.FullName, $"{formattedDatetime}.log");
-			return new FileLoggerProvider(timestampedFilePath);
+			return new FileLoggerProvider(level, timestampedFilePath);
 		}
 
 		var currentFilePath = Path.Combine(directoryInfo.FullName, "Nickel.log");
@@ -24,7 +24,7 @@ public sealed class FileLoggerProvider(string filePath) : ILoggerProvider
 		if (File.Exists(currentFilePath))
 			File.Move(currentFilePath, prevFilePath, true);
 
-		return new FileLoggerProvider(currentFilePath);
+		return new FileLoggerProvider(level, currentFilePath);
 	}
 
 	private StreamWriter StreamWriter { get; } = new(
@@ -48,6 +48,7 @@ public sealed class FileLoggerProvider(string filePath) : ILoggerProvider
 
 	public ILogger CreateLogger(string categoryName) =>
 		new Logger(
+			level,
 			categoryName,
 			logEntry =>
 			{
@@ -56,7 +57,7 @@ public sealed class FileLoggerProvider(string filePath) : ILoggerProvider
 			}
 		);
 
-	private sealed class Logger(string categoryName, Action<LogEntry> loggingFunction) : ILogger
+	private sealed class Logger(LogLevel level, string categoryName, Action<LogEntry> loggingFunction) : ILogger
 	{
 		private string CategoryName { get; } = categoryName;
 		private Action<LogEntry> LoggingFunction { get; } = loggingFunction;
@@ -65,7 +66,7 @@ public sealed class FileLoggerProvider(string filePath) : ILoggerProvider
 			=> null;
 
 		public bool IsEnabled(LogLevel logLevel)
-			=> true;
+			=> logLevel >= level;
 
 		public void Log<TState>(
 			LogLevel logLevel,
@@ -74,6 +75,9 @@ public sealed class FileLoggerProvider(string filePath) : ILoggerProvider
 			Exception? exception,
 			Func<TState, Exception?, string> formatter
 		)
-			=> this.LoggingFunction(new(this.CategoryName, logLevel, formatter(state, exception)));
+		{
+			if (this.IsEnabled(logLevel))
+				this.LoggingFunction(new(this.CategoryName, logLevel, formatter(state, exception)));
+		}
 	}
 }

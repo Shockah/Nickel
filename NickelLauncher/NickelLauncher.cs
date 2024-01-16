@@ -1,8 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Configuration;
-using Microsoft.Extensions.Logging.Console;
 using Nickel.Common;
 using System;
 using System.Collections.Generic;
@@ -54,20 +50,17 @@ internal class NickelLauncher
 
 	private static void CreateAndStartInstance(LaunchArguments launchArguments)
 	{
+		var realOut = Console.Out;
 		var loggerFactory = LoggerFactory.Create(builder =>
 		{
+			builder.SetMinimumLevel(LogLevel.Debug);
 			var fileLogDirectory = launchArguments.LogPath ?? GetOrCreateDefaultLogDirectory();
 			var timestampedLogFiles = launchArguments.TimestampedLogFiles ?? false;
-			builder.AddProvider(FileLoggerProvider.CreateNewLog(fileLogDirectory, timestampedLogFiles));
-
-			builder.AddConfiguration();
-			builder.AddConsoleFormatter<CustomConsoleFormatter, ConsoleFormatterOptions>();
-			builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, ConsoleLoggerProvider>());
-
-			LoggerProviderOptions.RegisterProviderOptions<ConsoleLoggerOptions, ConsoleLoggerProvider>(builder.Services);
+			builder.AddProvider(FileLoggerProvider.CreateNewLog(LogLevel.Debug, fileLogDirectory, timestampedLogFiles));
+			builder.AddProvider(new ConsoleLoggerProvider(LogLevel.Information, realOut, disposeWriter: false));
 		});
 		var logger = loggerFactory.CreateLogger($"{NickelConstants.Name}Launcher");
-		Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, Console.Out));
+		Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, realOut));
 		Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));
 		Dictionary<string, ILogger> categoryLoggers = [];
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
