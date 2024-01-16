@@ -17,7 +17,8 @@ internal sealed class NoInliningDefinitionEditor : IAssemblyDefinitionEditor
 
 		void AddAttribute(MethodDefinition methodDefinition)
 		{
-			methodDefinition.IsVirtual = true;
+			if (!methodDefinition.IsStatic)
+				methodDefinition.IsVirtual = true;
 			var attribute = new CustomAttribute(methodImplAttributeCtor);
 			attribute.ConstructorArguments.Add(new CustomAttributeArgument(methodImplOptionsTypeReference, MethodImplOptions.NoInlining));
 			methodDefinition.CustomAttributes.Add(attribute);

@@ -1,6 +1,7 @@
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager.Cecil;
+using Nanoray.Shrike;
 using Nickel.Common;
 using System;
 using System.Collections.Generic;
@@ -12,10 +13,11 @@ using System.Text.RegularExpressions;
 
 namespace Nickel;
 
-internal sealed partial class Nickel
+internal sealed partial class Nickel(LaunchArguments launchArguments)
 {
 	internal static Nickel Instance { get; private set; } = null!;
 	internal ModManager ModManager { get; private set; } = null!;
+	internal LaunchArguments LaunchArguments { get; } = launchArguments;
 
 	internal static int Main(string[] args)
 	{
@@ -26,6 +28,10 @@ internal sealed partial class Nickel
 		Option<bool?> saveInDebugOption = new(
 			name: "--saveInDebug",
 			description: "Whether the game should be auto-saved even in debug mode."
+		);
+		Option<bool?> initSteamOption = new(
+			name: "--initSteam",
+			description: "Whether Steam integration should be enabled."
 		);
 		Option<FileInfo?> gamePathOption = new(
 			name: "--gamePath",
@@ -55,6 +61,7 @@ internal sealed partial class Nickel
 		RootCommand rootCommand = new(NickelConstants.IntroMessage);
 		rootCommand.AddOption(debugOption);
 		rootCommand.AddOption(saveInDebugOption);
+		rootCommand.AddOption(initSteamOption);
 		rootCommand.AddOption(gamePathOption);
 		rootCommand.AddOption(modsPathOption);
 		rootCommand.AddOption(savePathOption);
@@ -68,6 +75,7 @@ internal sealed partial class Nickel
 			{
 				Debug = context.ParseResult.GetValueForOption(debugOption),
 				SaveInDebug = context.ParseResult.GetValueForOption(saveInDebugOption),
+				InitSteam = context.ParseResult.GetValueForOption(initSteamOption),
 				GamePath = context.ParseResult.GetValueForOption(gamePathOption),
 				ModsPath = context.ParseResult.GetValueForOption(modsPathOption),
 				SavePath = context.ParseResult.GetValueForOption(savePathOption),
@@ -105,7 +113,7 @@ internal sealed partial class Nickel
 		Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
 
-		Nickel instance = new();
+		var instance = new Nickel(launchArguments);
 		Instance = instance;
 
 		Harmony harmony = new(NickelConstants.Name);
@@ -186,6 +194,7 @@ internal sealed partial class Nickel
 		logger.LogInformation("SavePath: {Path}", savePath);
 
 		ApplyHarmonyPatches(harmony, saveInDebug);
+		ProgramPatches.OnTryInitSteam.Subscribe(instance, instance.OnTryInitSteam);
 		instance.ModManager.LoadMods(ModLoadPhase.AfterGameAssembly);
 
 		var oldWorkingDirectory = Directory.GetCurrentDirectory();
@@ -220,6 +229,7 @@ internal sealed partial class Nickel
 		CardPatches.Apply(harmony);
 		DBPatches.Apply(harmony);
 		GPatches.Apply(harmony);
+		ProgramPatches.Apply(harmony);
 		RunSummaryPatches.Apply(harmony);
 		SpriteLoaderPatches.Apply(harmony);
 		StatePatches.Apply(harmony, saveInDebug);
@@ -244,6 +254,9 @@ internal sealed partial class Nickel
 	[EventPriority(double.MaxValue)]
 	private void OnLoadStringsForLocale(object? _, LoadStringsForLocaleEventArgs e)
 		=> this.ModManager.ContentManager?.InjectLocalizations(e.Locale, e.Localizations);
+
+	private void OnTryInitSteam(object? _, StructRef<bool> initSteam)
+		=> initSteam.Value = this.LaunchArguments.InitSteam ?? true;
 
 	private static DirectoryInfo GetOrCreateDefaultModLibraryDirectory()
 	{
