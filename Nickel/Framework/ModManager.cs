@@ -6,6 +6,7 @@ using Nanoray.PluginManager.Cecil;
 using Nanoray.PluginManager.Implementations;
 using Newtonsoft.Json.Serialization;
 using Nickel.Common;
+using Nickel.Framework;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
@@ -24,15 +25,17 @@ internal sealed class ModManager
 	private ILoggerFactory LoggerFactory { get; }
 	internal ILogger Logger { get; }
 	internal ModEventManager EventManager { get; }
+	internal ModDataManager ModDataManager { get; }
 
 	internal IModManifest ModLoaderModManifest { get; private init; }
 	internal ModLoadPhase CurrentModLoadPhase { get; private set; } = ModLoadPhase.BeforeGameAssembly;
 	internal ContentManager? ContentManager { get; private set; }
 	internal IModManifest? VanillaModManifest { get; private set; }
 
+	internal List<IPluginPackage<IModManifest>> ResolvedMods { get; } = [];
+
 	private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; } = new();
 	private IProxyManager<string> ProxyManager { get; }
-	internal List<IPluginPackage<IModManifest>> ResolvedMods { get; } = [];
 	private List<IModManifest> FailedMods { get; } = [];
 	private HashSet<IModManifest> OptionalSubmods { get; } = [];
 	private bool DidLogHarmonyPatchesOnce = false;
@@ -67,6 +70,7 @@ internal sealed class ModManager
 			this.ObtainLogger,
 			this.ModLoaderModManifest
 		);
+		this.ModDataManager = new();
 
 		var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"{this.GetType().Namespace}.Proxies, Version={this.GetType().Assembly.GetName().Version}, Culture=neutral"), AssemblyBuilderAccess.Run);
 		var moduleBuilder = assemblyBuilder.DefineDynamicModule($"{this.GetType().Namespace}.Proxies");
@@ -407,16 +411,26 @@ internal sealed class ModManager
 
 		JSONSettings.indented.Converters.Add(proxyContractResolver);
 		JSONSettings.indented.Error += this.OnJsonError;
-		JSONSettings.indented.ContractResolver = new ModificatingContractResolver(
-			contractModificator: this.ModifyJsonContract,
-			wrapped: JSONSettings.indented.ContractResolver
+		JSONSettings.indented.ContractResolver = new ConditionalWeakTableExtensionDataContractResolver(
+			new ModificatingContractResolver(
+				contractModificator: this.ModifyJsonContract,
+				wrapped: JSONSettings.indented.ContractResolver
+			),
+			this.Logger,
+			ModDataManager.ModDataJsonKey,
+			this.ModDataManager.ModDataStorage
 		);
 
 		JSONSettings.serializer.Converters.Add(proxyContractResolver);
 		JSONSettings.serializer.Error += this.OnJsonError;
-		JSONSettings.serializer.ContractResolver = new ModificatingContractResolver(
-			contractModificator: this.ModifyJsonContract,
-			wrapped: JSONSettings.serializer.ContractResolver
+		JSONSettings.serializer.ContractResolver = new ConditionalWeakTableExtensionDataContractResolver(
+			new ModificatingContractResolver(
+				contractModificator: this.ModifyJsonContract,
+				wrapped: JSONSettings.serializer.ContractResolver
+			),
+			this.Logger,
+			ModDataManager.ModDataJsonKey,
+			this.ModDataManager.ModDataStorage
 		);
 	}
 
@@ -497,6 +511,7 @@ internal sealed class ModManager
 						() => this.ContentManager!.Parts
 					)
 				),
+				new ModData(package.Manifest, this.ModDataManager),
 				() => this.CurrentModLoadPhase
 			);
 			this.UniqueNameToHelper[package.Manifest.UniqueName] = helper;
