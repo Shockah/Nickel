@@ -41,44 +41,23 @@ public sealed class ByParameterDelegateMapper
 		for (var i = 0; i < shortDelegateParameters.Length; i++)
 		{
 			var shortDelegateParameter = shortDelegateParameters[i];
-			int? longDelegateParameterIndex = null;
+			var expectedName = shortDelegateParameter.GetCustomAttribute<MappedParameterNameAttribute>()?.Name ?? shortDelegateParameter.Name;
+			var longDelegateParameterIndex = -1;
 
-			if (shortDelegateParameter.GetCustomAttribute<MappedParameterNameAttribute>() is { } parameterAttribute)
+			for (var j = 0; j < longDelegateParameters.Length; j++)
 			{
-				for (var j = 0; j < longDelegateParameters.Length; j++)
-				{
-					var longDelegateParameter = longDelegateParameters[j];
-					if (longDelegateParameter.Name != parameterAttribute.Name)
-						continue;
-					if (!shortDelegateParameter.ParameterType.IsAssignableFrom(longDelegateParameter.ParameterType))
-						throw new ArgumentException($"Delegate `{@delegate}` specifies a method parameter named `{parameterAttribute.Name}` which exists on delegate `{typeof(TLongDelegate)}`, but its type `{longDelegateParameter.ParameterType}` is not compatible with the delegate parameter type `{shortDelegateParameter.ParameterType}`", nameof(@delegate));
+				if (longDelegateParameters[i].Name != expectedName)
+					continue;
+				if (!shortDelegateParameter.ParameterType.IsAssignableFrom(longDelegateParameters[i].ParameterType))
+					throw new ArgumentException($"Delegate `{@delegate}` specifies a method parameter named `{expectedName}` which does exist on delegate `{typeof(TLongDelegate)}`, but its type `{longDelegateParameters[i].ParameterType}` is not compatible with the delegate parameter type `{shortDelegateParameter.ParameterType}`", nameof(@delegate));
 
-					longDelegateParameterIndex = j;
-					break;
-				}
-
-				if (longDelegateParameterIndex is null)
-					throw new ArgumentException($"Delegate `{@delegate}` specifies a method parameter named `{parameterAttribute.Name}` which does not exist on delegate `{typeof(TLongDelegate)}`", nameof(@delegate));
-			}
-			else
-			{
-				for (var j = 0; j < longDelegateParameters.Length; j++)
-				{
-					var longDelegateParameter = longDelegateParameters[j];
-					if (!shortDelegateParameter.ParameterType.IsAssignableFrom(longDelegateParameter.ParameterType))
-						continue;
-
-					if (longDelegateParameterIndex is not null)
-						throw new ArgumentException($"Delegate `{@delegate}` specifies a method parameter #{i} which could match multiple parameters on delegate `{typeof(TLongDelegate)}`", nameof(@delegate));
-
-					longDelegateParameterIndex = j;
-				}
-
-				if (longDelegateParameterIndex is null)
-					throw new ArgumentException($"Delegate `{@delegate}` specifies a method parameter #{i} which does not match any parameters on delegate `{typeof(TLongDelegate)}`", nameof(@delegate));
+				longDelegateParameterIndex = j;
+				break;
 			}
 
-			parameterMapping[i] = longDelegateParameterIndex.Value;
+			if (longDelegateParameterIndex == -1)
+				throw new ArgumentException($"Delegate `{@delegate}` specifies a method parameter named `{expectedName}` which does not exist on delegate `{typeof(TLongDelegate)}`", nameof(@delegate));
+			parameterMapping[i] = longDelegateParameterIndex;
 		}
 
 		// start generating type
