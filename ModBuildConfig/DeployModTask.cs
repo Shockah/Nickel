@@ -46,8 +46,6 @@ public sealed class DeployModTask : Task
 			return true;
 
 		var modFiles = this.GetModFiles(this.TargetDir, this.ProjectDir).ToList();
-		foreach (var (info, _) in modFiles)
-			this.Log.LogWarning(info.Name);
 
 		if (!modFiles.Any(e => e.Info.Name == ManifestFileName))
 		{
