@@ -109,6 +109,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			}
 		});
 		var logger = loggerFactory.CreateLogger(NickelConstants.Name);
+		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
 		Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, realOut));
 		Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
@@ -154,7 +155,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			return -2;
 		}
 
-		var exitCode = ContinueAfterLoadingGameAssembly(instance, launchArguments, harmony, logger, handlerResult);
+		var exitCode = ContinueAfterLoadingGameAssembly(instance, launchArguments, harmony, logger, gameLogger, handlerResult);
 		loggerFactory.Dispose();
 		return exitCode;
 	}
@@ -174,7 +175,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			: NickelConstants.FallbackGameVersion;
 	}
 
-	private static int ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony harmony, ILogger logger, CobaltCoreHandlerResult handlerResult)
+	private static int ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony harmony, ILogger logger, ILogger gameLogger, CobaltCoreHandlerResult handlerResult)
 	{
 		var version = GetVanillaVersion();
 		logger.LogInformation("Game version: {Version}", version);
@@ -196,6 +197,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		logger.LogInformation("SavePath: {Path}", savePath);
 
 		ApplyHarmonyPatches(harmony, saveInDebug);
+		LogPatches.OnLine.Subscribe(instance, (_, obj) => gameLogger.LogDebug("{GameLogLine}", obj.ToString()));
 		ProgramPatches.OnTryInitSteam.Subscribe(instance, instance.OnTryInitSteam);
 		instance.ModManager.LoadMods(ModLoadPhase.AfterGameAssembly);
 
@@ -238,6 +240,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		CardPatches.Apply(harmony);
 		DBPatches.Apply(harmony);
 		GPatches.Apply(harmony);
+		LogPatches.Apply(harmony);
 		ProgramPatches.Apply(harmony);
 		RunSummaryPatches.Apply(harmony);
 		SpriteLoaderPatches.Apply(harmony);

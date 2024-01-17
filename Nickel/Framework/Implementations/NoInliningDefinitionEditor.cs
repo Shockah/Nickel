@@ -24,6 +24,7 @@ internal sealed class NoInliningDefinitionEditor : IAssemblyDefinitionEditor
 			methodDefinition.CustomAttributes.Add(attribute);
 		}
 
+		AddAttribute(definition.MainModule.GetType("Log").Methods.Single(m => m.Name == "Line"));
 		AddAttribute(definition.MainModule.GetType("Card").Methods.Single(m => m.Name == "Key"));
 		AddAttribute(definition.MainModule.GetType("Card").Methods.Single(m => m.Name == "GetMeta"));
 		AddAttribute(definition.MainModule.GetType("Artifact").Methods.Single(m => m.Name == "Key"));
