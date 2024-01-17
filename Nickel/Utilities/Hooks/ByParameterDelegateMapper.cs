@@ -46,10 +46,11 @@ public sealed class ByParameterDelegateMapper
 
 			for (var j = 0; j < longDelegateParameters.Length; j++)
 			{
-				if (longDelegateParameters[i].Name != expectedName)
+				var longDelegateParameter = longDelegateParameters[j];
+				if (longDelegateParameter.Name != expectedName)
 					continue;
-				if (!shortDelegateParameter.ParameterType.IsAssignableFrom(longDelegateParameters[i].ParameterType))
-					throw new ArgumentException($"Delegate `{@delegate}` specifies a method parameter named `{expectedName}` which does exist on delegate `{typeof(TLongDelegate)}`, but its type `{longDelegateParameters[i].ParameterType}` is not compatible with the delegate parameter type `{shortDelegateParameter.ParameterType}`", nameof(@delegate));
+				if (!shortDelegateParameter.ParameterType.IsAssignableFrom(longDelegateParameter.ParameterType))
+					throw new ArgumentException($"Delegate `{@delegate}` specifies a method parameter named `{expectedName}` which does exist on delegate `{typeof(TLongDelegate)}`, but its type `{longDelegateParameter.ParameterType}` is not compatible with the delegate parameter type `{shortDelegateParameter.ParameterType}`", nameof(@delegate));
 
 				longDelegateParameterIndex = j;
 				break;
