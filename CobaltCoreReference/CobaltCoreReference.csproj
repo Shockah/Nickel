@@ -16,7 +16,7 @@
 	
 	<ItemGroup>
 		<PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" />
-		<PackageReference Include="Fayti1703.AssemblyTasks" Version="1.0.5-beta" />
+		<PackageReference Include="Fayti1703.AssemblyTasks" Version="1.0.0" />
 	</ItemGroup>
 	
 	<!-- TODO: Move this to a common file -->
