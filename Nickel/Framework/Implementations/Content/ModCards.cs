@@ -19,6 +19,9 @@ internal sealed class ModCards : IModCards
 	public ICardEntry? LookupByUniqueName(string uniqueName)
 		=> this.CardManagerProvider().LookupByUniqueName(uniqueName);
 
+	public ICardEntry RegisterCard(CardConfiguration configuration)
+		=> this.CardManagerProvider().RegisterCard(this.ModManifest, configuration.CardType.Name, configuration);
+
 	public ICardEntry RegisterCard(string name, CardConfiguration configuration)
 		=> this.CardManagerProvider().RegisterCard(this.ModManifest, name, configuration);
 }
