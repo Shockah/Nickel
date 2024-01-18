@@ -49,6 +49,8 @@ internal sealed class ShipManager
 	public IShipEntry RegisterShip(IModManifest owner, string name, ShipConfiguration configuration)
 	{
 		var uniqueName = $"{owner.UniqueName}::{name}";
+		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
+			throw new ArgumentException($"A ship with the unique name `{uniqueName}` is already registered", nameof(name));
 		configuration.Ship.ship.key = uniqueName;
 		Entry entry = new(owner, uniqueName, configuration);
 

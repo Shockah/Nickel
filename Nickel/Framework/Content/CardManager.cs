@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -6,13 +7,15 @@ namespace Nickel;
 internal sealed class CardManager
 {
 	private AfterDbInitManager<Entry> Manager { get; }
+	private Func<IModManifest, ILogger> LoggerProvider { get; }
 	private IModManifest VanillaModManifest { get; }
 	private Dictionary<Type, Entry> CardTypeToEntry { get; } = [];
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 
-	public CardManager(Func<ModLoadPhase> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
+	public CardManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		this.LoggerProvider = loggerProvider;
 		this.VanillaModManifest = vanillaModManifest;
 
 		CardPatches.OnKey.Subscribe(this.OnKey);
@@ -27,9 +30,27 @@ internal sealed class CardManager
 			InjectLocalization(locale, localizations, entry);
 	}
 
+	private Entry GetMatchingExistingOrCreateNewEntry(IModManifest owner, string name, CardConfiguration configuration)
+	{
+		var uniqueName = $"{owner.UniqueName}::{name}";
+		if (!this.UniqueNameToEntry.TryGetValue(uniqueName, out var existing))
+		{
+			if (this.CardTypeToEntry.ContainsKey(configuration.CardType))
+				throw new ArgumentException($"A card with the type `{configuration.CardType.FullName ?? configuration.CardType.Name}` is already registered", nameof(configuration));
+			return new(owner, uniqueName, configuration);
+		}
+		if (existing.Configuration.CardType == configuration.CardType)
+		{
+			this.LoggerProvider(owner).LogDebug("Re-registering card `{UniqueName}` of type `{Type}`.", uniqueName, configuration.CardType.FullName ?? configuration.CardType.Name);
+			existing.Configuration = configuration;
+			return existing;
+		}
+		throw new ArgumentException($"A card with the unique name `{uniqueName}` is already registered");
+	}
+
 	public ICardEntry RegisterCard(IModManifest owner, string name, CardConfiguration configuration)
 	{
-		Entry entry = new(owner, $"{owner.UniqueName}::{name}", configuration);
+		var entry = this.GetMatchingExistingOrCreateNewEntry(owner, name, configuration);
 		this.CardTypeToEntry[entry.Configuration.CardType] = entry;
 		this.UniqueNameToEntry[entry.UniqueName] = entry;
 		this.Manager.QueueOrInject(entry);
@@ -63,8 +84,13 @@ internal sealed class CardManager
 	{
 		DB.cards[entry.UniqueName] = entry.Configuration.CardType;
 		DB.cardMetas[entry.UniqueName] = entry.Configuration.Meta;
+
 		if (entry.Configuration.Art is { } art)
 			DB.cardArt[entry.UniqueName] = art;
+		else
+			DB.cardArt.Remove(entry.UniqueName);
+
+		DB.releasedCards.RemoveAll(c => c.GetType() == entry.Configuration.GetType());
 		if (!entry.Configuration.Meta.unreleased)
 			DB.releasedCards.Add((Card)Activator.CreateInstance(entry.Configuration.CardType)!);
 
@@ -91,6 +117,6 @@ internal sealed class CardManager
 	{
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
-		public CardConfiguration Configuration { get; } = configuration;
+		public CardConfiguration Configuration { get; internal set; } = configuration;
 	}
 }

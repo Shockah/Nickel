@@ -26,9 +26,9 @@ internal sealed class AfterDbInitManager<TEntry>
 
 	public void QueueOrInject(TEntry entry)
 	{
-		if (this.CurrentModLoadPhaseProvider() < ModLoadPhase.AfterDbInit)
-			this.QueuedEntries.Add(entry);
-		else
+		if (this.CurrentModLoadPhaseProvider() >= ModLoadPhase.AfterDbInit)
 			this.InjectMethod(entry);
+		else if (!this.QueuedEntries.Contains(entry))
+			this.QueuedEntries.Add(entry);
 	}
 }

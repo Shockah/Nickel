@@ -52,7 +52,10 @@ internal sealed class CharacterManager
 
 	public ICharacterAnimationEntry RegisterCharacterAnimation(IModManifest owner, string name, CharacterAnimationConfiguration configuration)
 	{
-		AnimationEntry entry = new(owner, $"{owner.UniqueName}::{name}", configuration);
+		var uniqueName = $"{owner.UniqueName}::{name}";
+		if (this.UniqueNameToAnimationEntry.ContainsKey(uniqueName))
+			throw new ArgumentException($"A character animation with the unique name `{uniqueName}` is already registered", nameof(name));
+		AnimationEntry entry = new(owner, uniqueName, configuration);
 		this.UniqueNameToAnimationEntry[entry.UniqueName] = entry;
 		this.AnimationManager.QueueOrInject(entry);
 		return entry;
@@ -60,8 +63,11 @@ internal sealed class CharacterManager
 
 	public ICharacterEntry RegisterCharacter(IModManifest owner, string name, CharacterConfiguration configuration)
 	{
+		var uniqueName = $"{owner.UniqueName}::{name}";
+		if (this.UniqueNameToCharacterEntry.ContainsKey(uniqueName))
+			throw new ArgumentException($"A character with the unique name `{uniqueName}` is already registered", nameof(name));
 		var missingStatus = this.RegisterMissingStatus(owner, $"{name}::MissingStatus", configuration, configuration.MissingStatus);
-		CharacterEntry entry = new(owner, $"{owner.UniqueName}::{name}", configuration, missingStatus);
+		CharacterEntry entry = new(owner, uniqueName, configuration, missingStatus);
 		this.UniqueNameToCharacterEntry[entry.UniqueName] = entry;
 		this.CharManager.QueueOrInject(entry);
 		return entry;

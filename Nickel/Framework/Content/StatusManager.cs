@@ -83,6 +83,8 @@ internal sealed class StatusManager
 	public IStatusEntry RegisterStatus(IModManifest owner, string name, StatusConfiguration configuration)
 	{
 		var uniqueName = $"{owner.UniqueName}::{name}";
+		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
+			throw new ArgumentException($"A status with the unique name `{uniqueName}` is already registered", nameof(name));
 		var status = this.ReservedNameToStatus.TryGetValue(uniqueName, out var reservedStatus) ? reservedStatus : (Status)this.NextId++;
 		this.ReservedNameToStatus.Remove(uniqueName);
 		this.ReservedStatusToName.Remove(status);

@@ -18,12 +18,22 @@ internal sealed class SpriteManager
 	}
 
 	public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Texture2D> textureProvider)
-		=> this.RegisterSprite(new(owner, $"{owner.UniqueName}::{name}", (Spr)this.NextId++, textureProvider));
+	{
+		var uniqueName = $"{owner.UniqueName}::{name}";
+		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
+			throw new ArgumentException($"A sprite with the unique name `{uniqueName}` is already registered", nameof(name));
+		return this.RegisterSprite(new(owner, uniqueName, (Spr)this.NextId++, textureProvider));
+	}
 
 	public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Stream> streamProvider)
-		=> this.RegisterSprite(new(owner, $"{owner.UniqueName}::{name}", (Spr)this.NextId++, streamProvider));
+	{
+		var uniqueName = $"{owner.UniqueName}::{name}";
+		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
+			throw new ArgumentException($"A sprite with the unique name `{uniqueName}` is already registered", nameof(name));
+		return this.RegisterSprite(new(owner, $"{owner.UniqueName}::{name}", (Spr)this.NextId++, streamProvider));
+	}
 
-	private ISpriteEntry RegisterSprite(Entry entry)
+	private Entry RegisterSprite(Entry entry)
 	{
 		this.SpriteToEntry[entry.Sprite] = entry;
 		this.UniqueNameToEntry[entry.UniqueName] = entry;

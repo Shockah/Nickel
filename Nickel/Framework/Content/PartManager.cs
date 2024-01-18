@@ -23,7 +23,10 @@ internal sealed class PartManager
 
 	public IPartTypeEntry RegisterPartType(IModManifest owner, string name, PartTypeConfiguration configuration)
 	{
-		PartTypeEntry entry = new(owner, $"{owner.UniqueName}::{name}", (PType)this.NextPartTypeId++, configuration);
+		var uniqueName = $"{owner.UniqueName}::{name}";
+		if (this.UniqueNameToPartTypeEntry.ContainsKey(uniqueName))
+			throw new ArgumentException($"A part type with the unique name `{uniqueName}` is already registered", nameof(name));
+		PartTypeEntry entry = new(owner, uniqueName, (PType)this.NextPartTypeId++, configuration);
 		this.UniqueNameToPartTypeEntry[entry.UniqueName] = entry;
 
 		this.PartTypeManager.QueueOrInject(entry);
@@ -32,7 +35,10 @@ internal sealed class PartManager
 
 	public IPartEntry RegisterPart(IModManifest owner, string name, PartConfiguration configuration)
 	{
-		PartEntry entry = new(owner, $"{owner.UniqueName}::{name}", configuration);
+		var uniqueName = $"{owner.UniqueName}::{name}";
+		if (this.UniqueNameToPartInstanceEntry.ContainsKey(uniqueName))
+			throw new ArgumentException($"A part with the unique name `{uniqueName}` is already registered", nameof(name));
+		PartEntry entry = new(owner, uniqueName, configuration);
 		this.UniqueNameToPartInstanceEntry[entry.UniqueName] = entry;
 
 		this.PartInstanceManager.QueueOrInject(entry);

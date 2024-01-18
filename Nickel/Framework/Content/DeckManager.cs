@@ -70,6 +70,8 @@ internal sealed class DeckManager
 	public IDeckEntry RegisterDeck(IModManifest owner, string name, DeckConfiguration configuration)
 	{
 		var uniqueName = $"{owner.UniqueName}::{name}";
+		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
+			throw new ArgumentException($"A deck with the unique name `{uniqueName}` is already registered", nameof(name));
 		var deck = this.ReservedNameToDeck.TryGetValue(uniqueName, out var reservedStatus) ? reservedStatus : (Deck)this.NextId++;
 		this.ReservedNameToDeck.Remove(uniqueName);
 		this.ReservedDeckToName.Remove(deck);

@@ -45,8 +45,8 @@ internal sealed class ContentManager
 		var sprites = new SpriteManager();
 		var decks = new DeckManager(currentModLoadPhaseProvider, vanillaModManifest);
 		var statuses = new StatusManager(currentModLoadPhaseProvider, vanillaModManifest);
-		var cards = new CardManager(currentModLoadPhaseProvider, vanillaModManifest);
-		var artifacts = new ArtifactManager(currentModLoadPhaseProvider, vanillaModManifest);
+		var cards = new CardManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
+		var artifacts = new ArtifactManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
 		var characters = new CharacterManager(currentModLoadPhaseProvider, loggerProvider, sprites, decks, statuses);
 		var parts = new PartManager(currentModLoadPhaseProvider);
 		var ships = new ShipManager(currentModLoadPhaseProvider);
