@@ -8,12 +8,14 @@ using System.Text.RegularExpressions;
 
 namespace Nickel.Essentials;
 
-internal static class CardCodexFiltering
+internal static partial class CardCodexFiltering
 {
 	private const UK DeckFilterKey = (UK)2137301;
 
 	private static List<Deck> DeckTypes = [];
 	private static readonly HashSet<Deck> FilteredOutDecks = [];
+	private static double FilterScroll = 0;
+	private static double FilterScrollTarget = 0;
 
 	public static void ApplyPatches(Harmony harmony)
 	{
@@ -57,9 +59,8 @@ internal static class CardCodexFiltering
 		if (__instance.browseSource != CardBrowse.Source.Codex)
 			return;
 
-		var fixedScroll = Math.Min(-Math.Round(__instance.scroll), (DeckTypes.Count + 1) / 2 * 16 - 208);
-		if (fixedScroll < 0)
-			fixedScroll = 0;
+		var maxFilterScroll = Math.Max((DeckTypes.Count + 1) / 2 * 16 - 208, 0);
+		ScrollUtils.ReadScrollInputAndUpdate(g.dt, maxFilterScroll, ref FilterScroll, ref FilterScrollTarget);
 
 		for (var i = 0; i < DeckTypes.Count; i++)
 		{
@@ -71,7 +72,7 @@ internal static class CardCodexFiltering
 				if (DB.currentLocale.strings.TryGetValue(locKey, out var localized))
 					return localized;
 
-				var match = new Regex("\\w+$").Match(deck.Key());
+				var match = LastWordRegex().Match(deck.Key());
 				if (match.Success)
 					return match.Value;
 
@@ -79,13 +80,13 @@ internal static class CardCodexFiltering
 			}
 
 			var niceName = GetNiceName();
-			var colorMatch = new Regex("<c=.*?>(.*?)</c>").Match(niceName);
+			var colorMatch = UncoloredRegex().Match(niceName);
 			if (colorMatch.Success)
 				niceName = colorMatch.Groups[1].Value;
 
 			var box = g.Push(
 				new UIKey(DeckFilterKey, i),
-				new Rect(i % 2 * 56 + 4, 54 + i / 2 * 16 - fixedScroll, 48, 16),
+				new Rect(i % 2 * 56 + 4, 54 + i / 2 * 16 + FilterScroll, 48, 16),
 				onMouseDown: new MouseDownHandler(() =>
 				{
 					Audio.Play(Event.Click);
@@ -137,4 +138,10 @@ internal static class CardCodexFiltering
 		public void OnMouseDown(G _1, Box _2)
 			=> this.Delegate();
 	}
+
+	[GeneratedRegex("\\w+$")]
+	private static partial Regex LastWordRegex();
+
+	[GeneratedRegex("<c=.*?>(.*?)</c>")]
+	private static partial Regex UncoloredRegex();
 }
