@@ -23,6 +23,7 @@ public sealed class ModEntry : SimpleMod
 		);
 
 		Harmony harmony = new(package.Manifest.UniqueName);
+		CardCodexFiltering.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);
 		MemorySelection.ApplyPatches(harmony);
 		ModDescriptions.ApplyPatches(harmony);
