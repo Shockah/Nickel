@@ -67,7 +67,7 @@
 		<!-- mod management -->
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
 		<PackageReference Include="Lib.Harmony" Version="2.3.0-prerelease.5" />
-		<PackageReference Include="Pintail" Version="2.4.1" />
+		<PackageReference Include="Pintail" Version="2.4.2" />
 
 		<!-- mod utilities -->
 		<PackageReference Include="Shrike" Version="3.0.0" />
