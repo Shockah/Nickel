@@ -46,6 +46,9 @@ internal static partial class CardCodexFiltering
 		if (!__instance._needsCardInit)
 			return;
 
+		FilterScroll = 0;
+		FilterScrollTarget = 0;
+
 		FilteredOutDecks.Clear();
 		DeckTypes = __instance.GetCardList(g)
 			.Select(c => c.GetMeta().deck)
@@ -58,9 +61,10 @@ internal static partial class CardCodexFiltering
 	{
 		if (__instance.browseSource != CardBrowse.Source.Codex)
 			return;
-
-		var maxFilterScroll = Math.Max((DeckTypes.Count + 1) / 2 * 16 - 208, 0);
-		ScrollUtils.ReadScrollInputAndUpdate(g.dt, maxFilterScroll, ref FilterScroll, ref FilterScrollTarget);
+		var topOffset = 54;
+		var bottomOffset = 54;
+		var scale = 0.875;
+		var maxFilterScroll = Math.Max((DeckTypes.Count + 1) / 2 * 16 - 208, 0) * 2;
 
 		for (var i = 0; i < DeckTypes.Count; i++)
 		{
@@ -74,7 +78,12 @@ internal static partial class CardCodexFiltering
 
 				var match = LastWordRegex().Match(deck.Key());
 				if (match.Success)
-					return match.Value;
+				{
+					var text = match.Value;
+					if (text.Length >= 1)
+						text = string.Concat(text[0].ToString().ToUpper(), text.AsSpan(1));
+					return text;
+				}
 
 				return ((int)deck).ToString();
 			}
@@ -86,7 +95,7 @@ internal static partial class CardCodexFiltering
 
 			var box = g.Push(
 				new UIKey(DeckFilterKey, i),
-				new Rect(i % 2 * 56 + 4, 54 + i / 2 * 16 + FilterScroll, 48, 16),
+				new Rect(i % 2 * 56 + 4, bottomOffset + i / 2 * 16 + FilterScroll, 48 / scale, 16),
 				onMouseDown: new MouseDownHandler(() =>
 				{
 					Audio.Play(Event.Click);
@@ -121,16 +130,26 @@ internal static partial class CardCodexFiltering
 				})
 			);
 			var sprite = FilteredOutDecks.Contains(deck) ? Spr.buttons_select_gray : Spr.buttons_select_gray_on;
-			Draw.Sprite(sprite, box.rect.x, box.rect.y, scale: new Vec(0.875, 0.875), color: Colors.buttonBoxNormal);
+			Draw.Sprite(sprite, box.rect.x, box.rect.y, scale: new Vec(scale, scale), color: Colors.buttonBoxNormal);
 			Draw.Text(
 				$"<c={DB.decks[deck].color}>{niceName}</c>",
-				box.rect.x + box.rect.w / 0.875 / 2,
+				box.rect.x + box.rect.w / 2,
 				box.rect.y + 4.5 + (niceName.Length >= 12 ? 1 : 0),
 				align: TAlign.Center,
 				extraScale: niceName.Length >= 12 ? 0.75 : 1
 			);
+			if (Input.gamepadIsActiveInput && Equals(box.key, Input.currentGpKey))
+			{
+				if (box.rect.y < topOffset)
+					FilterScrollTarget = Math.Round(-(box.rect.y - FilterScroll - topOffset));
+				if (box.rect.y2 > g.mg.PIX_H - bottomOffset)
+					FilterScrollTarget = Math.Round(-(box.rect.y2 - FilterScroll - g.mg.PIX_H + bottomOffset));
+				MG.inst.Window.Title = $"{g.mg.PIX_H:N0} | {box.rect.y:N0}-{box.rect.y2:N0} | {FilterScroll:N0} -> {FilterScrollTarget:N0} | {niceName}";
+			}
 			g.Pop();
 		}
+
+		ScrollUtils.ReadScrollInputAndUpdate(g.dt, maxFilterScroll, ref FilterScroll, ref FilterScrollTarget);
 	}
 
 	private sealed record MouseDownHandler(Action Delegate) : OnMouseDown
