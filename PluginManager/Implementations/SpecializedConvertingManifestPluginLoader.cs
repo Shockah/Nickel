@@ -24,21 +24,18 @@ public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPlugin
 		var specializedManifestOrError = this.Converter(package.Manifest);
 		if (specializedManifestOrError.TryPickT1(out var error, out var specializedManifest))
 			return error;
-		var specializedPackage = MakeSpecializedPackage(package, specializedManifest);
+		var specializedPackage = new SpecializedPluginPackage(package, specializedManifest);
 		return this.Loader.CanLoadPlugin(specializedPackage);
 	}
 
-	public OneOf<TPlugin, Error<string>> LoadPlugin(IPluginPackage<TPluginManifest> package)
+	public PluginLoadResult<TPlugin> LoadPlugin(IPluginPackage<TPluginManifest> package)
 	{
 		var specializedManifestOrError = this.Converter(package.Manifest);
 		if (specializedManifestOrError.TryPickT1(out var error, out var specializedManifest))
 			return error;
-		var specializedPackage = MakeSpecializedPackage(package, specializedManifest);
+		var specializedPackage = new SpecializedPluginPackage(package, specializedManifest);
 		return this.Loader.LoadPlugin(specializedPackage);
 	}
-
-	private static IPluginPackage<TSpecializedPluginManifest> MakeSpecializedPackage(IPluginPackage<TPluginManifest> package, TSpecializedPluginManifest manifest)
-		=> new SpecializedPluginPackage(package, manifest);
 
 	private sealed class SpecializedPluginPackage : IPluginPackage<TSpecializedPluginManifest>
 	{

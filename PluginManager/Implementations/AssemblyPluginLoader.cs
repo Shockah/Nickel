@@ -36,7 +36,7 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 			error => error
 		);
 
-	public OneOf<TPlugin, Error<string>> LoadPlugin(IPluginPackage<TPluginManifest> package)
+	public PluginLoadResult<TPlugin> LoadPlugin(IPluginPackage<TPluginManifest> package)
 	{
 		if (!this.RequiredPluginDataProvider(package).TryPickT0(out var requiredPluginData, out _))
 			throw new ArgumentException($"This plugin loader cannot load the plugin package {package}.");
@@ -117,7 +117,10 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 			pluginParts.Add(pluginPart);
 		}
 
-		return this.PartAssembler.AssemblePluginParts(package, assembly, pluginParts);
+		return this.PartAssembler.AssemblePluginParts(package, assembly, pluginParts).Match<PluginLoadResult<TPlugin>>(
+			plugin => new PluginLoadResult<TPlugin>.Success { Plugin = plugin, Warnings = [] },
+			error => error
+		);
 	}
 
 	private readonly struct PotentialConstructor

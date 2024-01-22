@@ -21,7 +21,7 @@ public sealed class ExtendablePluginLoader<TPluginManifest, TPlugin> : IPluginLo
 		return new No();
 	}
 
-	public OneOf<TPlugin, Error<string>> LoadPlugin(IPluginPackage<TPluginManifest> package)
+	public PluginLoadResult<TPlugin> LoadPlugin(IPluginPackage<TPluginManifest> package)
 	{
 		foreach (var loader in this.Loaders)
 			if (loader.CanLoadPlugin(package).IsT0)

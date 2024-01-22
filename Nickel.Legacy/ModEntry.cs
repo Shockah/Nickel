@@ -44,34 +44,47 @@ public sealed class ModEntry : Mod
 		helper.Events.OnLoadStringsForLocale += this.OnLoadStringsForLocale;
 
 		var legacyAssemblyPluginLoader = new CallbackPluginLoader<IModManifest, Mod>(
-			loader: new ConditionalPluginLoader<IModManifest, Mod>(
-				loader: new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
-					loader: new AssemblyPluginLoader<IAssemblyModManifest, ILegacyManifest, Mod>(
-						requiredPluginDataProvider: p =>
-							new AssemblyPluginLoaderRequiredPluginData
-							{
-								UniqueName = p.Manifest.UniqueName,
-								EntryPointAssembly = p.Manifest.EntryPointAssembly,
-								EntryPointType = p.Manifest.EntryPointType
-							},
-						loadContextProvider: loadContextProvider,
-						partAssembler: new LegacyAssemblyPluginLoaderPartAssembler(
-							helperProvider: byPackageHelperProvider,
-							loggerProvider: loggerProvider,
-							this.Database
+			loader: new ValidatingPluginLoader<IModManifest, Mod>(
+				loader: new ConditionalPluginLoader<IModManifest, Mod>(
+					loader: new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
+						loader: new AssemblyPluginLoader<IAssemblyModManifest, ILegacyManifest, Mod>(
+							requiredPluginDataProvider: p =>
+								new AssemblyPluginLoaderRequiredPluginData
+								{
+									UniqueName = p.Manifest.UniqueName,
+									EntryPointAssembly = p.Manifest.EntryPointAssembly,
+									EntryPointType = p.Manifest.EntryPointType
+								},
+							loadContextProvider: loadContextProvider,
+							partAssembler: new LegacyAssemblyPluginLoaderPartAssembler(
+								helperProvider: byPackageHelperProvider,
+								loggerProvider: loggerProvider,
+								this.Database
+							),
+							parameterInjector: assemblyPluginLoaderParameterInjector,
+							assemblyEditor: assemblyEditor
 						),
-						parameterInjector: assemblyPluginLoaderParameterInjector,
-						assemblyEditor: assemblyEditor
+						converter: m => m.AsAssemblyModManifest()
 					),
-					converter: m => m.AsAssemblyModManifest()
+					condition: package =>
+					{
+						if (package.Manifest.ModType != LegacyModType)
+							return new No();
+						return package.PackageRoot is IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>
+							? new Yes()
+							: new Error<string>($"Found a legacy mod, but it is not stored directly on disk (is it in a ZIP file?).");
+					}
 				),
-				condition: package =>
+				validator: (package, mod) =>
 				{
-					if (package.Manifest.ModType != LegacyModType)
-						return new No();
-					return package.PackageRoot is IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>
-						? new Yes()
-						: new Error<string>($"Found a legacy mod, but it is not stored directly on disk (is it in a ZIP file?).");
+					List<string> warnings = [];
+					if (mod is not LegacyModWrapper legacy)
+						return new ValidatingPluginLoaderResult.Success { Warnings = warnings };
+					if (!SemanticVersionParser.TryParseForAssembly(legacy.LegacyManifests.First().GetType().Assembly, out var assemblyVersion))
+						return new ValidatingPluginLoaderResult.Success { Warnings = warnings };
+					if (package.Manifest.Version.MajorVersion != assemblyVersion.MajorVersion || package.Manifest.Version.MinorVersion != assemblyVersion.MinorVersion || package.Manifest.Version.PatchVersion != assemblyVersion.PatchVersion)
+						warnings.Add($"Found assembly version mismatch for mod {package.Manifest.GetDisplayName(@long: false)}: {assemblyVersion}");
+					return new ValidatingPluginLoaderResult.Success { Warnings = warnings };
 				}
 			),
 			callback: (Mod mod) =>

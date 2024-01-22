@@ -6,13 +6,10 @@ namespace Nickel.Launcher;
 
 internal static class NickelConstants
 {
-	private static readonly Lazy<SemanticVersion> LazyVersion = new(() =>
-	{
-		var attribute = typeof(NickelLauncher).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>() ?? throw new InvalidOperationException();
-		if (!SemanticVersionParser.TryParse(attribute.InformationalVersion.Split("+")[0], out var version))
-			throw new InvalidOperationException();
-		return version;
-	});
+	private static readonly Lazy<SemanticVersion> LazyVersion = new(
+		() => SemanticVersionParser.TryParseForAssembly(typeof(NickelLauncher).GetTypeInfo().Assembly, out var version)
+			? version : throw new InvalidOperationException()
+	);
 
 	public static string Name { get; } = "Nickel";
 	public static SemanticVersion Version => LazyVersion.Value;

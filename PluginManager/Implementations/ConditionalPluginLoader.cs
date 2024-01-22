@@ -23,6 +23,6 @@ public sealed class ConditionalPluginLoader<TPluginManifest, TPlugin> : IPluginL
 		return this.Loader.CanLoadPlugin(package);
 	}
 
-	public OneOf<TPlugin, Error<string>> LoadPlugin(IPluginPackage<TPluginManifest> package)
+	public PluginLoadResult<TPlugin> LoadPlugin(IPluginPackage<TPluginManifest> package)
 		=> this.Loader.LoadPlugin(package);
 }

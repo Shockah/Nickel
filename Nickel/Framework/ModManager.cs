@@ -15,7 +15,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Loader;
-using System.Text;
 
 namespace Nickel;
 
@@ -127,25 +126,37 @@ internal sealed class ModManager
 			)
 		);
 
-		var assemblyPluginLoader = new ConditionalPluginLoader<IModManifest, Mod>(
-			loader: new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
-				loader: new AssemblyPluginLoader<IAssemblyModManifest, Mod, Mod>(
-					requiredPluginDataProvider: p => new AssemblyPluginLoaderRequiredPluginData
-					{
-						UniqueName = p.Manifest.UniqueName,
-						EntryPointAssembly = p.Manifest.EntryPointAssembly,
-						EntryPointType = p.Manifest.EntryPointType
-					},
-					loadContextProvider: loadContextProvider,
-					partAssembler: new SingleAssemblyPluginPartAssembler<IAssemblyModManifest, Mod>(),
-					parameterInjector: assemblyPluginLoaderParameterInjector,
-					assemblyEditor: extendableAssemblyDefinitionEditor
+		var assemblyPluginLoader = new ValidatingPluginLoader<IModManifest, Mod>(
+			loader: new ConditionalPluginLoader<IModManifest, Mod>(
+				loader: new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
+					loader: new AssemblyPluginLoader<IAssemblyModManifest, Mod, Mod>(
+						requiredPluginDataProvider: p => new AssemblyPluginLoaderRequiredPluginData
+						{
+							UniqueName = p.Manifest.UniqueName,
+							EntryPointAssembly = p.Manifest.EntryPointAssembly,
+							EntryPointType = p.Manifest.EntryPointType
+						},
+						loadContextProvider: loadContextProvider,
+						partAssembler: new SingleAssemblyPluginPartAssembler<IAssemblyModManifest, Mod>(),
+						parameterInjector: assemblyPluginLoaderParameterInjector,
+						assemblyEditor: extendableAssemblyDefinitionEditor
+					),
+					converter: m => m.AsAssemblyModManifest()
 				),
-				converter: m => m.AsAssemblyModManifest()
+				condition: package => package.Manifest.ModType == NickelConstants.ModType || package.Manifest.ModType == NickelConstants.DeprecatedModType
+					? new Yes() : new No()
 			),
-			// TODO: add a warning about a mod using a deprecated mod type
-			condition: package => package.Manifest.ModType == NickelConstants.ModType || package.Manifest.ModType == NickelConstants.DeprecatedModType
-				? new Yes() : new No()
+			validator: (package, mod) =>
+			{
+				List<string> warnings = [];
+				if (!SemanticVersionParser.TryParseForAssembly(mod.GetType().Assembly, out var assemblyVersion))
+					return new ValidatingPluginLoaderResult.Success { Warnings = warnings };
+				if (package.Manifest.ModType == NickelConstants.DeprecatedModType)
+					warnings.Add($"Mod {package.Manifest.GetDisplayName(@long: false)} uses a deprecated ModType `{NickelConstants.DeprecatedModType}` - switch to `{NickelConstants.ModType}` instead.");
+				if (package.Manifest.Version.MajorVersion != assemblyVersion.MajorVersion || package.Manifest.Version.MinorVersion != assemblyVersion.MinorVersion || package.Manifest.Version.PatchVersion != assemblyVersion.PatchVersion)
+					warnings.Add($"Found assembly version mismatch for mod {package.Manifest.GetDisplayName(@long: false)}: {assemblyVersion}");
+				return new ValidatingPluginLoaderResult.Success { Warnings = warnings };
+			}
 		);
 
 		this.ExtendablePluginLoader.RegisterPluginLoader(assemblyPluginLoader);
@@ -287,7 +298,7 @@ internal sealed class ModManager
 			if (manifest.LoadPhase != phase)
 				continue;
 
-			var displayName = GetModDisplayName(manifest, @long: false);
+			var displayName = manifest.GetDisplayName(@long: false);
 			this.Logger.LogDebug("Loading mod {DisplayName}...", displayName);
 
 			var failedRequiredDependencies = manifest.Dependencies
@@ -323,12 +334,15 @@ internal sealed class ModManager
 
 			this.ExtendablePluginLoader.LoadPlugin(package)
 				.Switch(
-					mod =>
+					success =>
 					{
+						foreach (var warning in success.Warnings)
+							this.Logger.LogWarning("{Warning}", warning);
+
 						this.UniqueNameToPackage[manifest.UniqueName] = package;
-						this.UniqueNameToInstance[manifest.UniqueName] = mod;
+						this.UniqueNameToInstance[manifest.UniqueName] = success.Plugin;
 						successfulMods.Add(manifest);
-						this.Logger.LogInformation("Loaded mod {DisplayName}", GetModDisplayName(manifest, @long: true));
+						this.Logger.LogInformation("Loaded mod {DisplayName}", manifest.GetDisplayName(@long: true));
 					},
 					error =>
 					{
@@ -373,21 +387,6 @@ internal sealed class ModManager
 			})
 		);
 		this.Logger.LogDebug("Methods patched with Harmony:\n{Methods}", allMethodPatchInfoString);
-	}
-
-	private static string GetModDisplayName(IModManifest manifest, bool @long)
-	{
-		StringBuilder sb = new();
-		sb.Append(string.IsNullOrEmpty(manifest.DisplayName) ? manifest.UniqueName : $"{manifest.DisplayName} ({manifest.UniqueName})");
-		sb.Append($" {manifest.Version}");
-		if (@long)
-		{
-			if (!string.IsNullOrEmpty(manifest.Author))
-				sb.Append($" by {manifest.Author}");
-			if (!string.IsNullOrEmpty(manifest.Description))
-				sb.Append($": {manifest.Description}");
-		}
-		return sb.ToString();
 	}
 
 	internal void ContinueAfterLoadingGameAssembly(SemanticVersion gameVersion)

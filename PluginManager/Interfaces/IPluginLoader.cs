@@ -7,5 +7,5 @@ public interface IPluginLoader<in TPluginManifest, TPlugin>
 {
 	OneOf<Yes, No, Error<string>> CanLoadPlugin(IPluginPackage<TPluginManifest> package);
 
-	OneOf<TPlugin, Error<string>> LoadPlugin(IPluginPackage<TPluginManifest> package);
+	PluginLoadResult<TPlugin> LoadPlugin(IPluginPackage<TPluginManifest> package);
 }

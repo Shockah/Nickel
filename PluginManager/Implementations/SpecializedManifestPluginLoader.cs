@@ -21,6 +21,6 @@ public sealed class SpecializedManifestPluginLoader<TSpecializedPluginManifest, 
 	public OneOf<Yes, No, Error<string>> CanLoadPlugin(IPluginPackage<TPluginManifest> package)
 		=> this.ConvertingPluginLoader.CanLoadPlugin(package);
 
-	public OneOf<TPlugin, Error<string>> LoadPlugin(IPluginPackage<TPluginManifest> package)
+	public PluginLoadResult<TPlugin> LoadPlugin(IPluginPackage<TPluginManifest> package)
 		=> this.ConvertingPluginLoader.LoadPlugin(package);
 }
