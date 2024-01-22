@@ -332,24 +332,32 @@ internal sealed class ModManager
 				continue;
 			}
 
-			this.ExtendablePluginLoader.LoadPlugin(package)
-				.Switch(
-					success =>
-					{
-						foreach (var warning in success.Warnings)
-							this.Logger.LogWarning("{Warning}", warning);
+			try
+			{
+				this.ExtendablePluginLoader.LoadPlugin(package)
+					.Switch(
+						success =>
+						{
+							foreach (var warning in success.Warnings)
+								this.Logger.LogWarning("{Warning}", warning);
 
-						this.UniqueNameToPackage[manifest.UniqueName] = package;
-						this.UniqueNameToInstance[manifest.UniqueName] = success.Plugin;
-						successfulMods.Add(manifest);
-						this.Logger.LogInformation("Loaded mod {DisplayName}", manifest.GetDisplayName(@long: true));
-					},
-					error =>
-					{
-						this.FailedMods.Add(manifest);
-						this.Logger.LogError("Could not load {DisplayName}: {Error}", displayName, error.Value);
-					}
-				);
+							this.UniqueNameToPackage[manifest.UniqueName] = package;
+							this.UniqueNameToInstance[manifest.UniqueName] = success.Plugin;
+							successfulMods.Add(manifest);
+							this.Logger.LogInformation("Loaded mod {DisplayName}", manifest.GetDisplayName(@long: true));
+						},
+						error =>
+						{
+							this.FailedMods.Add(manifest);
+							this.Logger.LogError("Could not load {DisplayName}: {Error}", displayName, error.Value);
+						}
+					);
+			}
+			catch (Exception ex)
+			{
+				this.FailedMods.Add(manifest);
+				this.Logger.LogError("Could not load {DisplayName}: {ex}", displayName, ex);
+			}
 		}
 
 		this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
@@ -362,9 +370,13 @@ internal sealed class ModManager
 			return;
 		this.DidLogHarmonyPatchesOnce = true;
 
+		var allPatchedMethods = Harmony.GetAllPatchedMethods().ToList();
+		if (allPatchedMethods.Count == 0)
+			return;
+
 		var allMethodPatchInfoString = string.Join(
 			"\n",
-			Harmony.GetAllPatchedMethods().OrderBy(m => $"{m.DeclaringType?.FullName ?? m.DeclaringType?.Name}::{m.Name}").Select(m =>
+			allPatchedMethods.OrderBy(m => $"{m.DeclaringType?.FullName ?? m.DeclaringType?.Name}::{m.Name}").Select(m =>
 			{
 				var patchInfo = Harmony.GetPatchInfo(m);
 				var patchInfoString = string.Join(

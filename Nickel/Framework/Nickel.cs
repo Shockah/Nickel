@@ -109,11 +109,25 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			}
 		});
 		var logger = loggerFactory.CreateLogger(NickelConstants.Name);
-		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
 		Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, realOut));
 		Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
 
+		try
+		{
+			return CreateAndStartInstance(launchArguments, loggerFactory, logger);
+		}
+		catch (Exception ex)
+		{
+			logger.LogCritical("{ModLoaderName} threw an exception: {e}", NickelConstants.Name, ex);
+			Instance?.ModManager.LogHarmonyPatchesOnce();
+			return -3;
+		}
+	}
+
+	private static int CreateAndStartInstance(LaunchArguments launchArguments, ILoggerFactory loggerFactory, ILogger logger)
+	{
+		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
 		var instance = new Nickel(launchArguments);
 		Instance = instance;
 
@@ -129,7 +143,15 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new CobaltCorePublisher());
 		instance.ModManager = new(modsDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
-		instance.ModManager.ResolveMods();
+		try
+		{
+			instance.ModManager.ResolveMods();
+		}
+		catch (Exception ex)
+		{
+			logger.LogCritical("{ModLoaderName} threw an exception while resolving mods: {e}", NickelConstants.Name, ex);
+			return -4;
+		}
 		instance.ModManager.LoadMods(ModLoadPhase.BeforeGameAssembly);
 
 		ICobaltCoreResolver cobaltCoreResolver = launchArguments.GamePath is { } gamePath
