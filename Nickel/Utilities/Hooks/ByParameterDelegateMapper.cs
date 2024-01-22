@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -10,7 +9,6 @@ namespace Nickel;
 public sealed class ByParameterDelegateMapper
 {
 	private ModuleBuilder ModuleBuilder { get; }
-	private Dictionary<Type, Dictionary<Type, Func<Delegate, Delegate>>> Cache { get; } = [];
 	private int Counter { get; set; } = 0;
 
 	public ByParameterDelegateMapper()
@@ -23,9 +21,6 @@ public sealed class ByParameterDelegateMapper
 		where TShortDelegate : Delegate
 		where TLongDelegate : Delegate
 	{
-		if (this.Cache.TryGetValue(typeof(TLongDelegate), out var longDelegateTypeCache) && longDelegateTypeCache.TryGetValue(typeof(TShortDelegate), out var compiledFactory))
-			return (TLongDelegate)compiledFactory(@delegate);
-
 		var shortDelegateInvokeMethod = @delegate.GetMethodInfo();
 		var longDelegateInvokeMethod = typeof(TLongDelegate).GetMethod("Invoke")!;
 
@@ -122,18 +117,7 @@ public sealed class ByParameterDelegateMapper
 		var builtType = typeBuilder.CreateType()!;
 		var actualConstructor = builtType.GetConstructor([typeof(TShortDelegate)])!;
 		var actualInvokeMethod = builtType.GetMethod("Invoke")!;
-		compiledFactory = shortDelegate =>
-		{
-			var @object = actualConstructor.Invoke([shortDelegate]);
-			return Delegate.CreateDelegate(typeof(TLongDelegate), @object, actualInvokeMethod);
-		};
-
-		if (!this.Cache.TryGetValue(typeof(TLongDelegate), out longDelegateTypeCache))
-		{
-			longDelegateTypeCache = [];
-			this.Cache[typeof(TLongDelegate)] = longDelegateTypeCache;
-		}
-		longDelegateTypeCache[typeof(TShortDelegate)] = compiledFactory;
-		return (TLongDelegate)compiledFactory(@delegate);
+		var @object = actualConstructor.Invoke([@delegate]);
+		return (TLongDelegate)Delegate.CreateDelegate(typeof(TLongDelegate), @object, actualInvokeMethod);
 	}
 }
