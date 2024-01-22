@@ -36,7 +36,7 @@ internal sealed class LegacyModWrapper : Mod
 
 		foreach (var manifest in this.LegacyManifests)
 			if (manifest is ILegacyModManifest modManifest)
-				modManifest.CatchIntoManifestLogger(nameof(BootMod), m => m.BootMod(this.Registry));
+				modManifest.CatchIntoManifestLogger(nameof(ILegacyModManifest.BootMod), m => m.BootMod(this.Registry));
 
 		helper.Events.OnModLoadPhaseFinished += this.LoadSpriteManifest;
 		helper.Events.OnModLoadPhaseFinished += this.LoadGlossaryManifest;
