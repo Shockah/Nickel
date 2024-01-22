@@ -24,7 +24,20 @@ internal sealed class LegacyModWrapper : Mod
 		this.Registry = legacyRegistry;
 		this.EventHub = new LegacyPerModEventHub(legacyRegistry.GlobalEventHub, logger);
 
-		helper.Events.OnModLoadPhaseFinished += this.BootMod;
+		DirectoryInfo gameRootFolder = new(Directory.GetCurrentDirectory());
+		DirectoryInfo modRootFolder = new(directory.FullName);
+
+		foreach (var manifest in this.LegacyManifests)
+		{
+			manifest.GameRootFolder = gameRootFolder;
+			manifest.ModRootFolder = modRootFolder;
+			manifest.Logger = logger;
+		}
+
+		foreach (var manifest in this.LegacyManifests)
+			if (manifest is ILegacyModManifest modManifest)
+				modManifest.CatchIntoManifestLogger(nameof(BootMod), m => m.BootMod(this.Registry));
+
 		helper.Events.OnModLoadPhaseFinished += this.LoadSpriteManifest;
 		helper.Events.OnModLoadPhaseFinished += this.LoadGlossaryManifest;
 		helper.Events.OnModLoadPhaseFinished += this.LoadDeckManifest;
@@ -40,16 +53,6 @@ internal sealed class LegacyModWrapper : Mod
 		helper.Events.OnModLoadPhaseFinished += this.LoadStoryManifests;
 		helper.Events.OnModLoadPhaseFinished += this.LoadEventHubManifests;
 		helper.Events.OnModLoadPhaseFinished += this.FinalizePreparations;
-
-		DirectoryInfo gameRootFolder = new(Directory.GetCurrentDirectory());
-		DirectoryInfo modRootFolder = new(directory.FullName);
-
-		foreach (var manifest in this.LegacyManifests)
-		{
-			manifest.GameRootFolder = gameRootFolder;
-			manifest.ModRootFolder = modRootFolder;
-			manifest.Logger = logger;
-		}
 	}
 
 	public override object? GetApi(IModManifest requestingMod)
@@ -59,16 +62,6 @@ internal sealed class LegacyModWrapper : Mod
 
 		var legacyRequestingManifest = this.Registry.LoadedManifests.FirstOrDefault(m => m.Name == requestingMod.UniqueName);
 		return apiProvider.GetApi(legacyRequestingManifest ?? new NewToLegacyManifestStub(requestingMod));
-	}
-
-	[EventPriority(0)]
-	private void BootMod(object? _, ModLoadPhase phase)
-	{
-		if (phase != ModLoadPhase.AfterGameAssembly)
-			return;
-		foreach (var manifest in this.LegacyManifests)
-			if (manifest is ILegacyModManifest modManifest)
-				modManifest.CatchIntoManifestLogger(nameof(BootMod), m => m.BootMod(this.Registry));
 	}
 
 	[EventPriority(-100)]
