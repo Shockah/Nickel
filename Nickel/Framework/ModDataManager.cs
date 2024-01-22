@@ -1,6 +1,8 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace Nickel.Framework;
@@ -31,8 +33,13 @@ internal sealed class ModDataManager
 			return (T)(object)Convert.ToDouble(o);
 		else if (o is null && (!typeof(T).IsValueType || (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))))
 			return default!;
-		else
-			throw new ArgumentException($"Cannot convert {o} to extension data type {typeof(T)}", nameof(T));
+
+		var stringWriter = new StringWriter();
+		JSONSettings.serializer.Serialize(new JsonTextWriter(stringWriter), o);
+		if (JSONSettings.serializer.Deserialize<T>(new JsonTextReader(new StringReader(stringWriter.ToString()))) is { } deserialized)
+			return deserialized;
+
+		throw new ArgumentException($"Cannot convert {o} to extension data type {typeof(T)}", nameof(T));
 	}
 
 	public T GetModData<T>(IModManifest manifest, object o, string key)
