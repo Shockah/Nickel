@@ -36,6 +36,7 @@
 		<!-- Default settings that don't care about paths -->
 		<ModName Condition="'$(ModName)' == ''">$(MSBuildProjectName)</ModName>
 		<ModVersion Condition="'$(ModVersion)' == ''">$(Version)</ModVersion>
+		<IsLegacyMod Condition="'$(IsLegacyMod)' == ''">false</IsLegacyMod>
 		<ModZipPath Condition="'$(ModZipPath)' == ''">$(MSBuildProjectDirectory)\release\$(ModName)-$(Version).zip</ModZipPath>
 		<EnableModDeploy Condition="'$(EnableModDeploy)' == ''">true</EnableModDeploy>
 		<EnableModZip Condition="'$(EnableModZip)' == '' And '$(Configuration)' == 'Release'">true</EnableModZip>
@@ -127,17 +128,18 @@
 	<!-- Add assembly references -->
 	<ItemGroup>
 		<Reference Include="CobaltCore" Private="False" HintPath="$(GameDllPath)" IgnoreAccessChecks="true" />
-		<Reference Include="$(_ModLoaderName)Common" Private="False" HintPath="$(ModLoaderPath)\$(_ModLoaderName)Common.dll" />
-		<Reference Include="$(_ModLoaderName)" Private="False" HintPath="$(ModLoaderPath)\$(_ModLoaderName).dll" />
 		<Reference Include="MonoGame.Framework" Private="False" HintPath="$(ModLoaderPath)\MonoGame.Framework.dll" />
 		<Reference Include="Newtonsoft.Json" Private="False" HintPath="$(ModLoaderPath)\Newtonsoft.Json.dll" />
-		<Reference Include="0Harmony" Private="False" HintPath="$(ModLoaderPath)\0Harmony.dll" />
-		<Reference Include="Microsoft.Extensions.Logging.Abstractions" Private="False" HintPath="$(ModLoaderPath)\Microsoft.Extensions.Logging.Abstractions.dll" />
-		<Reference Include="PluginManager" Private="False" HintPath="$(ModLoaderPath)\PluginManager.dll" />
-		<Reference Include="PluginManager.Cecil" Private="False" HintPath="$(ModLoaderPath)\PluginManager.Cecil.dll" />
-		<Reference Include="Shrike" Private="False" HintPath="$(ModLoaderPath)\Shrike.dll" />
-		<Reference Include="Shrike.Harmony" Private="False" HintPath="$(ModLoaderPath)\Shrike.Harmony.dll" />
-		<Reference Include="OneOf" Private="False" HintPath="$(ModLoaderPath)\OneOf.dll" />
+		<Reference Condition="!$(IsLegacyMod)" Include="0Harmony" Private="False" HintPath="$(ModLoaderPath)\0Harmony.dll" />
+		<Reference Condition="!$(IsLegacyMod)" Include="Microsoft.Extensions.Logging.Abstractions" Private="False" HintPath="$(ModLoaderPath)\Microsoft.Extensions.Logging.Abstractions.dll" />
+		<Reference Condition="!$(IsLegacyMod)" Include="$(_ModLoaderName)Common" Private="False" HintPath="$(ModLoaderPath)\$(_ModLoaderName)Common.dll" />
+		<Reference Condition="!$(IsLegacyMod)" Include="$(_ModLoaderName)" Private="False" HintPath="$(ModLoaderPath)\$(_ModLoaderName).dll" />
+		<Reference Condition="!$(IsLegacyMod)" Include="PluginManager" Private="False" HintPath="$(ModLoaderPath)\PluginManager.dll" />
+		<Reference Condition="!$(IsLegacyMod)" Include="PluginManager.Cecil" Private="False" HintPath="$(ModLoaderPath)\PluginManager.Cecil.dll" />
+		<Reference Condition="!$(IsLegacyMod)" Include="Shrike" Private="False" HintPath="$(ModLoaderPath)\Shrike.dll" />
+		<Reference Condition="!$(IsLegacyMod)" Include="Shrike.Harmony" Private="False" HintPath="$(ModLoaderPath)\Shrike.Harmony.dll" />
+		<Reference Condition="!$(IsLegacyMod)" Include="OneOf" Private="False" HintPath="$(ModLoaderPath)\OneOf.dll" />
+		<Reference Condition="$(IsLegacyMod)" Include="CobaltCoreModding.Definitions" Private="False" HintPath="$(ModDeployModsPath)\Nickel.Legacy\CobaltCoreModding.Definitions.dll" />
 	</ItemGroup>
 
 	<!-- Enable game debugging -->
@@ -152,6 +154,7 @@
 		<Nickel.ModBuildConfig.DeployModTask
 				ModName="$(ModName)"
 				ModVersion="$(ModVersion)"
+				IsLegacyMod="$(IsLegacyMod)"
 				ProjectDir="$(ProjectDir)"
 				TargetDir="$(TargetDir)"
 				EnableModDeploy="$(EnableModDeploy)"

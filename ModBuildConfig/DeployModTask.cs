@@ -19,6 +19,9 @@ public sealed class DeployModTask : Task
 	public string ModVersion { get; set; } = null!;
 
 	[Required]
+	public bool IsLegacyMod { get; set; }
+
+	[Required]
 	public string ProjectDir { get; set; } = null!;
 
 	[Required]
@@ -49,8 +52,15 @@ public sealed class DeployModTask : Task
 
 		if (!modFiles.Any(e => e.Info.Name == ManifestFileName))
 		{
-			this.Log.LogError($"The required `{ManifestFileName}` file is missing.");
-			return false;
+			if (this.IsLegacyMod)
+			{
+				this.Log.LogWarning($"The `{ManifestFileName}` file is missing. It is recommended to create one manually.");
+			}
+			else
+			{
+				this.Log.LogError($"The required `{ManifestFileName}` file is missing.");
+				return false;
+			}
 		}
 
 		if (this.EnableModDeploy)
