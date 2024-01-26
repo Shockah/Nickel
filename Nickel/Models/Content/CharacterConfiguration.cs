@@ -13,6 +13,7 @@ public readonly struct CharacterConfiguration
 	public CharacterAnimationConfiguration? MiniAnimation { get; init; }
 	public bool StartLocked { get; init; }
 	public MissingStatusConfiguration MissingStatus { get; init; }
+	public Type? ExeCardType { get; init; }
 	public SingleLocalizationProvider? Description { get; init; }
 
 	public readonly struct MissingStatusConfiguration

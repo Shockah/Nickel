@@ -34,6 +34,7 @@ internal sealed class CharacterManager
 		this.AnimationManager = new(currentModLoadPhaseProvider, Inject);
 		this.CharManager = new(currentModLoadPhaseProvider, this.Inject);
 
+		StatePatches.OnModifyPotentialExeCards.Subscribe(this.OnModifyPotentialExeCards);
 		StoryVarsPatches.OnGetUnlockedChars.Subscribe(this.OnGetUnlockedChars);
 		WizardPatches.OnGetAssignableStatuses.Subscribe(this.OnGetAssignableStatuses);
 	}
@@ -218,6 +219,20 @@ internal sealed class CharacterManager
 		{
 			var characterName = deckEntry.Configuration.Name?.Invoke(locale);
 			localizations[$"char.{entry.Configuration.Deck}.desc.missing"] = $"<c={deckEntry.Configuration.Definition.color}>{characterName?.ToUpper()}..?</c>\n{characterName} is missing.";
+		}
+	}
+
+	private void OnModifyPotentialExeCards(object? _, StatePatches.ModifyPotentialExeCardsEventArgs e)
+	{
+		foreach (var character in this.UniqueNameToCharacterEntry.Values)
+		{
+			if (character.Configuration.ExeCardType is not { } exeCardType)
+				continue;
+			if (e.Characters.Contains(character.Configuration.Deck))
+				continue;
+			if (e.ExeCards.Any(c => c.GetType() == exeCardType))
+				continue;
+			e.ExeCards.Add((Card)Activator.CreateInstance(exeCardType)!);
 		}
 	}
 
