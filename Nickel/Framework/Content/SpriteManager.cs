@@ -24,7 +24,7 @@ internal sealed class SpriteManager
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A sprite with the unique name `{uniqueName}` is already registered", nameof(name));
-		return this.RegisterSprite(new(owner, uniqueName, (Spr)this.NextId++, textureProvider));
+		return this.RegisterSprite(new(owner, uniqueName, name, (Spr)this.NextId++, textureProvider));
 	}
 
 	public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Stream> streamProvider)
@@ -32,7 +32,7 @@ internal sealed class SpriteManager
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A sprite with the unique name `{uniqueName}` is already registered", nameof(name));
-		return this.RegisterSprite(new(owner, uniqueName, (Spr)this.NextId++, streamProvider));
+		return this.RegisterSprite(new(owner, uniqueName, name, (Spr)this.NextId++, streamProvider));
 	}
 
 	private Entry RegisterSprite(Entry entry)
@@ -58,6 +58,7 @@ internal sealed class SpriteManager
 		return new Entry(
 			modOwner: this.VanillaModManifest,
 			uniqueName: vanillaName,
+			localName: vanillaName,
 			sprite: spr,
 			textureProvider: () => SpriteLoader.Get(spr)!
 		);
@@ -80,24 +81,27 @@ internal sealed class SpriteManager
 	{
 		public IModManifest ModOwner { get; }
 		public string UniqueName { get; }
+		public string LocalName { get; }
 		public Spr Sprite { get; }
 
 		private Func<Stream>? StreamProvider { get; set; }
 		private Func<Texture2D>? TextureProvider { get; set; }
 		private Texture2D? TextureStorage { get; set; }
 
-		public Entry(IModManifest modOwner, string uniqueName, Spr sprite, Func<Stream> streamProvider)
+		public Entry(IModManifest modOwner, string uniqueName, string localName, Spr sprite, Func<Stream> streamProvider)
 		{
 			this.ModOwner = modOwner;
 			this.UniqueName = uniqueName;
+			this.LocalName = localName;
 			this.Sprite = sprite;
 			this.StreamProvider = streamProvider;
 		}
 
-		public Entry(IModManifest modOwner, string uniqueName, Spr sprite, Func<Texture2D> textureProvider)
+		public Entry(IModManifest modOwner, string uniqueName, string localName, Spr sprite, Func<Texture2D> textureProvider)
 		{
 			this.ModOwner = modOwner;
 			this.UniqueName = uniqueName;
+			this.LocalName = localName;
 			this.Sprite = sprite;
 			this.TextureProvider = textureProvider;
 		}
