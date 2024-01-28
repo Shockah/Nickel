@@ -5,6 +5,7 @@
 		<Version>$(NickelVersion)</Version>
 		<OutputType>Exe</OutputType>
 		<ApplicationIcon>../Icon.ico</ApplicationIcon>
+		<ApplicationManifest>../app.manifest</ApplicationManifest>
 	</PropertyGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="../Icon.ico">

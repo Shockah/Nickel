@@ -13,6 +13,7 @@
 		<Version>$(NickelVersion)</Version>
 		<OutputType>Exe</OutputType>
 		<ApplicationIcon>../Icon.ico</ApplicationIcon>
+		<ApplicationManifest>../app.manifest</ApplicationManifest>
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 		<NoWarn>$(NoWarn);CS0436</NoWarn>
 		<IgnoreAccessChecks>true</IgnoreAccessChecks>
