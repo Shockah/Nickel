@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<RootNamespace>Nanoray.PluginManager.Cecil</RootNamespace>
 		<Version>$(NickelVersion)</Version>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\PluginManager\PluginManager.csproj" />
