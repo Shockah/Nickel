@@ -15,7 +15,7 @@ public static class StreamExt
 		}
 		finally
 		{
-			if(takeOwnership)
+			if (takeOwnership)
 				stream.Dispose();
 		}
 	}
