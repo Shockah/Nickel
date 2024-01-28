@@ -34,7 +34,7 @@ internal sealed class SpriteManager
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A sprite with the unique name `{uniqueName}` is already registered", nameof(name));
-		return this.RegisterSprite(new(owner, $"{owner.UniqueName}::{name}", (Spr)this.NextId++, streamProvider));
+		return this.RegisterSprite(new(owner, uniqueName, (Spr)this.NextId++, streamProvider));
 	}
 
 	private Entry RegisterSprite(Entry entry)
