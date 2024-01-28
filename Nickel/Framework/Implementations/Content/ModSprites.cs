@@ -44,4 +44,7 @@ internal sealed class ModSprites : IModSprites
 
 	public ISpriteEntry RegisterSprite(string name, Func<Texture2D> textureProvider)
 		=> this.SpriteManagerProvider().RegisterSprite(this.Package.Manifest, name, textureProvider);
+
+	public ISpriteEntry? LookupBySpr(Spr spr) => this.SpriteManagerProvider().LookupBySpr(spr);
+	public ISpriteEntry? LookupByUniqueName(string uniqueName) => this.SpriteManagerProvider().LookupByUniqueName(uniqueName);
 }

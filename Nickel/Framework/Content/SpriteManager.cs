@@ -17,6 +17,10 @@ internal sealed class SpriteManager
 		SpriteLoaderPatches.OnGetTexture.Subscribe(this.OnGetTexture);
 	}
 
+	public ISpriteEntry? LookupBySpr(Spr spr) => this.SpriteToEntry.GetValueOrDefault(spr);
+
+	public ISpriteEntry? LookupByUniqueName(string uniqueName) => this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
+
 	public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Texture2D> textureProvider)
 	{
 		var uniqueName = $"{owner.UniqueName}::{name}";

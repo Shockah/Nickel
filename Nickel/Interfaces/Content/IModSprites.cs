@@ -13,4 +13,7 @@ public interface IModSprites
 	ISpriteEntry RegisterSprite(string name, Func<Stream> streamProvider);
 	ISpriteEntry RegisterSprite(Func<Texture2D> textureProvider);
 	ISpriteEntry RegisterSprite(string name, Func<Texture2D> textureProvider);
+
+	public ISpriteEntry? LookupBySpr(Spr spr);
+	public ISpriteEntry? LookupByUniqueName(string uniqueName);
 }
