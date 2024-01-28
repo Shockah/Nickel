@@ -56,6 +56,7 @@
 		<ProjectReference Include="..\$(_ModLoaderName)Common\$(_ModLoaderName)Common.csproj" />
 		<ProjectReference Include="..\PluginManager\PluginManager.csproj" />
 		<ProjectReference Include="..\PluginManager.Cecil\PluginManager.Cecil.csproj" />
+		<PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
 		
 		<!-- game handling -->
 		<PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" />
