@@ -50,12 +50,14 @@ internal sealed class SpriteManager
 	{
 		if (this.SpriteToEntry.TryGetValue(spr, out var entry))
 			return entry;
-		if (!Enum.GetValues<Spr>().Contains(spr))
+
+		var vanillaName = Enum.GetName(spr);
+		if (vanillaName == null)
 			return null;
 
 		return new Entry(
 			modOwner: this.VanillaModManifest,
-			uniqueName: Enum.GetName(spr)!,
+			uniqueName: vanillaName,
 			sprite: spr,
 			textureProvider: () => SpriteLoader.Get(spr)!
 		);
