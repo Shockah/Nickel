@@ -1,19 +1,21 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 
 namespace Nickel;
 
 internal sealed class SpriteManager
 {
 	private int NextId { get; set; } = 10_000_001;
+	private IModManifest VanillaModManifest { get; }
 	private Dictionary<Spr, Entry> SpriteToEntry { get; } = [];
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 
-	public SpriteManager()
+	public SpriteManager(IModManifest vanillaModManifest)
 	{
+		this.VanillaModManifest = vanillaModManifest;
 		SpriteLoaderPatches.OnGetTexture.Subscribe(this.OnGetTexture);
 	}
 
@@ -30,7 +32,7 @@ internal sealed class SpriteManager
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A sprite with the unique name `{uniqueName}` is already registered", nameof(name));
-		return this.RegisterSprite(new(owner, $"{owner.UniqueName}::{name}", (Spr)this.NextId++, streamProvider));
+		return this.RegisterSprite(new(owner, uniqueName, (Spr)this.NextId++, streamProvider));
 	}
 
 	private Entry RegisterSprite(Entry entry)
@@ -44,19 +46,23 @@ internal sealed class SpriteManager
 		return entry;
 	}
 
-	public bool TryGetByUniqueName(string uniqueName, [MaybeNullWhen(false)] out ISpriteEntry entry)
+	public ISpriteEntry? LookupBySpr(Spr spr)
 	{
-		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry))
-		{
-			entry = typedEntry;
-			return true;
-		}
-		else
-		{
-			entry = default;
-			return false;
-		}
+		if (this.SpriteToEntry.TryGetValue(spr, out var entry))
+			return entry;
+		if (!Enum.GetValues<Spr>().Contains(spr))
+			return null;
+
+		return new Entry(
+			modOwner: this.VanillaModManifest,
+			uniqueName: Enum.GetName(spr)!,
+			sprite: spr,
+			textureProvider: () => SpriteLoader.Get(spr)!
+		);
 	}
+
+	public ISpriteEntry? LookupByUniqueName(string uniqueName)
+		=> this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
 
 	private void OnGetTexture(object? _, SpriteLoaderPatches.GetTextureEventArgs e)
 	{
