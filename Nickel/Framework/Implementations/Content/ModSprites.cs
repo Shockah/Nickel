@@ -30,6 +30,12 @@ internal sealed class ModSprites : IModSprites
 		return this.SpriteManagerProvider().RegisterSprite(this.Package.Manifest, spriteName, file.OpenRead);
 	}
 
+	public ISpriteEntry? LookupBySpr(Spr spr)
+		=> this.SpriteManagerProvider().LookupBySpr(spr);
+
+	public ISpriteEntry? LookupByUniqueName(string uniqueName)
+		=> this.SpriteManagerProvider().LookupByUniqueName(uniqueName);
+
 	public ISpriteEntry RegisterSprite(string name, IFileInfo file)
 		=> this.SpriteManagerProvider().RegisterSprite(this.Package.Manifest, name, file.OpenRead);
 
@@ -44,7 +50,4 @@ internal sealed class ModSprites : IModSprites
 
 	public ISpriteEntry RegisterSprite(string name, Func<Texture2D> textureProvider)
 		=> this.SpriteManagerProvider().RegisterSprite(this.Package.Manifest, name, textureProvider);
-
-	public ISpriteEntry? LookupBySpr(Spr spr) => this.SpriteManagerProvider().LookupBySpr(spr);
-	public ISpriteEntry? LookupByUniqueName(string uniqueName) => this.SpriteManagerProvider().LookupByUniqueName(uniqueName);
 }
