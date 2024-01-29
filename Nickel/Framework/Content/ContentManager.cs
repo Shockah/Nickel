@@ -42,7 +42,7 @@ internal sealed class ContentManager
 
 	public static ContentManager Create(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
 	{
-		var sprites = new SpriteManager();
+		var sprites = new SpriteManager(vanillaModManifest);
 		var decks = new DeckManager(currentModLoadPhaseProvider, vanillaModManifest);
 		var statuses = new StatusManager(currentModLoadPhaseProvider, vanillaModManifest);
 		var cards = new CardManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
