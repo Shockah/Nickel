@@ -509,7 +509,7 @@ internal sealed class ModManager
 					this.ProxyManager
 				),
 				new ModEvents(package.Manifest, this.EventManager),
-				new ModContent(
+				() => new ModContent(
 					new ModSprites(package, () => this.ContentManager!.Sprites),
 					new ModDecks(package.Manifest, () => this.ContentManager!.Decks),
 					new ModStatuses(package.Manifest, () => this.ContentManager!.Statuses),

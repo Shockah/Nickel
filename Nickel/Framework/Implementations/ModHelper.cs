@@ -14,19 +14,19 @@ internal sealed class ModHelper : IModHelper
 		{
 			if (this.CurrentModLoadPhaseProvider() < ModLoadPhase.AfterGameAssembly)
 				throw new InvalidOperationException("Cannot access content before the game assembly is loaded.");
-			return this.ContentStorage;
+			return this.ContentStorage.Value;
 		}
 	}
 
-	private IModContent ContentStorage { get; }
+	private Lazy<IModContent> ContentStorage { get; }
 	private Func<ModLoadPhase> CurrentModLoadPhaseProvider { get; }
 
-	public ModHelper(IModRegistry modRegistry, IModEvents events, IModContent content, IModData modData, Func<ModLoadPhase> currentModLoadPhaseProvider)
+	public ModHelper(IModRegistry modRegistry, IModEvents events, Func<IModContent> contentProvider, IModData modData, Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
 		this.ModRegistry = modRegistry;
 		this.Events = events;
 		this.ModData = modData;
-		this.ContentStorage = content;
+		this.ContentStorage = new Lazy<IModContent>(contentProvider);
 		this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
 	}
 }
