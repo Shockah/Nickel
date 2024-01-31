@@ -21,7 +21,7 @@ internal sealed class ModSprites : IModSprites
 		string spriteName;
 		try
 		{
-			spriteName = file.GetRelativePathTo(this.Package.PackageRoot);
+			spriteName = this.Package.PackageRoot.GetRelativePathTo(file);
 		}
 		catch
 		{
