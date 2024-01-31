@@ -44,7 +44,7 @@ public abstract class FileSystemInfoImpl<TFileSystemInfo> : IFileSystemInfo<File
 
 	public string GetRelativePathTo(IFileSystemInfo other)
 	{
-		if (other is not FileSystemInfoImpl<FileSystemInfo>)
+		if (other is not IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>)
 			throw new ArgumentException("The two file systems are unrelated to each other");
 		return Path.GetRelativePath(this.FullName, other.FullName);
 	}
