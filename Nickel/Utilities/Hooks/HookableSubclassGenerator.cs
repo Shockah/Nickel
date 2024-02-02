@@ -459,7 +459,7 @@ file sealed class HookSubclassGlue(
 
 		DynamicMethod dynamicMethod = new(
 			name: $"Map_{typeof(THookDelegate)}_To_{method}",
-			returnType: method.ReturnType,
+			returnType: typeof(void),
 			parameterTypes: [typeof(HookSubclassGlue), typeof(MethodInfo), typeof(THookDelegate), typeof(double)]
 		);
 		var il = dynamicMethod.GetILGenerator();
