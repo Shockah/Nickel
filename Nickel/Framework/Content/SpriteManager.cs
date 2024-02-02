@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace Nickel;
 
@@ -50,9 +49,7 @@ internal sealed class SpriteManager
 	{
 		if (this.SpriteToEntry.TryGetValue(spr, out var entry))
 			return entry;
-
-		var vanillaName = Enum.GetName(spr);
-		if (vanillaName == null)
+		if (Enum.GetName(spr) is not { } vanillaName)
 			return null;
 
 		return new Entry(
