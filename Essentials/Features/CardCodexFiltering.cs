@@ -61,6 +61,9 @@ internal static partial class CardCodexFiltering
 	{
 		if (__instance.browseSource != CardBrowse.Source.Codex)
 			return;
+		if (__instance.subRoute is not null)
+			return;
+
 		var topOffset = 54;
 		var bottomOffset = 54;
 		var scale = 0.875;
