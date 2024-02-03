@@ -64,6 +64,11 @@ internal sealed class CharacterManager
 
 	public ICharacterEntry RegisterCharacter(IModManifest owner, string name, CharacterConfiguration configuration)
 	{
+#pragma warning disable CS0618 // Type or member is obsolete
+		if (configuration.Starters is not null && (configuration.StarterCardTypes is not null || configuration.StarterArtifactTypes is not null))
+			throw new ArgumentException($"A character should only have `{nameof(CharacterConfiguration.Starters)}` or `{nameof(CharacterConfiguration.StarterCardTypes)}`/`{nameof(CharacterConfiguration.StarterArtifactTypes)}` defined, but not both");
+#pragma warning restore CS0618 // Type or member is obsolete
+
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToCharacterEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A character with the unique name `{uniqueName}` is already registered", nameof(name));
@@ -197,11 +202,13 @@ internal sealed class CharacterManager
 
 		DB.charPanels[entry.Configuration.Deck.Key()] = entry.Configuration.BorderSprite;
 		NewRunOptions.allChars.Add(entry.Configuration.Deck);
-		StarterDeck.starterSets[entry.Configuration.Deck] = new()
+#pragma warning disable CS0618 // Type or member is obsolete
+		StarterDeck.starterSets[entry.Configuration.Deck] = entry.Configuration.Starters ?? new()
 		{
 			artifacts = entry.Configuration.StarterArtifactTypes?.Select(t => (Artifact)Activator.CreateInstance(t)!)?.ToList() ?? [],
-			cards = entry.Configuration.StarterCardTypes.Select(t => (Card)Activator.CreateInstance(t)!).ToList()
+			cards = entry.Configuration.StarterCardTypes?.Select(t => (Card)Activator.CreateInstance(t)!).ToList() ?? []
 		};
+#pragma warning restore CS0618 // Type or member is obsolete
 
 		StatusMeta.deckToMissingStatus[entry.Configuration.Deck] = entry.MissingStatus.Status;
 
