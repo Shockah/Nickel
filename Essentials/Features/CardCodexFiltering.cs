@@ -14,6 +14,7 @@ internal static partial class CardCodexFiltering
 
 	private static List<Deck> DeckTypes = [];
 	private static readonly HashSet<Deck> FilteredOutDecks = [];
+	private static readonly Dictionary<Deck, string> DeckNiceNames = [];
 	private static double FilterScroll = 0;
 	private static double FilterScrollTarget = 0;
 
@@ -28,6 +29,34 @@ internal static partial class CardCodexFiltering
 			prefix: new HarmonyMethod(typeof(CardCodexFiltering), nameof(CardBrowse_Render_Prefix)),
 			postfix: new HarmonyMethod(typeof(CardCodexFiltering), nameof(CardBrowse_Render_Postfix))
 		);
+	}
+
+	private static string ObtainDeckNiceName(Deck deck)
+	{
+		if (!DeckNiceNames.TryGetValue(deck, out var niceName))
+		{
+			static string GetNiceName(Deck deck)
+			{
+				var locKey = $"char.{deck.Key()}";
+				if (DB.currentLocale.strings.TryGetValue(locKey, out var localized))
+					return localized;
+
+				var match = LastWordRegex().Match(deck.Key());
+				if (match.Success)
+				{
+					var text = match.Value;
+					if (text.Length >= 1)
+						text = string.Concat(text[0].ToString().ToUpper(), text.AsSpan(1));
+					return text;
+				}
+
+				return ((int)deck).ToString();
+			}
+
+			niceName = GetNiceName(deck);
+			DeckNiceNames[deck] = niceName;
+		}
+		return niceName;
 	}
 
 	private static void CardBrowse_GetCardList_Postfix(CardBrowse __instance, G g, ref List<Card> __result)
@@ -72,26 +101,7 @@ internal static partial class CardCodexFiltering
 		for (var i = 0; i < DeckTypes.Count; i++)
 		{
 			var deck = DeckTypes[i];
-
-			string GetNiceName()
-			{
-				var locKey = $"char.{deck.Key()}";
-				if (DB.currentLocale.strings.TryGetValue(locKey, out var localized))
-					return localized;
-
-				var match = LastWordRegex().Match(deck.Key());
-				if (match.Success)
-				{
-					var text = match.Value;
-					if (text.Length >= 1)
-						text = string.Concat(text[0].ToString().ToUpper(), text.AsSpan(1));
-					return text;
-				}
-
-				return ((int)deck).ToString();
-			}
-
-			var niceName = GetNiceName();
+			var niceName = ObtainDeckNiceName(deck);
 			var colorMatch = UncoloredRegex().Match(niceName);
 			if (colorMatch.Success)
 				niceName = colorMatch.Groups[1].Value;
@@ -147,7 +157,6 @@ internal static partial class CardCodexFiltering
 					FilterScrollTarget = Math.Round(-(box.rect.y - FilterScroll - topOffset));
 				if (box.rect.y2 > g.mg.PIX_H - bottomOffset)
 					FilterScrollTarget = Math.Round(-(box.rect.y2 - FilterScroll - g.mg.PIX_H + bottomOffset));
-				MG.inst.Window.Title = $"{g.mg.PIX_H:N0} | {box.rect.y:N0}-{box.rect.y2:N0} | {FilterScroll:N0} -> {FilterScrollTarget:N0} | {niceName}";
 			}
 			g.Pop();
 		}
