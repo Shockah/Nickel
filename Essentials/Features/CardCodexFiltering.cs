@@ -96,7 +96,7 @@ internal static partial class CardCodexFiltering
 		var topOffset = 54;
 		var bottomOffset = 54;
 		var scale = 0.875;
-		var maxFilterScroll = Math.Max((DeckTypes.Count + 1) / 2 * 16 - 208, 0) * 2;
+		var maxFilterScroll = Math.Max((DeckTypes.Count + 1) / 2 * 16 - 253, 0) * 2;
 
 		for (var i = 0; i < DeckTypes.Count; i++)
 		{
