@@ -120,7 +120,7 @@
 		<Message Importance="high" Condition="'$(EnableModDeploy)'" Text="ModBuildConfig: ModDeployModsPath = '$(ModDeployModsPath)'" />
 	</Target>
 
-	<Target Name="ExtractGameDllTarget" BeforeTargets="CoreCompile" Condition="$(EnableDllExtract)">
+	<Target Name="ExtractGameDllTarget" BeforeTargets="PrepareForBuild" Condition="$(EnableDllExtract)">
 		<ExtractSingleFileApplicationResourceTask ExeInputPath="$(GameExePath)" ResourceName="CobaltCore.dll" ResourceOutputPath="$(GameDllPath)" />
 	</Target>
 
