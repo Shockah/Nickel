@@ -412,7 +412,7 @@ internal sealed class ModManager
 			RequiredApiVersion = NickelConstants.Version
 		};
 
-		this.ContentManager = ContentManager.Create(() => this.CurrentModLoadPhase, this.ObtainLogger, this.VanillaModManifest);
+		this.ContentManager = ContentManager.Create(() => this.CurrentModLoadPhase, this.ObtainLogger, this.VanillaModManifest, this.ModLoaderModManifest, this.ModDataManager);
 		this.PrepareJsonSerialization();
 	}
 
@@ -520,7 +520,8 @@ internal sealed class ModManager
 						package.Manifest,
 						() => this.ContentManager!.Ships,
 						() => this.ContentManager!.Parts
-					)
+					),
+					new ModCardTraits(package.Manifest, () => this.ContentManager!.CardTraits)
 				),
 				new ModData(package.Manifest, this.ModDataManager),
 				() => this.CurrentModLoadPhase

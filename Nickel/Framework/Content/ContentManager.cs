@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
+using Nickel.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,8 @@ internal sealed class ContentManager
 	public PartManager Parts { get; }
 	public ShipManager Ships { get; }
 
+	public CardTraitManager CardTraits { get; }
+
 	public ContentManager(
 		SpriteManager sprites,
 		DeckManager decks,
@@ -25,7 +28,8 @@ internal sealed class ContentManager
 		ArtifactManager artifacts,
 		CharacterManager characters,
 		PartManager parts,
-		ShipManager ships
+		ShipManager ships,
+		CardTraitManager cardTraits
 	)
 	{
 		this.Sprites = sprites;
@@ -36,11 +40,12 @@ internal sealed class ContentManager
 		this.Characters = characters;
 		this.Parts = parts;
 		this.Ships = ships;
+		this.CardTraits = cardTraits;
 
 		StatePatches.OnLoad.Subscribe(this, this.OnLoad);
 	}
 
-	public static ContentManager Create(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
+	public static ContentManager Create(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest, IModManifest modManagerModManifest, ModDataManager modDataManager)
 	{
 		var sprites = new SpriteManager(vanillaModManifest);
 		var decks = new DeckManager(currentModLoadPhaseProvider, vanillaModManifest);
@@ -50,7 +55,8 @@ internal sealed class ContentManager
 		var characters = new CharacterManager(currentModLoadPhaseProvider, loggerProvider, sprites, decks, statuses);
 		var parts = new PartManager(currentModLoadPhaseProvider);
 		var ships = new ShipManager(currentModLoadPhaseProvider);
-		return new(sprites, decks, statuses, cards, artifacts, characters, parts, ships);
+		var cardTraits = new CardTraitManager(vanillaModManifest, modManagerModManifest, modDataManager);
+		return new(sprites, decks, statuses, cards, artifacts, characters, parts, ships, cardTraits);
 	}
 
 	private void OnLoad(object? _, StatePatches.LoadEventArgs e)
