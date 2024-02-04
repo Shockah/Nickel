@@ -1,7 +1,6 @@
 <Project>
 	<!-- Mod build config setup start -->
 	<UsingTask TaskName="Nickel.ModBuildConfig.DeployModTask" AssemblyFile="Nickel.ModBuildConfig.dll" />
-	<UsingTask TaskName="ExtractSingleFileApplicationResourceTask" AssemblyFile="$(NuGetPackageRoot)\nanoray.extractsinglefileapplicationresourcetask\1.0.0\build\Nanoray.ExtractSingleFileApplicationResourceTask.dll" />
 	
 	<!-- Set build options -->
 	<PropertyGroup>
