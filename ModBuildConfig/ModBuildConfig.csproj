@@ -18,11 +18,10 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 	</PropertyGroup>
 	<Import Project="Configuration.props.user" Condition="Exists('Configuration.props.user')" />
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.11" />
+		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.11" PrivateAssets="all" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="$(MSBuildProjectDirectory)\..\.editorconfig" Link=".editorconfig" />
