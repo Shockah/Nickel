@@ -120,13 +120,20 @@
 		<Message Importance="high" Condition="'$(EnableModDeploy)'" Text="ModBuildConfig: ModDeployModsPath = '$(ModDeployModsPath)'" />
 	</Target>
 
-	<Target Name="ExtractGameDllTarget" BeforeTargets="PrepareForBuild" Condition="$(EnableDllExtract)">
+	<Target Name="ExtractGameDllTarget" BeforeTargets="PublicizeGameDll" Condition="$(EnableDllExtract)">
 		<ExtractSingleFileApplicationResourceTask ExeInputPath="$(GameExePath)" ResourceName="CobaltCore.dll" ResourceOutputPath="$(GameDllPath)" />
+	</Target>
+	
+	<Target Name="PublicizeGameDll" BeforeTargets="PrepareForBuild">
+		<Fayti1703.AssemblyTasks.PublishAllTypes
+			SourceFilePath="$(GameDllPath)"
+			TargetFilePath="$(IntermediateOutputPath)/CobaltCore.dll"
+		/>
 	</Target>
 
 	<!-- Add assembly references -->
 	<ItemGroup>
-		<Reference Include="CobaltCore" Private="False" HintPath="$(GameDllPath)" IgnoreAccessChecks="true" />
+		<Reference Include="CobaltCore" Private="False" HintPath="$(IntermediateOutputPath)/CobaltCore.dll" />
 		<Reference Include="MonoGame.Framework" Private="False" HintPath="$(ModLoaderPath)\MonoGame.Framework.dll" />
 		<Reference Include="Newtonsoft.Json" Private="False" HintPath="$(ModLoaderPath)\Newtonsoft.Json.dll" />
 		<Reference Condition="!$(IsLegacyMod)" Include="0Harmony" Private="False" HintPath="$(ModLoaderPath)\0Harmony.dll" />
