@@ -513,15 +513,14 @@ internal sealed class ModManager
 					new ModSprites(package, () => this.ContentManager!.Sprites),
 					new ModDecks(package.Manifest, () => this.ContentManager!.Decks),
 					new ModStatuses(package.Manifest, () => this.ContentManager!.Statuses),
-					new ModCards(package.Manifest, () => this.ContentManager!.Cards),
+					new ModCards(package.Manifest, () => this.ContentManager!.Cards, () => this.ContentManager!.CardTraits),
 					new ModArtifacts(package.Manifest, () => this.ContentManager!.Artifacts),
 					new ModCharacters(package.Manifest, () => this.ContentManager!.Characters),
 					new ModShips(
 						package.Manifest,
 						() => this.ContentManager!.Ships,
 						() => this.ContentManager!.Parts
-					),
-					new ModCardTraits(package.Manifest, () => this.ContentManager!.CardTraits)
+					)
 				),
 				new ModData(package.Manifest, this.ModDataManager),
 				() => this.CurrentModLoadPhase
