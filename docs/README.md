@@ -15,8 +15,8 @@ The main purposes of Nickel are:
 
 ### For players
 
-* [Player guide](player-guide.md)
+* [Player guide](https://github.com/Shockah/Nickel/blob/master/docs/player-guide.md)
 
 ### Other
 
-* [Release notes](release-notes.md)
+* [Release notes](https://github.com/Shockah/Nickel/blob/master/docs/release-notes.md)
