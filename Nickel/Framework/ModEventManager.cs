@@ -123,14 +123,15 @@ internal sealed class ModEventManager
 			DB.artifactSprites[subclass.Type.Name] = Enum.GetValues<Spr>()[0];
 		}
 
-		if(this.CurrentModLoadPhaseProvider() == ModLoadPhase.AfterDbInit) {
+		if (this.CurrentModLoadPhaseProvider() == ModLoadPhase.AfterDbInit)
+		{
 			RegisterArtifact();
 		}
 		else
 		{
 			this.OnModLoadPhaseFinishedEvent.Add((sender, phase) =>
 			{
-				if(phase == ModLoadPhase.AfterDbInit)
+				if (phase == ModLoadPhase.AfterDbInit)
 					RegisterArtifact();
 			}, this.ModLoaderModManifest);
 		}
