@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
@@ -21,6 +22,14 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	internal static int Main(string[] args)
 	{
+		Option<bool> vanillaOption = new(
+			name: "--vanilla",
+			description: "Whether to run the vanilla game instead.",
+			getDefaultValue: () => false
+		)
+		{
+			Arity = ArgumentArity.ZeroOrOne
+		};
 		Option<bool?> debugOption = new(
 			name: "--debug",
 			description: "Whether the game should be ran in debug mode."
@@ -59,6 +68,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		{ IsHidden = true };
 
 		RootCommand rootCommand = new(NickelConstants.IntroMessage);
+		rootCommand.AddOption(vanillaOption);
 		rootCommand.AddOption(debugOption);
 		rootCommand.AddOption(saveInDebugOption);
 		rootCommand.AddOption(initSteamOption);
@@ -73,6 +83,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		{
 			LaunchArguments launchArguments = new()
 			{
+				Vanilla = context.ParseResult.GetValueForOption(vanillaOption),
 				Debug = context.ParseResult.GetValueForOption(debugOption),
 				SaveInDebug = context.ParseResult.GetValueForOption(saveInDebugOption),
 				InitSteam = context.ParseResult.GetValueForOption(initSteamOption),
@@ -131,28 +142,33 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		var instance = new Nickel(launchArguments);
 		Instance = instance;
 
-		Harmony harmony = new(NickelConstants.Name);
-		HarmonyPatches.Apply(harmony, logger);
-
-		var modsDirectory = launchArguments.ModsPath ?? GetOrCreateDefaultModLibraryDirectory();
-		logger.LogInformation("ModsPath: {Path}", modsDirectory.FullName);
-
 		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor = new(() =>
-			new PackageAssemblyResolver(instance.ModManager.ResolvedMods)
+			new PackageAssemblyResolver(launchArguments.Vanilla ? [] : instance.ModManager.ResolvedMods)
 		);
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new CobaltCorePublisher());
-		instance.ModManager = new(modsDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
-		try
+
+		Harmony? harmony = null;
+		if (!launchArguments.Vanilla)
 		{
-			instance.ModManager.ResolveMods();
+			harmony = new(NickelConstants.Name);
+			HarmonyPatches.Apply(harmony, logger);
+
+			var modsDirectory = launchArguments.ModsPath ?? GetOrCreateDefaultModLibraryDirectory();
+			logger.LogInformation("ModsPath: {Path}", modsDirectory.FullName);
+
+			instance.ModManager = new(modsDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
+			try
+			{
+				instance.ModManager.ResolveMods();
+			}
+			catch (Exception ex)
+			{
+				logger.LogCritical("{ModLoaderName} threw an exception while resolving mods: {e}", NickelConstants.Name, ex);
+				return -4;
+			}
+			instance.ModManager.LoadMods(ModLoadPhase.BeforeGameAssembly);
 		}
-		catch (Exception ex)
-		{
-			logger.LogCritical("{ModLoaderName} threw an exception while resolving mods: {e}", NickelConstants.Name, ex);
-			return -4;
-		}
-		instance.ModManager.LoadMods(ModLoadPhase.BeforeGameAssembly);
 
 		ICobaltCoreResolver cobaltCoreResolver = launchArguments.GamePath is { } gamePath
 			? new SingleFileApplicationCobaltCoreResolver(gamePath, new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb")))
@@ -197,38 +213,51 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			: NickelConstants.FallbackGameVersion;
 	}
 
-	private static int ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony harmony, ILogger logger, ILogger gameLogger, CobaltCoreHandlerResult handlerResult)
+	private static int ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony? harmony, ILogger logger, ILogger gameLogger, CobaltCoreHandlerResult handlerResult)
 	{
 		var version = GetVanillaVersion();
 		logger.LogInformation("Game version: {Version}", version);
 
-		instance.ModManager.ContinueAfterLoadingGameAssembly(version);
-		instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderModManifest);
-		instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderModManifest);
-
-		var debug = launchArguments.Debug ?? true;
+		var debug = launchArguments.Debug ?? !launchArguments.Vanilla;
 		logger.LogInformation("Debug: {Value}", debug);
-
-		var saveInDebug = launchArguments.SaveInDebug ?? true;
-		logger.LogInformation("SaveInDebug: {Value}", saveInDebug);
 
 		var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? handlerResult.WorkingDirectory;
 		logger.LogInformation("GameWorkingDirectory: {Path}", gameWorkingDirectory.FullName);
 
-		var savePath = launchArguments.SavePath?.FullName ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModSaves");
-		logger.LogInformation("SavePath: {Path}", savePath);
+		if (!launchArguments.Vanilla)
+		{
+			instance.ModManager.ContinueAfterLoadingGameAssembly(version);
+			instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderModManifest);
+			instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderModManifest);
 
-		ApplyHarmonyPatches(harmony, saveInDebug);
-		LogPatches.OnLine.Subscribe(instance, (_, obj) => gameLogger.LogDebug("{GameLogLine}", obj.ToString()));
-		ProgramPatches.OnTryInitSteam.Subscribe(instance, instance.OnTryInitSteam);
-		instance.ModManager.LoadMods(ModLoadPhase.AfterGameAssembly);
+			var saveInDebug = launchArguments.SaveInDebug ?? true;
+			logger.LogInformation("SaveInDebug: {Value}", saveInDebug);
+
+			var savePath = launchArguments.SavePath?.FullName ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModSaves");
+			logger.LogInformation("SavePath: {Path}", savePath);
+
+			if (harmony is not null)
+				ApplyHarmonyPatches(harmony, saveInDebug);
+
+			LogPatches.OnLine.Subscribe(instance, (_, obj) => gameLogger.LogDebug("{GameLogLine}", obj.ToString()));
+			ProgramPatches.OnTryInitSteam.Subscribe(instance, instance.OnTryInitSteam);
+			instance.ModManager.LoadMods(ModLoadPhase.AfterGameAssembly);
+
+			FeatureFlags.OverrideSaveLocation = savePath;
+		}
+		FeatureFlags.Modded = debug || !launchArguments.Vanilla;
 
 		var oldWorkingDirectory = Directory.GetCurrentDirectory();
 		Directory.SetCurrentDirectory(gameWorkingDirectory.FullName);
 
-		logger.LogInformation("Starting the game...");
-		FeatureFlags.Modded = true;
-		FeatureFlags.OverrideSaveLocation = savePath;
+#pragma warning disable CA2254 // Template should be a static expression
+		logger.LogInformation(
+			launchArguments.Vanilla
+				? "Starting the vanilla game..."
+				: "Starting the game..."
+		);
+#pragma warning restore CA2254 // Template should be a static expression
+
 		try
 		{
 			List<string> gameArguments = new();
@@ -236,7 +265,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 				gameArguments.Add("--debug");
 			gameArguments.AddRange(launchArguments.UnmatchedArguments);
 
-			var result = handlerResult.EntryPoint.Invoke(null, System.Reflection.BindingFlags.DoNotWrapExceptions, null, [gameArguments.ToArray()], null);
+			var result = handlerResult.EntryPoint.Invoke(null, BindingFlags.DoNotWrapExceptions, null, [gameArguments.ToArray()], null);
 			if (result is not null)
 				logger.LogInformation("Cobalt Core closed with result: {Result}", result);
 			return 0;
@@ -244,7 +273,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		catch (Exception e)
 		{
 			logger.LogCritical("Cobalt Core threw an exception: {e}", e);
-			instance.ModManager.LogHarmonyPatchesOnce();
+			if (!launchArguments.Vanilla)
+				instance.ModManager.LogHarmonyPatchesOnce();
 			if (instance.LaunchArguments.LogPipeName is null)
 				Console.ReadLine();
 			return 1;
