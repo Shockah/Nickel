@@ -5,6 +5,7 @@ namespace Nickel;
 
 internal readonly struct LaunchArguments
 {
+	public bool Vanilla { get; init; }
 	public bool? Debug { get; init; }
 	public bool? SaveInDebug { get; init; }
 	public bool? InitSteam { get; init; }
