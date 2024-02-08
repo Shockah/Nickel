@@ -2,6 +2,11 @@
 
 # Release notes
 
+## 0.6.1
+Released 8 February 2024.
+
+* Added a `--vanilla` commandline flag, mostly for Thunderstore integration.
+
 ## 0.6.0
 Released 3 February 2024.
 
