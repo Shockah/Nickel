@@ -16,7 +16,6 @@ namespace Nickel.Legacy;
 public sealed class ModEntry : Mod
 {
 	public static string LegacyModType { get; } = $"{typeof(NickelConstants).Namespace!}.Legacy";
-	private const string ManifestFileName = "nickel.json";
 
 	private LegacyDatabase Database { get; }
 	private ILogger Logger { get; }
@@ -115,7 +114,7 @@ public sealed class ModEntry : Mod
 	{
 		if (!isRoot)
 		{
-			var manifestFile = new FileInfo(Path.Combine(directory.FullName, ManifestFileName));
+			var manifestFile = new FileInfo(Path.Combine(directory.FullName, NickelConstants.ManifestFileName));
 			if (manifestFile.Exists)
 				return;
 		}
@@ -168,7 +167,7 @@ public sealed class ModEntry : Mod
 
 		try
 		{
-			this.Logger.LogInformation("Generating a `{ManifestFileName}` file for a legacy mod that is missing one at `{Directory}`...", ManifestFileName, directory.FullName);
+			this.Logger.LogInformation("Generating a `{ManifestFileName}` file for a legacy mod that is missing one at `{Directory}`...", NickelConstants.ManifestFileName, directory.FullName);
 
 			var manifests = manifestTypes
 				.Select(t => (ILegacyManifest)Activator.CreateInstance(t)!)
@@ -208,17 +207,17 @@ public sealed class ModEntry : Mod
 				Formatting = Formatting.Indented,
 				NullValueHandling = NullValueHandling.Ignore,
 			});
-			var manifestFile = new FileInfo(Path.Combine(directory.FullName, ManifestFileName));
+			var manifestFile = new FileInfo(Path.Combine(directory.FullName, NickelConstants.ManifestFileName));
 			using var stream = manifestFile.OpenWrite();
 			using var streamWriter = new StreamWriter(stream);
 			serializer.Serialize(streamWriter, manifest);
 
-			this.Logger.LogWarning("Successfully generated a `{ManifestFileName}` file for a legacy mod at `{Directory}`. The mod will be loaded the next time you start {ModLoaderName}.", ManifestFileName, directory.FullName, NickelConstants.Name);
+			this.Logger.LogWarning("Successfully generated a `{ManifestFileName}` file for a legacy mod at `{Directory}`. The mod will be loaded the next time you start {ModLoaderName}.", NickelConstants.ManifestFileName, directory.FullName, NickelConstants.Name);
 			return true;
 		}
 		catch (Exception ex)
 		{
-			this.Logger.LogError("Could not generate a `{ManifestFileName}` file for legacy mod file `{LegacyModFileName}`: {Exception}", ManifestFileName, assemblyFileName.Name, ex);
+			this.Logger.LogError("Could not generate a `{ManifestFileName}` file for legacy mod file `{LegacyModFileName}`: {Exception}", NickelConstants.ManifestFileName, assemblyFileName.Name, ex);
 			// we failed, but this was definitely a legacy mod file, so we've "handled it" - don't recurse any deeper
 			return true;
 		}

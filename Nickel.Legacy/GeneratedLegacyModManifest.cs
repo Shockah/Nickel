@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Nickel.Common;
 using System.Collections.Generic;
 

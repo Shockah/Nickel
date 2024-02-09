@@ -17,4 +17,5 @@ public static class NickelConstants
 	public static string IntroMessage { get; } = $"{Name} {Version} -- A modding API / modloader for the game Cobalt Core.";
 	public static string ModType { get; } = Name;
 	public static string DeprecatedModType { get; } = $"{Name}.Assembly";
+	public static string ManifestFileName { get; } = "nickel.json";
 }

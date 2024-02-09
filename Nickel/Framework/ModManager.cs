@@ -177,10 +177,10 @@ internal sealed class ModManager
 			=> new SubpluginPluginPackageResolver<IModManifest>(
 				baseResolver: new RecursiveDirectoryPluginPackageResolver<IModManifest>(
 					directory: directory,
-					manifestFileName: "nickel.json",
+					manifestFileName: NickelConstants.ManifestFileName,
 					ignoreDotNames: true,
 					allowPluginsInRoot: allowModsInRoot,
-					directoryResolverFactory: d => new DirectoryPluginPackageResolver<IModManifest>(d, "nickel.json", pluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Empty),
+					directoryResolverFactory: d => new DirectoryPluginPackageResolver<IModManifest>(d, NickelConstants.ManifestFileName, pluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Empty),
 					fileResolverFactory: f => f.Name.EndsWith(".zip")
 						? new ZipPluginPackageResolver<IModManifest>(f, d => CreatePluginPackageResolver(d, allowModsInRoot: true))
 						: null
