@@ -24,7 +24,8 @@ internal sealed class LegacyRegistry
 	public IEnumerable<ILegacyManifest> LoadedManifests
 		=> this.Database.LegacyManifests;
 
-	internal LegacyEventHub GlobalEventHub { get; } = new();
+	internal LegacyEventHub GlobalEventHub
+		=> this.Database.GlobalEventHub;
 
 	private IModManifest ModManifest { get; }
 	private IModHelper Helper { get; }

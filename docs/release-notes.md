@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming version
+
+* Fixed registering artifact hooks in the `AfterGameAssembly` phase throwing exceptions.
+* Fixed legacy mods using `EventHub` each having their own hub, instead of a shared one.
+
 ## 0.6.1
 Released 8 February 2024.
 
