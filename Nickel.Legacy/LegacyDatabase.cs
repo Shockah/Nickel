@@ -14,6 +14,7 @@ internal sealed class LegacyDatabase(
 {
 	private Func<IModManifest, IModHelper> HelperProvider { get; } = helperProvider;
 
+	internal Dictionary<ILegacyManifest, LegacyModWrapper> LegacyManifestToMod { get; } = [];
 	internal List<ILegacyManifest> LegacyManifests { get; } = [];
 	internal LegacyEventHub GlobalEventHub { get; } = new();
 

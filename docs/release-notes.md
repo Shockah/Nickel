@@ -4,6 +4,7 @@
 
 ## Upcoming version
 
+* Added `Nickel::OnAfterGameAssemblyPhaseFinished` and `Nickel::OnAfterDbInitPhaseFinished` events for legacy mods' event hubs.
 * Fixed registering artifact hooks in the `AfterGameAssembly` phase throwing exceptions.
 * Fixed legacy mods using `EventHub` each having their own hub, instead of a shared one.
 

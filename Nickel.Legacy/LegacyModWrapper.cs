@@ -16,7 +16,7 @@ internal sealed class LegacyModWrapper : Mod
 {
 	internal IReadOnlySet<ILegacyManifest> LegacyManifests { get; }
 	private ICustomEventHub EventHub { get; }
-	private LegacyRegistry Registry { get; }
+	internal LegacyRegistry Registry { get; }
 
 	public LegacyModWrapper(IReadOnlySet<ILegacyManifest> legacyManifests, LegacyRegistry legacyRegistry, IDirectoryInfo directory, IModHelper helper, ILogger logger)
 	{

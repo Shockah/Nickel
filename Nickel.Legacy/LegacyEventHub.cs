@@ -7,6 +7,9 @@ namespace Nickel;
 
 internal sealed class LegacyEventHub
 {
+	internal static readonly string OnAfterGameAssemblyPhaseFinishedEvent = $"{NickelConstants.Name}::OnAfterGameAssemblyPhaseFinished";
+	internal static readonly string OnAfterDbInitPhaseFinishedEvent = $"{NickelConstants.Name}::OnAfterDbInitPhaseFinished";
+
 	/// <summary>
 	/// Similiar to volatileCustomEventLookup but with the assumption that the user can call DisconnectFromEvent function.
 	/// </summary>

@@ -1,3 +1,4 @@
+using CobaltCoreModding.Definitions.ModContactPoints;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
@@ -41,6 +42,9 @@ public sealed class ModEntry : Mod
 		this.Manifest = package.Manifest;
 		helper.Events.OnModLoadPhaseFinished += this.OnModLoadPhaseFinished;
 		helper.Events.OnLoadStringsForLocale += this.OnLoadStringsForLocale;
+
+		this.Database.GlobalEventHub.MakeEvent(logger, LegacyEventHub.OnAfterGameAssemblyPhaseFinishedEvent, typeof(Func<ILegacyManifest, IPrelaunchContactPoint>));
+		this.Database.GlobalEventHub.MakeEvent(logger, LegacyEventHub.OnAfterDbInitPhaseFinishedEvent, typeof(Func<ILegacyManifest, IPrelaunchContactPoint>));
 
 		var legacyAssemblyPluginLoader = new CallbackPluginLoader<IModManifest, Mod>(
 			loader: new ValidatingPluginLoader<IModManifest, Mod>(
@@ -90,7 +94,10 @@ public sealed class ModEntry : Mod
 			{
 				if (mod is not LegacyModWrapper legacy)
 					return;
+
 				this.Database.LegacyManifests.AddRange(legacy.LegacyManifests);
+				foreach (var manifest in legacy.LegacyManifests)
+					this.Database.LegacyManifestToMod[manifest] = legacy;
 			}
 		);
 
@@ -100,10 +107,29 @@ public sealed class ModEntry : Mod
 	[EventPriority(double.MaxValue)]
 	private void OnModLoadPhaseFinished(object? _, ModLoadPhase phase)
 	{
-		if (phase != ModLoadPhase.AfterDbInit)
-			return;
-		this.Database.AfterDbInit();
-		this.GenerateManifestsForLegacyModsMissingOne(this.Helper.ModRegistry.ModsDirectory, isRoot: true);
+		if (phase == ModLoadPhase.AfterDbInit)
+		{
+			this.Database.AfterDbInit();
+			this.GenerateManifestsForLegacyModsMissingOne(this.Helper.ModRegistry.ModsDirectory, isRoot: true);
+		}
+
+		switch (phase)
+		{
+			case ModLoadPhase.AfterGameAssembly:
+				this.Database.GlobalEventHub.SignalEvent<Func<ILegacyManifest, IPrelaunchContactPoint>>(
+					this.Logger,
+					LegacyEventHub.OnAfterGameAssemblyPhaseFinishedEvent,
+					m => this.Database.LegacyManifestToMod[m].Registry
+				);
+				break;
+			case ModLoadPhase.AfterDbInit:
+				this.Database.GlobalEventHub.SignalEvent<Func<ILegacyManifest, IPrelaunchContactPoint>>(
+					this.Logger,
+					LegacyEventHub.OnAfterDbInitPhaseFinishedEvent,
+					m => this.Database.LegacyManifestToMod[m].Registry
+				);
+				break;
+		}
 	}
 
 	[EventPriority(double.MaxValue)]
