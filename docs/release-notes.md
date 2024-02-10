@@ -2,13 +2,15 @@
 
 # Release notes
 
-## Upcoming version
+## 0.7.0
+Released 10 February 2024.
 
 * Added `Nickel::OnAfterGameAssemblyPhaseFinished` and `Nickel::OnAfterDbInitPhaseFinished` events for legacy mods' event hubs.
 * The Crystallized Friend event now grants the selected character's starter artifacts.
 * Fixed Steam achievements not working.
 * Fixed registering artifact hooks in the `AfterGameAssembly` phase throwing exceptions.
 * Fixed legacy mods using `EventHub` each having their own hub, instead of a shared one.
+* Deprecated `CharacterConfiguration.StarterCardTypes` and `CharacterConfiguration.StarterArtifactTypes` in favor of `CharacterConfiguration.Starters`.
 
 ## 0.6.1
 Released 8 February 2024.
