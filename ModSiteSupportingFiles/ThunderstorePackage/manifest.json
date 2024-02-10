@@ -1,6 +1,6 @@
 {
 	"name": "Nickel",
-	"version_number": "0.6.1",
+	"version_number": "0.7.0",
 	"website_url": "https://github.com/Shockah/Nickel",
 	"description": "A modding API / mod loader for the game Cobalt Core by Rocket Rat Games.",
 	"dependencies": []
