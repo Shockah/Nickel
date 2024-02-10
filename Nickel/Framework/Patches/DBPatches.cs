@@ -1,6 +1,7 @@
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using WeakEvent;
 
 namespace Nickel;
@@ -14,7 +15,7 @@ internal static class DBPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(DB), nameof(DB.LoadStringsForLocale))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(DB)}.{nameof(DB.LoadStringsForLocale)}`"),
-			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(DBPatches), nameof(LoadStringsForLocale_Postfix)), priority: Priority.Last)
+			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(LoadStringsForLocale_Postfix)), priority: Priority.Last)
 		);
 	}
 

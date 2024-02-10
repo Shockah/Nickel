@@ -20,12 +20,12 @@ internal static class ArtifactRewardPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(ArtifactReward), nameof(ArtifactReward.GetBlockedArtifacts))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(ArtifactReward)}.{nameof(ArtifactReward.GetBlockedArtifacts)}`"),
-			postfix: new HarmonyMethod(typeof(ArtifactRewardPatches), nameof(GetBlockedArtifacts_Postfix))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetBlockedArtifacts_Postfix))
 		);
 		harmony.Patch(
 			original: typeof(ArtifactReward).GetNestedTypes(AccessTools.all).SelectMany(t => t.GetMethods(AccessTools.all)).First(m => m.Name.StartsWith("<GetOffering>") && m.ReturnType == typeof(bool))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(ArtifactReward)}.{nameof(ArtifactReward.GetOffering)}.<Where delegate>`"),
-			transpiler: new HarmonyMethod(typeof(ArtifactRewardPatches), nameof(GetOffering_Delegate_Transpiler))
+			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetOffering_Delegate_Transpiler))
 		);
 	}
 

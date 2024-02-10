@@ -1,6 +1,7 @@
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using WeakEvent;
 
 namespace Nickel;
@@ -16,13 +17,13 @@ internal static class TTGlossaryPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(TTGlossary), nameof(TTGlossary.BuildIconAndText))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(TTGlossary)}.{nameof(TTGlossary.BuildIconAndText)}`"),
-			prefix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(TTGlossaryPatches), nameof(BuildIconAndText_Prefix))),
-			finalizer: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(TTGlossaryPatches), nameof(BuildIconAndText_Finalizer)))
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(BuildIconAndText_Prefix)),
+			finalizer: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(BuildIconAndText_Finalizer))
 		);
 		harmony.Patch(
 		   original: AccessTools.DeclaredMethod(typeof(TTGlossary), nameof(TTGlossary.TryGetIcon))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(TTGlossary)}.{nameof(TTGlossary.TryGetIcon)}`"),
-		   postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(TTGlossaryPatches), nameof(TryGetIcon_Postfix)))
+		   postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(TryGetIcon_Postfix))
 	   );
 	}
 

@@ -1,5 +1,6 @@
 using HarmonyLib;
 using System;
+using System.Reflection;
 using WeakEvent;
 
 namespace Nickel;
@@ -13,7 +14,7 @@ internal static class CardPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Card), nameof(Card.Key))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Card)}.{nameof(Card.Key)}`"),
-			postfix: new HarmonyMethod(typeof(CardPatches), nameof(Key_Postfix))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Key_Postfix))
 		);
 	}
 

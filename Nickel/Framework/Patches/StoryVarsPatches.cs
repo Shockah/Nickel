@@ -1,6 +1,7 @@
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using WeakEvent;
 
 namespace Nickel;
@@ -15,13 +16,13 @@ internal static class StoryVarsPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(StoryVars), nameof(StoryVars.GetUnlockedChars))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(StoryVars)}.{nameof(StoryVars.GetUnlockedChars)}`"),
-			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(StoryVarsPatches), nameof(GetUnlockedChars_Postfix)))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetUnlockedChars_Postfix))
 		);
 
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(StoryVars), nameof(StoryVars.GetUnlockedShips))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(StoryVars)}.{nameof(StoryVars.GetUnlockedShips)}`"),
-			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(StoryVarsPatches), nameof(GetUnlockedShips_Postfix)))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetUnlockedShips_Postfix))
 		);
 	}
 

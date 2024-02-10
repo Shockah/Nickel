@@ -1,5 +1,6 @@
 using HarmonyLib;
 using System;
+using System.Reflection;
 
 namespace Nickel;
 
@@ -10,7 +11,7 @@ internal static class GenericKeyPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(T), "Key")
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(T)}.Key`"),
-			postfix: new HarmonyMethod(typeof(CardPatches), nameof(Key_Postfix))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Key_Postfix))
 		);
 	}
 

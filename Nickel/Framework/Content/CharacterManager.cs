@@ -34,6 +34,7 @@ internal sealed class CharacterManager
 		this.AnimationManager = new(currentModLoadPhaseProvider, Inject);
 		this.CharManager = new(currentModLoadPhaseProvider, this.Inject);
 
+		EventsPatches.OnCrystallizedFriendEvent.Subscribe(this.OnCrystallizedFriendEvent);
 		StatePatches.OnModifyPotentialExeCards.Subscribe(this.OnModifyPotentialExeCards);
 		StoryVarsPatches.OnGetUnlockedChars.Subscribe(this.OnGetUnlockedChars);
 		WizardPatches.OnGetAssignableStatuses.Subscribe(this.OnGetAssignableStatuses);
@@ -226,6 +227,29 @@ internal sealed class CharacterManager
 		{
 			var characterName = deckEntry.Configuration.Name?.Invoke(locale);
 			localizations[$"char.{entry.Configuration.Deck}.desc.missing"] = $"<c={deckEntry.Configuration.Definition.color}>{characterName?.ToUpper()}..?</c>\n{characterName} is missing.";
+		}
+	}
+
+	private void OnCrystallizedFriendEvent(object? _, List<Choice> choices)
+	{
+		foreach (var choice in choices)
+		{
+			var addCharacterIndex = choice.actions.FindIndex(a => a is AAddCharacter);
+			if (addCharacterIndex == -1)
+				continue;
+
+			var addCharacter = (AAddCharacter)choice.actions[addCharacterIndex];
+			if (!StarterDeck.starterSets.TryGetValue(addCharacter.deck, out var starter))
+				continue;
+
+			choice.actions.InsertRange(
+				addCharacterIndex + 1,
+				starter.artifacts.Select(a => Mutil.DeepCopy(a)).Select(a => new AAddArtifact
+				{
+					artifact = a,
+					timer = 0
+				})
+			);
 		}
 	}
 

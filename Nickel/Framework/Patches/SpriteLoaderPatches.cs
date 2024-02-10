@@ -1,6 +1,7 @@
 using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Reflection;
 using WeakEvent;
 
 namespace Nickel;
@@ -14,7 +15,7 @@ internal static class SpriteLoaderPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(SpriteLoader), nameof(SpriteLoader.Get))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(SpriteLoader)}.{nameof(SpriteLoader.Get)}`"),
-			prefix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(SpriteLoaderPatches), nameof(Get_Prefix)), priority: Priority.Last)
+			prefix: new HarmonyMethod(AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Get_Prefix)), priority: Priority.Last)
 		);
 	}
 

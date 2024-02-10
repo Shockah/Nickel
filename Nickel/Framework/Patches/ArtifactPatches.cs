@@ -1,5 +1,6 @@
 using HarmonyLib;
 using System;
+using System.Reflection;
 using WeakEvent;
 
 namespace Nickel;
@@ -13,7 +14,7 @@ internal static class ArtifactPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Artifact), nameof(Artifact.Key))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Artifact)}.{nameof(Artifact.Key)}`"),
-			postfix: new HarmonyMethod(typeof(ArtifactPatches), nameof(Key_Postfix))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Key_Postfix))
 		);
 	}
 

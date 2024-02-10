@@ -19,7 +19,7 @@ internal static class ProgramPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Program), nameof(Program.TryInitSteam))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Program)}.{nameof(Program.TryInitSteam)}`"),
-			transpiler: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(ProgramPatches), nameof(TryInitSteam_Transpiler)))
+			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(TryInitSteam_Transpiler))
 		);
 	}
 

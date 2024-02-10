@@ -23,23 +23,23 @@ internal static class StatePatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.EnumerateAllArtifacts))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.EnumerateAllArtifacts)}`"),
-			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(StatePatches), nameof(EnumerateAllArtifacts_Postfix)), priority: Priority.Last)
+			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(EnumerateAllArtifacts_Postfix)), priority: Priority.Last)
 		);
 		harmony.Patch(
 			original: typeof(State).GetNestedTypes(AccessTools.all).SelectMany(t => t.GetMethods(AccessTools.all)).First(m => m.Name.StartsWith("<PopulateRun>") && m.ReturnType == typeof(Route))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.<compiler-generated-type>.<PopulateRun>`"),
-			transpiler: new HarmonyMethod(typeof(StatePatches), nameof(State_PopulateRun_Delegate_Transpiler))
+			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(State_PopulateRun_Delegate_Transpiler))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.SaveIfRelease))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.SaveIfRelease)}`"),
-			prefix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(StatePatches), nameof(SaveIfRelease_Prefix))),
-			postfix: saveInDebug ? new HarmonyMethod(AccessTools.DeclaredMethod(typeof(StatePatches), nameof(SaveIfRelease_Postfix))) : null
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(SaveIfRelease_Prefix)),
+			postfix: saveInDebug ? new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(SaveIfRelease_Postfix)) : null
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.Load))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.Load)}`"),
-			postfix: new HarmonyMethod(typeof(StatePatches), nameof(Load_Postfix))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Load_Postfix))
 		);
 	}
 

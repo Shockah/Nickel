@@ -1,6 +1,7 @@
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Linq;
+using System.Reflection;
 
 namespace Nickel;
 
@@ -21,8 +22,8 @@ internal static class HarmonyPatches
 
 			harmony.Patch(
 				original: originalMethod,
-				prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PatchFunctions_UpdateWrapper_Prefix)),
-				postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PatchFunctions_UpdateWrapper_Postfix))
+				prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(PatchFunctions_UpdateWrapper_Prefix)),
+				postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(PatchFunctions_UpdateWrapper_Postfix))
 			);
 		}
 
@@ -37,7 +38,7 @@ internal static class HarmonyPatches
 
 			harmony.Patch(
 				original: originalMethod,
-				prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(MethodPatcher_CreateDynamicMethod_Prefix))
+				prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(MethodPatcher_CreateDynamicMethod_Prefix))
 			);
 		}
 

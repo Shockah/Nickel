@@ -1,5 +1,6 @@
 using HarmonyLib;
 using System;
+using System.Reflection;
 
 namespace Nickel;
 
@@ -10,7 +11,7 @@ internal static class GPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(G), nameof(G.LoadSavegameOnStartup))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(G)}.{nameof(G.LoadSavegameOnStartup)}`"),
-			prefix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(GPatches), nameof(LoadSavegameOnStartup_Prefix)), priority: Priority.First)
+			prefix: new HarmonyMethod(AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(LoadSavegameOnStartup_Prefix)), priority: Priority.First)
 		);
 	}
 

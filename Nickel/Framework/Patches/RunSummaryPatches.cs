@@ -1,5 +1,6 @@
 using HarmonyLib;
 using System;
+using System.Reflection;
 
 namespace Nickel;
 
@@ -12,8 +13,8 @@ internal static class RunSummaryPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(RunSummary), nameof(RunSummary.SaveFromState))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(RunSummary)}.{nameof(RunSummary.SaveFromState)}`"),
-			prefix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(RunSummaryPatches), nameof(SaveFromState_Prefix))),
-			finalizer: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(RunSummaryPatches), nameof(SaveFromState_Finalizer)))
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(SaveFromState_Prefix)),
+			finalizer: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(SaveFromState_Finalizer))
 		);
 	}
 

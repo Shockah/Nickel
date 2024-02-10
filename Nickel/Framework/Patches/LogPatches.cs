@@ -1,5 +1,6 @@
 using HarmonyLib;
 using System;
+using System.Reflection;
 using WeakEvent;
 
 namespace Nickel;
@@ -13,7 +14,7 @@ internal static class LogPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Log), nameof(Log.Line))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Log)}.{nameof(Log.Line)}`"),
-			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(LogPatches), nameof(Line_Postfix)))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Line_Postfix))
 		);
 	}
 
