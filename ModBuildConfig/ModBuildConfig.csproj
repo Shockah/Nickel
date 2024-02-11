@@ -23,7 +23,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.11" PrivateAssets="all" />
 		<PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" PrivateAssets="none" />
-		<PackageReference Include="Fayti1703.AssemblyTasks" Version="1.0.0" PrivateAssets="none" />
+		<PackageReference Include="Fayti1703.AssemblyTasks" Version="1.1.0" PrivateAssets="none" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="$(MSBuildProjectDirectory)\..\.editorconfig" Link=".editorconfig" />
