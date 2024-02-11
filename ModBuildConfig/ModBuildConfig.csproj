@@ -10,6 +10,7 @@
 		<WarningsAsErrors>Nullable</WarningsAsErrors>
 		<CheckEolTargetFramework>false</CheckEolTargetFramework>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<NoWarn>NU5128</NoWarn>
 	</PropertyGroup>
 	<PropertyGroup>
 		<PackageId>Nickel.ModBuildConfig</PackageId>
