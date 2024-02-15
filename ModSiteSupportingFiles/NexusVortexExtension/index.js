@@ -4,27 +4,28 @@ const STEAMAPP_ID = '2179850';
 const path = require('path');
 const { fs, log, util } = require('vortex-api');
 
-function findGame() {
-	return util.GameStoreHelper.findByAppId([STEAMAPP_ID]).then(game => game.gamePath);
+async function findGame() {
+	const game = await util.GameStoreHelper.findByAppId([STEAMAPP_ID]);
+	return game.gamePath;
 }
 
-function prepareForModding(discovery) {
-	return fs.ensureDirWritableAsync(path.join(discovery.path, 'Nickel', 'ModLibrary'));
+async function prepareForModding(discovery) {
+	return await fs.ensureDirWritableAsync(path.join(discovery.path, 'Nickel', 'ModLibrary'));
 }
 
-function testSupportedContent(files, gameId) {
-	return Promise.resolve({
+async function testSupportedContent(files, gameId) {
+	return {
 		supported: gameId === GAME_ID && files.find(file => path.basename(file) === 'nickel.json') !== undefined,
 		requiredFiles: []
-	});
+	};
 }
 
-function installContent(files) {
+async function installContent(files) {
 	const manifestFile = files.find(file => path.basename(file) === 'nickel.json');
 	const idx = manifestFile.indexOf(path.basename(manifestFile));
 	const rootPath = path.dirname(manifestFile);
 
-	return Promise.resolve({
+	return {
 		instructions: files
 			.filter(file => file.indexOf(rootPath) !== -1)
 			.map(file => {
@@ -34,7 +35,7 @@ function installContent(files) {
 					destination: path.join(file.substr(idx))
 				}
 			})
-	});
+	};
 }
 
 function main(context) {
