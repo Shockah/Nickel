@@ -9,8 +9,29 @@ async function findGame() {
 	return game.gamePath;
 }
 
-async function prepareForModding(discovery) {
-	return await fs.ensureDirWritableAsync(path.join(discovery.path, 'Nickel', 'ModLibrary'));
+const NICKEL_URL = "https://www.nexusmods.com/cobaltcore/mods/1";
+
+async function prepareForModding(discovery, context) {
+	await fs.ensureDirWritableAsync(path.join(discovery.path, 'Nickel', 'ModLibrary'));
+	const nickelLauncherPath = path.join(discovery.path, "Nickel", "NickelLauncher.exe");
+	try {
+		await fs.statAsync(nickelLauncherPath)
+	} catch (e) {
+		log("warn", "Caught error while looking for Nickel: (" + e.code + "): " + e.message);
+		if(e.code === "ENOENT") {
+			context.api.sendNotification({
+				id: "nickel-missing",
+				type: "warning",
+				title: "Nickel is not installed",
+				message: "The Nickel ModLoader is required to mod Cobalt Core.",
+				actions: [
+					{ title: "Get Nickel", action: () => util.opn(NICKEL_URL) }
+				]
+			})
+		} else {
+			throw e;
+		}
+	}
 }
 
 async function testSupportedContent(files, gameId) {
@@ -49,10 +70,9 @@ function main(context) {
 		logo: 'gameart.jpg',
 		executable: () => 'Nickel/NickelLauncher.exe',
 		requiredFiles: [
-			'Nickel/NickelLauncher.exe',
 			'CobaltCore.exe',
 		],
-		setup: prepareForModding,
+		setup: (discovery) => prepareForModding(discovery, context),
 		environment: {
 			SteamAPPId: STEAMAPP_ID,
 		},
