@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Improved `Nickel.ModBuildConfig` NuGet package, which should hopefully fix any issues with extracting the `CobaltCore.dll` file from the `CobaltCore.exe` file provided by the game.
+
 ## 0.7.0
 Released 10 February 2024.
 

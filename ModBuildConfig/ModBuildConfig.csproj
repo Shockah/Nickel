@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<RootNamespace>Nickel.ModBuildConfig</RootNamespace>
 		<!-- TODO: Use proper versioning after Nickel is 1.0.0 -->
-		<Version>0.5.0-alpha1</Version>
+		<Version>0.8.0-alpha1</Version>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<LangVersion>12.0</LangVersion>
 		<ImplicitUsings>disable</ImplicitUsings>
@@ -29,7 +29,7 @@
 	<ItemGroup>
 		<None Include="$(MSBuildProjectDirectory)\..\.editorconfig" Link=".editorconfig" />
 		<None Remove="$(MSBuildProjectDirectory)\.release\**" />
-		<None Include="..\README.md" PackagePath="\" Pack="True" />
+		<None Include="..\docs\README.md" PackagePath="\" Pack="True" />
 		<None Include="..\LICENSE" PackagePath="\" Pack="True" />
 		<None Include="build\package.targets" PackagePath="build\$(PackageId).targets" Pack="True" />
 		<None Include="$(OutputPath)\$(AssemblyName).dll" PackagePath="build\$(PackageId).dll" Pack="True" Visible="True" />
