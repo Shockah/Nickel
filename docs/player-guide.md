@@ -8,7 +8,7 @@ Note: Nickel requires Windows 10+.
 
 1. Download the [latest version of Nickel](https://github.com/Shockah/Nickel/releases/latest).
 2. Extract the `.zip` file in the place where you would like to store Nickel (and by default also the mods, save files and logs).
-	* While the actual place you extract to does not matter for playing mods, it is recommended to extract either to the game's Steam folder (`C:\Program Files\Steam\steamapps\common\Cobalt Core` by default) or to the game's application data folder (`%appdata%\CobaltCore`). This will help when debugging any potential issues, and will also help when creating mods of your own.
+	* While the actual place you extract to does not matter for playing mods, it is recommended to extract to the game's Steam folder (`C:\Program Files\Steam\steamapps\common\Cobalt Core` by default). This will help when debugging any potential issues, and will also help when creating mods of your own. Additionally, this is the path where the [Vortex mod manager for NexusMods](https://www.nexusmods.com/about/vortex/) will look for Nickel to be installed. Alternatively, if you are not interested in using Vortex, the game's application data folder (`%appdata%\CobaltCore`) is also a good spot for installing Nickel.
 3. Open the extracted Nickel folder.
 4. Double-click `NickelLauncher.exe` to start Nickel to let it do its initial setup.
 	* While it is unlikely, if `NickelLauncher.exe` happens to not work, you can alternatively try running `Nickel.exe` instead, but doing so will reduce some of the Nickel's logging capabilities.
