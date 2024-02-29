@@ -56,7 +56,7 @@ internal class CardTraitManager
 	private void OnGetCardTooltips(object? sender, CardPatches.TooltipsEventArgs e) =>
 		e.TooltipsEnumerator = e.TooltipsEnumerator.Concat(
 			this.GetCustomTraitEntriesFor(e.Card, e.State)
-			.Select(x => x.Configuration.TooltipProvider?.Invoke(e.Card))
+			.Select(x => x.Configuration.TooltipProvider?.Invoke(e.State, e.Card))
 			.OfType<TTGlossary>()
 		);
 
