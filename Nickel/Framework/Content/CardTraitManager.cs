@@ -48,7 +48,7 @@ internal class CardTraitManager
 	{
 		var index = e.CardTraitIndex;
 		foreach(var traitEntry in this.GetCustomTraitEntriesFor(e.Card, e.State)) {
-			Draw.Sprite(traitEntry.Configuration.Icon, e.Position.x, e.Position.y - 8 * index++);
+			Draw.Sprite(traitEntry.Configuration.IconProvider(e.State, e.Card), e.Position.x, e.Position.y - 8 * index++);
 		}
 		e.CardTraitIndex = index;
 	}
@@ -87,7 +87,7 @@ internal class CardTraitManager
 				data = new Entry(
 					this.VanillaModManifest,
 					name,
-					new CardTraitConfiguration { Icon = Enum.Parse<Spr>("icons_" + name), Name = null, TooltipProvider = null }
+					new CardTraitConfiguration { IconProvider = (_, _) => Enum.Parse<Spr>("icons_" + name), Name = null, TooltipProvider = null }
 				),
 				getValue = getValue,
 				setOverride = setOverride,
