@@ -124,6 +124,33 @@ internal class CardTraitManager
 		return false;
 	}
 
+	public IReadOnlySet<string> GetCardCurrentTraits(State state, Card card)
+	{
+		var currentTraits = card is IHasCustomCardTraits hasCustomTraits ?
+			hasCustomTraits.GetInnateTraits(state).ToHashSet() :
+			[]
+		;
+
+		foreach(var (uniqueName, entry) in this.GetOverrideEntriesFor(card))
+		{
+			if(entry.overrideValue)
+				currentTraits.Add(uniqueName);
+			else
+				currentTraits.Remove(uniqueName);
+		}
+
+		var cardData = card.GetDataWithOverrides(state);
+		foreach(var (key, value) in this.SynthesizedVanillaEntries.Value)
+		{
+			if(value.getValue(cardData))
+				currentTraits.Add(key);
+			else
+				currentTraits.Remove(key);
+		}
+
+		return currentTraits;
+	}
+
 	public void AddCardTraitOverride(Card card, string uniqueName, bool overrideValue, bool isPermanent)
 	{
 		if (this.SynthesizedVanillaEntries.Value.TryGetValue(uniqueName, out var vanillaEntry))

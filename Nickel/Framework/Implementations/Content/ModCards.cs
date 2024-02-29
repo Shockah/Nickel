@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Nickel;
 
@@ -38,6 +39,9 @@ internal sealed class ModCards : IModCards
 
 	public bool GetCardHasTrait(State state, Card card, string uniqueName) =>
 		this.CardTraitManagerProvider().GetCardHasTrait(state, card, uniqueName);
+
+	public IReadOnlySet<string> GetCardCurrentTraits(State state, Card card) =>
+		this.CardTraitManagerProvider().GetCardCurrentTraits(state, card);
 
 	public void AddCardTraitOverride(Card card, string uniqueName, bool overrideValue, bool isPermanent = false) =>
 		this.CardTraitManagerProvider().AddCardTraitOverride(card, uniqueName, overrideValue, isPermanent);

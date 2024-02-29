@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Nickel;
 
@@ -13,5 +14,6 @@ public interface IModCards
 	ICardTraitEntry RegisterTrait(string name, CardTraitConfiguration configuration);
 	public bool GetCardHasTrait(State state, Card card, ICardTraitEntry trait);
 	public bool GetCardHasTrait(State state, Card card, string uniqueName);
+	public IReadOnlySet<string> GetCardCurrentTraits(State state, Card card);
 	public void AddCardTraitOverride(Card card, string uniqueName, bool overrideValue, bool isPermanent = false);
 }
