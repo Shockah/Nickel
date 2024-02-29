@@ -57,7 +57,7 @@ internal class CardTraitManager
 		e.TooltipsEnumerator = e.TooltipsEnumerator.Concat(
 			this.GetCustomTraitEntriesFor(e.Card, e.State)
 			.Select(x => x.Configuration.TooltipProvider?.Invoke(e.State, e.Card))
-			.OfType<TTGlossary>()
+			.OfType<Tooltip>()
 		);
 
 	public ICardTraitEntry? LookupByUniqueName(string uniqueName)
