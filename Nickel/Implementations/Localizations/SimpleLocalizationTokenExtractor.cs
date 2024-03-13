@@ -5,6 +5,7 @@ namespace Nickel;
 
 public sealed class SimpleLocalizationTokenExtractor : ILocalizationTokenExtractor<string>
 {
+	/// <inheritdoc/>
 	public IReadOnlyDictionary<string, string> ExtractTokens(object? @object)
 	{
 		Dictionary<string, string> results = new();

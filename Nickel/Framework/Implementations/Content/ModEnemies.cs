@@ -13,8 +13,8 @@ internal sealed class ModEnemies : IModEnemies
 		this.EnemyManagerProvider = enemyManagerProvider;
 	}
 
-	public IEnemyEntry? LookupByEnemyType(Type artifactType)
-		=> this.EnemyManagerProvider().LookupByEnemyType(artifactType);
+	public IEnemyEntry? LookupByEnemyType(Type enemyType)
+		=> this.EnemyManagerProvider().LookupByEnemyType(enemyType);
 
 	public IEnemyEntry? LookupByUniqueName(string uniqueName)
 		=> this.EnemyManagerProvider().LookupByUniqueName(uniqueName);

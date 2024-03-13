@@ -2,13 +2,30 @@ using System;
 
 namespace Nickel.Common;
 
+/// <summary>
+/// Describes a <a href="https://semver.org">Semantic Version</a> with an optional prerelease tag.
+/// </summary>
 public readonly struct SemanticVersion : IEquatable<SemanticVersion>, IComparable<SemanticVersion>
 {
+	/// <summary>The major version.</summary>
 	public int MajorVersion { get; init; }
+
+	/// <summary>The minor version.</summary>
 	public int MinorVersion { get; init; }
+
+	/// <summary>The patch version.</summary>
 	public int PatchVersion { get; init; }
+
+	/// <summary>The optional prerelease tag.</summary>
 	public string? PrereleaseTag { get; init; }
 
+	/// <summary>
+	/// Creates a new <see cref="SemanticVersion"/>.
+	/// </summary>
+	/// <param name="majorVersion">The major version.</param>
+	/// <param name="minorVersion">The minor version.</param>
+	/// <param name="patchVersion">>The patch version.</param>
+	/// <param name="prereleaseTag">The optional prerelease tag.</param>
 	public SemanticVersion(int majorVersion = 1, int minorVersion = 0, int patchVersion = 0, string? prereleaseTag = null)
 	{
 		this.MajorVersion = majorVersion;
@@ -17,6 +34,7 @@ public readonly struct SemanticVersion : IEquatable<SemanticVersion>, IComparabl
 		this.PrereleaseTag = prereleaseTag;
 	}
 
+	/// <inheritdoc/>
 	public override string ToString()
 	{
 		var version = $"{this.MajorVersion}.{this.MinorVersion}.{this.PatchVersion}";
@@ -25,15 +43,19 @@ public readonly struct SemanticVersion : IEquatable<SemanticVersion>, IComparabl
 		return version;
 	}
 
+	/// <inheritdoc/>
 	public bool Equals(SemanticVersion other)
 		=> this.MajorVersion == other.MajorVersion && this.MinorVersion == other.MinorVersion && this.PatchVersion == other.PatchVersion && Equals(this.PrereleaseTag, other.PrereleaseTag);
 
+	/// <inheritdoc/>
 	public override bool Equals(object? obj)
 		=> obj is SemanticVersion version && this.Equals(version);
 
+	/// <inheritdoc/>
 	public override int GetHashCode()
 		=> (this.MajorVersion, this.MinorVersion, this.PatchVersion, this.PrereleaseTag).GetHashCode();
 
+	/// <inheritdoc/>
 	public int CompareTo(SemanticVersion other)
 	{
 		if (this.MajorVersion != other.MajorVersion)

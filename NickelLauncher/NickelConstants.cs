@@ -13,5 +13,5 @@ internal static class NickelConstants
 
 	public static string Name { get; } = "Nickel";
 	public static SemanticVersion Version => LazyVersion.Value;
-	public static string IntroMessage { get; } = $"{Name} {Version} launcher -- A modding API / modloader for the game Cobalt Core.";
+	public static string IntroMessage { get; } = $"{Name} {Version} launcher -- A modding API / mod loader for the game Cobalt Core.";
 }

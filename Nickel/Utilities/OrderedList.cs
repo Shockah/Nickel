@@ -6,6 +6,12 @@ using System.Linq;
 
 namespace Nickel;
 
+/// <summary>
+/// Represents a list of elements that is always being kept ordered by a related comparable value.
+/// The list can be accessed by index for reading purposes.
+/// </summary>
+/// <typeparam name="TElement">The type of elements in the list.</typeparam>
+/// <typeparam name="TOrderingValue">The related comparable value used for ordering purposes.</typeparam>
 public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TElement> where TOrderingValue : IComparable<TOrderingValue>
 {
 	public record struct Entry(

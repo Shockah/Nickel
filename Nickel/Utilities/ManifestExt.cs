@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Nickel;
 
-public static partial class ManifestExt
+public static class ManifestExt
 {
 	public static OneOf<IAssemblyModManifest, Error<string>> AsAssemblyModManifest(this IModManifest manifest)
 	{

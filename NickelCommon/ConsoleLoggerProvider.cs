@@ -4,8 +4,15 @@ using System.IO;
 
 namespace Nickel;
 
+/// <summary>
+/// An <see cref="ILoggerProvider"/> implementation which logs messages to the console.
+/// </summary>
+/// <param name="level">The minimum log level to log. Messages at lower levels will be discarded.</param>
+/// <param name="textWriter">The console <see cref="TextWriter"/> to log messages to.</param>
+/// <param name="disposeWriter">Whether the <c>textWriter</c> should be disposed when this provider is disposed.</param>
 public sealed class ConsoleLoggerProvider(LogLevel level, TextWriter textWriter, bool disposeWriter) : ILoggerProvider
 {
+	/// <inheritdoc/>
 	public void Dispose()
 	{
 		textWriter.Flush();
@@ -13,6 +20,7 @@ public sealed class ConsoleLoggerProvider(LogLevel level, TextWriter textWriter,
 			textWriter.Dispose();
 	}
 
+	/// <inheritdoc/>
 	public ILogger CreateLogger(string categoryName) =>
 		new Logger(this, level, textWriter, categoryName);
 

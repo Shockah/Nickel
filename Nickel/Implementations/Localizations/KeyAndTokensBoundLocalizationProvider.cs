@@ -10,6 +10,7 @@ public sealed class KeyAndTokensBoundLocalizationProvider<TKey>(
 	private TKey Key { get; } = key;
 	private object? Tokens { get; } = tokens;
 
+	/// <inheritdoc/>
 	public string? Localize(string locale)
 		=> this.Provider.Localize(locale, this.Key, this.Tokens);
 }

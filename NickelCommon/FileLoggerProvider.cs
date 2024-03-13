@@ -6,8 +6,20 @@ using System.Text;
 
 namespace Nickel;
 
+/// <summary>
+/// An <see cref="ILoggerProvider"/> implementation which logs messages to files.
+/// </summary>
+/// <param name="level">The minimum log level to log. Messages at lower levels will be discarded.</param>
+/// <param name="filePath">The file to log messages to.</param>
 public sealed class FileLoggerProvider(LogLevel level, string filePath) : ILoggerProvider
 {
+	/// <summary>
+	/// Creates a <see cref="FileLoggerProvider"/> which keeps rolling logs.
+	/// </summary>
+	/// <param name="level">The minimum log level to log. Messages at lower levels will be discarded.</param>
+	/// <param name="directoryInfo">The directory that will store the log files.</param>
+	/// <param name="timestampedLogFiles">Whether the log file names should contain the current timestamp. If <c>false</c>, will only use two log files (current and previous).</param>
+	/// <returns></returns>
 	public static FileLoggerProvider CreateNewLog(LogLevel level, DirectoryInfo directoryInfo, bool timestampedLogFiles)
 	{
 		if (timestampedLogFiles)
@@ -40,12 +52,14 @@ public sealed class FileLoggerProvider(LogLevel level, string filePath) : ILogge
 	)
 	{ AutoFlush = true };
 
+	/// <inheritdoc/>
 	public void Dispose()
 	{
 		this.StreamWriter.Flush();
 		this.StreamWriter.Dispose();
 	}
 
+	/// <inheritdoc/>
 	public ILogger CreateLogger(string categoryName) =>
 		new Logger(
 			level,

@@ -8,6 +8,12 @@ using System.Text.RegularExpressions;
 
 namespace Nickel;
 
+/// <summary>
+/// A localization provider which returns data from JSON files.
+/// </summary>
+/// <param name="tokenExtractor">A token extractor to use for replacing tokens in localized strings.</param>
+/// <param name="localeStreamFunction">A function that returns a <see cref="Stream"/> to a JSON file for the given locale.</param>
+/// <param name="serializer">The JSON serializer to use for deserializing.</param>
 public sealed partial class JsonLocalizationProvider(
 	ILocalizationTokenExtractor<string> tokenExtractor,
 	Func<string, Stream> localeStreamFunction,
@@ -20,6 +26,7 @@ public sealed partial class JsonLocalizationProvider(
 
 	private Dictionary<string, JObject> LocalizationCache { get; } = [];
 
+	/// <inheritdoc/>
 	public string? Localize(string locale, IReadOnlyList<string> key, object? tokens = null)
 	{
 		var localization = this.GetLocalization(locale);

@@ -3,8 +3,17 @@ using System.Reflection;
 
 namespace Nickel.Common;
 
+/// <summary>
+/// A class providing the functionality of parsing <see cref="SemanticVersion"/> values from strings.
+/// </summary>
 public static class SemanticVersionParser
 {
+	/// <summary>
+	/// Attemps to parse an <see cref="Assembly"/>'s version into a <see cref="SemanticVersion"/>.
+	/// </summary>
+	/// <param name="assembly">The assembly to parse the version of.</param>
+	/// <param name="version">The result, if succeeded.</param>
+	/// <returns>Whether parsing was successful.</returns>
 	public static bool TryParseForAssembly(Assembly assembly, out SemanticVersion version)
 	{
 		if (assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>() is not { } attribute)
@@ -15,6 +24,12 @@ public static class SemanticVersionParser
 		return TryParse(attribute.InformationalVersion.Split("+")[0], out version);
 	}
 
+	/// <summary>
+	/// Attempts to parse a given string as a <see cref="SemanticVersion"/> value.
+	/// </summary>
+	/// <param name="versionStr">The string to parse.</param>
+	/// <param name="version">The result, if succeeded.</param>
+	/// <returns>Whether parsing was successful.</returns>
 	public static bool TryParse(string? versionStr, out SemanticVersion version)
 	{
 		version = default;

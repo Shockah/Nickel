@@ -2,17 +2,37 @@ using System.Text;
 
 namespace Nickel;
 
+/// <summary>
+/// A tooltip, mimicking one that would be used for a game glossary.
+/// </summary>
+/// <param name="key">The key used for deduplicating tooltips - if two tooltips have the same key, only the first one will be rendered.</param>
 public sealed class GlossaryTooltip(string key) : TTGlossary(key)
 {
+	/// <summary>The icon to show next to the title. If a title is not provided, this icon will not show.</summary>
 	public Spr? Icon = null;
+	
+	/// <summary>The color for the icon. If provided, the icon's texture is multiplied by this color.</summary>
 	public Color? IconColor = null;
+	
+	/// <summary>The color for the title text.</summary>
 	public Color? TitleColor = null;
+	
+	/// <summary>The title. If not provided, the icon (<see cref="Icon"/>) will not show.</summary>
 	public string? Title = null;
+	
+	/// <summary>The description.</summary>
 	public string? Description = null;
+	
+	/// <summary>Whether the provided icon is wide - double the width (18 px) than usual (9 px). This setting offsets the title to make space for the wide icon.</summary>
 	public bool IsWideIcon = false;
+	
+	/// <summary>Whether the icon should be flipped horizontally.</summary>
 	public bool FlipIconX = false;
+	
+	/// <summary>Whether the icon should be flipped vertically.</summary>
 	public bool FlipIconY = false;
 
+	/// <inheritdoc/>
 	public override Rect Render(G g, bool dontDraw)
 	{
 		var sb = new StringBuilder();
