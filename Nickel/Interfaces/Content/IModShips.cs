@@ -1,5 +1,9 @@
 namespace Nickel;
 
+/// <summary>
+/// A mod-specific ship registry.
+/// Allows looking up and registering ships and ship parts.
+/// </summary>
 public interface IModShips
 {
 	IShipEntry? LookupByUniqueName(string uniqueName);

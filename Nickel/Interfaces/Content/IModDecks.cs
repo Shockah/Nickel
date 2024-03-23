@@ -1,5 +1,9 @@
 namespace Nickel;
 
+/// <summary>
+/// A mod-specific deck registry.
+/// Allows looking up and registering decks.
+/// </summary>
 public interface IModDecks
 {
 	IDeckEntry? LookupByDeck(Deck deck);

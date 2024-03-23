@@ -1,5 +1,9 @@
 namespace Nickel;
 
+/// <summary>
+/// A mod-specific character registry.
+/// Allows looking up and registering characters.
+/// </summary>
 public interface IModCharacters
 {
 	ICharacterAnimationEntry RegisterCharacterAnimation(CharacterAnimationConfiguration configuration);

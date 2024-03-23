@@ -2,6 +2,10 @@ using System;
 
 namespace Nickel;
 
+/// <summary>
+/// A mod-specific card registry.
+/// Allows looking up and registering cards.
+/// </summary>
 public interface IModCards
 {
 	ICardEntry? LookupByCardType(Type cardType);
