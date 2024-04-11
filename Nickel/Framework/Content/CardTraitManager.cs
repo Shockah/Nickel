@@ -38,6 +38,7 @@ internal class CardTraitManager
 		this.SynthesizedVanillaEntries = new(this.SynthesizeVanillaEntries);
 		CardPatches.OnGetTooltips.Subscribe(this, this.OnGetCardTooltips);
 		CardPatches.OnRenderTraits.Subscribe(this, this.OnRenderTraits);
+		CombatPatches.OnReturnCardsToDeck.Subscribe(this, this.OnReturnCardsToDeck);
 	}
 
 	private IEnumerable<ICardTraitEntry> GetCustomTraitEntriesFor(Card card, State state) =>
@@ -59,6 +60,23 @@ internal class CardTraitManager
 			.Select(x => x.Configuration.Tooltip?.Invoke(e.State, e.Card))
 			.OfType<Tooltip>()
 		);
+
+	private void OnReturnCardsToDeck(object? sender, CombatPatches.ReturnCardsToDeckEventArgs e)
+	{
+		foreach(var card in e.State.deck)
+		{
+			if (!this.ModDataManager.TryGetModData<Dictionary<string, TraitOverrideEntry>>(
+				this.ModManagerModManifest,
+				card,
+				"CustomTraitOverrides",
+				out var overrides)
+			) continue;
+
+			var toRemove = overrides.Where(x => !x.Value.overrideIsPermanent).Select(x => x.Key).ToArray();
+			foreach (var key in toRemove)
+				overrides.Remove(key);
+		}
+	}
 
 	public ICardTraitEntry? LookupByUniqueName(string uniqueName)
 	{
