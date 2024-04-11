@@ -1,11 +1,11 @@
 using HarmonyLib;
-using System;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
 using WeakEvent;
 
 namespace Nickel;
@@ -95,7 +95,6 @@ internal static class CardPatches
 		OnGetTooltips.Raise(null, eventArgs);
 		__result = eventArgs.TooltipsEnumerator;
 	}
-
 
 	internal sealed class KeyEventArgs
 	{

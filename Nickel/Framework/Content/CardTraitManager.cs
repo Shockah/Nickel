@@ -48,7 +48,8 @@ internal class CardTraitManager
 	private void OnRenderTraits(object? sender, CardPatches.TraitRenderEventArgs e)
 	{
 		var index = e.CardTraitIndex;
-		foreach(var traitEntry in this.GetCustomTraitEntriesFor(e.Card, e.State)) {
+		foreach (var traitEntry in this.GetCustomTraitEntriesFor(e.Card, e.State))
+		{
 			Draw.Sprite(traitEntry.Configuration.Icon(e.State, e.Card), e.Position.x, e.Position.y - 8 * index++);
 		}
 		e.CardTraitIndex = index;
@@ -63,7 +64,7 @@ internal class CardTraitManager
 
 	private void OnReturnCardsToDeck(object? sender, CombatPatches.ReturnCardsToDeckEventArgs e)
 	{
-		foreach(var card in e.State.deck)
+		foreach (var card in e.State.deck)
 		{
 			if (!this.ModDataManager.TryGetModData<Dictionary<string, TraitOverrideEntry>>(
 				this.ModManagerModManifest,
@@ -101,7 +102,8 @@ internal class CardTraitManager
 	{
 		KeyValuePair<string, VanillaEntry> SynthesizeEntry(string name, Func<CardData, bool> getValue, Action<Card, bool> setOverride, Action<Card> setPermanent)
 		{
-			return new KeyValuePair<string, VanillaEntry>(name, new VanillaEntry {
+			return new KeyValuePair<string, VanillaEntry>(name, new VanillaEntry
+			{
 				data = new Entry(
 					this.VanillaModManifest,
 					name,
@@ -149,18 +151,18 @@ internal class CardTraitManager
 			[]
 		;
 
-		foreach(var (uniqueName, entry) in this.GetOverrideEntriesFor(card))
+		foreach (var (uniqueName, entry) in this.GetOverrideEntriesFor(card))
 		{
-			if(entry.overrideValue)
+			if (entry.overrideValue)
 				currentTraits.Add(uniqueName);
 			else
 				currentTraits.Remove(uniqueName);
 		}
 
 		var cardData = card.GetDataWithOverrides(state);
-		foreach(var (key, value) in this.SynthesizedVanillaEntries.Value)
+		foreach (var (key, value) in this.SynthesizedVanillaEntries.Value)
 		{
-			if(value.getValue(cardData))
+			if (value.getValue(cardData))
 				currentTraits.Add(key);
 			else
 				currentTraits.Remove(key);
@@ -194,11 +196,11 @@ internal class CardTraitManager
 	{
 		HashSet<string> customTraits;
 		if (card is IHasCustomCardTraits hasCustomTraits)
-			customTraits = [..hasCustomTraits.GetInnateTraits(state)];
+			customTraits = [.. hasCustomTraits.GetInnateTraits(state)];
 		else
 			customTraits = [];
 
-		foreach(var (uniqueName, entry) in this.GetOverrideEntriesFor(card))
+		foreach (var (uniqueName, entry) in this.GetOverrideEntriesFor(card))
 		{
 			if (entry.overrideValue)
 				customTraits.Add(uniqueName);
