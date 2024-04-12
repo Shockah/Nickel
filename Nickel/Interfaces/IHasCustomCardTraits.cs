@@ -4,5 +4,5 @@ namespace Nickel;
 
 public interface IHasCustomCardTraits
 {
-	public IReadOnlySet<string> GetInnateTraits(State state);
+	public IReadOnlySet<ICardTraitEntry> GetInnateTraits(State state);
 }

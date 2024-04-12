@@ -17,7 +17,6 @@ internal sealed class ContentManager
 	public CharacterManager Characters { get; }
 	public PartManager Parts { get; }
 	public ShipManager Ships { get; }
-
 	public CardTraitManager CardTraits { get; }
 
 	public ContentManager(

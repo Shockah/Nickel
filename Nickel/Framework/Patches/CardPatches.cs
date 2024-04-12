@@ -12,9 +12,9 @@ namespace Nickel;
 
 internal static class CardPatches
 {
-	internal static WeakEventSource<KeyEventArgs> OnKey { get; } = new();
-	internal static WeakEventSource<TooltipsEventArgs> OnGetTooltips { get; } = new();
-	internal static WeakEventSource<TraitRenderEventArgs> OnRenderTraits { get; } = new();
+	internal static readonly WeakEventSource<KeyEventArgs> OnKey = new();
+	internal static readonly WeakEventSource<TooltipsEventArgs> OnGetTooltips = new();
+	internal static readonly WeakEventSource<TraitRenderEventArgs> OnRenderTraits = new();
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -117,5 +117,4 @@ internal static class CardPatches
 		public required int CardTraitIndex { get; set; }
 		public required Vec Position { get; set; }
 	}
-
 }

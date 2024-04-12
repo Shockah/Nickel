@@ -5,7 +5,7 @@ namespace Nickel;
 
 internal static class CombatPatches
 {
-	internal static WeakEventSource<ReturnCardsToDeckEventArgs> OnReturnCardsToDeck { get; } = new();
+	internal static readonly WeakEventSource<ReturnCardsToDeckEventArgs> OnReturnCardsToDeck = new();
 
 	internal static void Apply(Harmony harmony)
 	{

@@ -1,7 +1,6 @@
 using Nickel.Framework;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 
 namespace Nickel;
@@ -18,10 +17,10 @@ internal class CardTraitManager
 
 	private class VanillaEntry
 	{
-		public required Entry data;
-		public required Func<CardData, bool> getValue;
-		public required Action<Card, bool> setOverride;
-		public required Action<Card> setPermanent;
+		public required Entry Data;
+		public required Func<CardData, bool> GetValue;
+		public required Action<Card, bool> SetOverride;
+		public required Action<Card, bool> SetPermanent;
 	}
 
 	private readonly Dictionary<string, Entry> UniqueNameToEntry = [];
@@ -41,39 +40,27 @@ internal class CardTraitManager
 		CombatPatches.OnReturnCardsToDeck.Subscribe(this, this.OnReturnCardsToDeck);
 	}
 
-	private IEnumerable<ICardTraitEntry> GetCustomTraitEntriesFor(Card card, State state) =>
-		/* we intentionally skip unregistered entries here, in case a mod (safely) disappears in the middle of a run */
-		this.GetAllCustomTraitsFor(card, state).Select(this.LookupByUniqueName).OfType<ICardTraitEntry>();
-
 	private void OnRenderTraits(object? sender, CardPatches.TraitRenderEventArgs e)
 	{
-		var index = e.CardTraitIndex;
-		foreach (var traitEntry in this.GetCustomTraitEntriesFor(e.Card, e.State))
-		{
-			Draw.Sprite(traitEntry.Configuration.Icon(e.State, e.Card), e.Position.x, e.Position.y - 8 * index++);
-		}
-		e.CardTraitIndex = index;
+		foreach (var traitEntry in this.GetAllCustomTraitsFor(e.Card, e.State))
+			if (traitEntry.Configuration.Icon(e.State, e.Card) is { } icon)
+				Draw.Sprite(icon, e.Position.x, e.Position.y - 8 * e.CardTraitIndex++);
 	}
 
-	private void OnGetCardTooltips(object? sender, CardPatches.TooltipsEventArgs e) =>
-		e.TooltipsEnumerator = e.TooltipsEnumerator.Concat(
-			this.GetCustomTraitEntriesFor(e.Card, e.State)
-			.Select(x => x.Configuration.Tooltip?.Invoke(e.State, e.Card))
-			.OfType<Tooltip>()
+	private void OnGetCardTooltips(object? sender, CardPatches.TooltipsEventArgs e)
+		=> e.TooltipsEnumerator = e.TooltipsEnumerator.Concat(
+			this.GetAllCustomTraitsFor(e.Card, e.State)
+				.SelectMany(t => t.Configuration.Tooltips?.Invoke(e.State, e.Card) ?? [])
 		);
 
 	private void OnReturnCardsToDeck(object? sender, CombatPatches.ReturnCardsToDeckEventArgs e)
 	{
 		foreach (var card in e.State.deck)
 		{
-			if (!this.ModDataManager.TryGetModData<Dictionary<string, TraitOverrideEntry>>(
-				this.ModManagerModManifest,
-				card,
-				"CustomTraitOverrides",
-				out var overrides)
-			) continue;
+			if (!this.ModDataManager.TryGetModData<Dictionary<string, TraitOverrideEntry>>(this.ModManagerModManifest, card, "CustomTraitOverrides", out var overrides))
+				continue;
 
-			var toRemove = overrides.Where(x => !x.Value.overrideIsPermanent).Select(x => x.Key).ToArray();
+			var toRemove = overrides.Where(x => !x.Value.OverrideIsPermanent).Select(x => x.Key).ToList();
 			foreach (var key in toRemove)
 				overrides.Remove(key);
 		}
@@ -84,7 +71,7 @@ internal class CardTraitManager
 		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var entry))
 			return entry;
 		if (this.SynthesizedVanillaEntries.Value.TryGetValue(uniqueName, out var vanillaEntry))
-			return vanillaEntry.data;
+			return vanillaEntry.Data;
 		return null;
 	}
 
@@ -92,7 +79,7 @@ internal class CardTraitManager
 	{
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
-			throw new ArgumentException($"A deck with the unique name `{uniqueName}` is already registered", nameof(name));
+			throw new ArgumentException($"A card trait with the unique name `{uniqueName}` is already registered", nameof(name));
 		var entry = new Entry(owner, uniqueName, configuration);
 		this.UniqueNameToEntry.Add(uniqueName, entry);
 		return entry;
@@ -100,29 +87,43 @@ internal class CardTraitManager
 
 	private Dictionary<string, VanillaEntry> SynthesizeVanillaEntries()
 	{
-		KeyValuePair<string, VanillaEntry> SynthesizeEntry(string name, Func<CardData, bool> getValue, Action<Card, bool> setOverride, Action<Card> setPermanent)
+		KeyValuePair<string, VanillaEntry> SynthesizeEntry(string name, Func<CardData, bool> getValue, Action<Card, bool> setOverride, Action<Card, bool> setPermanent)
 		{
 			return new KeyValuePair<string, VanillaEntry>(name, new VanillaEntry
 			{
-				data = new Entry(
+				Data = new Entry(
 					this.VanillaModManifest,
 					name,
-					new CardTraitConfiguration { Icon = (_, _) => Enum.Parse<Spr>("icons_" + name), Name = null, Tooltip = null }
+					new CardTraitConfiguration
+					{
+						Icon = (_, _) => Enum.Parse<Spr>("icons_" + name),
+						Name = (_) => Loc.T($"cardtrait.{name}.name"),
+						Tooltips = (_, _) => [new TTGlossary($"cardtrait.{name}")]
+					}
 				),
-				getValue = getValue,
-				setOverride = setOverride,
-				setPermanent = setPermanent
+				GetValue = getValue,
+				SetOverride = setOverride,
+				SetPermanent = setPermanent
 			});
 		}
 
 		return new Dictionary<string, VanillaEntry>([
-			SynthesizeEntry("temporary", d => d.temporary, (c, v) => c.temporaryOverride = v, c => throw new NotSupportedException("This trait cannot be permanent, since it is temporary")),
-			SynthesizeEntry("exhaust", d => d.exhaust, (c, v) => c.exhaustOverride = v, c => c.exhaustOverrideIsPermanent = true),
-			SynthesizeEntry("singleUse", d => d.singleUse, (c, v) => c.singleUseOverride = v, c => { /* This trait is always permanent. */ }),
-			SynthesizeEntry("retain", d => d.retain, (c, v) => c.retainOverride = v, c => c.retainOverrideIsPermanent = true),
-			SynthesizeEntry("buoyant", d => d.buoyant, (c, v) => c.buoyantOverride = v, c => c.buoyantOverrideIsPermanent = true),
-			SynthesizeEntry("recycle", d => d.recycle, (c, v) => c.recycleOverride = v, c => c.recycleOverrideIsPermanent = true),
-			SynthesizeEntry("unplayable", d => d.unplayable, (c, v) => c.unplayableOverride = v, c => c.unplayableOverrideIsPermanent = true),
+			SynthesizeEntry("exhaust", d => d.exhaust, (c, v) => c.exhaustOverride = v, (c, v) => c.exhaustOverrideIsPermanent = true),
+			SynthesizeEntry("retain", d => d.retain, (c, v) => c.retainOverride = v, (c, v) => c.retainOverrideIsPermanent = v),
+			SynthesizeEntry("buoyant", d => d.buoyant, (c, v) => c.buoyantOverride = v, (c, v) => c.buoyantOverrideIsPermanent = v),
+			SynthesizeEntry("recycle", d => d.recycle, (c, v) => c.recycleOverride = v, (c, v) => c.recycleOverrideIsPermanent = v),
+			SynthesizeEntry("unplayable", d => d.unplayable, (c, v) => c.unplayableOverride = v, (c, v) => c.unplayableOverrideIsPermanent = v),
+
+			SynthesizeEntry("temporary", d => d.temporary, (c, v) => c.temporaryOverride = v, (c, v) =>
+			{
+				if (v)
+					throw new NotSupportedException("This trait cannot be made permanent");
+			}),
+			SynthesizeEntry("singleUse", d => d.singleUse, (c, v) => c.singleUseOverride = v, (c, v) =>
+			{
+				if (!v)
+					throw new NotSupportedException("This trait cannot be made non-permanent");
+			}),
 		]);
 	}
 
@@ -132,40 +133,43 @@ internal class CardTraitManager
 	public bool GetCardHasTrait(State state, Card card, string uniqueName)
 	{
 		if (this.SynthesizedVanillaEntries.Value.TryGetValue(uniqueName, out var vanillaEntry))
-			return vanillaEntry.getValue(card.GetDataWithOverrides(state));
+			return vanillaEntry.GetValue(card.GetDataWithOverrides(state));
 
 		var overrides = this.GetOverrideEntriesFor(card);
 		if (overrides.TryGetValue(uniqueName, out var entry))
-			return entry.overrideValue;
+			return entry.OverrideValue;
 
 		if (card is IHasCustomCardTraits hasCustomTraits)
-			return hasCustomTraits.GetInnateTraits(state).Contains(uniqueName);
+			return hasCustomTraits.GetInnateTraits(state).Any(t => t.UniqueName == uniqueName);
 
 		return false;
 	}
 
-	public IReadOnlySet<string> GetCardCurrentTraits(State state, Card card)
+	public IReadOnlySet<ICardTraitEntry> GetCardCurrentTraits(State state, Card card)
 	{
-		var currentTraits = card is IHasCustomCardTraits hasCustomTraits ?
-			hasCustomTraits.GetInnateTraits(state).ToHashSet() :
-			[]
-		;
+		var currentTraits = (card as IHasCustomCardTraits)?.GetInnateTraits(state).ToHashSet() ?? [];
 
 		foreach (var (uniqueName, entry) in this.GetOverrideEntriesFor(card))
 		{
-			if (entry.overrideValue)
-				currentTraits.Add(uniqueName);
+			if (this.LookupByUniqueName(uniqueName) is not { } trait)
+				continue;
+
+			if (entry.OverrideValue)
+				currentTraits.Add(trait);
 			else
-				currentTraits.Remove(uniqueName);
+				currentTraits.Remove(trait);
 		}
 
 		var cardData = card.GetDataWithOverrides(state);
 		foreach (var (key, value) in this.SynthesizedVanillaEntries.Value)
 		{
-			if (value.getValue(cardData))
-				currentTraits.Add(key);
+			if (this.LookupByUniqueName(key) is not { } trait)
+				continue;
+
+			if (value.GetValue(cardData))
+				currentTraits.Add(trait);
 			else
-				currentTraits.Remove(key);
+				currentTraits.Remove(trait);
 		}
 
 		return currentTraits;
@@ -175,9 +179,8 @@ internal class CardTraitManager
 	{
 		if (this.SynthesizedVanillaEntries.Value.TryGetValue(uniqueName, out var vanillaEntry))
 		{
-			vanillaEntry.setOverride(card, overrideValue);
-			if (isPermanent)
-				vanillaEntry.setPermanent(card);
+			vanillaEntry.SetOverride(card, overrideValue);
+			vanillaEntry.SetPermanent(card, isPermanent);
 			return;
 		}
 
@@ -185,27 +188,26 @@ internal class CardTraitManager
 		if (overrides.TryGetValue(uniqueName, out var existingEntry))
 		{
 			/* mirror vanilla behavior */
-			if (existingEntry.overrideIsPermanent)
+			if (existingEntry.OverrideIsPermanent)
 				isPermanent = true;
 		}
 
-		overrides[uniqueName] = new TraitOverrideEntry { overrideValue = overrideValue, overrideIsPermanent = isPermanent };
+		overrides[uniqueName] = new TraitOverrideEntry { OverrideValue = overrideValue, OverrideIsPermanent = isPermanent };
 	}
 
-	private HashSet<string> GetAllCustomTraitsFor(Card card, State state)
+	private HashSet<ICardTraitEntry> GetAllCustomTraitsFor(Card card, State state)
 	{
-		HashSet<string> customTraits;
-		if (card is IHasCustomCardTraits hasCustomTraits)
-			customTraits = [.. hasCustomTraits.GetInnateTraits(state)];
-		else
-			customTraits = [];
+		var customTraits = (card as IHasCustomCardTraits)?.GetInnateTraits(state).ToHashSet() ?? [];
 
 		foreach (var (uniqueName, entry) in this.GetOverrideEntriesFor(card))
 		{
-			if (entry.overrideValue)
-				customTraits.Add(uniqueName);
+			if (this.LookupByUniqueName(uniqueName) is not { } trait)
+				continue;
+
+			if (entry.OverrideValue)
+				customTraits.Add(trait);
 			else
-				customTraits.Remove(uniqueName);
+				customTraits.Remove(trait);
 		}
 
 		return customTraits;
@@ -213,7 +215,7 @@ internal class CardTraitManager
 
 	internal struct TraitOverrideEntry
 	{
-		public required bool overrideValue;
-		public required bool overrideIsPermanent;
+		public required bool OverrideValue;
+		public required bool OverrideIsPermanent;
 	}
 }
