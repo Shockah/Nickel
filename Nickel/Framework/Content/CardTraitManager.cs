@@ -96,7 +96,7 @@ internal class CardTraitManager
 					name,
 					new CardTraitConfiguration
 					{
-						Icon = (_, _) => Enum.Parse<Spr>("icons_" + name),
+						Icon = (_, _) => Enum.TryParse<Spr>($"icons_{name}", out var icon) ? icon : null,
 						Name = (_) => Loc.T($"cardtrait.{name}.name"),
 						Tooltips = (_, _) => [new TTGlossary($"cardtrait.{name}")]
 					}
