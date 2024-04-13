@@ -16,6 +16,7 @@ internal static class CardPatches
 	internal static readonly WeakEventSource<TooltipsEventArgs> OnGetTooltips = new();
 	internal static readonly WeakEventSource<TraitRenderEventArgs> OnRenderTraits = new();
 	internal static readonly WeakEventSource<GettingDataWithOverridesEventArgs> OnGettingDataWithOverrides = new();
+	internal static readonly WeakEventSource<GetDataWithOverridesEventArgs> OnGetDataWithOverrides = new();
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -34,7 +35,8 @@ internal static class CardPatches
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Card), nameof(Card.GetDataWithOverrides)),
-			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetDataWithOverrides_Postfix))
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetDataWithOverrides_Prefix)),
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetDataWithOverrides_Postfix))
 		);
 	}
 
@@ -101,10 +103,17 @@ internal static class CardPatches
 		__result = eventArgs.TooltipsEnumerator;
 	}
 
-	private static void GetDataWithOverrides_Postfix(Card __instance, State state)
+	private static void GetDataWithOverrides_Prefix(Card __instance, State state)
 	{
 		var eventArgs = new GettingDataWithOverridesEventArgs { Card = __instance, State = state };
 		OnGettingDataWithOverrides.Raise(null, eventArgs);
+	}
+
+	private static void GetDataWithOverrides_Postfix(Card __instance, State state, ref CardData __result)
+	{
+		var eventArgs = new GetDataWithOverridesEventArgs { Card = __instance, State = state, Data = __result };
+		OnGetDataWithOverrides.Raise(null, eventArgs);
+		__result = eventArgs.Data;
 	}
 
 	internal sealed class KeyEventArgs
@@ -133,5 +142,12 @@ internal static class CardPatches
 	{
 		public required Card Card { get; init; }
 		public required State State { get; init; }
+	}
+
+	internal sealed class GetDataWithOverridesEventArgs
+	{
+		public required Card Card { get; init; }
+		public required State State { get; init; }
+		public required CardData Data;
 	}
 }

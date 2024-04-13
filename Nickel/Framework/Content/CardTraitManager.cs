@@ -13,11 +13,16 @@ internal class CardTraitManager
 	{
 		bool IsInnatelyActive(Card card, CardData data, HashSet<ICardTraitEntry> innateCustomTraits);
 
-		bool? GetPermanentOverride(Card card, OverridesModData overrides);
-		bool? GetTemporaryOverride(Card card, OverridesModData overrides);
+		bool? GetPermanentOverride(Card card, OverridesModData overrides)
+			=> overrides.Permanent.TryGetValue(this.UniqueName, out var overrideValue) ? overrideValue : null;
+
+		bool? GetTemporaryOverride(Card card, OverridesModData overrides)
+			=> overrides.Temporary.TryGetValue(this.UniqueName, out var overrideValue) ? overrideValue : null;
 
 		void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue);
 		void SetTemporaryOverride(Card card, OverridesModData overrides, bool? overrideValue);
+
+		void FixModData(Card card, OverridesModData overrides) { }
 	}
 
 	private sealed class ModdedEntry(IModManifest modOwner, string uniqueName, CardTraitConfiguration configuration)
@@ -29,12 +34,6 @@ internal class CardTraitManager
 
 		public bool IsInnatelyActive(Card card, CardData data, HashSet<ICardTraitEntry> innateCustomTraits)
 			=> innateCustomTraits.Contains(this);
-
-		public bool? GetPermanentOverride(Card card, OverridesModData overrides)
-			=> overrides.Permanent.TryGetValue(this.UniqueName, out var overrideValue) ? overrideValue : null;
-
-		public bool? GetTemporaryOverride(Card card, OverridesModData overrides)
-			=> overrides.Temporary.TryGetValue(this.UniqueName, out var overrideValue) ? overrideValue : null;
 
 		public void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
 		{
@@ -70,12 +69,6 @@ internal class CardTraitManager
 		public bool IsInnatelyActive(Card card, CardData data, HashSet<ICardTraitEntry> innateCustomTraits)
 			=> this.GetDataValue.Value(data);
 
-		public virtual bool? GetPermanentOverride(Card card, OverridesModData overrides)
-			=> overrides.Permanent.TryGetValue(this.UniqueName, out var overrideValue) ? overrideValue : null;
-
-		public virtual bool? GetTemporaryOverride(Card card, OverridesModData overrides)
-			=> overrides.Temporary.TryGetValue(this.UniqueName, out var overrideValue) ? overrideValue : null;
-
 		public virtual void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
 		{
 			if (overrideValue is { } newOverrideValue)
@@ -91,6 +84,8 @@ internal class CardTraitManager
 			else
 				overrides.Temporary.Remove(this.UniqueName);
 		}
+
+		public virtual void FixModData(Card card, OverridesModData overrides) { }
 	}
 
 	private class VariablePermanenceVanillaEntry(
@@ -105,12 +100,6 @@ internal class CardTraitManager
 		private readonly Lazy<Func<Card, bool>> GetOverridePermanent = new(() => AccessTools.DeclaredField(typeof(Card), cardOverridePermanentFieldName).EmitInstanceGetter<Card, bool>());
 		private readonly Lazy<Action<Card, bool>> SetOverridePermanent = new(() => AccessTools.DeclaredField(typeof(Card), cardOverridePermanentFieldName).EmitInstanceSetter<Card, bool>());
 
-		public override bool? GetPermanentOverride(Card card, OverridesModData overrides)
-			=> base.GetPermanentOverride(card, overrides) ?? (this.GetOverridePermanent.Value(card) ? this.GetOverrideValue.Value(card) : null);
-
-		public override bool? GetTemporaryOverride(Card card, OverridesModData overrides)
-			=> base.GetTemporaryOverride(card, overrides) ?? (!this.GetOverridePermanent.Value(card) ? this.GetOverrideValue.Value(card) : null);
-
 		public override void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
 		{
 			base.SetPermanentOverride(card, overrides, overrideValue);
@@ -121,6 +110,17 @@ internal class CardTraitManager
 		{
 			base.SetTemporaryOverride(card, overrides, overrideValue);
 			this.FixCardFields(card, overrides);
+		}
+
+		public override void FixModData(Card card, OverridesModData overrides)
+		{
+			var fieldValue = this.GetOverrideValue.Value(card);
+			var isTemporary = fieldValue is null ? overrides.Temporary.ContainsKey(this.UniqueName) : !this.GetOverridePermanent.Value(card);
+
+			if (isTemporary)
+				this.SetTemporaryOverride(card, overrides, fieldValue);
+			else
+				this.SetPermanentOverride(card, overrides, fieldValue);
 		}
 
 		private void FixCardFields(Card card, OverridesModData overrides)
@@ -139,12 +139,6 @@ internal class CardTraitManager
 		private readonly Lazy<Func<Card, bool?>> GetOverrideValue = new(() => AccessTools.DeclaredField(typeof(Card), cardOverrideValueFieldName).EmitInstanceGetter<Card, bool?>());
 		private readonly Lazy<Action<Card, bool?>> SetOverrideValue = new(() => AccessTools.DeclaredField(typeof(Card), cardOverrideValueFieldName).EmitInstanceSetter<Card, bool?>());
 
-		public override bool? GetPermanentOverride(Card card, OverridesModData overrides)
-			=> null;
-
-		public override bool? GetTemporaryOverride(Card card, OverridesModData overrides)
-			=> base.GetTemporaryOverride(card, overrides) ?? this.GetOverrideValue.Value(card);
-
 		public override void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
 			=> throw new NotSupportedException($"Trait {this.UniqueName} cannot have permanent overrides");
 
@@ -152,6 +146,12 @@ internal class CardTraitManager
 		{
 			base.SetTemporaryOverride(card, overrides, overrideValue);
 			this.FixCardFields(card, overrides);
+		}
+
+		public override void FixModData(Card card, OverridesModData overrides)
+		{
+			var fieldValue = this.GetOverrideValue.Value(card);
+			this.SetTemporaryOverride(card, overrides, fieldValue);
 		}
 
 		private void FixCardFields(Card card, OverridesModData overrides)
@@ -168,12 +168,6 @@ internal class CardTraitManager
 		private readonly Lazy<Func<Card, bool?>>? GetOverrideValue = cardOverrideValueFieldName is null ? null : new (() => AccessTools.DeclaredField(typeof(Card), cardOverrideValueFieldName).EmitInstanceGetter<Card, bool?>());
 		private readonly Lazy<Action<Card, bool?>>? SetOverrideValue = cardOverrideValueFieldName is null ? null : new (() => AccessTools.DeclaredField(typeof(Card), cardOverrideValueFieldName).EmitInstanceSetter<Card, bool?>());
 
-		public override bool? GetPermanentOverride(Card card, OverridesModData overrides)
-			=> base.GetPermanentOverride(card, overrides) ?? (isPermanentByDefault && this.GetOverrideValue is { } getter ? getter.Value(card) : null);
-
-		public override bool? GetTemporaryOverride(Card card, OverridesModData overrides)
-			=> base.GetTemporaryOverride(card, overrides) ?? (!isPermanentByDefault && this.GetOverrideValue is { } getter ? getter.Value(card) : null);
-
 		public override void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
 		{
 			base.SetPermanentOverride(card, overrides, overrideValue);
@@ -184,6 +178,18 @@ internal class CardTraitManager
 		{
 			base.SetTemporaryOverride(card, overrides, overrideValue);
 			this.FixCardFields(card, overrides);
+		}
+
+		public override void FixModData(Card card, OverridesModData overrides)
+		{
+			if (this.GetOverrideValue is not { } getter)
+				return;
+
+			var fieldValue = getter.Value(card);
+			if (isPermanentByDefault)
+				this.SetPermanentOverride(card, overrides, fieldValue);
+			else
+				this.SetTemporaryOverride(card, overrides, fieldValue);
 		}
 
 		private void FixCardFields(Card card, OverridesModData overrides)
@@ -245,6 +251,7 @@ internal class CardTraitManager
 		CardPatches.OnGetTooltips.Subscribe(this, this.OnGetCardTooltips);
 		CardPatches.OnRenderTraits.Subscribe(this, this.OnRenderTraits);
 		CardPatches.OnGettingDataWithOverrides.Subscribe(this, this.OnGettingDataWithOverrides);
+		CardPatches.OnGetDataWithOverrides.Subscribe(this, this.OnGetDataWithOverrides);
 		CombatPatches.OnReturnCardsToDeck.Subscribe(this, this.OnReturnCardsToDeck);
 	}
 
@@ -264,6 +271,9 @@ internal class CardTraitManager
 
 	private void OnGettingDataWithOverrides(object? sender, CardPatches.GettingDataWithOverridesEventArgs e)
 		=> this.FixModData(e.Card);
+
+	private void OnGetDataWithOverrides(object? sender, CardPatches.GetDataWithOverridesEventArgs e)
+		=> e.Data.infinite = this.IsCardTraitActive(e.State, e.Card, this.InfiniteCardTrait.Value);
 
 	private void OnReturnCardsToDeck(object? sender, CombatPatches.ReturnCardsToDeckEventArgs e)
 	{
@@ -385,16 +395,8 @@ internal class CardTraitManager
 	{
 		if (trait is not IReadWriteCardTraitEntry rwTrait)
 			throw new NotImplementedException($"Internal error: trait {trait.UniqueName} is supposed to implement the private interface {nameof(IReadWriteCardTraitEntry)}");
+
 		var nonNullOverrides = overrides ?? this.ModDataManager.ObtainModData<OverridesModData>(this.ModManagerModManifest, card, "CustomTraitOverrides");
-
-		if (rwTrait.GetPermanentOverride(card, nonNullOverrides) is { } permanentOverride)
-			nonNullOverrides.Permanent[trait.UniqueName] = permanentOverride;
-		else
-			nonNullOverrides.Permanent.Remove(trait.UniqueName);
-
-		if (rwTrait.GetTemporaryOverride(card, nonNullOverrides) is { } temporaryOverride)
-			nonNullOverrides.Temporary[trait.UniqueName] = temporaryOverride;
-		else
-			nonNullOverrides.Temporary.Remove(trait.UniqueName);
+		rwTrait.FixModData(card, nonNullOverrides);
 	}
 }
