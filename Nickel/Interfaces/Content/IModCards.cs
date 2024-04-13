@@ -1,3 +1,4 @@
+using Nickel.Models.Content;
 using System;
 using System.Collections.Generic;
 
@@ -10,10 +11,20 @@ public interface IModCards
 	ICardEntry RegisterCard(CardConfiguration configuration);
 	ICardEntry RegisterCard(string name, CardConfiguration configuration);
 
+	ICardTraitEntry ExhaustCardTrait { get; }
+	ICardTraitEntry RetainCardTrait { get; }
+	ICardTraitEntry RecycleCardTrait { get; }
+	ICardTraitEntry InfiniteCardTrait { get; }
+	ICardTraitEntry UnplayableCardTrait { get; }
+	ICardTraitEntry TemporaryCardTrait { get; }
+	ICardTraitEntry BuoyantCardTrait { get; }
+	ICardTraitEntry SingleUseCardTrait { get; }
+
 	ICardTraitEntry? LookupTraitByUniqueName(string uniqueName);
 	ICardTraitEntry RegisterTrait(string name, CardTraitConfiguration configuration);
-	public bool GetCardHasTrait(State state, Card card, ICardTraitEntry trait);
-	public bool GetCardHasTrait(State state, Card card, string uniqueName);
-	public IReadOnlySet<ICardTraitEntry> GetCardCurrentTraits(State state, Card card);
-	public void AddCardTraitOverride(Card card, string uniqueName, bool overrideValue, bool isPermanent = false);
+	IReadOnlySet<ICardTraitEntry> GetActiveCardTraits(State state, Card card);
+	IReadOnlyDictionary<ICardTraitEntry, CardTraitState> GetAllCardTraits(State state, Card card);
+	bool IsCardTraitActive(State state, Card card, ICardTraitEntry trait);
+	CardTraitState GetCardTraitState(State state, Card card, ICardTraitEntry trait);
+	void SetCardTraitOverride(State state, Card card, ICardTraitEntry trait, bool? overrideValue, bool permanent);
 }

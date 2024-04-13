@@ -15,6 +15,7 @@ internal static class CardPatches
 	internal static readonly WeakEventSource<KeyEventArgs> OnKey = new();
 	internal static readonly WeakEventSource<TooltipsEventArgs> OnGetTooltips = new();
 	internal static readonly WeakEventSource<TraitRenderEventArgs> OnRenderTraits = new();
+	internal static readonly WeakEventSource<GettingDataWithOverridesEventArgs> OnGettingDataWithOverrides = new();
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -25,11 +26,15 @@ internal static class CardPatches
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Card), nameof(Card.Render)),
-			transpiler: new HarmonyMethod(typeof(CardPatches), nameof(Render_Transpiler))
+			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Render_Transpiler))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Card), nameof(Card.GetAllTooltips)),
-			postfix: new HarmonyMethod(typeof(CardPatches), nameof(GetAllTooltips_Postfix))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetAllTooltips_Postfix))
+		);
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(Card), nameof(Card.GetDataWithOverrides)),
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetDataWithOverrides_Postfix))
 		);
 	}
 
@@ -83,17 +88,23 @@ internal static class CardPatches
 		}
 	}
 
-	internal static void Render_Transpiler_RenderTraits(Card card, State state, ref int cardTraitIndex, Vec vec)
+	private static void Render_Transpiler_RenderTraits(Card card, State state, ref int cardTraitIndex, Vec vec)
 	{
 		var eventArgs = new TraitRenderEventArgs { Card = card, State = state, CardTraitIndex = cardTraitIndex, Position = vec };
 		OnRenderTraits.Raise(null, eventArgs);
 	}
 
-	internal static void GetAllTooltips_Postfix(Card __instance, State s, bool showCardTraits, ref IEnumerable<Tooltip> __result)
+	private static void GetAllTooltips_Postfix(Card __instance, State s, bool showCardTraits, ref IEnumerable<Tooltip> __result)
 	{
 		var eventArgs = new TooltipsEventArgs { Card = __instance, State = s, ShowCardTraits = showCardTraits, TooltipsEnumerator = __result };
 		OnGetTooltips.Raise(null, eventArgs);
 		__result = eventArgs.TooltipsEnumerator;
+	}
+
+	private static void GetDataWithOverrides_Postfix(Card __instance, State state)
+	{
+		var eventArgs = new GettingDataWithOverridesEventArgs { Card = __instance, State = state };
+		OnGettingDataWithOverrides.Raise(null, eventArgs);
 	}
 
 	internal sealed class KeyEventArgs
@@ -116,5 +127,11 @@ internal static class CardPatches
 		public required State State { get; init; }
 		public required int CardTraitIndex { get; set; }
 		public required Vec Position { get; set; }
+	}
+
+	internal sealed class GettingDataWithOverridesEventArgs
+	{
+		public required Card Card { get; init; }
+		public required State State { get; init; }
 	}
 }

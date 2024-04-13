@@ -1,3 +1,4 @@
+using Nickel.Models.Content;
 using System;
 using System.Collections.Generic;
 
@@ -28,21 +29,48 @@ internal sealed class ModCards : IModCards
 	public ICardEntry RegisterCard(string name, CardConfiguration configuration)
 		=> this.CardManagerProvider().RegisterCard(this.ModManifest, name, configuration);
 
+	public ICardTraitEntry ExhaustCardTrait
+		=> this.CardTraitManagerProvider().ExhaustCardTrait.Value;
+
+	public ICardTraitEntry RetainCardTrait
+		=> this.CardTraitManagerProvider().RetainCardTrait.Value;
+
+	public ICardTraitEntry RecycleCardTrait
+		=> this.CardTraitManagerProvider().RecycleCardTrait.Value;
+
+	public ICardTraitEntry InfiniteCardTrait
+		=> this.CardTraitManagerProvider().InfiniteCardTrait.Value;
+
+	public ICardTraitEntry UnplayableCardTrait
+		=> this.CardTraitManagerProvider().UnplayableCardTrait.Value;
+
+	public ICardTraitEntry TemporaryCardTrait
+		=> this.CardTraitManagerProvider().TemporaryCardTrait.Value;
+
+	public ICardTraitEntry BuoyantCardTrait
+		=> this.CardTraitManagerProvider().BuoyantCardTrait.Value;
+
+	public ICardTraitEntry SingleUseCardTrait
+		=> this.CardTraitManagerProvider().SingleUseCardTrait.Value;
+
 	public ICardTraitEntry? LookupTraitByUniqueName(string uniqueName)
 		=> this.CardTraitManagerProvider().LookupByUniqueName(uniqueName);
 
 	public ICardTraitEntry RegisterTrait(string name, CardTraitConfiguration configuration)
 		=> this.CardTraitManagerProvider().RegisterTrait(this.ModManifest, name, configuration);
 
-	public bool GetCardHasTrait(State state, Card card, ICardTraitEntry trait)
-		=> this.CardTraitManagerProvider().GetCardHasTrait(state, card, trait.UniqueName);
+	public IReadOnlySet<ICardTraitEntry> GetActiveCardTraits(State state, Card card)
+		=> this.CardTraitManagerProvider().GetActiveCardTraits(state, card);
 
-	public bool GetCardHasTrait(State state, Card card, string uniqueName)
-		=> this.CardTraitManagerProvider().GetCardHasTrait(state, card, uniqueName);
+	public IReadOnlyDictionary<ICardTraitEntry, CardTraitState> GetAllCardTraits(State state, Card card)
+		=> this.CardTraitManagerProvider().GetAllCardTraits(state, card);
 
-	public IReadOnlySet<ICardTraitEntry> GetCardCurrentTraits(State state, Card card)
-		=> this.CardTraitManagerProvider().GetCardCurrentTraits(state, card);
+	public bool IsCardTraitActive(State state, Card card, ICardTraitEntry trait)
+		=> this.CardTraitManagerProvider().IsCardTraitActive(state, card, trait);
 
-	public void AddCardTraitOverride(Card card, string uniqueName, bool overrideValue, bool isPermanent = false)
-		=> this.CardTraitManagerProvider().AddCardTraitOverride(card, uniqueName, overrideValue, isPermanent);
+	public CardTraitState GetCardTraitState(State state, Card card, ICardTraitEntry trait)
+		=> this.CardTraitManagerProvider().GetCardTraitState(state, card, trait);
+
+	public void SetCardTraitOverride(State state, Card card, ICardTraitEntry trait, bool? overrideValue, bool permanent)
+		=> this.CardTraitManagerProvider().SetCardTraitOverride(card, trait, overrideValue, permanent);
 }
