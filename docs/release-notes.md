@@ -2,6 +2,11 @@
 
 # Release notes
 
+## 0.8.1
+Released 14 April 2024.
+
+* Updated the `Shrike.Harmony` library to 3.1.1, fixing an error in `Essentials`.
+
 ## 0.8.0
 Released 14 April 2024.
 
