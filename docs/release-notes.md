@@ -6,6 +6,7 @@
 
 * Added support for custom card traits.
 * Fixed a crash when serializing some API proxied types.
+* Fixed re-registered cards counting twice for codex, preventing full completion.
 * Improved `Nickel.ModBuildConfig` NuGet package, which should hopefully fix any issues with extracting the `CobaltCore.dll` file from the `CobaltCore.exe` file provided by the game.
 
 ## 0.7.0

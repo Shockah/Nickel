@@ -90,7 +90,7 @@ internal sealed class CardManager
 		else
 			DB.cardArt.Remove(entry.UniqueName);
 
-		DB.releasedCards.RemoveAll(c => c.GetType() == entry.Configuration.GetType());
+		DB.releasedCards.RemoveAll(c => c.GetType() == entry.Configuration.CardType);
 		if (!entry.Configuration.Meta.unreleased)
 			DB.releasedCards.Add((Card)Activator.CreateInstance(entry.Configuration.CardType)!);
 
