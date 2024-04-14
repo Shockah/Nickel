@@ -2,8 +2,10 @@
 
 # Release notes
 
-## Upcoming release
+## 0.8.0
+Released 14 April 2024.
 
+* Updated the `Shrike` and `Shrike.Harmony` libraries to 3.1.0.
 * Added support for custom card traits.
 * Added `GlossaryTooltip` to be used by mods, which mimicks vanilla `TTGlossary`, but accepts any content.
 * Fixed a crash when serializing some API proxied types.
