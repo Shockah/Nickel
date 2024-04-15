@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 0.8.2
+Released 15 April 2024.
 
 * Fixed temporary card traits being so temporary, that they disappear before the cards get to be removed from the deck.
 
