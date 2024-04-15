@@ -32,6 +32,9 @@ internal class CardTraitManager
 		public string UniqueName { get; } = uniqueName;
 		public CardTraitConfiguration Configuration { get; } = configuration;
 
+		public override string ToString()
+			=> this.UniqueName;
+
 		public bool IsInnatelyActive(Card card, CardData data, HashSet<ICardTraitEntry> innateCustomTraits)
 			=> innateCustomTraits.Contains(this);
 
@@ -65,6 +68,9 @@ internal class CardTraitManager
 		};
 
 		private readonly Lazy<Func<CardData, bool>> GetDataValue = new(() => AccessTools.DeclaredField(typeof(CardData), dataFieldName).EmitInstanceGetter<CardData, bool>());
+
+		public override string ToString()
+			=> this.UniqueName;
 
 		public bool IsInnatelyActive(Card card, CardData data, HashSet<ICardTraitEntry> innateCustomTraits)
 			=> this.GetDataValue.Value(data);
@@ -130,32 +136,30 @@ internal class CardTraitManager
 		}
 	}
 
-	private class TemporaryOnlyVanillaEntry(
-		IModManifest modOwner,
-		string dataFieldName,
-		string cardOverrideValueFieldName
-	) : VanillaEntry(modOwner, dataFieldName)
+	private class TemporaryVanillaEntry(
+		IModManifest modOwner
+	) : VanillaEntry(modOwner, nameof(CardData.temporary))
 	{
-		private readonly Lazy<Func<Card, bool?>> GetOverrideValue = new(() => AccessTools.DeclaredField(typeof(Card), cardOverrideValueFieldName).EmitInstanceGetter<Card, bool?>());
-		private readonly Lazy<Action<Card, bool?>> SetOverrideValue = new(() => AccessTools.DeclaredField(typeof(Card), cardOverrideValueFieldName).EmitInstanceSetter<Card, bool?>());
+		private readonly Func<Card, bool?> GetOverrideValue = c => c.temporaryOverride;
+		private readonly Action<Card, bool?> SetOverrideValue = (c, v) => c.temporaryOverride = v;
 
 		public override void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
-			=> throw new NotSupportedException($"Trait {this.UniqueName} cannot have permanent overrides");
-
-		public override void SetTemporaryOverride(Card card, OverridesModData overrides, bool? overrideValue)
 		{
-			base.SetTemporaryOverride(card, overrides, overrideValue);
+			base.SetPermanentOverride(card, overrides, overrideValue);
 			this.FixCardFields(card, overrides);
 		}
 
+		public override void SetTemporaryOverride(Card card, OverridesModData overrides, bool? overrideValue)
+			=> this.SetPermanentOverride(card, overrides, overrideValue);
+
 		public override void FixModData(Card card, OverridesModData overrides)
 		{
-			var fieldValue = this.GetOverrideValue.Value(card);
-			this.SetTemporaryOverride(card, overrides, fieldValue);
+			var fieldValue = this.GetOverrideValue(card);
+			this.SetPermanentOverride(card, overrides, fieldValue);
 		}
 
 		private void FixCardFields(Card card, OverridesModData overrides)
-			=> this.SetOverrideValue.Value(card, overrides.Temporary.TryGetValue(this.UniqueName, out var temporaryOverride) ? temporaryOverride : null);
+			=> this.SetOverrideValue(card, overrides.Permanent.TryGetValue(this.UniqueName, out var temporaryOverride) ? temporaryOverride : null);
 	}
 
 	private class ModDataBasedPermanenceVanillaEntry(
@@ -232,7 +236,7 @@ internal class CardTraitManager
 		this.RecycleCardTrait = new(() => new VariablePermanenceVanillaEntry(this.VanillaModManifest, nameof(CardData.recycle), nameof(Card.recycleOverride), nameof(Card.recycleOverrideIsPermanent)));
 		this.UnplayableCardTrait = new(() => new VariablePermanenceVanillaEntry(this.VanillaModManifest, nameof(CardData.unplayable), nameof(Card.unplayableOverride), nameof(Card.unplayableOverrideIsPermanent)));
 		this.BuoyantCardTrait = new(() => new VariablePermanenceVanillaEntry(this.VanillaModManifest, nameof(CardData.buoyant), nameof(Card.buoyantOverride), nameof(Card.buoyantOverrideIsPermanent)));
-		this.TemporaryCardTrait = new(() => new TemporaryOnlyVanillaEntry(this.VanillaModManifest, nameof(CardData.temporary), nameof(Card.temporaryOverride)));
+		this.TemporaryCardTrait = new(() => new TemporaryVanillaEntry(this.VanillaModManifest));
 		this.SingleUseCardTrait = new(() => new ModDataBasedPermanenceVanillaEntry(this.VanillaModManifest, nameof(CardData.singleUse), nameof(Card.singleUseOverride), isPermanentByDefault: true));
 		this.InfiniteCardTrait = new(() => new ModDataBasedPermanenceVanillaEntry(this.VanillaModManifest, nameof(CardData.infinite)));
 
