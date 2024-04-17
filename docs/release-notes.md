@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed a crash when serializing some API proxied types, again.
+
 ## 0.8.2
 Released 15 April 2024.
 

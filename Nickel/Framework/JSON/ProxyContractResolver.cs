@@ -42,10 +42,8 @@ internal sealed class ProxyContractResolver<TContext> : JsonConverter
 			this.NestingCounter[objectType] = this.NestingCounter.GetValueOrDefault(objectType) + 1;
 
 			var token = JToken.Load(reader);
-			if (token is not JValue || token.Value<JObject>() is not { } @object)
+			if (token is not JObject @object || !@object.ContainsKey("ProxyInfo") || !@object.ContainsKey("Target"))
 				return serializer.Deserialize(new JTokenReader(token), objectType);
-			if (!@object.ContainsKey("ProxyInfo") || !@object.ContainsKey("Target"))
-				return serializer.Deserialize(new JTokenReader(@object), objectType);
 
 			var serializableProxy = serializer.Deserialize<SerializableProxy>(new JTokenReader(@object));
 			if (serializableProxy is null)
