@@ -6,12 +6,14 @@ namespace Nickel;
 
 internal sealed class ShipManager
 {
+	private IModManifest VanillaModManifest { get; }
 	private AfterDbInitManager<Entry> Manager { get; }
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 
-	public ShipManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
+	public ShipManager(Func<ModLoadPhase> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
 	{
-		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		this.VanillaModManifest = vanillaModManifest;
+		this.Manager = new(currentModLoadPhaseProvider, this.Inject);
 		StoryVarsPatches.OnGetUnlockedShips.Subscribe(this.OnGetUnlockedShips);
 		ArtifactRewardPatches.OnGetBlockedArtifacts.Subscribe(this.OnGetBlockedArtifacts);
 	}
@@ -62,7 +64,7 @@ internal sealed class ShipManager
 	public IShipEntry? LookupByUniqueName(string uniqueName)
 		=> this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry) ? typedEntry : null;
 
-	private static void Inject(Entry entry)
+	private void Inject(Entry entry)
 	{
 		entry.Configuration.Ship.ship.isPlayerShip = true;
 		if (entry.Configuration.UnderChassisSprite is { } underChassisSprite)
@@ -78,7 +80,18 @@ internal sealed class ShipManager
 			entry.Configuration.Ship.ship.chassisOver = key;
 		}
 
-		StarterShip.ships[entry.UniqueName] = entry.Configuration.Ship;
+		var vanillaShips = StarterShip.ships
+			.Where(kvp => this.LookupByUniqueName(kvp.Key) == null)
+			.ToList();
+		var moddedShips = StarterShip.ships
+			.Append(new KeyValuePair<string, StarterShip>(entry.UniqueName, entry.Configuration.Ship))
+			.Select(kvp => this.LookupByUniqueName(kvp.Key))
+			.Where(e => e != null)
+			.Select(e => e!)
+			.OrderBy(e => e.ModOwner == this.VanillaModManifest ? "" : e.ModOwner.UniqueName)
+			.Select(e => new KeyValuePair<string, StarterShip>(e.UniqueName, e.Configuration.Ship));
+		StarterShip.ships = vanillaShips.Concat(moddedShips).ToDictionary();
+
 		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 	}
 
