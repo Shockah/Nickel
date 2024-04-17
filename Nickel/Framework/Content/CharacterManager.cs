@@ -14,6 +14,7 @@ internal sealed class CharacterManager
 	private SpriteManager Sprites { get; }
 	private DeckManager Decks { get; }
 	private StatusManager Statuses { get; }
+	private IModManifest VanillaModManifest { get; }
 	private AfterDbInitManager<AnimationEntry> AnimationManager { get; }
 	private AfterDbInitManager<CharacterEntry> CharManager { get; }
 	private Dictionary<string, AnimationEntry> UniqueNameToAnimationEntry { get; } = [];
@@ -24,13 +25,15 @@ internal sealed class CharacterManager
 		Func<IModManifest, ILogger> loggerProvider,
 		SpriteManager sprites,
 		DeckManager decks,
-		StatusManager statuses
+		StatusManager statuses,
+		IModManifest vanillaModManifest
 	)
 	{
 		this.LoggerProvider = loggerProvider;
 		this.Sprites = sprites;
 		this.Decks = decks;
 		this.Statuses = statuses;
+		this.VanillaModManifest = vanillaModManifest;
 		this.AnimationManager = new(currentModLoadPhaseProvider, Inject);
 		this.CharManager = new(currentModLoadPhaseProvider, this.Inject);
 
@@ -202,7 +205,14 @@ internal sealed class CharacterManager
 		}
 
 		DB.charPanels[entry.Configuration.Deck.Key()] = entry.Configuration.BorderSprite;
-		NewRunOptions.allChars.Add(entry.Configuration.Deck);
+		NewRunOptions.allChars = NewRunOptions.allChars
+			.Append(entry.Configuration.Deck)
+			.Select(this.Decks.LookupByDeck)
+			.Where(e => e != null)
+			.Select(e => e!)
+			.OrderBy(e => e.ModOwner == this.VanillaModManifest ? "" : e.ModOwner.UniqueName)
+			.Select(e => e.Deck)
+			.ToList();
 #pragma warning disable CS0618 // Type or member is obsolete
 		StarterDeck.starterSets[entry.Configuration.Deck] = entry.Configuration.Starters ?? new()
 		{

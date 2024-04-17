@@ -4,6 +4,7 @@
 
 ## Upcoming release
 
+* Playable characters are now sorted by their mod's `UniqueName`.
 * Fixed a crash when serializing some API proxied types, again.
 
 ## 0.8.2
