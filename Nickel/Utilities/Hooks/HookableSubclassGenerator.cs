@@ -445,7 +445,6 @@ file sealed class HookSubclassGlue(
 {
 	private HookSubclassStaticGlue StaticGlue { get; } = staticGlue;
 	// TODO: probably move some of it to the StaticGlue for reusage
-	private Dictionary<MethodInfo, Delegate> CompiledRegisterTypedMethodHookDelegates { get; } = [];
 	private Dictionary<MethodInfo, OrderedList<Delegate, double>> CompiledDelegates { get; } = [];
 	private Dictionary<MethodInfo, Dictionary<Delegate, Delegate>> OriginalToCompiledDelegates { get; } = [];
 
@@ -490,20 +489,15 @@ file sealed class HookSubclassGlue(
 			this.CompiledDelegates[method] = compiledDelegates;
 		}
 
+		originalToCompiledDelegates[hookDelegate] = compiledDelegate;
 		compiledDelegates.Add(objectifiedDelegate, -priority);
 	}
 
 	public void RegisterMethodHook<THookDelegate>(MethodInfo method, THookDelegate hookDelegate, double priority)
 		where THookDelegate : Delegate
 	{
-		if (!this.CompiledRegisterTypedMethodHookDelegates.TryGetValue(method, out var rawCompiledRegisterTypedMethodHookDelegate))
-		{
-			rawCompiledRegisterTypedMethodHookDelegate = this.CompileRegisterTypedMethodHook<THookDelegate>(method);
-			this.CompiledRegisterTypedMethodHookDelegates[method] = rawCompiledRegisterTypedMethodHookDelegate;
-		}
-
-		var typedCompiledRegisterTypedMethodHookDelegate = (Action<HookSubclassGlue, MethodInfo, THookDelegate, double>)rawCompiledRegisterTypedMethodHookDelegate;
-		typedCompiledRegisterTypedMethodHookDelegate(this, method, hookDelegate, priority);
+		var compiledRegisterTypedMethodHookDelegate = this.CompileRegisterTypedMethodHook<THookDelegate>(method);
+		compiledRegisterTypedMethodHookDelegate(this, method, hookDelegate, priority);
 	}
 
 	public void UnregisterMethodHook<THookDelegate>(MethodInfo method, THookDelegate hookDelegate)

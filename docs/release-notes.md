@@ -6,6 +6,7 @@
 
 * Playable characters and ships are now sorted by their mod's `UniqueName`.
 * Fixed a crash when serializing some API proxied types, again.
+* Fixed a crash when multiple mods registered for the same artifact hook with different arguments.
 
 ## 0.8.2
 Released 15 April 2024.
