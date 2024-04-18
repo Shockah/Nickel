@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 0.8.3
+Released 18 April 2024.
 
 * Playable characters and ships are now sorted by their mod's `UniqueName`.
 * Fixed a crash when serializing some API proxied types, again.
