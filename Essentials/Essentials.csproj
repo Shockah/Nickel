@@ -2,7 +2,7 @@
 	<Import Project="..\Configuration.props" />
 	<PropertyGroup>
 		<RootNamespace>Nickel.Essentials</RootNamespace>
-		<IncludedModProjectPaths>i18n</IncludedModProjectPaths>
+		<IncludedModProjectPaths>i18n;assets</IncludedModProjectPaths>
 		<Version>$(NickelVersion)</Version>
 	</PropertyGroup>
 	<ItemGroup>
@@ -10,5 +10,8 @@
 		<PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" PrivateAssets="All" ExcludeAssets="runtime" />
 		<PackageReference Include="MakeTypesPublic" Version="1.0.3" PrivateAssets="All" ExcludeAssets="runtime" />
 		<PackageReference Include="EnumByNameSourceGenerator" Version="1.1.1" PrivateAssets="All" ExcludeAssets="runtime" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="assets\" />
 	</ItemGroup>
 </Project>

@@ -19,6 +19,7 @@ internal sealed class CharacterManager
 	private AfterDbInitManager<CharacterEntry> CharManager { get; }
 	private Dictionary<string, AnimationEntry> UniqueNameToAnimationEntry { get; } = [];
 	private Dictionary<string, CharacterEntry> UniqueNameToCharacterEntry { get; } = [];
+	private Dictionary<Deck, CharacterEntry> DeckToCharacterEntry { get; } = [];
 
 	public CharacterManager(
 		Func<ModLoadPhase> currentModLoadPhaseProvider,
@@ -66,6 +67,60 @@ internal sealed class CharacterManager
 		return entry;
 	}
 
+	public ICharacterEntry? LookupByDeck(Deck deck)
+	{
+		if (this.DeckToCharacterEntry.TryGetValue(deck, out var entry))
+			return entry;
+		if (deck is not (Deck.dizzy or Deck.riggs or Deck.peri or Deck.goat or Deck.eunice or Deck.hacker or Deck.shard))
+			return null;
+
+		return new CharacterEntry(
+			modOwner: this.VanillaModManifest,
+			uniqueName: Enum.GetName(deck)!,
+			configuration: new()
+			{
+				Deck = deck,
+				BorderSprite = DB.charPanels[deck.Key()],
+				Starters = StarterDeck.starterSets[deck],
+				NeutralAnimation = new()
+				{
+					Deck = deck,
+					LoopTag = "neutral",
+					Frames = DB.charAnimations[Character.GetSpriteAliasIfExists(deck.Key())]["neutral"]
+				},
+				MiniAnimation = new()
+				{
+					Deck = deck,
+					LoopTag = "mini",
+					Frames = DB.charAnimations[Character.GetSpriteAliasIfExists(deck.Key())]["mini"]
+				},
+				StartLocked = deck is Deck.goat or Deck.eunice or Deck.hacker or Deck.shard,
+				MissingStatus = new()
+				{
+					Color = DB.statuses[StatusMeta.deckToMissingStatus[deck]].color,
+					Sprite = DB.statuses[StatusMeta.deckToMissingStatus[deck]].icon
+				},
+				ExeCardType = deck switch
+				{
+					Deck.dizzy => typeof(ColorlessDizzySummon),
+					Deck.riggs => typeof(ColorlessRiggsSummon),
+					Deck.peri => typeof(ColorlessPeriSummon),
+					Deck.goat => typeof(ColorlessIsaacSummon),
+					Deck.eunice => typeof(ColorlessDrakeSummon),
+					Deck.hacker => typeof(ColorlessMaxSummon),
+					Deck.shard => typeof(ColorlessBooksSummon),
+					Deck.colorless => typeof(ColorlessCATSummon),
+					_ => null
+				},
+				Description = _ => Loc.T($"char.{deck}.desc")
+			},
+			missingStatus: this.Statuses.LookupByStatus(StatusMeta.deckToMissingStatus[deck])!
+		);
+	}
+
+	public ICharacterEntry? LookupByUniqueName(string uniqueName)
+		=> this.UniqueNameToCharacterEntry.TryGetValue(uniqueName, out var entry) ? entry : null;
+
 	public ICharacterEntry RegisterCharacter(IModManifest owner, string name, CharacterConfiguration configuration)
 	{
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -79,6 +134,7 @@ internal sealed class CharacterManager
 		var missingStatus = this.RegisterMissingStatus(owner, $"{name}::MissingStatus", configuration, configuration.MissingStatus);
 		CharacterEntry entry = new(owner, uniqueName, configuration, missingStatus);
 		this.UniqueNameToCharacterEntry[entry.UniqueName] = entry;
+		this.DeckToCharacterEntry[entry.Configuration.Deck] = entry;
 		this.CharManager.QueueOrInject(entry);
 		return entry;
 	}

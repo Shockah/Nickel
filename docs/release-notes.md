@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+* Essentials: Added an option to disable a given EXE card from the starter pool.
+* Added character lookup to `IModCharacters`.
+
 ## 0.8.3
 Released 18 April 2024.
 

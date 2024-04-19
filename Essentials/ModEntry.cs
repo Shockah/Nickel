@@ -8,7 +8,7 @@ namespace Nickel.Essentials;
 public sealed class ModEntry : SimpleMod
 {
 	internal static ModEntry Instance { get; private set; } = null!;
-	internal ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations { get; }
+	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
@@ -22,9 +22,10 @@ public sealed class ModEntry : SimpleMod
 			)
 		);
 
-		Harmony harmony = new(package.Manifest.UniqueName);
+		var harmony = new Harmony(package.Manifest.UniqueName);
 		CardCodexFiltering.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);
+		ExeBlacklist.ApplyPatches(harmony);
 		MemorySelection.ApplyPatches(harmony);
 		ModDescriptions.ApplyPatches(harmony);
 	}
