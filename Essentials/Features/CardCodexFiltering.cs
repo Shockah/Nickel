@@ -164,12 +164,6 @@ internal static partial class CardCodexFiltering
 		ScrollUtils.ReadScrollInputAndUpdate(g.dt, maxFilterScroll, ref FilterScroll, ref FilterScrollTarget);
 	}
 
-	private sealed record MouseDownHandler(Action Delegate) : OnMouseDown
-	{
-		public void OnMouseDown(G _1, Box _2)
-			=> this.Delegate();
-	}
-
 	[GeneratedRegex("\\w+$")]
 	private static partial Regex LastWordRegex();
 

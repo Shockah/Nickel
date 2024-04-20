@@ -160,10 +160,4 @@ internal static class CrewSelection
 		g.Pop();
 		return buttonResult;
 	}
-
-	private sealed record MouseDownHandler(Action Delegate) : OnMouseDown
-	{
-		public void OnMouseDown(G _1, Box _2)
-			=> this.Delegate();
-	}
 }

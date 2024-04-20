@@ -145,10 +145,4 @@ internal static class MemorySelection
 			return instructions;
 		}
 	}
-
-	private sealed record MouseDownHandler(Action Delegate) : OnMouseDown
-	{
-		public void OnMouseDown(G _1, Box _2)
-			=> this.Delegate();
-	}
 }

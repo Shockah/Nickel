@@ -7,5 +7,8 @@
 		"on": "Can be randomly selected for a CAT starter EXE card. Click to disable.",
 		"off": "CANNOT be randomly selected for a CAT starter EXE card. Click to enable."
 	},
-	"modDescription": "<c=keyword>Mod:</c> {{ModName}}"
+	"modDescription": "<c=keyword>Mod:</c> {{ModName}}",
+	"starterDeckPreview": {
+		"exeCard": "A random CAT EXE card, like this one:"
+	}
 }

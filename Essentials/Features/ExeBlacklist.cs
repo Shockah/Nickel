@@ -79,55 +79,8 @@ internal static class ExeBlacklist
 		);
 	}
 
-	private static Type? GetExeType(Deck deck)
-	{
-		if (ExeCache.TryGetValue(deck, out var exeType))
-			return exeType;
-
-		if (deck == Deck.colorless)
-		{
-			ExeCache[deck] = null;
-			return null;
-		}
-		if (ModEntry.Instance.Helper.Content.Characters.LookupByDeck(deck) is { } entry && entry.Configuration.ExeCardType is { } entryExeType)
-		{
-			ExeCache[deck] = entryExeType;
-			ExeTypeToDeck[entryExeType] = deck;
-			return entryExeType;
-		}
-
-		var fakeShip = Mutil.DeepCopy(StarterShip.ships.Values.First());
-		fakeShip.cards.Clear();
-		fakeShip.artifacts.Clear();
-
-		try
-		{
-			var fakeState = Mutil.DeepCopy(DB.fakeState);
-			fakeState.slot = null;
-			fakeState.PopulateRun(
-				shipTemplate: fakeShip,
-				chars: NewRunOptions.allChars
-					.Where(d => d != deck && d != Deck.dizzy) // need at least 2 characters total, otherwise it will always throw
-					.ToHashSet()
-			);
-
-			exeType = fakeState.deck
-				.Where(card => card is not ColorlessDizzySummon)
-				.SingleOrDefault(card => card.GetMeta().deck == Deck.colorless && card.GetFullDisplayName().Contains(".EXE", StringComparison.OrdinalIgnoreCase))?.GetType();
-			ExeCache[deck] = exeType;
-			if (exeType is not null)
-				ExeTypeToDeck[exeType] = deck;
-			return exeType;
-		}
-		catch
-		{
-			ExeCache[deck] = null;
-			return null;
-		}
-	}
-
 	private static IEnumerable<Deck> GetAllExeCharacters()
-		=> NewRunOptions.allChars.Where(d => GetExeType(d) is not null);
+		=> NewRunOptions.allChars.Where(d => d != Deck.colorless && ModEntry.Instance.Api.GetExeCardTypeForDeck(d) is not null);
 
 	private static IEnumerable<Deck> GetNonBlacklistedExeCharacters(RunConfig runConfig)
 		=> GetAllExeCharacters().Where(d => !runConfig.selectedChars.Contains(d)).Where(d => !runConfig.IsBlacklistedExe(d));
@@ -206,7 +159,7 @@ internal static class ExeBlacklist
 			return;
 		if (!mini || renderLocked)
 			return;
-		if (g.state.route is not NewRunOptions)
+		if (g.state.route is not NewRunOptions route)
 			return;
 		if (__instance.deckType is not { } deck)
 			return;
@@ -218,12 +171,13 @@ internal static class ExeBlacklist
 			return;
 		if (ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(g.state, Deck.colorless) == true)
 			return;
-		if (GetExeType(deck) is not { } exeType)
+		if (ModEntry.Instance.Api.GetExeCardTypeForDeck(deck) is not { } exeType)
 			return;
 		if (g.boxes.FirstOrDefault(b => b.key is { } key && key.k == StableUK.char_mini && key.v == (int)deck) is not { } characterBox)
 			return;
 
 		var isBlacklisted = g.state.runConfig.IsBlacklistedExe(deck);
+		var exeCard = (Card)Activator.CreateInstance(exeType)!;
 
 		var box = g.Push(new UIKey(ExeBlacklistKey, (int)deck), new Rect(4, 13, 7, 7), onMouseDown: new MouseDownHandler(() =>
 		{
@@ -243,6 +197,13 @@ internal static class ExeBlacklist
 
 			g.state.runConfig.SetBlacklistedExe(deck, true);
 			Audio.Play(Event.Click);
+		}), onMouseDownRight: new MouseDownHandler(() =>
+		{
+			route.subRoute = new CardUpgrade
+			{
+				cardCopy = Mutil.DeepCopy(exeCard),
+				isPreview = true
+			};
 		}));
 		
 		Draw.Sprite(isBlacklisted ? OffSprite.Sprite : OnSprite.Sprite, box.rect.x, box.rect.y, color: DB.decks[Deck.colorless].color);
@@ -250,7 +211,7 @@ internal static class ExeBlacklist
 		{
 			var tooltipPosition = box.rect.xy + new Vec(32);
 			g.tooltips.Add(tooltipPosition, ModEntry.Instance.Localizations.Localize(["exeBlacklist", isBlacklisted ? "off" : "on"]));
-			g.tooltips.Add(tooltipPosition, new TTCard { card = (Card)Activator.CreateInstance(exeType)! });
+			g.tooltips.Add(tooltipPosition, new TTCard { card = exeCard });
 		}
 
 		g.Pop();
@@ -266,11 +227,5 @@ internal static class ExeBlacklist
 			return;
 		if (GetNonBlacklistedExeCharacters(__instance).Count() < 2)
 			__result = false;
-	}
-
-	private sealed record MouseDownHandler(Action Delegate) : OnMouseDown
-	{
-		public void OnMouseDown(G _1, Box _2)
-			=> this.Delegate();
 	}
 }
