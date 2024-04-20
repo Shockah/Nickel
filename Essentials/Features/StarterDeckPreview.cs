@@ -1,5 +1,6 @@
 using HarmonyLib;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -7,22 +8,42 @@ namespace Nickel.Essentials;
 
 internal static class StarterDeckPreview
 {
+	private static bool UpdateNextFrame = true;
+	private static Character? LastRenderedCharacter;
+	private static readonly List<Card> LastStarterCards = [];
+	private static readonly List<Artifact> LastStarterArtifacts = [];
+
 	public static void ApplyPatches(Harmony harmony)
 	{
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(G), nameof(G.BubbleEvents))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(G)}.{nameof(G.BubbleEvents)}`"),
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(G_BubbleEvents_Prefix))
+		);
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(NewRunOptions), nameof(NewRunOptions.OnEnter))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(NewRunOptions)}.{nameof(NewRunOptions.OnEnter)}`"),
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(NewRunOptions_OnEnter_Postfix))
+		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(NewRunOptions), nameof(NewRunOptions.Render))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(NewRunOptions)}.{nameof(NewRunOptions.Render)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(NewRunOptions_Render_Postfix))
 		);
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(Character), nameof(Character.Render))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Character)}.{nameof(Character.Render)}`"),
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Character_Render_Prefix))
+		);
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(Artifact), nameof(Artifact.RenderArtifactList))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Artifact)}.{nameof(Artifact.RenderArtifactList)}`"),
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Artifact_RenderArtifactList_Prefix))
+		);
 	}
 
-	private static void NewRunOptions_Render_Postfix(NewRunOptions __instance, G g)
+	private static void UpdateStateBasedData(G g)
 	{
-		if (__instance.subRoute is not null)
-			return;
-		if (!g.state.runConfig.IsValid(g))
-			return;
-
 		var fakeState = Mutil.DeepCopy(g.state);
 		fakeState.slot = null;
 		var shipTemplate = StarterShip.ships.TryGetValue(fakeState.runConfig.selectedShip, out var ship) ? ship : StarterShip.ships.Values.First();
@@ -31,42 +52,100 @@ internal static class StarterDeckPreview
 		try
 		{
 			FeatureFlags.Demo = DemoMode.PAX;
-			fakeState.PopulateRun(
-				shipTemplate: shipTemplate,
-				chars: fakeState.runConfig.selectedChars,
-				difficulty: fakeState.runConfig.difficulty,
-				seed: fakeState.seed,
-				giveRunStartRewards: false
-			);
+			ModEntry.StopStateTransitions = true;
 
-			foreach (var card in fakeState.deck)
-				card.GetActions(fakeState, DB.fakeCombat);
-		}
-		catch
-		{
-			return;
+			try
+			{
+				fakeState.PopulateRun(
+					shipTemplate: shipTemplate,
+					newMap: new MapDemo(),
+					chars: NewRunOptions.allChars.Where(d => d != Deck.colorless),
+					difficulty: fakeState.runConfig.difficulty,
+					seed: fakeState.seed,
+					giveRunStartRewards: true
+				);
+
+				LastStarterArtifacts.Clear();
+				LastStarterArtifacts.AddRange(fakeState.characters.SelectMany(c => c.artifacts));
+			}
+			catch
+			{
+			}
+
+			if (!g.state.runConfig.IsValid(g))
+				return;
+
+			try
+			{
+				fakeState.PopulateRun(
+					shipTemplate: shipTemplate,
+					newMap: new MapDemo(),
+					chars: fakeState.runConfig.selectedChars,
+					difficulty: fakeState.runConfig.difficulty,
+					seed: fakeState.seed,
+					giveRunStartRewards: true
+				);
+
+				foreach (var card in fakeState.deck)
+					card.GetActions(fakeState, DB.fakeCombat);
+			}
+			catch
+			{
+				return;
+			}
 		}
 		finally
 		{
 			FeatureFlags.Demo = oldDemo;
+			ModEntry.StopStateTransitions = false;
 		}
 
-		var cards = fakeState.deck
-			.Select(card => (Card: card, Meta: card.GetMeta()))
-			.OrderBy(e => shipTemplate.cards.Any(shipCard => shipCard.Key() == e.Card.Key()) || e.Card.GetMeta().dontOffer)
-			.ThenBy(e => !NewRunOptions.allChars.Contains(e.Meta.deck))
-			.ThenBy(e => NewRunOptions.allChars.IndexOf(e.Meta.deck))
-			.ThenBy(e => ModEntry.Instance.Api.IsExeCardType(e.Card.GetType()))
-			.ThenBy(e => e.Meta.rarity)
-			.ThenBy(e => e.Card.GetFullDisplayName())
-			.Select(e => e.Card)
-			.ToList();
+		LastStarterCards.Clear();
+		LastStarterCards.AddRange(
+			fakeState.deck
+				.Select(card => (Card: card, Meta: card.GetMeta()))
+				.OrderBy(e => shipTemplate.cards.Any(shipCard => shipCard.Key() == e.Card.Key()) || e.Card.GetMeta().dontOffer)
+				.ThenBy(e => !NewRunOptions.allChars.Contains(e.Meta.deck))
+				.ThenBy(e => NewRunOptions.allChars.IndexOf(e.Meta.deck))
+				.ThenBy(e => ModEntry.Instance.Api.IsExeCardType(e.Card.GetType()))
+				.ThenBy(e => e.Meta.rarity)
+				.ThenBy(e => e.Card.GetFullDisplayName())
+				.Select(e => e.Card)
+		);
+	}
+
+	private static void G_BubbleEvents_Prefix(G __instance)
+	{
+		if (__instance.state.route is not NewRunOptions route)
+			return;
+		if (route.subRoute is not null)
+			return;
+		if (Input.mouseLeftDown || Input.mouseRightDown || Input.GetGpDown(Btn.A, consume: false) || Input.GetGpDown(Btn.X, consume: false))
+			UpdateNextFrame = true;
+	}
+
+	private static void NewRunOptions_OnEnter_Postfix()
+		=> UpdateNextFrame = true;
+
+	private static void NewRunOptions_Render_Postfix(NewRunOptions __instance, G g)
+	{
+		if (__instance.subRoute is not null)
+			return;
+
+		if (UpdateNextFrame)
+		{
+			UpdateNextFrame = false;
+			UpdateStateBasedData(g);
+		}
+
+		if (!g.state.runConfig.IsValid(g))
+			return;
 
 		var textRect = Draw.Text(ModEntry.Instance.Localizations.Localize(["starterDeckPreview", "startingDeck"]), 96, 258, color: Colors.textBold);
 
-		for (var i = 0; i < cards.Count; i++)
+		for (var i = 0; i < LastStarterCards.Count; i++)
 		{
-			var card = cards[i];
+			var card = LastStarterCards[i];
 			var isNonCatExe = ModEntry.Instance.Api.GetDeckForExeCardType(card.GetType()) is { } exeDeck && exeDeck != Deck.colorless;
 
 			if (isNonCatExe)
@@ -93,5 +172,30 @@ internal static class StarterDeckPreview
 
 			g.Pop();
 		}
+	}
+
+	private static void Character_Render_Prefix(Character __instance, G g, bool renderLocked)
+	{
+		if (__instance.deckType is not { } deck)
+			return;
+		if (g.state.route is not NewRunOptions)
+			return;
+		if (renderLocked)
+			return;
+		
+		LastRenderedCharacter = __instance;
+
+		__instance.artifacts.AddRange(LastStarterArtifacts.Where(a => a.GetMeta().owner == deck));
+	}
+
+	private static void Artifact_RenderArtifactList_Prefix(G g, ref Vec offset)
+	{
+		if (LastRenderedCharacter?.deckType is not { } deck)
+			return;
+		if (g.state.route is not NewRunOptions)
+			return;
+
+		if (NewRunOptions.allChars.IndexOf(deck) % 2 == 0)
+			offset = new(-5, offset.y);
 	}
 }

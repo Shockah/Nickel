@@ -6,6 +6,7 @@
 
 * Essentials: Added an option to disable a given EXE card from the starter pool.
 * Essentials: Added a starter deck card preview.
+* Essentials: Added a character starter artifact preview.
 * Essentials: Fixed Isaac unlock condition.
 * Added character lookup to `IModCharacters`.
 

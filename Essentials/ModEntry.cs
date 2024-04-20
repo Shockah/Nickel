@@ -14,6 +14,8 @@ public sealed class ModEntry : SimpleMod
 	internal ApiImplementation Api { get; private set; }
 	internal IMoreDifficultiesApi? MoreDifficultiesApi { get; private set; }
 
+	internal static bool StopStateTransitions = false;
+
 	private readonly Dictionary<Deck, Type?> ExeCache = [];
 	private readonly Dictionary<Type, Deck> ExeTypeToDeck = [];
 
@@ -45,6 +47,17 @@ public sealed class ModEntry : SimpleMod
 		MemorySelection.ApplyPatches(harmony);
 		ModDescriptions.ApplyPatches(harmony);
 		StarterDeckPreview.ApplyPatches(harmony);
+
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.ShuffleDeck))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.ShuffleDeck)}`"),
+			prefix: new HarmonyMethod(this.GetType(), nameof(State_ShuffleDeck_Prefix))
+		);
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.GoToZone))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.GoToZone)}`"),
+			prefix: new HarmonyMethod(this.GetType(), nameof(State_GoToZone_Prefix))
+		);
 	}
 
 	public override object? GetApi(IModManifest requestingMod)
@@ -70,13 +83,18 @@ public sealed class ModEntry : SimpleMod
 		try
 		{
 			FeatureFlags.Demo = DemoMode.PAX;
+			StopStateTransitions = true;
+
 			var fakeState = Mutil.DeepCopy(DB.fakeState);
 			fakeState.slot = null;
+			this.Helper.ModData.SetModData(fakeState, "RunningDataCollectingPopulateRun", true);
 			fakeState.PopulateRun(
 				shipTemplate: fakeShip,
+				newMap: new MapDemo(),
 				chars: NewRunOptions.allChars
 					.Where(d => d != deck && d != Deck.dizzy) // need at least 2 characters total, otherwise it will always throw
-					.ToHashSet()
+					.ToHashSet(),
+				giveRunStartRewards: true
 			);
 
 			exeType = fakeState.deck
@@ -95,6 +113,19 @@ public sealed class ModEntry : SimpleMod
 		finally
 		{
 			FeatureFlags.Demo = oldDemo;
+			StopStateTransitions = false;
 		}
+	}
+
+	private static bool State_ShuffleDeck_Prefix()
+		=> !StopStateTransitions;
+
+	private static bool State_GoToZone_Prefix(ref Route __result)
+	{
+		if (!StopStateTransitions)
+			return true;
+
+		__result = new Route();
+		return false;
 	}
 }
