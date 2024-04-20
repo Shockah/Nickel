@@ -9,6 +9,7 @@ public sealed class ModEntry : SimpleMod
 {
 	internal static ModEntry Instance { get; private set; } = null!;
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
+	internal IMoreDifficultiesApi? MoreDifficultiesApi { get; private set; }
 
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
@@ -21,6 +22,13 @@ public sealed class ModEntry : SimpleMod
 				)
 			)
 		);
+
+		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
+		{
+			if (phase != ModLoadPhase.AfterDbInit)
+				return;
+			this.MoreDifficultiesApi = helper.ModRegistry.GetApi<IMoreDifficultiesApi>("TheJazMaster.MoreDifficulties", new(1, 4, 1));
+		};
 
 		var harmony = new Harmony(package.Manifest.UniqueName);
 		CardCodexFiltering.ApplyPatches(harmony);

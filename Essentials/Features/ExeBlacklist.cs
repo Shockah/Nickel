@@ -129,6 +129,9 @@ internal static class ExeBlacklist
 	private static IEnumerable<Deck> GetAllExeCharacters()
 		=> NewRunOptions.allChars.Where(d => GetExeType(d) is not null);
 
+	private static IEnumerable<Deck> GetNonBlacklistedExeCharacters(RunConfig runConfig)
+		=> GetAllExeCharacters().Where(d => !runConfig.selectedChars.Contains(d)).Where(d => !runConfig.IsBlacklistedExe(d));
+
 	private static void State_PopulateRun_Prefix(State __instance)
 		=> LastState = __instance;
 
@@ -183,9 +186,13 @@ internal static class ExeBlacklist
 
 	private static bool NewRunOptions_OnMouseDown_Prefix(G g, Box b)
 	{
+		if (!g.state.runConfig.selectedChars.Contains(Deck.colorless))
+			return true;
+		if (ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(g.state, Deck.colorless) == true)
+			return true;
 		if (b.key != StableUK.newRun_continue)
 			return true;
-		if (GetAllExeCharacters().Where(d => !g.state.runConfig.selectedChars.Contains(d)).Count(d => !g.state.runConfig.IsBlacklistedExe(d)) >= 2)
+		if (GetNonBlacklistedExeCharacters(g.state.runConfig).Count() >= 2)
 			return true;
 
 		CannotBlacklistWarning = 1.5;
@@ -205,9 +212,11 @@ internal static class ExeBlacklist
 			return;
 		if (deck == Deck.colorless)
 			return;
+		if (g.state.runConfig.selectedChars.Contains(deck))
+			return;
 		if (!g.state.runConfig.selectedChars.Contains(Deck.colorless))
 			return;
-		if (g.state.runConfig.selectedChars.Contains(deck))
+		if (ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(g.state, Deck.colorless) == true)
 			return;
 		if (GetExeType(deck) is not { } exeType)
 			return;
@@ -225,7 +234,7 @@ internal static class ExeBlacklist
 				return;
 			}
 
-			if (GetAllExeCharacters().Where(d => !g.state.runConfig.selectedChars.Contains(d)).Count(d => !g.state.runConfig.IsBlacklistedExe(d)) <= 2)
+			if (GetNonBlacklistedExeCharacters(g.state.runConfig).Count() <= 2)
 			{
 				CannotBlacklistWarning = 1.5;
 				Audio.Play(Event.ZeroEnergy);
@@ -247,11 +256,15 @@ internal static class ExeBlacklist
 		g.Pop();
 	}
 
-	private static void RunConfig_IsValid_Postfix(RunConfig __instance, ref bool __result)
+	private static void RunConfig_IsValid_Postfix(RunConfig __instance, G g, ref bool __result)
 	{
+		if (!__instance.selectedChars.Contains(Deck.colorless))
+			return;
+		if (ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(g.state, Deck.colorless) == true)
+			return;
 		if (!__result)
 			return;
-		if (GetAllExeCharacters().Where(d => !__instance.selectedChars.Contains(d)).Count(d => !__instance.IsBlacklistedExe(d)) < 2)
+		if (GetNonBlacklistedExeCharacters(__instance).Count() < 2)
 			__result = false;
 	}
 
