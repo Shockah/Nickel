@@ -27,8 +27,10 @@ internal static class StarterDeckPreview
 		fakeState.slot = null;
 		var shipTemplate = StarterShip.ships.TryGetValue(fakeState.runConfig.selectedShip, out var ship) ? ship : StarterShip.ships.Values.First();
 
+		var oldDemo = FeatureFlags.Demo;
 		try
 		{
+			FeatureFlags.Demo = DemoMode.PAX;
 			fakeState.PopulateRun(
 				shipTemplate: shipTemplate,
 				chars: fakeState.runConfig.selectedChars,
@@ -43,6 +45,10 @@ internal static class StarterDeckPreview
 		catch
 		{
 			return;
+		}
+		finally
+		{
+			FeatureFlags.Demo = oldDemo;
 		}
 
 		var cards = fakeState.deck
@@ -64,7 +70,7 @@ internal static class StarterDeckPreview
 			if (isNonCatExe)
 				card = new ColorlessDizzySummon();
 
-			var rect = new Rect((int)(MG.inst.PIX_W / 2 - 1 + i * 7 - cards.Count * 3.5), 48, 6, 8);
+			var rect = new Rect((int)(MG.inst.PIX_W / 2 + i * 7 - cards.Count * 3.5), 48, 6, 8);
 			var box = g.Push(new UIKey(StableUK.logbook_card, i), rect, onMouseDownRight: new MouseDownHandler(() =>
 			{
 				__instance.subRoute = new CardUpgrade

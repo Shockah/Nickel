@@ -41,6 +41,7 @@ public sealed class ModEntry : SimpleMod
 		CardCodexFiltering.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);
 		ExeBlacklist.ApplyPatches(harmony);
+		FixIsaacUnlock.ApplyPatches(harmony);
 		MemorySelection.ApplyPatches(harmony);
 		ModDescriptions.ApplyPatches(harmony);
 		StarterDeckPreview.ApplyPatches(harmony);
@@ -65,8 +66,10 @@ public sealed class ModEntry : SimpleMod
 		fakeShip.cards.Clear();
 		fakeShip.artifacts.Clear();
 
+		var oldDemo = FeatureFlags.Demo;
 		try
 		{
+			FeatureFlags.Demo = DemoMode.PAX;
 			var fakeState = Mutil.DeepCopy(DB.fakeState);
 			fakeState.slot = null;
 			fakeState.PopulateRun(
@@ -88,6 +91,10 @@ public sealed class ModEntry : SimpleMod
 		{
 			this.ExeCache[deck] = null;
 			return null;
+		}
+		finally
+		{
+			FeatureFlags.Demo = oldDemo;
 		}
 	}
 }
