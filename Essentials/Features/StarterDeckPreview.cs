@@ -62,6 +62,8 @@ internal static class StarterDeckPreview
 			.Select(e => e.Card)
 			.ToList();
 
+		var textRect = Draw.Text(ModEntry.Instance.Localizations.Localize(["starterDeckPreview", "startingDeck"]), 96, 258, color: Colors.textBold);
+
 		for (var i = 0; i < cards.Count; i++)
 		{
 			var card = cards[i];
@@ -70,7 +72,7 @@ internal static class StarterDeckPreview
 			if (isNonCatExe)
 				card = new ColorlessDizzySummon();
 
-			var rect = new Rect((int)(MG.inst.PIX_W / 2 + i * 7 - cards.Count * 3.5), 48, 6, 8);
+			var rect = new Rect(96 + textRect.w + 4 + i * 7, 256, 6, 8);
 			var box = g.Push(new UIKey(StableUK.logbook_card, i), rect, onMouseDownRight: new MouseDownHandler(() =>
 			{
 				__instance.subRoute = new CardUpgrade

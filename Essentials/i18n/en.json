@@ -9,6 +9,7 @@
 	},
 	"modDescription": "<c=keyword>Mod:</c> {{ModName}}",
 	"starterDeckPreview": {
+		"startingDeck": "Starting Deck:",
 		"exeCard": "A random CAT EXE card, like this one:"
 	}
 }
