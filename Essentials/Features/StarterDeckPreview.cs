@@ -116,7 +116,7 @@ internal static class StarterDeckPreview
 
 	private static void G_BubbleEvents_Prefix(G __instance)
 	{
-		if (__instance.state.route is not NewRunOptions route)
+		if (__instance.state?.route is not NewRunOptions route)
 			return;
 		if (route.subRoute is not null)
 			return;
