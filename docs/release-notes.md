@@ -9,6 +9,7 @@
 * Essentials: Added a character starter artifact preview.
 * Essentials: Fixed Isaac unlock condition.
 * Added character lookup to `IModCharacters`.
+* Card trait icon and tooltip callbacks' `Card` parameter is now nullable.
 * Fixed card traits rendering at wrong spots, sometimes not appearing at all.
 
 ## 0.8.3
