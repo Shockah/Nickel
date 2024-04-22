@@ -94,6 +94,7 @@ internal static class CardPatches
 	{
 		var eventArgs = new TraitRenderEventArgs { Card = card, State = state, CardTraitIndex = cardTraitIndex, Position = vec };
 		OnRenderTraits.Raise(null, eventArgs);
+		cardTraitIndex = eventArgs.CardTraitIndex;
 	}
 
 	private static void GetAllTooltips_Postfix(Card __instance, State s, bool showCardTraits, ref IEnumerable<Tooltip> __result)

@@ -9,6 +9,7 @@
 * Essentials: Added a character starter artifact preview.
 * Essentials: Fixed Isaac unlock condition.
 * Added character lookup to `IModCharacters`.
+* Fixed card traits rendering at wrong spots, sometimes not appearing at all.
 
 ## 0.8.3
 Released 18 April 2024.
