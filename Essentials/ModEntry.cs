@@ -63,7 +63,7 @@ public sealed class ModEntry : SimpleMod
 	public override object? GetApi(IModManifest requestingMod)
 		=> new ApiImplementation();
 
-	internal Type? GetExeType(Deck deck)
+	internal Type? GetExeCardTypeForDeck(Deck deck)
 	{
 		if (this.ExeCache.TryGetValue(deck, out var exeType))
 			return exeType;
@@ -115,6 +115,18 @@ public sealed class ModEntry : SimpleMod
 			FeatureFlags.Demo = oldDemo;
 			StopStateTransitions = false;
 		}
+	}
+
+	internal Deck? GetDeckForExeCardType(Type type)
+	{
+		if (this.ExeTypeToDeck.TryGetValue(type, out var deck))
+			return deck;
+
+		var nullableDeck = NewRunOptions.allChars.FirstOrNull(deck => this.GetExeCardTypeForDeck(deck) == type);
+		if (nullableDeck is not null)
+			this.ExeTypeToDeck[type] = nullableDeck.Value;
+
+		return deck;
 	}
 
 	private static bool State_ShuffleDeck_Prefix()

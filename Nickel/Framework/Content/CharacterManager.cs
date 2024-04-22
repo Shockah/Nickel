@@ -71,7 +71,7 @@ internal sealed class CharacterManager
 	{
 		if (this.DeckToCharacterEntry.TryGetValue(deck, out var entry))
 			return entry;
-		if (deck is not (Deck.dizzy or Deck.riggs or Deck.peri or Deck.goat or Deck.eunice or Deck.hacker or Deck.shard))
+		if (deck is not (Deck.dizzy or Deck.riggs or Deck.peri or Deck.goat or Deck.eunice or Deck.hacker or Deck.shard or Deck.colorless))
 			return null;
 
 		return new CharacterEntry(

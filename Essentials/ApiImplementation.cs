@@ -5,10 +5,10 @@ namespace Nickel.Essentials;
 public sealed class ApiImplementation : IEssentialsApi
 {
 	public Type? GetExeCardTypeForDeck(Deck deck)
-		=> ModEntry.Instance.GetExeType(deck);
+		=> ModEntry.Instance.GetExeCardTypeForDeck(deck);
 
 	public Deck? GetDeckForExeCardType(Type type)
-		=> NewRunOptions.allChars.FirstOrNull(deck => this.GetExeCardTypeForDeck(deck) == type);
+		=> ModEntry.Instance.GetDeckForExeCardType(type);
 
 	public bool IsExeCardType(Type type)
 		=> this.GetDeckForExeCardType(type) is not null;
