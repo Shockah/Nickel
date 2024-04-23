@@ -63,17 +63,10 @@ public sealed class ModEntry : SimpleMod
 	public override object? GetApi(IModManifest requestingMod)
 		=> new ApiImplementation();
 
-	internal Type? GetExeCardTypeForDeck(Deck deck)
+	private void PrepareExeInfoIfNeeded()
 	{
-		if (this.ExeCache.TryGetValue(deck, out var exeType))
-			return exeType;
-
-		if (this.Helper.Content.Characters.LookupByDeck(deck) is { } entry && entry.Configuration.ExeCardType is { } entryExeType)
-		{
-			this.ExeCache[deck] = entryExeType;
-			this.ExeTypeToDeck[entryExeType] = deck;
-			return entryExeType;
-		}
+		if (this.ExeCache.Count != 0)
+			return;
 
 		var fakeShip = Mutil.DeepCopy(StarterShip.ships.Values.First());
 		fakeShip.cards.Clear();
@@ -88,27 +81,39 @@ public sealed class ModEntry : SimpleMod
 			var fakeState = Mutil.DeepCopy(DB.fakeState);
 			fakeState.slot = null;
 			this.Helper.ModData.SetModData(fakeState, "RunningDataCollectingPopulateRun", true);
-			fakeState.PopulateRun(
-				shipTemplate: fakeShip,
-				newMap: new MapDemo(),
-				chars: NewRunOptions.allChars
-					.Where(d => d != deck && d != Deck.dizzy) // need at least 2 characters total, otherwise it will always throw
-					.ToHashSet(),
-				giveRunStartRewards: true
-			);
 
-			exeType = fakeState.deck
-				.Where(card => card is not ColorlessDizzySummon)
-				.SingleOrDefault(card => card.GetMeta().deck == Deck.colorless && card.GetFullDisplayName().Contains(".EXE", StringComparison.OrdinalIgnoreCase))?.GetType();
-			this.ExeCache[deck] = exeType;
-			if (exeType is not null)
-				this.ExeTypeToDeck[exeType] = deck;
-			return exeType;
-		}
-		catch
-		{
-			this.ExeCache[deck] = null;
-			return null;
+			foreach (var deck in NewRunOptions.allChars)
+			{
+				if (this.Helper.Content.Characters.LookupByDeck(deck) is { } entry && entry.Configuration.ExeCardType is { } entryExeType)
+				{
+					this.ExeCache[deck] = entryExeType;
+					this.ExeTypeToDeck[entryExeType] = deck;
+					continue;
+				}
+
+				try
+				{
+					fakeState.PopulateRun(
+						shipTemplate: fakeShip,
+						newMap: new MapDemo(),
+						chars: NewRunOptions.allChars
+							.Where(d => d != deck && d != Deck.dizzy) // need at least 2 characters total, otherwise it will always throw
+							.ToHashSet(),
+						giveRunStartRewards: true
+					);
+
+					var exeType = fakeState.deck
+						.Where(card => card is not ColorlessDizzySummon)
+						.SingleOrDefault(card => card.GetMeta().deck == Deck.colorless && card.GetFullDisplayName().Contains(".EXE", StringComparison.OrdinalIgnoreCase))?.GetType();
+					this.ExeCache[deck] = exeType;
+					if (exeType is not null)
+						this.ExeTypeToDeck[exeType] = deck;
+				}
+				catch
+				{
+
+				}
+			}
 		}
 		finally
 		{
@@ -117,16 +122,16 @@ public sealed class ModEntry : SimpleMod
 		}
 	}
 
+	internal Type? GetExeCardTypeForDeck(Deck deck)
+	{
+		this.PrepareExeInfoIfNeeded();
+		return this.ExeCache.TryGetValue(deck, out var exeType) ? exeType : null;
+	}
+
 	internal Deck? GetDeckForExeCardType(Type type)
 	{
-		if (this.ExeTypeToDeck.TryGetValue(type, out var deck))
-			return deck;
-
-		var nullableDeck = NewRunOptions.allChars.FirstOrNull(deck => this.GetExeCardTypeForDeck(deck) == type);
-		if (nullableDeck is not null)
-			this.ExeTypeToDeck[type] = nullableDeck.Value;
-
-		return deck;
+		this.PrepareExeInfoIfNeeded();
+		return this.ExeTypeToDeck.TryGetValue(type, out var deck) ? deck : null;
 	}
 
 	private static bool State_ShuffleDeck_Prefix()

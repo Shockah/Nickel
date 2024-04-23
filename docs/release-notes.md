@@ -4,6 +4,7 @@
 
 ## Upcoming release
 
+* Essentials: Added More Difficulties alt starters indicators.
 * Essentials: Added an option to disable a given EXE card from the starter pool.
 * Essentials: Added a starter deck card preview.
 * Essentials: Added a character starter artifact preview.

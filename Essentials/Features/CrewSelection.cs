@@ -127,7 +127,8 @@ internal static class CrewSelection
 		for (var i = 0; i < 3; i++)
 		{
 			Deck? deck = i < orderedSelectedChars.Count ? orderedSelectedChars[i] : null;
-			var charText = deck is null ? ModEntry.Instance.Localizations.Localize(["crewSelection", "emptySlot"]) : Loc.T($"char.{deck.Value.Key()}");
+			var altStarters = deck is not null && (ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(MG.inst.g.state, deck.Value) ?? false);
+			var charText = deck is null ? ModEntry.Instance.Localizations.Localize(["crewSelection", "emptySlot"]) : $"{Loc.T($"char.{deck.Value.Key()}")}{(altStarters ? "*" : "")}";
 			var charTextColor = deck is null || !DB.decks.TryGetValue(deck.Value, out var deckDef) ? Colors.downside.fadeAlpha(0.4) : deckDef.color;
 			Draw.Text(charText, x, y - 5 + i * 8, font, charTextColor);
 		}
