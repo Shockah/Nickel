@@ -12,6 +12,7 @@
 * Added character lookup to `IModCharacters`.
 * Card trait icon and tooltip callbacks' `Card` parameter is now nullable.
 * Fixed card traits rendering at wrong spots, sometimes not appearing at all.
+* Improved "missing string" text.
 
 ## 0.8.3
 Released 18 April 2024.
