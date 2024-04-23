@@ -2,7 +2,7 @@
 
 # Release notes
 
-## Upcoming release
+## 0.9.0
 
 * Essentials: Added More Difficulties alt starters indicators.
 * Essentials: Added an option to disable a given EXE card from the starter pool.
