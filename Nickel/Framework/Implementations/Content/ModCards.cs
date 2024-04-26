@@ -73,4 +73,10 @@ internal sealed class ModCards : IModCards
 
 	public void SetCardTraitOverride(State state, Card card, ICardTraitEntry trait, bool? overrideValue, bool permanent)
 		=> this.CardTraitManagerProvider().SetCardTraitOverride(card, trait, overrideValue, permanent);
+
+	public event EventHandler<GetVolatileCardTraitOverridesEventArgs> OnGetVolatileCardTraitOverrides
+	{
+		add => this.CardTraitManagerProvider().OnOverrideInnateTraitsEvent.Add(value, this.ModManifest);
+		remove => this.CardTraitManagerProvider().OnOverrideInnateTraitsEvent.Remove(value, this.ModManifest);
+	}
 }

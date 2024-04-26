@@ -54,7 +54,7 @@ internal sealed class ContentManager
 		var characters = new CharacterManager(currentModLoadPhaseProvider, loggerProvider, sprites, decks, statuses, vanillaModManifest);
 		var parts = new PartManager(currentModLoadPhaseProvider);
 		var ships = new ShipManager(currentModLoadPhaseProvider, vanillaModManifest);
-		var cardTraits = new CardTraitManager(vanillaModManifest, modManagerModManifest, modDataManager);
+		var cardTraits = new CardTraitManager(loggerProvider, vanillaModManifest, modManagerModManifest, modDataManager);
 		return new(sprites, decks, statuses, cards, artifacts, characters, parts, ships, cardTraits);
 	}
 

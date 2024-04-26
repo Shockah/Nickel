@@ -6,10 +6,14 @@ namespace Nickel;
 
 public sealed class ManagedEvent<TEventArgs>
 {
-	private OrderedList<ManagedEventHandler, double> Handlers { get; } = [];
-	private Action<EventHandler<TEventArgs>, IModManifest, Exception>? ExceptionHandler { get; }
-	private bool IsRaising { get; set; } = false;
-	private List<(ManagedEventsModification, ManagedEventHandler)> AwaitingModifications { get; } = [];
+	public delegate void ModifyEventArgsBetweenSubscribersDelegate(IModManifest? previousSubscriber, IModManifest? nextSubscriber, object? sender, ref TEventArgs args);
+
+	internal ModifyEventArgsBetweenSubscribersDelegate? ModifyEventArgsBetweenSubscribers { get; init; }
+
+	private readonly OrderedList<ManagedEventHandler, double> Handlers = [];
+	private readonly List<(ManagedEventsModification, ManagedEventHandler)> AwaitingModifications = [];
+	private readonly Action<EventHandler<TEventArgs>, IModManifest, Exception>? ExceptionHandler;
+	private bool IsRaising = false;
 
 	public ManagedEvent(Action<EventHandler<TEventArgs>, IModManifest, Exception>? exceptionHandler)
 	{
@@ -57,7 +61,7 @@ public sealed class ManagedEvent<TEventArgs>
 		}
 	}
 
-	public void Raise(object? sender, TEventArgs args)
+	public TEventArgs Raise(object? sender, TEventArgs args)
 	{
 		lock (this.Handlers)
 		{
@@ -66,17 +70,21 @@ public sealed class ManagedEvent<TEventArgs>
 			{
 				if (this.ExceptionHandler is { } exceptionHandler)
 				{
+					IModManifest? previousSubscriber = null;
 					foreach (var handler in this.Handlers)
 					{
 						try
 						{
+							this.ModifyEventArgsBetweenSubscribers?.Invoke(previousSubscriber, handler.Mod, sender, ref args);
 							handler.Handler(sender, args);
 						}
 						catch (Exception e)
 						{
 							exceptionHandler(handler.Handler, handler.Mod, e);
 						}
+						previousSubscriber = handler.Mod;
 					}
+					this.ModifyEventArgsBetweenSubscribers?.Invoke(previousSubscriber, null, sender, ref args);
 				}
 				else
 				{
@@ -89,6 +97,7 @@ public sealed class ManagedEvent<TEventArgs>
 				this.IsRaising = false;
 				this.RunAwaitingModifications();
 			}
+			return args;
 		}
 	}
 

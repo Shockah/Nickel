@@ -17,6 +17,7 @@ internal static class StatePatches
 	internal static WeakEventSource<EnumerateAllArtifactsEventArgs> OnEnumerateAllArtifacts { get; } = new();
 	internal static WeakEventSource<ModifyPotentialExeCardsEventArgs> OnModifyPotentialExeCards { get; } = new();
 	internal static WeakEventSource<LoadEventArgs> OnLoad { get; } = new();
+	internal static WeakEventSource<State> OnUpdate { get; } = new();
 
 	internal static void Apply(Harmony harmony, bool saveInDebug)
 	{
@@ -40,6 +41,11 @@ internal static class StatePatches
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.Load))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.Load)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Load_Postfix))
+		);
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.Update))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.Update)}`"),
+			prefix: new HarmonyMethod(AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Update_Prefix)), priority: Priority.First)
 		);
 	}
 
@@ -106,6 +112,9 @@ internal static class StatePatches
 		OnLoad.Raise(null, eventArgs);
 		__result.isCorrupted = eventArgs.IsCorrupted;
 	}
+
+	private static void Update_Prefix(State __instance)
+		=> OnUpdate.Raise(null, __instance);
 
 	internal sealed class EnumerateAllArtifactsEventArgs
 	{

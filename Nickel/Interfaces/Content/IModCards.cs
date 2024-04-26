@@ -27,4 +27,6 @@ public interface IModCards
 	bool IsCardTraitActive(State state, Card card, ICardTraitEntry trait);
 	CardTraitState GetCardTraitState(State state, Card card, ICardTraitEntry trait);
 	void SetCardTraitOverride(State state, Card card, ICardTraitEntry trait, bool? overrideValue, bool permanent);
+
+	event EventHandler<GetVolatileCardTraitOverridesEventArgs> OnGetVolatileCardTraitOverrides;
 }
