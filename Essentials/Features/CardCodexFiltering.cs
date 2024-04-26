@@ -142,7 +142,7 @@ internal static partial class CardCodexFiltering
 					}
 				})
 			);
-			var sprite = FilteredOutDecks.Contains(deck) ? Spr.buttons_select_gray : Spr.buttons_select_gray_on;
+			var sprite = FilteredOutDecks.Contains(deck) ? StableSpr.buttons_select_gray : StableSpr.buttons_select_gray_on;
 			Draw.Sprite(sprite, box.rect.x, box.rect.y, scale: new Vec(scale, scale), color: Colors.buttonBoxNormal);
 			Draw.Text(
 				$"<c={DB.decks[deck].color}>{niceName}</c>",
