@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed EXE blacklist checkbox appearing on run summary if CAT is currently selected for a new run.
+
 ## 0.9.0
 Released 23 April 2024.
 

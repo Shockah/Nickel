@@ -159,6 +159,8 @@ internal static class ExeBlacklist
 			return;
 		if (!mini || renderLocked)
 			return;
+		if (g.metaRoute is not null)
+			return;
 		if (g.state.route is not NewRunOptions route)
 			return;
 		if (__instance.deckType is not { } deck)
