@@ -52,6 +52,7 @@ internal sealed class LegacyDatabase(
 	public void AfterDbInit()
 	{
 		this.InjectGlossaryIconSprites();
+		this.InjectPartSprites();
 		this.InjectExternalStory();
 		this.InjectChoiceAndCommands();
 	}
@@ -147,13 +148,23 @@ internal sealed class LegacyDatabase(
 		}
 	}
 
-	internal void InjectGlossaryIconSprites()
+	private void InjectGlossaryIconSprites()
 	{
 		foreach (var glossary in this.ItemNameToGlossary.Values)
 		{
 			if (glossary.Icon.Id is not { } spriteId)
 				continue;
 			DB.icons[glossary.ItemName] = (Spr)spriteId;
+		}
+	}
+
+	private void InjectPartSprites()
+	{
+		foreach (var part in this.GlobalNameToPart.Values)
+		{
+			DB.parts[part.Key] = (Spr)part.PartSprite.Id!.Value;
+			if (part.PartOffSprite is { } partOff)
+				DB.parts[part.Key] = (Spr)partOff.Id!.Value;
 		}
 	}
 
@@ -342,8 +353,11 @@ internal sealed class LegacyDatabase(
 		{
 			Deck = (Deck)value.Deck.Id!.Value,
 			BorderSprite = (Spr)value.CharPanelSpr.Id!.Value,
-			StarterArtifactTypes = value.StarterArtifacts.ToList(),
-			StarterCardTypes = value.StarterDeck.ToList()
+			Starters = new()
+			{
+				cards = value.StarterDeck.Select(t => (Card)Activator.CreateInstance(t)!).ToList(),
+				artifacts = value.StarterArtifacts.Select(t => (Artifact)Activator.CreateInstance(t)!).ToList(),
+			}
 		};
 
 		this.HelperProvider(mod).Content.Characters.RegisterCharacter(value.GlobalName, configuration);
