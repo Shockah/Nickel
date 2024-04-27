@@ -213,6 +213,7 @@ internal class CardTraitManager
 
 	private readonly Dictionary<string, ModdedEntry> UniqueNameToEntry = [];
 	private readonly Dictionary<Card, IReadOnlyDictionary<ICardTraitEntry, CardTraitState>> CardTraitStateCache = [];
+	private readonly HashSet<Card> CurrentlyCreatingCardTraitStates = [];
 	private readonly Lazy<IReadOnlyDictionary<string, ICardTraitEntry>> SynthesizedVanillaEntries;
 	private readonly IModManifest VanillaModManifest;
 	private readonly IModManifest ModManagerModManifest;
@@ -417,7 +418,10 @@ internal class CardTraitManager
 		var overrides = this.ModDataManager.TryGetModData<OverridesModData>(this.ModManagerModManifest, card, "CustomTraitOverrides", out var modDataOverrides) ? modDataOverrides : new();
 		this.FixModData(card, overrides);
 
-		var data = card.GetData(state);
+		var wasCurrentlyCreatingCardTraitStates = this.CurrentlyCreatingCardTraitStates.Contains(card);
+		this.CurrentlyCreatingCardTraitStates.Add(card);
+
+		var data = wasCurrentlyCreatingCardTraitStates ? new() : card.GetData(state);
 		var innateCustomTraits = (card as IHasCustomCardTraits)?.GetInnateTraits(state).ToHashSet() ?? [];
 
 		foreach (var trait in this.SynthesizedVanillaEntries.Value.Values.Concat(this.UniqueNameToEntry.Values))
@@ -440,6 +444,10 @@ internal class CardTraitManager
 			VolatileOverrides = [],
 			TraitStates = results
 		});
+
+		if (wasCurrentlyCreatingCardTraitStates)
+			this.CurrentlyCreatingCardTraitStates.Remove(card);
+
 		return overrideEventArgs.TraitStates;
 	}
 }

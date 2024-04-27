@@ -4,6 +4,7 @@
 
 ## Upcoming release
 
+* Fixed a crash that could occur within the new card trait system.
 * Fixed EXE blacklist checkbox appearing on run summary if CAT is currently selected for a new run.
 * Fixed Codex filter buttons using `Spr` directly, breaking on various game versions.
 * Fixed modded ship part behavior for legacy mods, causing some of their ships to become invisible.
