@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 0.10.0
+Released 27 April 2024.
 
 * Added an API to add "volatile" card trait overrides - overrides, which act as if they were innate card traits, but which can actually depend on other traits, including other overrides.
 * Fixed a crash that could occur within the new card trait system.
