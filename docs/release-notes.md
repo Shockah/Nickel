@@ -4,6 +4,7 @@
 
 ## Upcoming release
 
+* Added an API to add "volatile" card trait overrides - overrides, which act as if they were innate card traits, but which can actually depend on other traits, including other overrides.
 * Fixed a crash that could occur within the new card trait system.
 * Fixed EXE blacklist checkbox appearing on run summary if CAT is currently selected for a new run.
 * Fixed Codex filter buttons using `Spr` directly, breaking on various game versions.
