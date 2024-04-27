@@ -445,7 +445,7 @@ internal class CardTraitManager
 			TraitStates = results
 		});
 
-		if (wasCurrentlyCreatingCardTraitStates)
+		if (!wasCurrentlyCreatingCardTraitStates)
 			this.CurrentlyCreatingCardTraitStates.Remove(card);
 
 		return overrideEventArgs.TraitStates;

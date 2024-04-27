@@ -2,6 +2,11 @@
 
 # Release notes
 
+## 0.10.1
+Released 27 April 2024.
+
+* Fixed card traits being half of the time active, half of the time not.
+
 ## 0.10.0
 Released 27 April 2024.
 
