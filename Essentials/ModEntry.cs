@@ -40,6 +40,7 @@ public sealed class ModEntry : SimpleMod
 		};
 
 		var harmony = new Harmony(package.Manifest.UniqueName);
+		CardBrowseCurrentPile.ApplyPatches(harmony);
 		CardCodexFiltering.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);
 		ExeBlacklist.ApplyPatches(harmony);

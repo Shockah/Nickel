@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Added additional indicators for the current pile the card is in when browsing cards with `CardBrowse`.
+
 ## 0.10.1
 Released 27 April 2024.
 

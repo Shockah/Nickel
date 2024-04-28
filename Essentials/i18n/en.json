@@ -1,4 +1,22 @@
 {
+	"cardBrowseCurrentPile": {
+		"InDrawPile": {
+			"name": " In Draw Pile",
+			"description": "The card is in the draw pile."
+		},
+		"InHand": {
+			"name": "In Hand",
+			"description": "The card is in your hand."
+		},
+		"InDiscardPile": {
+			"name": " In Discard Pile",
+			"description": "The card is in the discard pile."
+		},
+		"InExhaustPile": {
+			"name": " In Exhaust Pile",
+			"description": "The card has been exhausted."
+		}
+	},
 	"crewSelection": {
 		"emptySlot": "-- NONE --"
 	},
