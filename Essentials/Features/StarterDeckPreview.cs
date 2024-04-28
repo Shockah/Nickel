@@ -178,6 +178,8 @@ internal static class StarterDeckPreview
 	{
 		if (__instance.deckType is not { } deck)
 			return;
+		if (g.metaRoute is not null)
+			return;
 		if (g.state.route is not NewRunOptions)
 			return;
 		if (renderLocked)
@@ -191,6 +193,8 @@ internal static class StarterDeckPreview
 	private static void Artifact_RenderArtifactList_Prefix(G g, ref Vec offset)
 	{
 		if (LastRenderedCharacter?.deckType is not { } deck)
+			return;
+		if (g.metaRoute is not null)
 			return;
 		if (g.state.route is not NewRunOptions)
 			return;
