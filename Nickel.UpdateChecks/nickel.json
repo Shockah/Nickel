@@ -1,0 +1,14 @@
+{
+	"UniqueName": "Nickel.UpdateChecks",
+	"Version": "0.10.0",
+	"DisplayName": "Nickel: Update checks",
+	"Description": "Provides a mechanism of update checks for installed mods.",
+	"Author": "Nickel",
+	"RequiredApiVersion": "0.10.0",
+	"EntryPointAssembly": "Nickel.UpdateChecks.dll",
+	"UpdateChecks": {
+		"NexusMods": {
+			"ID": 1
+		}
+	}
+}

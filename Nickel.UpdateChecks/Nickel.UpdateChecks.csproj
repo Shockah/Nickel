@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\Configuration.props" />
+	<PropertyGroup>
+		<RootNamespace>Nickel.UpdateChecks</RootNamespace>
+		<IncludedModProjectPaths>i18n</IncludedModProjectPaths>
+		<Version>$(NickelVersion)</Version>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Nickel.ModBuildConfig" Version="0.8.0" />
+		<PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" PrivateAssets="All" ExcludeAssets="runtime" />
+		<PackageReference Include="MakeTypesPublic" Version="1.0.3" PrivateAssets="All" ExcludeAssets="runtime" />
+		<PackageReference Include="EnumByNameSourceGenerator" Version="1.1.1" PrivateAssets="All" ExcludeAssets="runtime" />
+	</ItemGroup>
+</Project>
