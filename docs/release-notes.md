@@ -6,6 +6,7 @@
 
 * Added additional indicators for the current pile the card is in when browsing cards with `CardBrowse`.
 * Fixed character starter artifacts showing up in various unexpected menus like the Codex Logbook.
+* Improved/fixed assembly sharing between mods.
 
 ## 0.10.1
 Released 27 April 2024.

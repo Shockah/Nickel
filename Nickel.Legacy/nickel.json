@@ -1,7 +1,7 @@
 {
 	"UniqueName": "Nickel.Legacy",
 	"Version": "0.10.1",
-	"DisplayName": "Nickel.Legacy",
+	"DisplayName": "Nickel: Legacy mod support",
 	"Description": "Loads and manages legacy mods.",
 	"Author": "Nickel",
 	"RequiredApiVersion": "0.10.0",

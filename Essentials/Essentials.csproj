@@ -11,7 +11,4 @@
 		<PackageReference Include="MakeTypesPublic" Version="1.0.3" PrivateAssets="All" ExcludeAssets="runtime" />
 		<PackageReference Include="EnumByNameSourceGenerator" Version="1.1.1" PrivateAssets="All" ExcludeAssets="runtime" />
 	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="assets\" />
-	</ItemGroup>
 </Project>

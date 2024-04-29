@@ -51,8 +51,12 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 			this.AssemblyEditor?.EditAssemblyStream(assemblyFile.Name, ref refStream);
 			using var stream = refStream;
 
+			var assemblyName = requiredPluginData.EntryPointAssembly;
+			if (assemblyName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+				assemblyName = assemblyName.Substring(0, assemblyName.Length - 4);
+
 			var context = this.LoadContextProvider.GetLoadContext(package);
-			assembly = context.LoadFromStream(stream);
+			assembly = context.LoadFromAssemblyName(new AssemblyName(assemblyName));
 		}
 		catch (Exception ex)
 		{
