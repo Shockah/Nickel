@@ -4,6 +4,7 @@
 
 ## Upcoming release
 
+* Added update checks for installed mods.
 * Fixed `Nickel.Legacy` not generating `nickel.json` files for mods after the latest changes.
 
 ## 0.11.1

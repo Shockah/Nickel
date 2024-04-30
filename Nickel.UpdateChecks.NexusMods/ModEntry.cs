@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 using Nickel.Common;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -91,6 +90,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	{
 		var client = new HttpClient();
 
+		client.DefaultRequestHeaders.Add("User-Agent", $"{this.Package.Manifest.UniqueName}/{this.Package.Manifest.Version}");
 		client.DefaultRequestHeaders.Add("Application-Name", this.Package.Manifest.UniqueName);
 		client.DefaultRequestHeaders.Add("Application-Version", this.Package.Manifest.Version.ToString());
 
@@ -106,6 +106,18 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		if (manifestEntry is null)
 			this.Logger.LogError("Cannot check NexusMods updates for mod {ModName}: invalid `UpdateChecks` structure.", mod.GetDisplayName(@long: false));
 		return manifestEntry is not null;
+	}
+
+	private static SemanticVersion? ParseVersionOrNull(string? versionString)
+	{
+		if (versionString is null)
+			return null;
+
+		var last = versionString.Split('/').Last();
+		if (last.StartsWith('v'))
+			last = last.Substring(1);
+
+		return SemanticVersionParser.TryParse(last, out var version) ? version : null;
 	}
 
 	public async Task<IReadOnlyDictionary<IModManifest, (SemanticVersion Version, string UpdateInfo)>> GetLatestVersionsAsync(IEnumerable<(IModManifest Mod, object? ManifestEntry)> mods)
@@ -150,14 +162,16 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 				foreach (var model in latestAddedMods.Concat(latestUpdatedMods).Concat(trendingMods))
 				{
-					if (!SemanticVersionParser.TryParse(model.Version, out var version))
+					if (ParseVersionOrNull(model.Version) is not { } version)
 						continue;
+
+					this.Database.ModIdToVersion[model.ID] = version;
+
 					if (remainingMods.FirstOrNull(e => e.Entry.ID == model.ID) is not { } modEntry)
 						continue;
 
 					remainingMods.Remove(modEntry);
 					results[modEntry.Mod] = (Version: version, UpdateInfo: $"https://www.nexusmods.com/cobaltcore/mods/{model.ID}");
-					this.Database.ModIdToVersion[model.ID] = version;
 				}
 
 				if (remainingMods.Count == 0)
@@ -211,7 +225,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			{
 				if (maybeEntry is not { } entry)
 					continue;
-				if (!SemanticVersionParser.TryParse(entry.Model.Version, out var version))
+				if (ParseVersionOrNull(entry.Model.Version) is not { } version)
 					continue;
 
 				remainingMods.Remove(entry.ModEntry);
