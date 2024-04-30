@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
 using Nickel.Common;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -14,13 +15,17 @@ namespace Nickel.UpdateChecks.NexusMods;
 
 public sealed class ModEntry : SimpleMod, IUpdateSource
 {
-	private const string NexusApiKey = "";
+	private const long UpdateCheckThrottleDuration = 60 * 5;
 
 	internal static ModEntry Instance { get; private set; } = null!;
 
+	private FileInfo DatabaseFile
+		=> new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, $"{this.Package.Manifest.UniqueName}.json"));
+
 	private readonly JsonSerializerSettings SerializerSettings;
 	private readonly JsonSerializer Serializer;
-	private readonly HttpClient Client;
+	private HttpClient? Client;
+
 	private readonly SemaphoreSlim Semaphore = new(1, 1);
 	private Database Database = new();
 
@@ -30,17 +35,69 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 		this.SerializerSettings = new()
 		{
-			ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
+			ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+			Formatting = Formatting.Indented,
 		};
 		this.SerializerSettings.Converters.Add(new SemanticVersionConverter());
 		this.Serializer = JsonSerializer.Create(this.SerializerSettings);
 
-		this.Client = new();
-		this.Client.DefaultRequestHeaders.Add("Application-Name", this.Package.Manifest.UniqueName);
-		this.Client.DefaultRequestHeaders.Add("Application-Version", this.Package.Manifest.Version.ToString());
-		this.Client.DefaultRequestHeaders.Add("apikey", NexusApiKey);
+		this.LoadDatabase();
 
 		helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!.RegisterUpdateSource("NexusMods", this);
+	}
+
+	private void LoadDatabase()
+	{
+		if (this.DatabaseFile.Exists)
+		{
+			try
+			{
+				using var stream = this.DatabaseFile.OpenRead();
+				using var streamReader = new StreamReader(stream);
+				using var jsonReader = new JsonTextReader(streamReader);
+				this.Database = this.Serializer.Deserialize<Database>(jsonReader) ?? new();
+			}
+			catch
+			{
+				this.Database = new();
+			}
+		}
+		else
+		{
+			this.Database = new();
+			this.SaveDatabase();
+		}
+
+		this.Client = this.MakeHttpClient();
+	}
+
+	private void SaveDatabase()
+	{
+		try
+		{
+			this.DatabaseFile.Directory?.Create();
+			using var stream = this.DatabaseFile.OpenWrite();
+			using var streamWriter = new StreamWriter(stream);
+			using var jsonWriter = new JsonTextWriter(streamWriter);
+			this.Serializer.Serialize(jsonWriter, this.Database);
+		}
+		catch (Exception ex)
+		{
+			this.Logger.LogError("Could not save database file: {Exception}", ex);
+		}
+	}
+
+	private HttpClient? MakeHttpClient()
+	{
+		var client = new HttpClient();
+
+		client.DefaultRequestHeaders.Add("Application-Name", this.Package.Manifest.UniqueName);
+		client.DefaultRequestHeaders.Add("Application-Version", this.Package.Manifest.Version.ToString());
+
+		if (this.Database.ApiKey is { } apiKey)
+			client.DefaultRequestHeaders.Add("apikey", apiKey);
+
+		return client;
 	}
 
 	public bool TryParseManifestEntry(IModManifest mod, object? rawManifestEntry, out object? manifestEntry)
@@ -57,20 +114,35 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		try
 		{
 			var results = new Dictionary<IModManifest, (SemanticVersion Version, string UpdateInfo)>();
-			var now = Stopwatch.GetTimestamp();
+			var now = DateTimeOffset.Now.ToUnixTimeSeconds();
 			var remainingMods = mods
 				.Where(e => e.ManifestEntry is ManifestEntry)
 				.Select(e => (Mod: e.Mod, Entry: (ManifestEntry)e.ManifestEntry!))
 				.ToList();
+
+			foreach (var modEntry in remainingMods)
+				if (this.Database.ModIdToVersion.TryGetValue(modEntry.Entry.ID, out var version))
+					results[modEntry.Mod] = (Version: version, UpdateInfo: $"https://www.nexusmods.com/cobaltcore/mods/{modEntry.Entry.ID}");
+
+			if (now - this.Database.LastUpdate < UpdateCheckThrottleDuration)
+			{
+				this.Logger.LogDebug("Throttling NexusMods update checks.");
+				return results;
+			}
+			if (this.Client is not { } client || this.Database.ApiKey is null)
+			{
+				this.Logger.LogWarning("Requested NexusMods update checks, but no API key is provided in the `{File}` file.", this.DatabaseFile.FullName);
+				return results;
+			}
 
 			// updating version data from the 3 10-element lists
 			// if we only have 3 mods to fetch, we skip to save on requests
 
 			if (remainingMods.Count >= 3)
 			{
-				var latestAddedModsTask = this.GetLatestAddedMods();
-				var latestUpdatedModsTask = this.GetLatestUpdatedMods();
-				var trendingModsTask = this.GetTrendingMods();
+				var latestAddedModsTask = this.GetLatestAddedMods(client);
+				var latestUpdatedModsTask = this.GetLatestUpdatedMods(client);
+				var trendingModsTask = this.GetTrendingMods(client);
 
 				var latestAddedMods = await latestAddedModsTask;
 				var latestUpdatedMods = await latestUpdatedModsTask;
@@ -100,7 +172,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				var timeSinceLastUpdate = now - this.Database.LastUpdate;
 				if (timeSinceLastUpdate < 60 * 60 * 24 * 28)
 				{
-					var updatedMods = await this.GetUpdatedMods(timeSinceLastUpdate);
+					var updatedMods = await this.GetUpdatedMods(client, timeSinceLastUpdate);
 
 					foreach (var modEntry in remainingMods)
 					{
@@ -126,7 +198,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 					{
 						try
 						{
-							return (ModEntry: modEntry, Model: await this.GetMod(modEntry.Entry.ID));
+							return (ModEntry: modEntry, Model: await this.GetMod(client, modEntry.Entry.ID));
 						}
 						catch
 						{
@@ -149,6 +221,8 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 			// if we STILL have remaining mods, then we either exceeded the quota, or failed to get some versions for whatever other reason
 
+			this.Database.LastUpdate = now;
+			this.SaveDatabase();
 			return results;
 		}
 		finally
@@ -157,31 +231,34 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		}
 	}
 
-	private async Task<IReadOnlyList<NexusModModel>> GetLatestAddedMods()
+	private async Task<IReadOnlyList<NexusModModel>> GetLatestAddedMods(HttpClient client)
 	{
-		var stream = await this.Client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/latest_added.json");
+		this.Logger.LogDebug("Requesting latest added mods...");
+		var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/latest_added.json");
 		using var streamReader = new StreamReader(stream);
 		using var jsonReader = new JsonTextReader(streamReader);
 		return this.Serializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
 	}
 
-	private async Task<IReadOnlyList<NexusModModel>> GetLatestUpdatedMods()
+	private async Task<IReadOnlyList<NexusModModel>> GetLatestUpdatedMods(HttpClient client)
 	{
-		var stream = await this.Client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/latest_updated.json");
+		this.Logger.LogDebug("Requesting latest updated mods...");
+		var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/latest_updated.json");
 		using var streamReader = new StreamReader(stream);
 		using var jsonReader = new JsonTextReader(streamReader);
 		return this.Serializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
 	}
 
-	private async Task<IReadOnlyList<NexusModModel>> GetTrendingMods()
+	private async Task<IReadOnlyList<NexusModModel>> GetTrendingMods(HttpClient client)
 	{
-		var stream = await this.Client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/trending.json");
+		this.Logger.LogDebug("Requesting trending mods...");
+		var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/trending.json");
 		using var streamReader = new StreamReader(stream);
 		using var jsonReader = new JsonTextReader(streamReader);
 		return this.Serializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
 	}
 
-	private async Task<IReadOnlyList<NexusModLastUpdateModel>> GetUpdatedMods(long timeSinceLastUpdate)
+	private async Task<IReadOnlyList<NexusModLastUpdateModel>> GetUpdatedMods(HttpClient client, long timeSinceLastUpdate)
 	{
 		var period = timeSinceLastUpdate switch
 		{
@@ -190,15 +267,17 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			_ => "1d"
 		};
 
-		var stream = await this.Client.GetStreamAsync($"https://api.nexusmods.com/v1/games/cobaltcore/mods/updated.json?period={period}");
+		this.Logger.LogDebug("Requesting updated mods in the {Period} period...", period);
+		var stream = await client.GetStreamAsync($"https://api.nexusmods.com/v1/games/cobaltcore/mods/updated.json?period={period}");
 		using var streamReader = new StreamReader(stream);
 		using var jsonReader = new JsonTextReader(streamReader);
 		return this.Serializer.Deserialize<IReadOnlyList<NexusModLastUpdateModel>>(jsonReader) ?? throw new InvalidDataException();
 	}
 
-	private async Task<NexusModModel> GetMod(int id)
+	private async Task<NexusModModel> GetMod(HttpClient client, int id)
 	{
-		var stream = await this.Client.GetStreamAsync($"https://api.nexusmods.com/v1/games/cobaltcore/mods/{id}.json");
+		this.Logger.LogDebug("Requesting mod {ModId}...", id);
+		var stream = await client.GetStreamAsync($"https://api.nexusmods.com/v1/games/cobaltcore/mods/{id}.json");
 		using var streamReader = new StreamReader(stream);
 		using var jsonReader = new JsonTextReader(streamReader);
 		return this.Serializer.Deserialize<NexusModModel>(jsonReader) ?? throw new InvalidDataException();
