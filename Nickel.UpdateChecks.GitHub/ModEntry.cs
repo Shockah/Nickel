@@ -175,12 +175,12 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		return ParseVersionOrNull(model.TagName) ?? ParseVersionOrNull(model.Name);
 	}
 
-	public async Task<IReadOnlyDictionary<IModManifest, (SemanticVersion Version, string UpdateInfo)>> GetLatestVersionsAsync(IEnumerable<(IModManifest Mod, object? ManifestEntry)> mods)
+	public async Task<IReadOnlyDictionary<IModManifest, UpdateDescriptor>> GetLatestVersionsAsync(IEnumerable<(IModManifest Mod, object? ManifestEntry)> mods)
 	{
 		await this.Semaphore.WaitAsync();
 		try
 		{
-			var results = new Dictionary<IModManifest, (SemanticVersion Version, string UpdateInfo)>();
+			var results = new Dictionary<IModManifest, UpdateDescriptor>();
 			var now = DateTimeOffset.Now.ToUnixTimeSeconds();
 			var remainingMods = mods
 				.Where(e => e.ManifestEntry is ManifestEntry)
@@ -189,7 +189,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 			foreach (var modEntry in remainingMods)
 				if (this.Database.UniqueNameToEntry.TryGetValue(modEntry.Mod.UniqueName, out var entry))
-					results[modEntry.Mod] = (Version: entry.Version, UpdateInfo: entry.UpdateInfo);
+					results[modEntry.Mod] = new(entry.Version, [entry.Url]);
 
 			if (now - this.Database.LastUpdate < UpdateCheckThrottleDuration)
 			{
@@ -236,19 +236,19 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 					var (release, version) = matchingReleases.MaxBy(e => e.Release.PublishedAt)!;
 
 					remainingMods.Remove(modEntry);
-					results[modEntry.Mod] = (Version: version, UpdateInfo: release.Url);
-					this.Database.UniqueNameToEntry[modEntry.Mod.UniqueName] = new Database.Entry { Version = version, UpdateInfo = release.Url };
+					results[modEntry.Mod] = new(version, [release.Url]);
+					this.Database.UniqueNameToEntry[modEntry.Mod.UniqueName] = new Database.Entry { Version = version, Url = release.Url };
 				}
 			}
 
 			// if we still have remaining mods, then we either exceeded the quota, or failed to get some versions for whatever other reason
 
 			this.Database.LastUpdate = now;
-			this.SaveDatabase();
 			return results;
 		}
 		finally
 		{
+			this.SaveDatabase();
 			this.Semaphore.Release();
 		}
 	}

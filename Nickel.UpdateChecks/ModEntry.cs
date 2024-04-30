@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Nickel.Common;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,7 +17,7 @@ public sealed class ModEntry : SimpleMod
 	internal static ModEntry Instance { get; private set; } = null!;
 
 	internal readonly Dictionary<string, IUpdateSource> UpdateSources = [];
-	internal readonly Dictionary<IModManifest, (SemanticVersion Version, string UpdateInfo)?> UpdatesAvailable = [];
+	internal readonly Dictionary<IModManifest, UpdateDescriptor?> UpdatesAvailable = [];
 	internal readonly ConcurrentQueue<Action> ToRunInGameLoop = [];
 	internal readonly List<Action> AwaitingUpdateInfo = [];
 
@@ -123,28 +122,30 @@ public sealed class ModEntry : SimpleMod
 						.ToList();
 
 					if (versions.Count == 0)
-						return (Mod: m, Version: ((SemanticVersion Version, string UpdateInfo)?)null);
+						return (Mod: m, Descriptor: (UpdateDescriptor?)null);
 
 					var maxVersion = versions.Select(e => e.Version).Max();
-					var maxUpdateInfos = versions
+					var maxVersionUrls = versions
 						.Where(e => e.Version == maxVersion)
-						.Select(e => e.UpdateInfo);
-					return (Mod: m, Version: (maxVersion, string.Join(" | ", maxUpdateInfos)));
+						.SelectMany(e => e.Urls);
+					return (Mod: m, Descriptor: new UpdateDescriptor(maxVersion, maxVersionUrls.ToList()));
 				})
-				.Where(e => e.Version is not null)
-				.ToDictionary(e => e.Mod, e => e.Version!.Value);
+				.Where(e => e.Descriptor is not null)
+				.ToDictionary(e => e.Mod, e => e.Descriptor!.Value);
 
 			this.ToRunInGameLoop.Enqueue(() => this.ReportUpdates(modToVersion));
 		});
 
-	private void ReportUpdates(Dictionary<IModManifest, (SemanticVersion Version, string UpdateInfo)> updates)
+	private void ReportUpdates(Dictionary<IModManifest, UpdateDescriptor> updates)
 	{
 		foreach (var (mod, result) in updates)
 		{
 			this.UpdatesAvailable[mod] = result;
 			if (mod.Version >= result.Version)
 				continue;
-			this.Logger.LogWarning("Mod {ModName} has an update {Version} available: {UpdateInfo}", mod.GetDisplayName(@long: false), result.Version, result.UpdateInfo);
+			if (result.Urls.Count == 0)
+				continue;
+			this.Logger.LogWarning("Mod {ModName} has an update {Version} available:\n{Urls}", mod.GetDisplayName(@long: false), result.Version, string.Join("\n", result.Urls.Select(url => $"\t{url}")));
 		}
 
 		var callbacks = this.AwaitingUpdateInfo.ToList();

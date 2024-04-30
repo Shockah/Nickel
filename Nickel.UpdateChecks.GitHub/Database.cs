@@ -23,6 +23,6 @@ internal sealed class Database
 
 		[JsonProperty]
 		[JsonRequired]
-		public string UpdateInfo = null!;
+		public string Url = null!;
 	}
 }

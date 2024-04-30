@@ -1,14 +1,13 @@
-using Nickel.Common;
 using System;
 
 namespace Nickel.UpdateChecks;
 
 public sealed class ApiImplementation : IUpdateChecksApi
 {
-	public bool TryGetUpdateInfo(IModManifest mod, out (SemanticVersion Version, string UpdateInfo)? update)
+	public bool TryGetUpdateInfo(IModManifest mod, out UpdateDescriptor? update)
 		=> ModEntry.Instance.UpdatesAvailable.TryGetValue(mod, out update);
 
-	public void AwaitUpdateInfo(IModManifest mod, Action<IModManifest, (SemanticVersion Version, string UpdateInfo)?> callback)
+	public void AwaitUpdateInfo(IModManifest mod, Action<IModManifest, UpdateDescriptor?> callback)
 	{
 		if (this.TryGetUpdateInfo(mod, out var update))
 		{

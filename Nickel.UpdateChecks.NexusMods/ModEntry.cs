@@ -120,12 +120,12 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		return SemanticVersionParser.TryParse(last, out var version) ? version : null;
 	}
 
-	public async Task<IReadOnlyDictionary<IModManifest, (SemanticVersion Version, string UpdateInfo)>> GetLatestVersionsAsync(IEnumerable<(IModManifest Mod, object? ManifestEntry)> mods)
+	public async Task<IReadOnlyDictionary<IModManifest, UpdateDescriptor>> GetLatestVersionsAsync(IEnumerable<(IModManifest Mod, object? ManifestEntry)> mods)
 	{
 		await this.Semaphore.WaitAsync();
 		try
 		{
-			var results = new Dictionary<IModManifest, (SemanticVersion Version, string UpdateInfo)>();
+			var results = new Dictionary<IModManifest, UpdateDescriptor>();
 			var now = DateTimeOffset.Now.ToUnixTimeSeconds();
 			var remainingMods = mods
 				.Where(e => e.ManifestEntry is ManifestEntry)
@@ -134,7 +134,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 			foreach (var modEntry in remainingMods)
 				if (this.Database.ModIdToVersion.TryGetValue(modEntry.Entry.ID, out var version))
-					results[modEntry.Mod] = (Version: version, UpdateInfo: $"https://www.nexusmods.com/cobaltcore/mods/{modEntry.Entry.ID}");
+					results[modEntry.Mod] = new(version, [$"https://www.nexusmods.com/cobaltcore/mods/{modEntry.Entry.ID}"]);
 
 			if (now - this.Database.LastUpdate < UpdateCheckThrottleDuration)
 			{
@@ -150,58 +150,69 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			// updating version data from the 3 10-element lists
 			// if we only have 3 mods to fetch, we skip to save on requests
 
-			if (remainingMods.Count >= 3)
+			try
 			{
-				var latestAddedModsTask = this.GetLatestAddedMods(client);
-				var latestUpdatedModsTask = this.GetLatestUpdatedMods(client);
-				var trendingModsTask = this.GetTrendingMods(client);
-
-				var latestAddedMods = await latestAddedModsTask;
-				var latestUpdatedMods = await latestUpdatedModsTask;
-				var trendingMods = await trendingModsTask;
-
-				foreach (var model in latestAddedMods.Concat(latestUpdatedMods).Concat(trendingMods))
+				if (remainingMods.Count >= 3)
 				{
-					if (ParseVersionOrNull(model.Version) is not { } version)
-						continue;
+					var latestAddedModsTask = this.GetLatestAddedMods(client);
+					var latestUpdatedModsTask = this.GetLatestUpdatedMods(client);
+					var trendingModsTask = this.GetTrendingMods(client);
 
-					this.Database.ModIdToVersion[model.ID] = version;
+					var latestAddedMods = await latestAddedModsTask;
+					var latestUpdatedMods = await latestUpdatedModsTask;
+					var trendingMods = await trendingModsTask;
 
-					if (remainingMods.FirstOrNull(e => e.Entry.ID == model.ID) is not { } modEntry)
-						continue;
-
-					remainingMods.Remove(modEntry);
-					results[modEntry.Mod] = (Version: version, UpdateInfo: $"https://www.nexusmods.com/cobaltcore/mods/{model.ID}");
-				}
-
-				if (remainingMods.Count == 0)
-					return results;
-			}
-
-			// if we had a previous update within the last month, we can try checking if any of the remaining mods had any updates and return early if not
-			// if we only have 2 mods to fetch, we skip to save on requests
-
-			if (remainingMods.Count >= 2)
-			{
-				var timeSinceLastUpdate = now - this.Database.LastUpdate;
-				if (timeSinceLastUpdate < 60 * 60 * 24 * 28)
-				{
-					var updatedMods = await this.GetUpdatedMods(client, timeSinceLastUpdate);
-
-					foreach (var modEntry in remainingMods)
+					foreach (var model in latestAddedMods.Concat(latestUpdatedMods).Concat(trendingMods))
 					{
-						if (updatedMods.Any(model => model.ID == modEntry.Entry.ID))
+						if (ParseVersionOrNull(model.Version) is not { } version)
 							continue;
-						if (!this.Database.ModIdToVersion.TryGetValue(modEntry.Entry.ID, out var persistedVersion))
+
+						this.Database.ModIdToVersion[model.ID] = version;
+
+						if (remainingMods.FirstOrNull(e => e.Entry.ID == model.ID) is not { } modEntry)
 							continue;
 
 						remainingMods.Remove(modEntry);
-						results[modEntry.Mod] = (Version: persistedVersion, UpdateInfo: $"https://www.nexusmods.com/cobaltcore/mods/{modEntry.Entry.ID}");
+						results[modEntry.Mod] = new(version, [$"https://www.nexusmods.com/cobaltcore/mods/{model.ID}"]);
 					}
 
 					if (remainingMods.Count == 0)
 						return results;
 				}
+			}
+			catch
+			{
+			}
+
+			// if we had a previous update within the last month, we can try checking if any of the remaining mods had any updates and return early if not
+			// if we only have 2 mods to fetch, we skip to save on requests
+
+			try
+			{
+				if (remainingMods.Count >= 2)
+				{
+					var timeSinceLastUpdate = now - this.Database.LastUpdate;
+					if (timeSinceLastUpdate < 60 * 60 * 24 * 28)
+					{
+						var updatedMods = await this.GetUpdatedMods(client, timeSinceLastUpdate);
+
+						foreach (var modEntry in remainingMods)
+						{
+							if (updatedMods.Any(model => model.ID == modEntry.Entry.ID))
+								continue;
+							if (!this.Database.ModIdToVersion.ContainsKey(modEntry.Entry.ID))
+								continue;
+
+							remainingMods.Remove(modEntry);
+						}
+
+						if (remainingMods.Count == 0)
+							return results;
+					}
+				}
+			}
+			catch
+			{
 			}
 
 			// if we still have some remaining mods, we gotta fetch them 1-by-1
@@ -229,18 +240,18 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 					continue;
 
 				remainingMods.Remove(entry.ModEntry);
-				results[entry.ModEntry.Mod] = (Version: version, UpdateInfo: $"https://www.nexusmods.com/cobaltcore/mods/{entry.Model.ID}");
+				results[entry.ModEntry.Mod] = new(version, [$"https://www.nexusmods.com/cobaltcore/mods/{entry.Model.ID}"]);
 				this.Database.ModIdToVersion[entry.Model.ID] = version;
 			}
 
 			// if we STILL have remaining mods, then we either exceeded the quota, or failed to get some versions for whatever other reason
 
 			this.Database.LastUpdate = now;
-			this.SaveDatabase();
 			return results;
 		}
 		finally
 		{
+			this.SaveDatabase();
 			this.Semaphore.Release();
 		}
 	}
