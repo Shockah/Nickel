@@ -57,11 +57,14 @@ internal sealed class NamedPipeClientLoggerProvider : ILoggerProvider
 		this.Start(500);
 		return new Logger(categoryName, e =>
 		{
-			this.Start(500);
-			if (this.JsonWriter is not { } jsonWriter)
-				throw new InvalidOperationException();
-			this.Serializer.Serialize(jsonWriter, e);
-			jsonWriter.Flush();
+			lock (this)
+			{
+				this.Start(500);
+				if (this.JsonWriter is not { } jsonWriter)
+					throw new InvalidOperationException();
+				this.Serializer.Serialize(jsonWriter, e);
+				jsonWriter.Flush();
+			}
 		});
 	}
 

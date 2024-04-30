@@ -52,8 +52,11 @@ public sealed class FileLoggerProvider(LogLevel level, string filePath) : ILogge
 			categoryName,
 			logEntry =>
 			{
-				var timeString = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-				this.StreamWriter.WriteLine($"[{timeString}][{logEntry.LogLevel}][{categoryName}] {logEntry.Message}");
+				lock (this)
+				{
+					var timeString = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+					this.StreamWriter.WriteLine($"[{timeString}][{logEntry.LogLevel}][{categoryName}] {logEntry.Message}");
+				}
 			}
 		);
 

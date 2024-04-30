@@ -14,9 +14,9 @@ public sealed class ConsoleLoggerProvider(LogLevel level, TextWriter textWriter,
 	}
 
 	public ILogger CreateLogger(string categoryName) =>
-		new Logger(level, textWriter, categoryName);
+		new Logger(this, level, textWriter, categoryName);
 
-	private sealed class Logger(LogLevel level, TextWriter textWriter, string categoryName) : ILogger
+	private sealed class Logger(ConsoleLoggerProvider provider, LogLevel level, TextWriter textWriter, string categoryName) : ILogger
 	{
 		public IDisposable? BeginScope<TState>(TState state) where TState : notnull
 			=> null;
@@ -32,33 +32,36 @@ public sealed class ConsoleLoggerProvider(LogLevel level, TextWriter textWriter,
 			Func<TState, Exception?, string> formatter
 		)
 		{
-			if (!this.IsEnabled(logLevel))
-				return;
-			var logColor = GetLogLevelConsoleColors(logLevel);
-
-			var oldBackgroundColor = Console.BackgroundColor;
-			var oldForegroundColor = Console.ForegroundColor;
-			try
+			lock (provider)
 			{
-				textWriter.Write('[');
+				if (!this.IsEnabled(logLevel))
+					return;
+				var logColor = GetLogLevelConsoleColors(logLevel);
 
-				Console.BackgroundColor = logColor.Background ?? oldBackgroundColor;
-				Console.ForegroundColor = logColor.Foreground ?? oldForegroundColor;
-				textWriter.Write(GetLogLevelString(logLevel));
+				var oldBackgroundColor = Console.BackgroundColor;
+				var oldForegroundColor = Console.ForegroundColor;
+				try
+				{
+					textWriter.Write('[');
 
-				Console.BackgroundColor = oldBackgroundColor;
-				Console.ForegroundColor = oldForegroundColor;
-				textWriter.Write(']');
+					Console.BackgroundColor = logColor.Background ?? oldBackgroundColor;
+					Console.ForegroundColor = logColor.Foreground ?? oldForegroundColor;
+					textWriter.Write(GetLogLevelString(logLevel));
 
-				textWriter.Write($"[{categoryName}]");
-				textWriter.Write($" {formatter(state, exception)}");
-				textWriter.WriteLine();
+					Console.BackgroundColor = oldBackgroundColor;
+					Console.ForegroundColor = oldForegroundColor;
+					textWriter.Write(']');
 
-			}
-			finally
-			{
-				Console.BackgroundColor = oldBackgroundColor;
-				Console.ForegroundColor = oldForegroundColor;
+					textWriter.Write($"[{categoryName}]");
+					textWriter.Write($" {formatter(state, exception)}");
+					textWriter.WriteLine();
+
+				}
+				finally
+				{
+					Console.BackgroundColor = oldBackgroundColor;
+					Console.ForegroundColor = oldForegroundColor;
+				}
 			}
 		}
 
