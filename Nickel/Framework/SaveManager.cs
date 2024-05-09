@@ -34,6 +34,10 @@ internal sealed class SaveManager
 				return;
 
 			this.TryResetToMenu(e, @object);
+			if (!e.Data.isCorrupted)
+				return;
+
+			this.TryForceReset(e, @object);
 		}
 		catch
 		{
@@ -53,6 +57,8 @@ internal sealed class SaveManager
 			clone[nameof(State.map)] = JValue.CreateNull();
 			clone[nameof(State.route)] = JValue.CreateNull();
 			clone[nameof(State.routeOverride)] = JValue.CreateNull();
+			clone[nameof(State.pendingRunSummary)] = JValue.CreateNull();
+			clone[nameof(State.rewardsQueue)] = new JArray();
 
 			if (@object.GetValue(nameof(State.runConfig)) is JObject runConfig)
 				runConfig[nameof(RunConfig.selectedChars)] = new JArray();
@@ -70,10 +76,37 @@ internal sealed class SaveManager
 
 			e.Data.state = recoveredState;
 			e.Data.isCorrupted = false;
+			this.Logger.LogWarning("Recovered save slot {Slot} by returning to menu.", e.Slot);
 		}
 		catch
 		{
-			this.Logger.LogWarning("Recovered save slot {Slot} by returning to menu.", e.Slot);
+		}
+	}
+
+	private void TryForceReset(StatePatches.LoadEventArgs e, JObject @object)
+	{
+		this.Logger.LogDebug("Attempting to force reset save slot {Slot} while keeping progress...", e.Slot);
+
+		try
+		{
+			if (@object.GetValue(nameof(State.storyVars)) is not JObject storyVars)
+				return;
+
+			using var jsonReader = new JTokenReader(storyVars);
+			if (JSONSettings.serializer.Deserialize<StoryVars>(jsonReader) is not { } recoveredStoryVars)
+				return;
+
+			var recoveredState = State.NewGame(slot: null);
+			recoveredState.storyVars = recoveredStoryVars;
+			recoveredState.route = new NewRunOptions();
+			recoveredState.slot = e.Slot;
+
+			e.Data.state = recoveredState;
+			e.Data.isCorrupted = false;
+			this.Logger.LogWarning("Recovered save slot {Slot} by force resetting while keeping progress.", e.Slot);
+		}
+		catch
+		{
 		}
 	}
 }
