@@ -47,6 +47,7 @@ public sealed class ModEntry : SimpleMod
 		FixIsaacUnlock.ApplyPatches(harmony);
 		MemorySelection.ApplyPatches(harmony);
 		ModDescriptions.ApplyPatches(harmony);
+		SaveImport.ApplyPatches(harmony);
 		StarterDeckPreview.ApplyPatches(harmony);
 
 		harmony.Patch(

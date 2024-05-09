@@ -26,6 +26,10 @@
 		"off": "CANNOT be randomly selected for a CAT starter EXE card. Click to enable."
 	},
 	"modDescription": "<c=keyword>Mod:</c> {{ModName}}",
+	"saveImport": {
+		"title": "IMPORT PROFILE",
+		"button": "IMPORT"
+	},
 	"starterDeckPreview": {
 		"startingDeck": "Starting Deck:",
 		"exeCard": "A random CAT EXE card, like this one:"
