@@ -104,13 +104,11 @@ internal static class StatePatches
 			__instance.Save();
 	}
 
-	private static void Load_Postfix(ref State.SaveSlot __result)
+	private static void Load_Postfix(int slot, ref State.SaveSlot __result)
 	{
-		if (__result.state is not { } state)
-			return;
-		var eventArgs = new LoadEventArgs { State = state, IsCorrupted = __result.isCorrupted };
+		var eventArgs = new LoadEventArgs { Slot = slot, Data = __result };
 		OnLoad.Raise(null, eventArgs);
-		__result.isCorrupted = eventArgs.IsCorrupted;
+		__result = eventArgs.Data;
 	}
 
 	private static void Update_Prefix(State __instance)
@@ -130,7 +128,7 @@ internal static class StatePatches
 
 	internal sealed class LoadEventArgs
 	{
-		public required State State { get; init; }
-		public required bool IsCorrupted { get; set; }
+		public required int Slot { get; init; }
+		public required State.SaveSlot Data { get; set; }
 	}
 }

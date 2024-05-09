@@ -4,6 +4,7 @@
 
 ## Upcoming release
 
+* [Experimental] Replaced the current save recovering mechanism with a new one. If a save cannot be loaded, Nickel will attempt to return you to the "new run" menu, keeping other progress.
 * Added additional indicators for the current pile the card is in when browsing cards with `CardBrowse`.
 * Fixed character starter artifacts showing up in various unexpected menus like the Codex Logbook.
 * Improved/fixed assembly sharing between mods.

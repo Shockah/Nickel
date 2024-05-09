@@ -18,6 +18,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 {
 	internal static Nickel Instance { get; private set; } = null!;
 	internal ModManager ModManager { get; private set; } = null!;
+	internal SaveManager SaveManager { get; private set; } = null!;
 	internal LaunchArguments LaunchArguments { get; } = launchArguments;
 
 	internal static int Main(string[] args)
@@ -215,6 +216,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static int ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony? harmony, ILogger logger, ILogger gameLogger, CobaltCoreHandlerResult handlerResult)
 	{
+		instance.SaveManager = new(logger);
+
 		var version = GetVanillaVersion();
 		logger.LogInformation("Game version: {Version}", version);
 
