@@ -11,6 +11,11 @@
 * Improved/fixed assembly sharing between mods.
 * Additional caching for card traits.
 
+### `ModBuildConfig`
+`Nickel.ModBuildConfig` is also updated to 0.11.0.
+
+* Legacy mods' `CobaltCore.dll` is also publicized now.
+
 ## 0.10.1
 Released 27 April 2024.
 
