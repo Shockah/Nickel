@@ -422,7 +422,7 @@ internal class CardTraitManager
 		this.CurrentlyCreatingCardTraitStates.Add(card);
 
 		var data = wasCurrentlyCreatingCardTraitStates ? new() : card.GetData(state);
-		var innateCustomTraits = (card as IHasCustomCardTraits)?.GetInnateTraits(state).ToHashSet() ?? [];
+		var innateCustomTraits = wasCurrentlyCreatingCardTraitStates ? [] : ((card as IHasCustomCardTraits)?.GetInnateTraits(state).ToHashSet() ?? []);
 
 		foreach (var trait in this.SynthesizedVanillaEntries.Value.Values.Concat(this.UniqueNameToEntry.Values))
 		{
@@ -436,6 +436,9 @@ internal class CardTraitManager
 				TemporaryOverride = rwTrait.GetTemporaryOverride(card, overrides),
 			};
 		}
+
+		if (wasCurrentlyCreatingCardTraitStates)
+			return results;
 
 		var overrideEventArgs = this.OnOverrideInnateTraitsEvent.Raise(null, new()
 		{
