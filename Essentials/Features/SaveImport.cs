@@ -5,6 +5,7 @@ using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -42,11 +43,8 @@ internal static class SaveImport
 		);
 	}
 
-	private static bool ProfileSelect_ReloadSlotsCache_Prefix(ProfileSelect __instance)
+	private static void DoWithVanillaSavePath(Action code)
 	{
-		if (__instance is not SaveImportRoute route)
-			return true;
-
 		var oldOverrideSaveLocation = FeatureFlags.OverrideSaveLocation;
 		var oldDebug = FeatureFlags.Debug;
 
@@ -55,15 +53,26 @@ internal static class SaveImport
 
 		try
 		{
-			route._slotsCache = Enumerable.Range(0, 3)
-				.Select(State.Load)
-				.ToList();
+			code();
 		}
 		finally
 		{
 			FeatureFlags.OverrideSaveLocation = oldOverrideSaveLocation;
 			FeatureFlags.Debug = oldDebug;
 		}
+	}
+
+	private static bool ProfileSelect_ReloadSlotsCache_Prefix(ProfileSelect __instance)
+	{
+		if (__instance is not SaveImportRoute route)
+			return true;
+
+		DoWithVanillaSavePath(() =>
+		{
+			route._slotsCache = Enumerable.Range(0, 3)
+				.Select(State.Load)
+				.ToList();
+		});
 		return false;
 	}
 
@@ -203,6 +212,13 @@ internal static class SaveImport
 					return;
 				}
 
+				var vanillaSavePath = "";
+				DoWithVanillaSavePath(() => vanillaSavePath = Storage.SavePath(State.GetSavePath(slot)));
+				var targetSavePath = Storage.SavePath(State.GetSavePath(this.TargetSlot));
+
+				vanillaSavePath = new FileInfo(vanillaSavePath).Directory!.FullName;
+				targetSavePath = new FileInfo(targetSavePath).Directory!.FullName;
+
 				Audio.Play(Event.Click);
 
 				state.slot = this.TargetSlot;
@@ -213,6 +229,18 @@ internal static class SaveImport
 				Cheevos.CheckOnLoad(g.state);
 				g.state.SaveIfRelease();
 				g.metaRoute = new MainMenu();
+
+				foreach (var filePath in Directory.EnumerateFiles(vanillaSavePath, "*", SearchOption.AllDirectories))
+				{
+					var file = new FileInfo(filePath);
+					if (file.Name == "Save.json")
+						continue;
+
+					var relativePath = Path.GetRelativePath(vanillaSavePath, filePath);
+					var copyDestination = new FileInfo(Path.Combine(targetSavePath, relativePath));
+					copyDestination.Directory!.Create();
+					file.CopyTo(copyDestination.FullName);
+				}
 			}
 			else if (b.key == ImportProfileBackKey)
 			{
