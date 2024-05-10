@@ -62,8 +62,8 @@
 		<PackageReference Include="SingleFileExtractor.Core" Version="2.2.0" />
 		<PackageReference Include="VdfConverter" Version="1.0.3" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
-		<PackageReference Include="MakeTypesPublic" Version="1.0.3" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
-		<Reference Include="CobaltCore" HintPath="$(GameDllPath)" Private="False" IgnoreAccessChecks="true" />
+		<PackageReference Include="Fayti1703.AssemblyTasks" Version="1.1.0" PrivateAssets="none" />
+		<Reference Include="CobaltCore" HintPath="$(IntermediateOutputPath)/CobaltCore.dll" Private="False" />
 
 		<!-- mod management -->
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
@@ -77,24 +77,23 @@
 		<!-- utilities -->
 		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
 		<PackageReference Include="ThomasLevesque.WeakEvent" Version="4.1.0" />
-		<PackageReference Include="PolySharp" Version="1.14.1" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 	</ItemGroup>
 	
 	<ItemGroup>
-		<EmbeddedResource Include="../Icon.ico">
-			<LogicalName>Icon.ico</LogicalName>
-		</EmbeddedResource>
-		<EmbeddedResource Include="../Icon.bmp">
-			<LogicalName>Icon.bmp</LogicalName>
-		</EmbeddedResource>
+		<EmbeddedResource Include="../Icon.ico" LogicalName="Icon.ico" />
+		<EmbeddedResource Include="../Icon.bmp" LogicalName="Icon.bmp" />
 	</ItemGroup>
 
-	<Target Name="ExtractGameDll" BeforeTargets="CoreCompile">
+	<Target Name="ExtractGameDll" BeforeTargets="PublicizeGameDll">
 		<Message Importance="high" Text="$(_ModLoaderName): _SteamLibraryPath = '$(_SteamLibraryPath)'" />
 		<Message Importance="high" Text="$(_ModLoaderName): _GamePath = '$(_GamePath)'" />
 		<Message Importance="high" Text="$(_ModLoaderName): GameExePath = '$(GameExePath)'" />
 		<Message Importance="high" Text="$(_ModLoaderName): GameDllPath = '$(GameDllPath)'" />
 
 		<ExtractSingleFileApplicationResourceTask Condition="'$(EnableGameDllExtract)'" ExeInputPath="$(GameExePath)" ResourceName="CobaltCore.dll" ResourceOutputPath="$(GameDllPath)" />
+	</Target>
+
+	<Target Name="PublicizeGameDll" BeforeTargets="CoreCompile">
+		<Fayti1703.AssemblyTasks.PublishAllTypes SourceFilePath="$(GameDllPath)" TargetFilePath="$(IntermediateOutputPath)CobaltCore.dll" />
 	</Target>
 </Project>

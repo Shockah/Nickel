@@ -125,16 +125,7 @@
 	</Target>
 	
 	<Target Name="PublicizeGameDll" BeforeTargets="PrepareForBuild">
-		<Fayti1703.AssemblyTasks.PublishAllTypes
-			Condition="!$(IsLegacyMod)"
-			SourceFilePath="$(GameDllPath)"
-			TargetFilePath="$(IntermediateOutputPath)/CobaltCore.dll"
-		/>
-		<Copy
-			Condition="$(IsLegacyMod)"
-			SourceFiles="$(GameDllPath)"
-			DestinationFiles="$(IntermediateOutputPath)/CobaltCore.dll"
-		/>
+		<Fayti1703.AssemblyTasks.PublishAllTypes SourceFilePath="$(GameDllPath)" TargetFilePath="$(IntermediateOutputPath)/CobaltCore.dll" />
 	</Target>
 
 	<!-- Add assembly references -->
