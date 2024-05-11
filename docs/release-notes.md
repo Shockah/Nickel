@@ -5,7 +5,7 @@
 ## 0.11.0
 Released 11 May 2024.
 
-* [Experimental] Replaced the current save recovering mechanism with a new one. If a save cannot be loaded, Nickel will attempt to return you to the "new run" menu, keeping other progress. If that fails, it will forcefully reset the save, while trying to keep the progress.
+* Replaced the current save recovering mechanism with a new one. If a save cannot be loaded, Nickel will attempt to return you to the "new run" menu, keeping other progress. If that fails, it will forcefully reset the save, while trying to keep the progress.
 * Added an option to import vanilla saves into Nickel straight from the Profile Select menu.
 * Added additional indicators for the current pile the card is in when browsing cards with `CardBrowse`.
 * Added enemy support for mods.
