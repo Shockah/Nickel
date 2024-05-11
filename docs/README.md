@@ -9,7 +9,7 @@ The main purposes of Nickel are:
 3. **Set up common utilities for mods.** These utilities include but are not limited to: [Harmony](https://github.com/pardeike/Harmony), [Mono.Cecil](https://github.com/jbevain/cecil), [Shrike](https://github.com/Nanoray-pl/Shrike).
 4. **Expose the ability to edit the game's code before it gets loaded.** Combining the [Mono.Cecil](https://github.com/jbevain/cecil) library and being able to load before the game's assembly lets mods do some normally impossible things by directly editing the game's code before it even gets a chance to get loaded.
 5. **Capture logs useful for debugging issues.** Nickel will capture all kinds of logs in one common file. This includes any actions Nickel does, anything mods log by themselves, and anything the game logs. All of this information together can help figuring out issues specific to the modded game.
-6. **[Experimental] Automatically fix save files.** Nickel will try to recover a save file from being completely unusable. This can often happen when adding, removing or updating mods.
+6. **Automatically fix save files.** Nickel will try to recover a save file from being completely unusable. This can often happen when adding, removing or updating mods.
 
 ## Documentation
 

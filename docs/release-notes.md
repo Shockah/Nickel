@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 0.11.0
+Released 11 May 2024.
 
 * [Experimental] Replaced the current save recovering mechanism with a new one. If a save cannot be loaded, Nickel will attempt to return you to the "new run" menu, keeping other progress. If that fails, it will forcefully reset the save, while trying to keep the progress.
 * Added an option to import vanilla saves into Nickel straight from the Profile Select menu.
