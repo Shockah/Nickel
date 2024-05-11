@@ -7,6 +7,7 @@
 * [Experimental] Replaced the current save recovering mechanism with a new one. If a save cannot be loaded, Nickel will attempt to return you to the "new run" menu, keeping other progress. If that fails, it will forcefully reset the save, while trying to keep the progress.
 * Added an option to import vanilla saves into Nickel straight from the Profile Select menu.
 * Added additional indicators for the current pile the card is in when browsing cards with `CardBrowse`.
+* Added enemy support for mods.
 * Fixed character starter artifacts showing up in various unexpected menus like the Codex Logbook.
 * Improved/fixed assembly sharing between mods.
 * Additional caching for card traits.

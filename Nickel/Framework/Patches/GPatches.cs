@@ -21,6 +21,8 @@ internal static class GPatches
 			DB.SetLocale(__instance.settings.locale, __instance.settings.highResFont);
 
 		Nickel.Instance.ModManager.LoadMods(ModLoadPhase.AfterDbInit);
+		if (Nickel.Instance.Harmony is { } harmony)
+			Nickel.ApplyLateHarmonyPatches(harmony);
 		Nickel.Instance.ModManager.LogHarmonyPatchesOnce();
 	}
 }

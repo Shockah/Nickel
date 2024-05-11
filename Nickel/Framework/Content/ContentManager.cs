@@ -17,6 +17,7 @@ internal sealed class ContentManager
 	public PartManager Parts { get; }
 	public ShipManager Ships { get; }
 	public CardTraitManager CardTraits { get; }
+	public EnemyManager Enemies { get; }
 
 	public ContentManager(
 		SpriteManager sprites,
@@ -27,7 +28,8 @@ internal sealed class ContentManager
 		CharacterManager characters,
 		PartManager parts,
 		ShipManager ships,
-		CardTraitManager cardTraits
+		CardTraitManager cardTraits,
+		EnemyManager enemies
 	)
 	{
 		this.Sprites = sprites;
@@ -39,6 +41,7 @@ internal sealed class ContentManager
 		this.Parts = parts;
 		this.Ships = ships;
 		this.CardTraits = cardTraits;
+		this.Enemies = enemies;
 	}
 
 	public static ContentManager Create(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest, IModManifest modManagerModManifest, ModDataManager modDataManager)
@@ -52,7 +55,8 @@ internal sealed class ContentManager
 		var parts = new PartManager(currentModLoadPhaseProvider);
 		var ships = new ShipManager(currentModLoadPhaseProvider, vanillaModManifest);
 		var cardTraits = new CardTraitManager(loggerProvider, vanillaModManifest, modManagerModManifest, modDataManager);
-		return new(sprites, decks, statuses, cards, artifacts, characters, parts, ships, cardTraits);
+		var enemies = new EnemyManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
+		return new(sprites, decks, statuses, cards, artifacts, characters, parts, ships, cardTraits, enemies);
 	}
 
 	internal void InjectQueuedEntries()
@@ -64,6 +68,7 @@ internal sealed class ContentManager
 		this.Characters.InjectQueuedEntries();
 		this.Parts.InjectQueuedEntries();
 		this.Ships.InjectQueuedEntries();
+		this.Enemies.InjectQueuedEntries();
 	}
 
 	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
@@ -74,6 +79,7 @@ internal sealed class ContentManager
 		this.Artifacts.InjectLocalizations(locale, localizations);
 		this.Characters.InjectLocalizations(locale, localizations);
 		this.Ships.InjectLocalizations(locale, localizations);
+		this.Enemies.InjectLocalizations(locale, localizations);
 	}
 
 	internal void ModifyJsonContract(Type type, JsonContract contract)

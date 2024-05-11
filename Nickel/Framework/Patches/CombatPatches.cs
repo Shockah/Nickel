@@ -1,4 +1,5 @@
 using HarmonyLib;
+using System.Reflection;
 using WeakEvent;
 
 namespace Nickel;
@@ -11,7 +12,7 @@ internal static class CombatPatches
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Combat), nameof(Combat.ReturnCardsToDeck)),
-			postfix: new HarmonyMethod(typeof(CombatPatches), nameof(ReturnCardsToDeck_Postfix))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(ReturnCardsToDeck_Postfix))
 		);
 	}
 

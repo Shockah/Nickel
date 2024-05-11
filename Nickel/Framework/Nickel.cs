@@ -17,6 +17,7 @@ namespace Nickel;
 internal sealed partial class Nickel(LaunchArguments launchArguments)
 {
 	internal static Nickel Instance { get; private set; } = null!;
+	internal Harmony? Harmony { get; private set; }
 	internal ModManager ModManager { get; private set; } = null!;
 	internal SaveManager SaveManager { get; private set; } = null!;
 	internal LaunchArguments LaunchArguments { get; } = launchArguments;
@@ -153,6 +154,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		if (!launchArguments.Vanilla)
 		{
 			harmony = new(NickelConstants.Name);
+			instance.Harmony = harmony;
 			HarmonyPatches.Apply(harmony, logger);
 
 			var modsDirectory = launchArguments.ModsPath ?? GetOrCreateDefaultModLibraryDirectory();
@@ -290,6 +292,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static void ApplyHarmonyPatches(Harmony harmony, bool saveInDebug)
 	{
+		AIPatches.Apply(harmony);
 		ArtifactPatches.Apply(harmony);
 		ArtifactRewardPatches.Apply(harmony);
 		CardPatches.Apply(harmony);
@@ -310,7 +313,11 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		GenericKeyPatches.Apply<CardAction>(harmony);
 		GenericKeyPatches.Apply<FightModifier>(harmony);
 		GenericKeyPatches.Apply<MapBase>(harmony);
-		GenericKeyPatches.Apply<AI>(harmony);
+	}
+
+	internal static void ApplyLateHarmonyPatches(Harmony harmony)
+	{
+		MapBasePatches.ApplyLate(harmony);
 	}
 
 	[EventPriority(double.MaxValue)]

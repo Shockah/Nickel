@@ -43,7 +43,7 @@ internal static class ArtifactRewardPatches
 					ILMatches.Call("get_Name")
 				)
 				.PointerMatcher(SequenceMatcherRelativeElement.Last)
-				.Replace(new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(ArtifactRewardPatches), nameof(GetOffering_Delegate_Transpiler_GetKey))))
+				.Replace(new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetOffering_Delegate_Transpiler_GetKey))))
 				.AllElements();
 		}
 		catch (Exception ex)

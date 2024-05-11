@@ -1,6 +1,7 @@
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using WeakEvent;
 
 namespace Nickel;
@@ -14,7 +15,7 @@ internal static class WizardPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Wizard), nameof(Wizard.GetAssignableStatuses))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Wizard)}.{nameof(Wizard.GetAssignableStatuses)}`"),
-			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(WizardPatches), nameof(GetAssignableStatuses_Postfix)), priority: Priority.Last)
+			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetAssignableStatuses_Postfix)), priority: Priority.Last)
 		);
 	}
 
