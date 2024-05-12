@@ -218,8 +218,6 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static int ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony? harmony, ILogger logger, ILogger gameLogger, CobaltCoreHandlerResult handlerResult)
 	{
-		instance.SaveManager = new(logger);
-
 		var version = GetVanillaVersion();
 		logger.LogInformation("Game version: {Version}", version);
 
@@ -231,6 +229,12 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 		if (!launchArguments.Vanilla)
 		{
+			instance.SaveManager = new(
+				logger,
+				() => instance.ModManager.ContentManager!.Decks,
+				() => instance.ModManager.ContentManager!.Statuses
+			);
+
 			instance.ModManager.ContinueAfterLoadingGameAssembly(version);
 			instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderModManifest);
 			instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderModManifest);

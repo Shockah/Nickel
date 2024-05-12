@@ -1,7 +1,9 @@
+using HarmonyLib;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Nickel;
 
@@ -15,10 +17,41 @@ internal sealed class DeckManager
 	private Dictionary<string, Deck> ReservedNameToDeck { get; } = [];
 	private Dictionary<Deck, string> ReservedDeckToName { get; } = [];
 
+	private readonly FieldInfo[] FieldsAllowedToHaveInvalidEntries = [
+		AccessTools.DeclaredField(typeof(StoryVars), nameof(StoryVars.unlockedChars)),
+		AccessTools.DeclaredField(typeof(StoryVars), nameof(StoryVars.memoryUnlockLevel)),
+	];
+
 	public DeckManager(Func<ModLoadPhase> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
 		this.VanillaModManifest = vanillaModManifest;
+	}
+
+	internal bool IsStateInvalid(State state)
+	{
+		var @checked = new HashSet<object>();
+
+		bool ContainsInvalidEntries(object? o)
+		{
+			if (o is null)
+				return false;
+			if (o is Deck deck && this.LookupByDeck(deck) is null)
+				return true;
+			if (o.GetType().IsPrimitive)
+				return false;
+			if (@checked.Contains(o))
+				return false;
+
+			@checked.Add(o);
+
+			foreach (var field in o.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+				if (!FieldsAllowedToHaveInvalidEntries.Contains(field) && ContainsInvalidEntries(field.GetValue(o)))
+					return true;
+			return false;
+		}
+
+		return ContainsInvalidEntries(state);
 	}
 
 	internal void ModifyJsonContract(Type type, JsonContract contract)

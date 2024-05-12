@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 using System.IO;
 using System.IO.Compression;
 
@@ -9,16 +10,21 @@ namespace Nickel;
 internal sealed class SaveManager
 {
 	private readonly ILogger Logger;
+	private Func<DeckManager> DeckManagerProvider { get; }
+	private Func<StatusManager> StatusManagerProvider { get; }
 
-	public SaveManager(ILogger logger)
+	public SaveManager(ILogger logger, Func<DeckManager> deckManagerProvider, Func<StatusManager> statusManagerProvider)
 	{
 		this.Logger = logger;
+		this.DeckManagerProvider = deckManagerProvider;
+		this.StatusManagerProvider = statusManagerProvider;
 
 		StatePatches.OnLoad.Subscribe(this, this.OnLoad);
 	}
 
 	private void OnLoad(object? _, StatePatches.LoadEventArgs e)
 	{
+		this.MarkAsCorruptedIfNeeded(e.Data);
 		if (!e.Data.isCorrupted)
 			return;
 
@@ -34,15 +40,20 @@ internal sealed class SaveManager
 				return;
 
 			this.TryResetToMenu(e, @object);
+			this.MarkAsCorruptedIfNeeded(e.Data);
 			if (!e.Data.isCorrupted)
 				return;
 
 			this.TryForceReset(e, @object);
+			this.MarkAsCorruptedIfNeeded(e.Data);
 		}
 		catch
 		{
 		}
 	}
+
+	private void MarkAsCorruptedIfNeeded(State.SaveSlot data)
+		=> data.isCorrupted = data.isCorrupted || (data.state is { } state && (this.DeckManagerProvider().IsStateInvalid(state) || this.StatusManagerProvider().IsStateInvalid(state)));
 
 	private void TryResetToMenu(StatePatches.LoadEventArgs e, JObject @object)
 	{

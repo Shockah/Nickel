@@ -2,6 +2,7 @@ using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Nickel;
 
@@ -20,6 +21,32 @@ internal sealed class StatusManager
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
 		this.VanillaModManifest = vanillaModManifest;
 		TTGlossaryPatches.OnTryGetIcon.Subscribe(this.OnTryGetIcon);
+	}
+
+	internal bool IsStateInvalid(State state)
+	{
+		var @checked = new HashSet<object>();
+
+		bool ContainsInvalidEntries(object? o)
+		{
+			if (o is null)
+				return false;
+			if (o is Status status && this.LookupByStatus(status) is null)
+				return true;
+			if (o.GetType().IsPrimitive)
+				return false;
+			if (@checked.Contains(o))
+				return false;
+
+			@checked.Add(o);
+
+			foreach (var field in o.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+				if (ContainsInvalidEntries(field.GetValue(o)))
+					return true;
+			return false;
+		}
+
+		return ContainsInvalidEntries(state);
 	}
 
 	private void OnTryGetIcon(object? _, TTGlossaryPatches.TryGetIconEventArgs e)
