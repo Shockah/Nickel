@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Additional improvements to the save recovering mechanism.
+
 ## 0.11.0
 Released 11 May 2024.
 

@@ -60,7 +60,7 @@ internal sealed class SaveManager
 			clone[nameof(State.pendingRunSummary)] = JValue.CreateNull();
 			clone[nameof(State.rewardsQueue)] = new JArray();
 
-			if (@object.GetValue(nameof(State.runConfig)) is JObject runConfig)
+			if (clone.GetValue(nameof(State.runConfig)) is JObject runConfig)
 				runConfig[nameof(RunConfig.selectedChars)] = new JArray();
 
 			using var jsonReader = new JTokenReader(clone);
@@ -71,6 +71,7 @@ internal sealed class SaveManager
 			recoveredState.map = new MapFirst();
 			recoveredState.route = new NewRunOptions();
 			recoveredState.runConfig.selectedShip = "artemis";
+			recoveredState.storyVars.ResetAfterRun();
 
 			recoveredState.map.Populate(recoveredState, recoveredState.rngZone);
 
@@ -95,6 +96,8 @@ internal sealed class SaveManager
 			using var jsonReader = new JTokenReader(storyVars);
 			if (JSONSettings.serializer.Deserialize<StoryVars>(jsonReader) is not { } recoveredStoryVars)
 				return;
+
+			recoveredStoryVars.ResetAfterRun();
 
 			var recoveredState = State.NewGame(slot: null);
 			recoveredState.storyVars = recoveredStoryVars;
