@@ -4,7 +4,7 @@
 	"DisplayName": "Nickel: Legacy mod support",
 	"Description": "Loads and manages legacy mods.",
 	"Author": "Nickel",
-	"RequiredApiVersion": "0.11.0",
+	"RequiredApiVersion": "0.11.1",
 	"EntryPointAssembly": "Nickel.Legacy.dll",
 	"EntryPointType": "Nickel.Legacy.ModEntry",
 	"AssemblyReferences": [
