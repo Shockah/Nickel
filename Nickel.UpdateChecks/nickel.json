@@ -9,6 +9,9 @@
 	"UpdateChecks": {
 		"NexusMods": {
 			"ID": 1
+		},
+		"GitHub": {
+			"Repository": "Shockah/Nickel"
 		}
 	}
 }

@@ -1,8 +1,9 @@
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
+using Microsoft.Xna.Framework.Graphics;
 using Nanoray.PluginManager;
-using Nanoray.Shrike.Harmony;
 using Nanoray.Shrike;
+using Nanoray.Shrike.Harmony;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -12,12 +13,31 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Nickel.UpdateChecks;
 
 public sealed class ModEntry : SimpleMod
 {
+	private static readonly Dictionary<string, Dictionary<string, JObject>> HardcodedUpdateCheckData = new()
+	{
+		{ "Shockah.Rerolls", new() { { "NexusMods", JObject.Parse("""{"ID": 2}""") } } },
+		{ "Shockah.Kokoro", new() { { "NexusMods", JObject.Parse("""{"ID": 4}""") } } },
+		{ "Shockah.Soggins", new() { { "NexusMods", JObject.Parse("""{"ID": 5}""") } } },
+		{ "APurpleApple.Shipyard", new() { { "NexusMods", JObject.Parse("""{"ID": 6}""") } } },
+		{ "TheJazMaster.TyAndSasha", new() { { "NexusMods", JObject.Parse("""{"ID": 7}""") } } },
+		{ "Sorwest.LenMod", new() { { "NexusMods", JObject.Parse("""{"ID": 8}""") } } },
+		{ "TheJazMaster.Bucket", new() { { "NexusMods", JObject.Parse("""{"ID": 9}""") } } },
+		{ "Shockah.Johnson", new() { { "NexusMods", JObject.Parse("""{"ID": 10}""") } } },
+		{ "Shockah.Dracula", new() { { "NexusMods", JObject.Parse("""{"ID": 12}""") } } },
+		{ "APurpleApple.FutureVision", new() { { "NexusMods", JObject.Parse("""{"ID": 13}""") } } },
+		{ "Shockah.DuoArtifacts", new() { { "NexusMods", JObject.Parse("""{"ID": 14}""") } } },
+		{ "TheJazMaster.MoreDifficulties", new() { { "NexusMods", JObject.Parse("""{"ID": 15}""") } } },
+		{ "APurpleApple.GenericArtifacts", new() { { "NexusMods", JObject.Parse("""{"ID": 16}""") } } },
+		{ "TheJazMaster.Eddie", new() { { "NexusMods", JObject.Parse("""{"ID": 17}""") } } },
+		{ "Shockah.Dyna", new() { { "NexusMods", JObject.Parse("""{"ID": 18}""") } } },
+		{ "Shockah.BetterRunSummaries", new() { { "NexusMods", JObject.Parse("""{"ID": 19}""") } } },
+	};
+
 	internal static ModEntry Instance { get; private set; } = null!;
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
@@ -73,24 +93,34 @@ public sealed class ModEntry : SimpleMod
 
 		foreach (var mod in helper.ModRegistry.LoadedMods.Values)
 		{
-			if (!mod.ExtensionData.TryGetValue("UpdateChecks", out var rawUpdateChecks))
+			Dictionary<string, JObject>? updateChecks;
+
+			if (mod.ExtensionData.TryGetValue("UpdateChecks", out var rawUpdateChecks))
+			{
+				var settings = new JsonSerializerSettings
+				{
+					ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
+				};
+
+				updateChecks = JsonConvert.DeserializeObject<Dictionary<string, JObject>>(JsonConvert.SerializeObject(rawUpdateChecks, settings), settings);
+			}
+			else if (HardcodedUpdateCheckData.TryGetValue(mod.UniqueName, out updateChecks))
+			{
+				logger.LogDebug("Checking hardcoded update info for mod {ModName}: `UpdateChecks` structure not defined.", mod.GetDisplayName(@long: false));
+			}
+			else
 			{
 				this.UpdatesAvailable[mod] = null;
 				logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure not defined.", mod.GetDisplayName(@long: false));
 				continue;
 			}
 
-			var settings = new JsonSerializerSettings
-			{
-				ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
-			};
-			if (JsonConvert.DeserializeObject<Dictionary<string, JObject>>(JsonConvert.SerializeObject(rawUpdateChecks, settings), settings) is not { } updateChecks)
+			if (updateChecks is null)
 			{
 				this.UpdatesAvailable[mod] = null;
 				logger.LogError("Cannot check updates for mod {ModName}: invalid `UpdateChecks` structure.", mod.GetDisplayName(@long: false));
 				continue;
 			}
-
 			if (updateChecks.Count == 0)
 			{
 				this.UpdatesAvailable[mod] = null;
