@@ -89,7 +89,10 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 	private HttpClient? MakeHttpClient()
 	{
-		var client = new HttpClient();
+		var client = new HttpClient
+		{
+			Timeout = TimeSpan.FromSeconds(15)
+		};
 
 		client.DefaultRequestHeaders.Add("User-Agent", $"{this.Package.Manifest.UniqueName}/{this.Package.Manifest.Version}");
 		client.DefaultRequestHeaders.Add("Application-Name", this.Package.Manifest.UniqueName);
@@ -255,10 +258,18 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 	private async Task<List<GithubReleaseModel>> GetReleases(HttpClient client, string repository)
 	{
-		this.Logger.LogDebug("Requesting releases for repository {Repository}...", repository);
-		var stream = await client.GetStreamAsync($"https://api.github.com/repos/{repository}/releases?per_page=100");
-		using var streamReader = new StreamReader(stream);
-		using var jsonReader = new JsonTextReader(streamReader);
-		return this.Serializer.Deserialize<List<GithubReleaseModel>>(jsonReader) ?? throw new InvalidDataException();
+		try
+		{
+			this.Logger.LogDebug("Requesting releases for repository {Repository}...", repository);
+			var stream = await client.GetStreamAsync($"https://api.github.com/repos/{repository}/releases?per_page=100");
+			using var streamReader = new StreamReader(stream);
+			using var jsonReader = new JsonTextReader(streamReader);
+			return this.Serializer.Deserialize<List<GithubReleaseModel>>(jsonReader) ?? throw new InvalidDataException();
+		}
+		catch (Exception ex)
+		{
+			this.Logger.LogDebug("Failed to retrieve releases for repository {Repository}: {Error}", repository, ex.Message);
+			throw;
+		}
 	}
 }

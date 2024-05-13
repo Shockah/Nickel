@@ -88,7 +88,10 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 	private HttpClient? MakeHttpClient()
 	{
-		var client = new HttpClient();
+		var client = new HttpClient
+		{
+			Timeout = TimeSpan.FromSeconds(15)
+		};
 
 		client.DefaultRequestHeaders.Add("User-Agent", $"{this.Package.Manifest.UniqueName}/{this.Package.Manifest.Version}");
 		client.DefaultRequestHeaders.Add("Application-Name", this.Package.Manifest.UniqueName);
@@ -147,6 +150,37 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				return results;
 			}
 
+			// if we had a previous update within the last month, we can try checking if any of the remaining mods had any updates and return early if not
+			// if we only have 3 mods to fetch, we skip to save on requests
+
+			try
+			{
+				if (remainingMods.Count >= 3)
+				{
+					var timeSinceLastUpdate = now - this.Database.LastUpdate;
+					if (timeSinceLastUpdate < 60 * 60 * 24 * 28)
+					{
+						var updatedMods = await this.GetUpdatedMods(client, timeSinceLastUpdate);
+
+						foreach (var modEntry in remainingMods.ToList())
+						{
+							if (updatedMods.Any(model => model.ID == modEntry.Entry.ID))
+								continue;
+							if (!this.Database.ModIdToVersion.ContainsKey(modEntry.Entry.ID))
+								continue;
+
+							remainingMods.Remove(modEntry);
+						}
+
+						if (remainingMods.Count == 0)
+							return results;
+					}
+				}
+			}
+			catch
+			{
+			}
+
 			// updating version data from the 3 10-element lists
 			// if we only have 3 mods to fetch, we skip to save on requests
 
@@ -178,37 +212,6 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 					if (remainingMods.Count == 0)
 						return results;
-				}
-			}
-			catch
-			{
-			}
-
-			// if we had a previous update within the last month, we can try checking if any of the remaining mods had any updates and return early if not
-			// if we only have 2 mods to fetch, we skip to save on requests
-
-			try
-			{
-				if (remainingMods.Count >= 2)
-				{
-					var timeSinceLastUpdate = now - this.Database.LastUpdate;
-					if (timeSinceLastUpdate < 60 * 60 * 24 * 28)
-					{
-						var updatedMods = await this.GetUpdatedMods(client, timeSinceLastUpdate);
-
-						foreach (var modEntry in remainingMods)
-						{
-							if (updatedMods.Any(model => model.ID == modEntry.Entry.ID))
-								continue;
-							if (!this.Database.ModIdToVersion.ContainsKey(modEntry.Entry.ID))
-								continue;
-
-							remainingMods.Remove(modEntry);
-						}
-
-						if (remainingMods.Count == 0)
-							return results;
-					}
 				}
 			}
 			catch
@@ -258,29 +261,53 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 	private async Task<IReadOnlyList<NexusModModel>> GetLatestAddedMods(HttpClient client)
 	{
-		this.Logger.LogDebug("Requesting latest added mods...");
-		var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/latest_added.json");
-		using var streamReader = new StreamReader(stream);
-		using var jsonReader = new JsonTextReader(streamReader);
-		return this.Serializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
+		try
+		{
+			this.Logger.LogDebug("Requesting latest added mods...");
+			var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/latest_added.json");
+			using var streamReader = new StreamReader(stream);
+			using var jsonReader = new JsonTextReader(streamReader);
+			return this.Serializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
+		}
+		catch (Exception ex)
+		{
+			this.Logger.LogDebug("Failed to retrieve latest added mods: {Error}", ex.Message);
+			throw;
+		}
 	}
 
 	private async Task<IReadOnlyList<NexusModModel>> GetLatestUpdatedMods(HttpClient client)
 	{
-		this.Logger.LogDebug("Requesting latest updated mods...");
-		var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/latest_updated.json");
-		using var streamReader = new StreamReader(stream);
-		using var jsonReader = new JsonTextReader(streamReader);
-		return this.Serializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
+		try
+		{
+			this.Logger.LogDebug("Requesting latest updated mods...");
+			var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/latest_updated.json");
+			using var streamReader = new StreamReader(stream);
+			using var jsonReader = new JsonTextReader(streamReader);
+			return this.Serializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
+		}
+		catch (Exception ex)
+		{
+			this.Logger.LogDebug("Failed to retrieve latest updated mods: {Error}", ex.Message);
+			throw;
+		}
 	}
 
 	private async Task<IReadOnlyList<NexusModModel>> GetTrendingMods(HttpClient client)
 	{
-		this.Logger.LogDebug("Requesting trending mods...");
-		var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/trending.json");
-		using var streamReader = new StreamReader(stream);
-		using var jsonReader = new JsonTextReader(streamReader);
-		return this.Serializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
+		try
+		{
+			this.Logger.LogDebug("Requesting trending mods...");
+			var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/trending.json");
+			using var streamReader = new StreamReader(stream);
+			using var jsonReader = new JsonTextReader(streamReader);
+			return this.Serializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
+		}
+		catch (Exception ex)
+		{
+			this.Logger.LogDebug("Failed to retrieve trending mods: {Error}", ex.Message);
+			throw;
+		}
 	}
 
 	private async Task<IReadOnlyList<NexusModLastUpdateModel>> GetUpdatedMods(HttpClient client, long timeSinceLastUpdate)
@@ -292,19 +319,35 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			_ => "1d"
 		};
 
-		this.Logger.LogDebug("Requesting updated mods in the {Period} period...", period);
-		var stream = await client.GetStreamAsync($"https://api.nexusmods.com/v1/games/cobaltcore/mods/updated.json?period={period}");
-		using var streamReader = new StreamReader(stream);
-		using var jsonReader = new JsonTextReader(streamReader);
-		return this.Serializer.Deserialize<IReadOnlyList<NexusModLastUpdateModel>>(jsonReader) ?? throw new InvalidDataException();
+		try
+		{
+			this.Logger.LogDebug("Requesting updated mods in the {Period} period...", period);
+			var stream = await client.GetStreamAsync($"https://api.nexusmods.com/v1/games/cobaltcore/mods/updated.json?period={period}");
+			using var streamReader = new StreamReader(stream);
+			using var jsonReader = new JsonTextReader(streamReader);
+			return this.Serializer.Deserialize<IReadOnlyList<NexusModLastUpdateModel>>(jsonReader) ?? throw new InvalidDataException();
+		}
+		catch (Exception ex)
+		{
+			this.Logger.LogDebug("Failed to retrieve updated mods in the {Period} period: {Error}", period, ex.Message);
+			throw;
+		}
 	}
 
 	private async Task<NexusModModel> GetMod(HttpClient client, int id)
 	{
-		this.Logger.LogDebug("Requesting mod {ModId}...", id);
-		var stream = await client.GetStreamAsync($"https://api.nexusmods.com/v1/games/cobaltcore/mods/{id}.json");
-		using var streamReader = new StreamReader(stream);
-		using var jsonReader = new JsonTextReader(streamReader);
-		return this.Serializer.Deserialize<NexusModModel>(jsonReader) ?? throw new InvalidDataException();
+		try
+		{
+			this.Logger.LogDebug("Requesting mod {ModId}...", id);
+			var stream = await client.GetStreamAsync($"https://api.nexusmods.com/v1/games/cobaltcore/mods/{id}.json");
+			using var streamReader = new StreamReader(stream);
+			using var jsonReader = new JsonTextReader(streamReader);
+			return this.Serializer.Deserialize<NexusModModel>(jsonReader) ?? throw new InvalidDataException();
+		}
+		catch (Exception ex)
+		{
+			this.Logger.LogDebug("Failed to retrieve mod {ModId}: {Error}", id, ex.Message);
+			throw;
+		}
 	}
 }

@@ -192,6 +192,7 @@ public sealed class ModEntry : SimpleMod
 
 	private void ReportUpdates(Dictionary<IModManifest, UpdateDescriptor> updates)
 	{
+		var hasOutdatedMods = false;
 		foreach (var (mod, result) in updates)
 		{
 			this.UpdatesAvailable[mod] = result;
@@ -200,7 +201,11 @@ public sealed class ModEntry : SimpleMod
 			if (result.Urls.Count == 0)
 				continue;
 			this.Logger.LogWarning("Mod {ModName} has an update {Version} available:\n{Urls}", mod.GetDisplayName(@long: false), result.Version, string.Join("\n", result.Urls.Select(url => $"\t{url}")));
+			hasOutdatedMods = true;
 		}
+
+		if (!hasOutdatedMods)
+			this.Logger.LogInformation("All mods up to date.");
 
 		var callbacks = this.AwaitingUpdateInfo.ToList();
 		callbacks.Clear();
