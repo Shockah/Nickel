@@ -18,24 +18,30 @@ namespace Nickel.UpdateChecks;
 
 public sealed class ModEntry : SimpleMod
 {
-	private static readonly Dictionary<string, Dictionary<string, JObject>> HardcodedUpdateCheckData = new()
+	private static readonly Dictionary<string, Dictionary<string, string>> HardcodedUpdateCheckData = new()
 	{
-		{ "Shockah.Rerolls", new() { { "NexusMods", JObject.Parse("""{"ID": 2}""") } } },
-		{ "Shockah.Kokoro", new() { { "NexusMods", JObject.Parse("""{"ID": 4}""") } } },
-		{ "Shockah.Soggins", new() { { "NexusMods", JObject.Parse("""{"ID": 5}""") } } },
-		{ "APurpleApple.Shipyard", new() { { "NexusMods", JObject.Parse("""{"ID": 6}""") } } },
-		{ "TheJazMaster.TyAndSasha", new() { { "NexusMods", JObject.Parse("""{"ID": 7}""") } } },
-		{ "Sorwest.LenMod", new() { { "NexusMods", JObject.Parse("""{"ID": 8}""") } } },
-		{ "TheJazMaster.Bucket", new() { { "NexusMods", JObject.Parse("""{"ID": 9}""") } } },
-		{ "Shockah.Johnson", new() { { "NexusMods", JObject.Parse("""{"ID": 10}""") } } },
-		{ "Shockah.Dracula", new() { { "NexusMods", JObject.Parse("""{"ID": 12}""") } } },
-		{ "APurpleApple.FutureVision", new() { { "NexusMods", JObject.Parse("""{"ID": 13}""") } } },
-		{ "Shockah.DuoArtifacts", new() { { "NexusMods", JObject.Parse("""{"ID": 14}""") } } },
-		{ "TheJazMaster.MoreDifficulties", new() { { "NexusMods", JObject.Parse("""{"ID": 15}""") } } },
-		{ "APurpleApple.GenericArtifacts", new() { { "NexusMods", JObject.Parse("""{"ID": 16}""") } } },
-		{ "TheJazMaster.Eddie", new() { { "NexusMods", JObject.Parse("""{"ID": 17}""") } } },
-		{ "Shockah.Dyna", new() { { "NexusMods", JObject.Parse("""{"ID": 18}""") } } },
-		{ "Shockah.BetterRunSummaries", new() { { "NexusMods", JObject.Parse("""{"ID": 19}""") } } },
+		{ "APurpleApple.FutureVision", new() { { "NexusMods", """{"ID": 13}""" }, { "GitHub", """{"Repository": "APurpleApple/CC_FutureVision"}""" } } },
+		{ "APurpleApple.GenericArtifacts", new() { { "NexusMods", """{"ID": 16}""" }, { "GitHub", """{"Repository": "APurpleApple/APurpleApple_Artifacts"}""" } } },
+		{ "APurpleApple.Shipyard", new() { { "NexusMods", """{"ID": 6}""" }, { "GitHub", """{"Repository": "APurpleApple/APurpleApple_Shipyard"}""" } } },
+		{ "Arin.Randall", new() { { "GitHub", """{"Repository": "UnicornArin/CobaltCoreRandall"}""" } } },
+		{ "Dave", new() { { "GitHub", """{"Repository": "rft50/cc-dave", "ReleaseTagRegex": "^dave\\-(.*)"}""" } } },
+		{ "KeplerShipManifest", new() { { "GitHub", """{"Repository": "aherbig/TheGreenDigiKepler"}""" } } },
+		{ "Mezz.TwosCompany", new() { { "GitHub", """{"Repository": "Mezzelo/TwosCompany"}""" } } },
+		{ "rft.Jester", new() { { "GitHub", """{"Repository": "rft50/cc-dave", "ReleaseTagRegex": "^jester\\-(.*)"}""" } } },
+		{ "Shockah.BetterRunSummaries", new() { { "NexusMods", """{"ID": 19}""" } } },
+		{ "Shockah.Dracula", new() { { "NexusMods", """{"ID": 12}""" } } },
+		{ "Shockah.DuoArtifacts", new() { { "NexusMods", """{"ID": 14}""" } } },
+		{ "Shockah.Dyna", new() { { "NexusMods", """{"ID": 18}""" } } },
+		{ "Shockah.Johnson", new() { { "NexusMods", """{"ID": 10}""" } } },
+		{ "Shockah.Kokoro", new() { { "NexusMods", """{"ID": 4}""" } } },
+		{ "Shockah.Rerolls", new() { { "NexusMods", """{"ID": 2}""" } } },
+		{ "Shockah.Soggins", new() { { "NexusMods", """{"ID": 5}""" } } },
+		{ "SoggoruWaffle.Tucker", new() { { "GitHub", """{"Repository": "CupOfJim/Tucker-Mod"}""" } } },
+		{ "Sorwest.LenMod", new() { { "NexusMods", """{"ID": 8}""" }, { "GitHub", """{"Repository": "Sorwest/LenMod"}""" } } },
+		{ "TheJazMaster.Bucket", new() { { "NexusMods", """{"ID": 9}""" }, { "GitHub", """{"Repository": "TheJazMaster/Bucket"}""" } } },
+		{ "TheJazMaster.Eddie", new() { { "NexusMods", """{"ID": 17}""" }, { "GitHub", """{"Repository": "TheJazMaster/Eddie"}""" } } },
+		{ "TheJazMaster.MoreDifficulties", new() { { "NexusMods", """{"ID": 15}""" }, { "GitHub", """{"Repository": "TheJazMaster/MoreDifficulties"}""" } } },
+		{ "TheJazMaster.TyAndSasha", new() { { "NexusMods", """{"ID": 7}""" }, { "GitHub", """{"Repository": "TheJazMaster/TyAndSasha"}""" } } },
 	};
 
 	internal static ModEntry Instance { get; private set; } = null!;
@@ -104,9 +110,10 @@ public sealed class ModEntry : SimpleMod
 
 				updateChecks = JsonConvert.DeserializeObject<Dictionary<string, JObject>>(JsonConvert.SerializeObject(rawUpdateChecks, settings), settings);
 			}
-			else if (HardcodedUpdateCheckData.TryGetValue(mod.UniqueName, out updateChecks))
+			else if (HardcodedUpdateCheckData.TryGetValue(mod.UniqueName, out var hardcodedUpdateCheckData))
 			{
 				logger.LogDebug("Checking hardcoded update info for mod {ModName}: `UpdateChecks` structure not defined.", mod.GetDisplayName(@long: false));
+				updateChecks = hardcodedUpdateCheckData.ToDictionary(kvp => kvp.Key, kvp => JObject.Parse(kvp.Value));
 			}
 			else
 			{
