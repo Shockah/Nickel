@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed `Nickel.Legacy` not generating `nickel.json` files for mods after the latest changes.
+
 ## 0.11.1
 Released 13 May 2024.
 

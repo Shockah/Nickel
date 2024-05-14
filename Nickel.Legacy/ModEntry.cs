@@ -165,8 +165,8 @@ public sealed class ModEntry : Mod
 		Assembly assembly;
 		try
 		{
-			var temporaryContext = new AssemblyLoadContext($"{typeof(ModEntry).Namespace!}.ManifestGenerator", isCollectible: true);
-			assembly = temporaryContext.LoadFromAssemblyPath(assemblyFileName.FullName);
+			var context = AssemblyLoadContext.GetLoadContext(this.GetType().Assembly) ?? AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default;
+			assembly = context.LoadFromAssemblyPath(assemblyFileName.FullName);
 		}
 		catch
 		{
