@@ -1,15 +1,15 @@
 {
 	"UniqueName": "Nickel.UpdateChecks.GitHub",
-	"Version": "0.11.1",
+	"Version": "0.12.0",
 	"DisplayName": "Nickel: GitHub update checks",
 	"Description": "Provides a mechanism of GitHub update checks for installed mods.",
 	"Author": "Nickel",
-	"RequiredApiVersion": "0.11.0",
+	"RequiredApiVersion": "0.12.0",
 	"EntryPointAssembly": "Nickel.UpdateChecks.GitHub.dll",
 	"Dependencies": [
 		{
 			"UniqueName": "Nickel.UpdateChecks",
-			"Version": "0.11.0"
+			"Version": "0.12.0"
 		}
 	]
 }
