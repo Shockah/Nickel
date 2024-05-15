@@ -1,5 +1,7 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -41,8 +43,16 @@ public sealed class DeployModTask : Task
 
 	public string IncludedModProjectPaths { get; set; } = "";
 
+	public string ModVersionValidation { get; set; } = Enum.GetName(typeof(ModVersionValidation), ModBuildConfig.ModVersionValidation.Error);
+
 	public override bool Execute()
 	{
+		if (!Enum.TryParse<ModVersionValidation>(this.ModVersionValidation, ignoreCase: true, out var modVersionValidation))
+		{
+			this.Log.LogError($"The `ModVersionValidation` property has an invalid value `{this.ModVersionValidation}`.");
+			return false;
+		}
+
 		// skip if nothing to do
 		// (this must be checked before the manifest validation, to allow cases like unit test projects)
 		if (!this.EnableModDeploy && !this.EnableModZip)
@@ -50,17 +60,47 @@ public sealed class DeployModTask : Task
 
 		var modFiles = this.GetModFiles(this.TargetDir, this.ProjectDir).ToList();
 
-		if (!modFiles.Any(e => e.Info.Name == ManifestFileName))
+		if (modFiles.FirstOrDefault(e => e.Info.Name == ManifestFileName) is { } manifestFile && manifestFile.Info.Exists)
 		{
-			if (this.IsLegacyMod)
+			if (modVersionValidation != ModBuildConfig.ModVersionValidation.Disabled)
 			{
-				this.Log.LogWarning($"The `{ManifestFileName}` file is missing. It is recommended to create one manually.");
+				using var fileStream = manifestFile.Info.OpenRead();
+				using var reader = new StreamReader(fileStream);
+				using var jsonReader = new JsonTextReader(reader);
+
+				if (JToken.ReadFrom(jsonReader) is not JObject json)
+				{
+					this.Log.LogError($"The `{ManifestFileName}` file is not a valid JSON file.");
+					return false;
+				}
+				if (json.Value<string>("Version") is not { } manifestVersion)
+				{
+					this.Log.LogError($"The `{ManifestFileName}` file does is missing a required `Version` field.");
+					return false;
+				}
+				if (manifestVersion.Trim() != this.ModVersion.Trim())
+				{
+					var message = $"The `{ManifestFileName}` file specifies a `Version` of `{manifestVersion.Trim()}` which does not match the `ModVersion` property of `{this.ModVersion.Trim()}`.";
+					switch (modVersionValidation)
+					{
+						case ModBuildConfig.ModVersionValidation.Warning:
+							this.Log.LogWarning(message);
+							break;
+						case ModBuildConfig.ModVersionValidation.Error:
+							this.Log.LogError(message);
+							return false;
+					}
+				}
 			}
-			else
-			{
-				this.Log.LogError($"The required `{ManifestFileName}` file is missing.");
-				return false;
-			}
+		}
+		else if (this.IsLegacyMod)
+		{
+			this.Log.LogWarning($"The `{ManifestFileName}` file is missing. It is recommended to create one manually.");
+		}
+		else
+		{
+			this.Log.LogError($"The required `{ManifestFileName}` file is missing.");
+			return false;
 		}
 
 		if (this.EnableModDeploy)

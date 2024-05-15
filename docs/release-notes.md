@@ -7,6 +7,11 @@
 * Added update checks for installed mods.
 * Fixed `Nickel.Legacy` not generating `nickel.json` files for mods after the latest changes.
 
+### `ModBuildConfig`
+`Nickel.ModBuildConfig` is also updated to [insert upcoming release version number].
+
+* `ModBuildConfig` now validates the `Version` in the `nickel.json` file against the provided `ModVersion` property (defaulting to `Version`).
+
 ## 0.11.1
 Released 13 May 2024.
 
