@@ -18,11 +18,9 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 	internal static ModEntry Instance { get; private set; } = null!;
 
-	private FileInfo DatabaseFile
-		=> new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, $"{this.Package.Manifest.UniqueName}.json"));
+	private IWritableFileInfo DatabaseFile
+		=> this.Helper.Storage.GetSinglePrivateSettingsFile("json");
 
-	private readonly JsonSerializerSettings SerializerSettings;
-	private readonly JsonSerializer Serializer;
 	private HttpClient? Client;
 
 	private readonly SemaphoreSlim Semaphore = new(1, 1);
@@ -31,15 +29,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
 		Instance = this;
-
-		this.SerializerSettings = new()
-		{
-			ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
-			Formatting = Formatting.Indented,
-		};
-		this.SerializerSettings.Converters.Add(new SemanticVersionConverter());
-		this.Serializer = JsonSerializer.Create(this.SerializerSettings);
-
+		helper.Storage.ApplyJsonSerializerSettings(s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
 		this.LoadDatabase();
 
 		helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!.RegisterUpdateSource("NexusMods", this);
@@ -54,7 +44,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				using var stream = this.DatabaseFile.OpenRead();
 				using var streamReader = new StreamReader(stream);
 				using var jsonReader = new JsonTextReader(streamReader);
-				this.Database = this.Serializer.Deserialize<Database>(jsonReader) ?? new();
+				this.Database = this.Helper.Storage.JsonSerializer.Deserialize<Database>(jsonReader) ?? new();
 			}
 			catch
 			{
@@ -74,11 +64,10 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	{
 		try
 		{
-			this.DatabaseFile.Directory?.Create();
 			using var stream = this.DatabaseFile.OpenWrite();
 			using var streamWriter = new StreamWriter(stream);
 			using var jsonWriter = new JsonTextWriter(streamWriter);
-			this.Serializer.Serialize(jsonWriter, this.Database);
+			this.Helper.Storage.JsonSerializer.Serialize(jsonWriter, this.Database);
 		}
 		catch (Exception ex)
 		{
@@ -105,7 +94,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 	public bool TryParseManifestEntry(IModManifest mod, object? rawManifestEntry, out object? manifestEntry)
 	{
-		manifestEntry = JsonConvert.DeserializeObject<ManifestEntry>(JsonConvert.SerializeObject(rawManifestEntry, this.SerializerSettings), this.SerializerSettings);
+		manifestEntry = JsonConvert.DeserializeObject<ManifestEntry>(JsonConvert.SerializeObject(rawManifestEntry, this.Helper.Storage.JsonSerializerSettings), this.Helper.Storage.JsonSerializerSettings);
 		if (manifestEntry is null)
 			this.Logger.LogError("Cannot check NexusMods updates for mod {ModName}: invalid `UpdateChecks` structure.", mod.GetDisplayName(@long: false));
 		return manifestEntry is not null;
@@ -267,7 +256,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/latest_added.json");
 			using var streamReader = new StreamReader(stream);
 			using var jsonReader = new JsonTextReader(streamReader);
-			return this.Serializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
+			return this.Helper.Storage.JsonSerializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{
@@ -284,7 +273,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/latest_updated.json");
 			using var streamReader = new StreamReader(stream);
 			using var jsonReader = new JsonTextReader(streamReader);
-			return this.Serializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
+			return this.Helper.Storage.JsonSerializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{
@@ -301,7 +290,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/trending.json");
 			using var streamReader = new StreamReader(stream);
 			using var jsonReader = new JsonTextReader(streamReader);
-			return this.Serializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
+			return this.Helper.Storage.JsonSerializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{
@@ -325,7 +314,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			var stream = await client.GetStreamAsync($"https://api.nexusmods.com/v1/games/cobaltcore/mods/updated.json?period={period}");
 			using var streamReader = new StreamReader(stream);
 			using var jsonReader = new JsonTextReader(streamReader);
-			return this.Serializer.Deserialize<IReadOnlyList<NexusModLastUpdateModel>>(jsonReader) ?? throw new InvalidDataException();
+			return this.Helper.Storage.JsonSerializer.Deserialize<IReadOnlyList<NexusModLastUpdateModel>>(jsonReader) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{
@@ -342,7 +331,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			var stream = await client.GetStreamAsync($"https://api.nexusmods.com/v1/games/cobaltcore/mods/{id}.json");
 			using var streamReader = new StreamReader(stream);
 			using var jsonReader = new JsonTextReader(streamReader);
-			return this.Serializer.Deserialize<NexusModModel>(jsonReader) ?? throw new InvalidDataException();
+			return this.Helper.Storage.JsonSerializer.Deserialize<NexusModModel>(jsonReader) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{

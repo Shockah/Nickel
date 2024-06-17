@@ -52,6 +52,14 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			name: "--modsPath",
 			description: "The path containing the mods to load."
 		);
+		Option<DirectoryInfo?> modSettingsPathOption = new(
+			name: "--modSettingsPath",
+			description: "The path containing mod settings (ones that are fine to share)."
+		);
+		Option<DirectoryInfo?> privateModSettingsPathOption = new(
+			name: "--privateModSettingsPath",
+			description: "The path containing private mod settings (ones that should never be shared)."
+		);
 		Option<DirectoryInfo?> savePathOption = new(
 			name: "--savePath",
 			description: "The path that will store the save data."
@@ -76,6 +84,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		rootCommand.AddOption(initSteamOption);
 		rootCommand.AddOption(gamePathOption);
 		rootCommand.AddOption(modsPathOption);
+		rootCommand.AddOption(modSettingsPathOption);
+		rootCommand.AddOption(privateModSettingsPathOption);
 		rootCommand.AddOption(savePathOption);
 		rootCommand.AddOption(logPathOption);
 		rootCommand.AddOption(timestampedLogFiles);
@@ -91,6 +101,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 				InitSteam = context.ParseResult.GetValueForOption(initSteamOption),
 				GamePath = context.ParseResult.GetValueForOption(gamePathOption),
 				ModsPath = context.ParseResult.GetValueForOption(modsPathOption),
+				ModSettingsPath = context.ParseResult.GetValueForOption(modSettingsPathOption),
+				PrivateModSettingsPath = context.ParseResult.GetValueForOption(privateModSettingsPathOption),
 				SavePath = context.ParseResult.GetValueForOption(savePathOption),
 				LogPath = context.ParseResult.GetValueForOption(logPathOption),
 				TimestampedLogFiles = context.ParseResult.GetValueForOption(timestampedLogFiles),
@@ -160,7 +172,13 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			var modsDirectory = launchArguments.ModsPath ?? GetOrCreateDefaultModLibraryDirectory();
 			logger.LogInformation("ModsPath: {Path}", modsDirectory.FullName);
 
-			instance.ModManager = new(modsDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
+			var modSettingsDirectory = launchArguments.ModSettingsPath ?? new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModSettings"));
+			logger.LogInformation("ModSettingsPath: {Path}", modSettingsDirectory.FullName);
+
+			var privateModSettingsDirectory = launchArguments.PrivateModSettingsPath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name));
+			logger.LogInformation("PrivateModSettingsPath: {Path}", privateModSettingsDirectory.FullName);
+
+			instance.ModManager = new(modsDirectory, modSettingsDirectory, privateModSettingsDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
 			try
 			{
 				instance.ModManager.ResolveMods();

@@ -19,11 +19,9 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 	internal static ModEntry Instance { get; private set; } = null!;
 
-	private FileInfo DatabaseFile
-		=> new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, $"{this.Package.Manifest.UniqueName}.json"));
+	private IWritableFileInfo DatabaseFile
+		=> this.Helper.Storage.GetSinglePrivateSettingsFile("json");
 
-	private readonly JsonSerializerSettings SerializerSettings;
-	private readonly JsonSerializer Serializer;
 	private HttpClient? Client;
 
 	private readonly SemaphoreSlim Semaphore = new(1, 1);
@@ -32,15 +30,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
 		Instance = this;
-
-		this.SerializerSettings = new()
-		{
-			ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
-			Formatting = Formatting.Indented,
-		};
-		this.SerializerSettings.Converters.Add(new SemanticVersionConverter());
-		this.Serializer = JsonSerializer.Create(this.SerializerSettings);
-
+		helper.Storage.ApplyJsonSerializerSettings(s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
 		this.LoadDatabase();
 
 		helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!.RegisterUpdateSource("GitHub", this);
@@ -55,7 +45,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				using var stream = this.DatabaseFile.OpenRead();
 				using var streamReader = new StreamReader(stream);
 				using var jsonReader = new JsonTextReader(streamReader);
-				this.Database = this.Serializer.Deserialize<Database>(jsonReader) ?? new();
+				this.Database = this.Helper.Storage.JsonSerializer.Deserialize<Database>(jsonReader) ?? new();
 			}
 			catch
 			{
@@ -75,11 +65,10 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	{
 		try
 		{
-			this.DatabaseFile.Directory?.Create();
 			using var stream = this.DatabaseFile.OpenWrite();
 			using var streamWriter = new StreamWriter(stream);
 			using var jsonWriter = new JsonTextWriter(streamWriter);
-			this.Serializer.Serialize(jsonWriter, this.Database);
+			this.Helper.Storage.JsonSerializer.Serialize(jsonWriter, this.Database);
 		}
 		catch (Exception ex)
 		{
@@ -109,7 +98,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	{
 		manifestEntry = null;
 
-		if (JsonConvert.DeserializeObject<ManifestEntry>(JsonConvert.SerializeObject(rawManifestEntry, this.SerializerSettings), this.SerializerSettings) is not { } entry)
+		if (JsonConvert.DeserializeObject<ManifestEntry>(JsonConvert.SerializeObject(rawManifestEntry, this.Helper.Storage.JsonSerializerSettings), this.Helper.Storage.JsonSerializerSettings) is not { } entry)
 		{
 			this.Logger.LogError("Cannot check GitHub updates for mod {ModName}: invalid `UpdateChecks` structure.", mod.GetDisplayName(@long: false));
 			return false;
@@ -264,7 +253,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			var stream = await client.GetStreamAsync($"https://api.github.com/repos/{repository}/releases?per_page=100");
 			using var streamReader = new StreamReader(stream);
 			using var jsonReader = new JsonTextReader(streamReader);
-			return this.Serializer.Deserialize<List<GithubReleaseModel>>(jsonReader) ?? throw new InvalidDataException();
+			return this.Helper.Storage.JsonSerializer.Deserialize<List<GithubReleaseModel>>(jsonReader) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{

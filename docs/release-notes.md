@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Added APIs for storing mod settings in a common place.
+
 ## 0.12.0
 Released 15 May 2024.
 

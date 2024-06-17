@@ -15,8 +15,14 @@ public sealed class FileInfoImpl : FileSystemInfoImpl<FileInfo>, IWritableFileIn
 		=> this.FileSystemInfo.OpenRead();
 
 	public Stream OpenWrite()
-		=> this.FileSystemInfo.OpenWrite();
+	{
+		this.Parent?.Create();
+		return this.FileSystemInfo.OpenWrite();
+	}
 
 	public void Delete()
-		=> this.FileSystemInfo.Delete();
+	{
+		if (this.Exists)
+			this.FileSystemInfo.Delete();
+	}
 }

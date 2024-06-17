@@ -20,38 +20,45 @@ namespace Nickel;
 
 internal sealed class ModManager
 {
-	private DirectoryInfo ModsDirectory { get; }
-	private ILoggerFactory LoggerFactory { get; }
-	internal ILogger Logger { get; }
-	internal ModEventManager EventManager { get; }
-	internal ModDataManager ModDataManager { get; }
+	private readonly DirectoryInfo ModsDirectory;
+	private readonly DirectoryInfo ModSettingsDirectory;
+	private readonly DirectoryInfo PrivateModSettingsDirectory;
+	private readonly ILoggerFactory LoggerFactory;
+	internal readonly ILogger Logger;
+	internal readonly ModEventManager EventManager;
+	internal readonly ModDataManager ModDataManager;
+	internal readonly ModStorageManager ModStorageManager;
 
-	internal IModManifest ModLoaderModManifest { get; private init; }
+	internal readonly IModManifest ModLoaderModManifest;
 	internal ModLoadPhase CurrentModLoadPhase { get; private set; } = ModLoadPhase.BeforeGameAssembly;
 	internal ContentManager? ContentManager { get; private set; }
 	internal IModManifest? VanillaModManifest { get; private set; }
 
-	internal List<IPluginPackage<IModManifest>> ResolvedMods { get; } = [];
+	internal readonly List<IPluginPackage<IModManifest>> ResolvedMods = [];
 
-	private ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader { get; } = new();
-	private IProxyManager<string> ProxyManager { get; }
-	private List<IModManifest> FailedMods { get; } = [];
-	private HashSet<IModManifest> OptionalSubmods { get; } = [];
+	private readonly ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader = new();
+	private readonly IProxyManager<string> ProxyManager;
+	private readonly List<IModManifest> FailedMods = [];
+	private readonly HashSet<IModManifest> OptionalSubmods = [];
 	private bool DidLogHarmonyPatchesOnce = false;
 
-	private Dictionary<string, ILogger> UniqueNameToLogger { get; } = [];
-	private Dictionary<string, IModHelper> UniqueNameToHelper { get; } = [];
-	private Dictionary<string, Mod> UniqueNameToInstance { get; } = [];
-	private Dictionary<string, IPluginPackage<IModManifest>> UniqueNameToPackage { get; } = [];
+	private readonly Dictionary<string, ILogger> UniqueNameToLogger = [];
+	private readonly Dictionary<string, IModHelper> UniqueNameToHelper = [];
+	private readonly Dictionary<string, Mod> UniqueNameToInstance = [];
+	private readonly Dictionary<string, IPluginPackage<IModManifest>> UniqueNameToPackage = [];
 
 	public ModManager(
 		DirectoryInfo modsDirectory,
+		DirectoryInfo modSettingsDirectory,
+		DirectoryInfo privateModSettingsDirectory,
 		ILoggerFactory loggerFactory,
 		ILogger logger,
 		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor
 	)
 	{
 		this.ModsDirectory = modsDirectory;
+		this.ModSettingsDirectory = modSettingsDirectory;
+		this.PrivateModSettingsDirectory = privateModSettingsDirectory;
 		this.LoggerFactory = loggerFactory;
 		this.Logger = logger;
 
@@ -70,6 +77,7 @@ internal sealed class ModManager
 			this.ModLoaderModManifest
 		);
 		this.ModDataManager = new();
+		this.ModStorageManager = new();
 
 		var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"{this.GetType().Namespace}.Proxies, Version={this.GetType().Assembly.GetName().Version}, Culture=neutral"), AssemblyBuilderAccess.Run);
 		var moduleBuilder = assemblyBuilder.DefineDynamicModule($"{this.GetType().Namespace}.Proxies");
@@ -497,6 +505,7 @@ internal sealed class ModManager
 					new ModEnemies(package.Manifest, () => this.ContentManager!.Enemies)
 				),
 				new ModData(package.Manifest, this.ModDataManager),
+				new ModStorage(package.Manifest, new DirectoryInfoImpl(this.ModSettingsDirectory), new DirectoryInfoImpl(this.PrivateModSettingsDirectory), this.ModStorageManager),
 				() => this.CurrentModLoadPhase
 			);
 			this.UniqueNameToHelper[package.Manifest.UniqueName] = helper;

@@ -6,4 +6,5 @@ public interface IModHelper
 	IModEvents Events { get; }
 	IModContent Content { get; }
 	IModData ModData { get; }
+	IModStorage Storage { get; }
 }

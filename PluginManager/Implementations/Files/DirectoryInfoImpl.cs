@@ -36,5 +36,8 @@ public sealed class DirectoryInfoImpl : FileSystemInfoImpl<DirectoryInfo>, IWrit
 		=> this.FileSystemInfo.Create();
 
 	public void Delete()
-		=> this.FileSystemInfo.Delete(recursive: true);
+	{
+		if (this.Exists)
+			this.FileSystemInfo.Delete(recursive: true);
+	}
 }

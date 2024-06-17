@@ -8,51 +8,84 @@ namespace Nickel;
 
 public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TElement> where TOrderingValue : IComparable<TOrderingValue>
 {
-	private record struct Entry(
+	public record struct Entry(
 		TElement Element,
 		TOrderingValue OrderingValue
 	);
 
-	private readonly List<Entry> Entries = [];
+	public IEnumerable<Entry> Entries
+		=> this.EntryStorage;
+
+	private readonly List<Entry> EntryStorage = [];
+
+	public bool Ascending;
+
+	public OrderedList() : this(ascending: true) { }
+
+	public OrderedList(bool ascending)
+	{
+		this.Ascending = ascending;
+	}
+
+	public OrderedList(OrderedList<TElement, TOrderingValue> anotherList)
+	{
+		this.Ascending = anotherList.Ascending;
+		this.EntryStorage.AddRange(anotherList.EntryStorage);
+	}
 
 	public int Count
-		=> this.Entries.Count;
+		=> this.EntryStorage.Count;
 
 	public TElement this[int index]
-		=> this.Entries[index].Element;
+		=> this.EntryStorage[index].Element;
 
 	public IEnumerator<TElement> GetEnumerator()
-		=> this.Entries.Select(e => e.Element).GetEnumerator();
+		=> this.EntryStorage.Select(e => e.Element).GetEnumerator();
 
 	IEnumerator IEnumerable.GetEnumerator()
 		=> this.GetEnumerator();
 
 	public void Clear()
-		=> this.Entries.Clear();
+		=> this.EntryStorage.Clear();
 
 	public bool Contains(TElement item)
-		=> this.Entries.Any(e => Equals(e.Element, item));
+		=> this.EntryStorage.Any(e => Equals(e.Element, item));
 
 	public void Add(TElement element, TOrderingValue orderingValue)
 	{
-		for (var i = 0; i < this.Entries.Count; i++)
+		if (this.Ascending)
 		{
-			if (this.Entries[i].OrderingValue.CompareTo(orderingValue) > 0)
+			for (var i = 0; i < this.EntryStorage.Count; i++)
 			{
-				this.Entries.Insert(i, new(element, orderingValue));
-				return;
+				if (this.EntryStorage[i].OrderingValue.CompareTo(orderingValue) > 0)
+				{
+					this.EntryStorage.Insert(i, new(element, orderingValue));
+					return;
+				}
 			}
 		}
-		this.Entries.Add(new(element, orderingValue));
+		else
+		{
+			for (var i = 0; i < this.EntryStorage.Count; i++)
+			{
+				if (this.EntryStorage[i].OrderingValue.CompareTo(orderingValue) < 0)
+				{
+					this.EntryStorage.Insert(i, new(element, orderingValue));
+					return;
+				}
+			}
+		}
+
+		this.EntryStorage.Add(new(element, orderingValue));
 	}
 
 	public bool Remove(TElement element)
 	{
-		for (var i = 0; i < this.Entries.Count; i++)
+		for (var i = 0; i < this.EntryStorage.Count; i++)
 		{
-			if (Equals(this.Entries[i].Element, element))
+			if (Equals(this.EntryStorage[i].Element, element))
 			{
-				this.Entries.RemoveAt(i);
+				this.EntryStorage.RemoveAt(i);
 				return true;
 			}
 		}
@@ -61,7 +94,7 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 
 	public bool TryGetOrderingValue(TElement element, [MaybeNullWhen(false)] out TOrderingValue orderingValue)
 	{
-		foreach (var entry in this.Entries)
+		foreach (var entry in this.EntryStorage)
 		{
 			if (!Equals(entry.Element, element))
 				continue;

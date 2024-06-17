@@ -7,6 +7,7 @@ internal sealed class ModHelper : IModHelper
 	public IModRegistry ModRegistry { get; init; }
 	public IModEvents Events { get; init; }
 	public IModData ModData { get; init; }
+	public IModStorage Storage { get; init; }
 
 	public IModContent Content
 	{
@@ -21,11 +22,12 @@ internal sealed class ModHelper : IModHelper
 	private Lazy<IModContent> ContentStorage { get; }
 	private Func<ModLoadPhase> CurrentModLoadPhaseProvider { get; }
 
-	public ModHelper(IModRegistry modRegistry, IModEvents events, Func<IModContent> contentProvider, IModData modData, Func<ModLoadPhase> currentModLoadPhaseProvider)
+	public ModHelper(IModRegistry modRegistry, IModEvents events, Func<IModContent> contentProvider, IModData modData, IModStorage storage, Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
 		this.ModRegistry = modRegistry;
 		this.Events = events;
 		this.ModData = modData;
+		this.Storage = storage;
 		this.ContentStorage = new Lazy<IModContent>(contentProvider);
 		this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
 	}
