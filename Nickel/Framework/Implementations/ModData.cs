@@ -19,7 +19,7 @@ internal sealed class ModData : IModData
 		=> this.ModDataManager.GetModData<T>(this.ModManifest, o, key);
 
 	public bool TryGetModData<T>(object o, string key, [MaybeNullWhen(false)] out T data)
-		=> this.ModDataManager.TryGetModData<T>(this.ModManifest, o, key, out data);
+		=> this.ModDataManager.TryGetModData(this.ModManifest, o, key, out data);
 
 	public T GetModDataOrDefault<T>(object o, string key, T defaultValue)
 		=> this.ModDataManager.GetModDataOrDefault(this.ModManifest, o, key, defaultValue);

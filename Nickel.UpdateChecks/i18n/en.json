@@ -1,5 +1,10 @@
 {
 	"updatesAvailableTooltip": {
 		"name": "Updates"
+	},
+	"settings": {
+		"paste": "PASTE",
+		"clear": "CLEAR",
+		"setup": "SETUP"
 	}
 }

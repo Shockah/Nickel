@@ -1,0 +1,10 @@
+{
+	"mainMenu": {
+		"buttonTitle": "MOD SETTINGS"
+	},
+	"modSettings": {
+		"title": "MOD SETTINGS",
+		"back": "BACK",
+		"noMods": "There are no mods installed with settings."
+	}
+}

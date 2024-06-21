@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
 using Nickel.Common;
+using Nickel.ModSettings;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -34,6 +35,23 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		this.LoadDatabase();
 
 		helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!.RegisterUpdateSource("GitHub", this);
+
+		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
+		{
+			if (phase != ModLoadPhase.AfterDbInit)
+				return;
+			helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings")?.RegisterModSettings(new TokenModSetting
+			{
+				Title = () => "GitHub token",
+				HasValue = () => !string.IsNullOrEmpty(this.Database.Token),
+				PasteAction = text =>
+				{
+					this.Database.Token = text;
+					this.SaveDatabase();
+				},
+				SetupAction = () => MainMenu.TryOpenWebsiteLink("https://github.com/settings/tokens?type=beta")
+			});
+		};
 	}
 
 	private void LoadDatabase()

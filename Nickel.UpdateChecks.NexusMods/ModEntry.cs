@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
 using Nickel.Common;
+using Nickel.ModSettings;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,6 +34,23 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		this.LoadDatabase();
 
 		helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!.RegisterUpdateSource("NexusMods", this);
+
+		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
+		{
+			if (phase != ModLoadPhase.AfterDbInit)
+				return;
+			helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings")?.RegisterModSettings(new TokenModSetting
+			{
+				Title = () => "NexusMods API key",
+				HasValue = () => !string.IsNullOrEmpty(this.Database.ApiKey),
+				PasteAction = text =>
+				{
+					this.Database.ApiKey = text;
+					this.SaveDatabase();
+				},
+				SetupAction = () => MainMenu.TryOpenWebsiteLink("https://next.nexusmods.com/settings/api-keys")
+			});
+		};
 	}
 
 	private void LoadDatabase()

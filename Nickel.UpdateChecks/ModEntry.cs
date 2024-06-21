@@ -25,7 +25,6 @@ public sealed class ModEntry : SimpleMod
 		{ "APurpleApple.Shipyard", new() { { "NexusMods", """{"ID": 6}""" }, { "GitHub", """{"Repository": "APurpleApple/APurpleApple_Shipyard"}""" } } },
 		{ "Arin.Randall", new() { { "GitHub", """{"Repository": "UnicornArin/CobaltCoreRandall"}""" } } },
 		{ "Dave", new() { { "GitHub", """{"Repository": "rft50/cc-dave", "ReleaseTagRegex": "^dave\\-(.*)"}""" } } },
-		{ "KeplerShipManifest", new() { { "GitHub", """{"Repository": "aherbig/TheGreenDigiKepler"}""" } } },
 		{ "Mezz.TwosCompany", new() { { "GitHub", """{"Repository": "Mezzelo/TwosCompany"}""" } } },
 		{ "rft.Jester", new() { { "GitHub", """{"Repository": "rft50/cc-dave", "ReleaseTagRegex": "^jester\\-(.*)"}""" } } },
 		{ "Shockah.BetterRunSummaries", new() { { "NexusMods", """{"ID": 19}""" } } },
