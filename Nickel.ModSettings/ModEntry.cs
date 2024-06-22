@@ -14,7 +14,7 @@ public sealed class ModEntry : SimpleMod
 	internal static ModEntry Instance { get; private set; } = null!;
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
-	private readonly Dictionary<string, ModSetting> ModSettings = [];
+	private readonly Dictionary<string, IModSettingsApi.IModSetting> ModSettings = [];
 
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
@@ -40,7 +40,7 @@ public sealed class ModEntry : SimpleMod
 	public override object? GetApi(IModManifest requestingMod)
 		=> new ApiImplementation(requestingMod);
 
-	internal void RegisterModSettings(IModManifest modManifest, ModSetting settings)
+	internal void RegisterModSettings(IModManifest modManifest, IModSettingsApi.IModSetting settings)
 		=> this.ModSettings[modManifest.UniqueName] = settings;
 
 	private static void MainMenu_Render_Postfix(MainMenu __instance, G g)
@@ -72,7 +72,7 @@ public sealed class ModEntry : SimpleMod
 										.Select(e => new ButtonModSetting
 										{
 											Title = () => e.Mod.DisplayName ?? e.Mod.UniqueName,
-											OnClick = (g, route) => route.Subroute = new ModSettingsRoute
+											OnClick = (g, route) => route.OpenSubroute(g, new ModSettingsRoute
 											{
 												Setting = new ListModSetting
 												{
@@ -83,11 +83,11 @@ public sealed class ModEntry : SimpleMod
 														new ButtonModSetting
 														{
 															Title = () => Instance.Localizations.Localize(["modSettings", "back"]),
-															OnClick = (g, route) => g.CloseRoute(route)
+															OnClick = (g, route) => route.CloseRoute(g)
 														},
 													]
 												}
-											}
+											})
 										})
 								],
 								EmptySetting = new TextModSetting
@@ -98,7 +98,7 @@ public sealed class ModEntry : SimpleMod
 							new ButtonModSetting
 							{
 								Title = () => Instance.Localizations.Localize(["modSettings", "back"]),
-								OnClick = (g, route) => g.CloseRoute(route)
+								OnClick = (g, route) => route.CloseRoute(g)
 							},
 						],
 					},

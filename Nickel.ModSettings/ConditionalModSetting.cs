@@ -2,15 +2,27 @@ using System;
 
 namespace Nickel.ModSettings;
 
-public sealed class ConditionalModSetting : ModSetting
+public sealed class ConditionalModSetting : BaseModSetting, IModSettingsApi.IConditionalModSetting
 {
-	public required ModSetting Setting { get; init; }
-	public required Func<bool> IsVisible { get; init; }
+	public required IModSettingsApi.IModSetting Setting { get; set; }
+	public required Func<bool> IsVisible { get; set; }
 
-	public override void Initialize(G g, ModSettingsRoute route, Func<UIKey> keyGenerator)
+	IModSettingsApi.IConditionalModSetting IModSettingsApi.IConditionalModSetting.SetSetting(IModSettingsApi.IModSetting value)
 	{
-		base.Initialize(g, route, keyGenerator);
-		this.Setting.Initialize(g, route, keyGenerator);
+		this.Setting = value;
+		return this;
+	}
+
+	IModSettingsApi.IConditionalModSetting IModSettingsApi.IConditionalModSetting.SetVisible(Func<bool> value)
+	{
+		this.IsVisible = value;
+		return this;
+	}
+
+	public override void Prepare(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
+	{
+		base.Prepare(g, route, keyGenerator);
+		this.Setting.Prepare(g, route, keyGenerator);
 	}
 
 	public override Vec? Render(G g, Box box, bool dontDraw)

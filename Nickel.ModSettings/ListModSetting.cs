@@ -3,18 +3,36 @@ using System.Collections.Generic;
 
 namespace Nickel.ModSettings;
 
-public sealed class ListModSetting : ModSetting
+public sealed class ListModSetting : BaseModSetting, IModSettingsApi.IListModSetting
 {
-	public required List<ModSetting> Settings { get; init; }
-	public ModSetting? EmptySetting { get; init; }
-	public int Spacing = 0;
+	public required IList<IModSettingsApi.IModSetting> Settings { get; set; }
+	public IModSettingsApi.IModSetting? EmptySetting { get; set; }
+	public int Spacing { get; set; } = 0;
 
-	public override void Initialize(G g, ModSettingsRoute route, Func<UIKey> keyGenerator)
+	IModSettingsApi.IListModSetting IModSettingsApi.IListModSetting.SetSettings(IList<IModSettingsApi.IModSetting> value)
 	{
-		base.Initialize(g, route, keyGenerator);
+		this.Settings = value;
+		return this;
+	}
+
+	IModSettingsApi.IListModSetting IModSettingsApi.IListModSetting.SetEmptySetting(IModSettingsApi.IModSetting? value)
+	{
+		this.EmptySetting = value;
+		return this;
+	}
+
+	IModSettingsApi.IListModSetting IModSettingsApi.IListModSetting.SetSpacing(int value)
+	{
+		this.Spacing = value;
+		return this;
+	}
+
+	public override void Prepare(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
+	{
+		base.Prepare(g, route, keyGenerator);
 		foreach (var setting in this.Settings)
-			setting.Initialize(g, route, keyGenerator);
-		this.EmptySetting?.Initialize(g, route, keyGenerator);
+			setting.Prepare(g, route, keyGenerator);
+		this.EmptySetting?.Prepare(g, route, keyGenerator);
 	}
 
 	public override Vec? Render(G g, Box box, bool dontDraw)

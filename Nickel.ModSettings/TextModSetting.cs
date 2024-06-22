@@ -3,10 +3,22 @@ using System;
 
 namespace Nickel.ModSettings;
 
-public sealed class TextModSetting : ModSetting
+public sealed class TextModSetting : BaseModSetting, IModSettingsApi.ITextModSetting
 {
-	public required Func<string> Text { get; init; }
-	public TAlign Alignment { get; init; } = TAlign.Left;
+	public required Func<string> Text { get; set; }
+	public TAlign Alignment { get; set; } = TAlign.Left;
+
+	IModSettingsApi.ITextModSetting IModSettingsApi.ITextModSetting.SetText(Func<string> value)
+	{
+		this.Text = value;
+		return this;
+	}
+
+	IModSettingsApi.ITextModSetting IModSettingsApi.ITextModSetting.SetAlignment(TAlign value)
+	{
+		this.Alignment = value;
+		return this;
+	}
 
 	public override Vec? Render(G g, Box box, bool dontDraw)
 	{

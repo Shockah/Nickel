@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
 using Nickel.Common;
-using Nickel.ModSettings;
 using System;
 using System.Collections.Generic;
 using System.IO;

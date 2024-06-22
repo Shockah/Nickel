@@ -2,12 +2,12 @@ using System;
 
 namespace Nickel.ModSettings;
 
-public abstract class ModSetting
+public abstract class BaseModSetting : IModSettingsApi.IModSetting
 {
 	public UIKey Key { get; private set; }
-	public ModSettingsRoute CurrentRoute { get; private set; } = null!;
+	protected IModSettingsApi.IModSettingsRoute CurrentRoute { get; private set; } = null!;
 
-	public virtual void Initialize(G g, ModSettingsRoute route, Func<UIKey> keyGenerator)
+	public virtual void Prepare(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
 	{
 		if (this.Key == 0)
 			this.Key = keyGenerator();

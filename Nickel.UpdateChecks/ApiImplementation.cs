@@ -19,4 +19,7 @@ public sealed class ApiImplementation : IUpdateChecksApi
 
 	public void RegisterUpdateSource(string sourceKey, IUpdateSource source)
 		=> ModEntry.Instance.UpdateSources.Add(sourceKey, source);
+
+	public IUpdateChecksApi.ITokenModSetting MakeTokenSetting(Func<string> title, Func<bool> hasValue, Action setupAction)
+		=> new TokenModSetting { Title = title, HasValue = hasValue, SetupAction = setupAction };
 }

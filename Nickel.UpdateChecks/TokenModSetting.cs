@@ -1,28 +1,72 @@
 using FSPRO;
-using Nickel.ModSettings;
 using System;
 using System.Collections.Generic;
 using TextCopy;
 
 namespace Nickel.UpdateChecks;
 
-public sealed class TokenModSetting : ModSetting
+public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 {
-	public UIKey PasteKey { get; private set; }
-	public UIKey SetupKey { get; private set; }
-	public UIKey CheckboxKey { get; private set; }
-	public required Func<string> Title { get; init; }
-	public required Func<bool> HasValue { get; init; }
-	public Action<string?>? PasteAction { get; init; }
-	public required Action SetupAction { get; init; }
-	public Func<IEnumerable<Tooltip>>? BaseTooltips { get; init; }
-	public Func<IEnumerable<Tooltip>>? PasteTooltips { get; init; }
-	public Func<IEnumerable<Tooltip>>? SetupTooltips { get; init; }
+	public UIKey Key { get; private set; }
 
-	public override void Initialize(G g, ModSettingsRoute route, Func<UIKey> keyGenerator)
+	public required Func<string> Title { get; set; }
+	public required Func<bool> HasValue { get; set; }
+	public Action<string?>? PasteAction { get; set; }
+	public required Action SetupAction { get; set; }
+	public Func<IEnumerable<Tooltip>>? BaseTooltips { get; set; }
+	public Func<IEnumerable<Tooltip>>? PasteTooltips { get; set; }
+	public Func<IEnumerable<Tooltip>>? SetupTooltips { get; set; }
+
+	private UIKey PasteKey;
+	private UIKey SetupKey;
+	private UIKey CheckboxKey;
+
+	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetTitle(Func<string> value)
 	{
-		base.Initialize(g, route, keyGenerator);
+		this.Title = value;
+		return this;
+	}
 
+	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetHasValue(Func<bool> value)
+	{
+		this.HasValue = value;
+		return this;
+	}
+
+	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetPasteAction(Action<string?>? value)
+	{
+		this.PasteAction = value;
+		return this;
+	}
+
+	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetSetupAction(Action value)
+	{
+		this.SetupAction = value;
+		return this;
+	}
+
+	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetBaseTooltips(Func<IEnumerable<Tooltip>>? value)
+	{
+		this.BaseTooltips = value;
+		return this;
+	}
+
+	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetPasteTooltips(Func<IEnumerable<Tooltip>>? value)
+	{
+		this.PasteTooltips = value;
+		return this;
+	}
+
+	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetSetupTooltips(Func<IEnumerable<Tooltip>>? value)
+	{
+		this.SetupTooltips = value;
+		return this;
+	}
+
+	public void Prepare(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
+	{
+		if (this.Key == 0)
+			this.Key = keyGenerator();
 		if (this.PasteKey == 0)
 			this.PasteKey = keyGenerator();
 		if (this.SetupKey == 0)
@@ -31,7 +75,7 @@ public sealed class TokenModSetting : ModSetting
 			this.CheckboxKey = keyGenerator();
 	}
 
-	public override Vec? Render(G g, Box box, bool dontDraw)
+	public Vec? Render(G g, Box box, bool dontDraw)
 	{
 		if (!dontDraw)
 		{

@@ -3,16 +3,16 @@ using System;
 
 namespace Nickel.ModSettings;
 
-public sealed class CheckboxModSetting : ModSetting, OnMouseDown
+public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown
 {
 	public UIKey CheckboxKey { get; private set; }
 	public required Func<string> Title { get; init; }
 	public required Func<bool> Getter { get; init; }
 	public required Action<bool> Setter { get; init; }
 
-	public override void Initialize(G g, ModSettingsRoute route, Func<UIKey> keyGenerator)
+	public override void Prepare(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
 	{
-		base.Initialize(g, route, keyGenerator);
+		base.Prepare(g, route, keyGenerator);
 
 		if (this.CheckboxKey == 0)
 			this.CheckboxKey = keyGenerator();

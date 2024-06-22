@@ -67,7 +67,7 @@ public static class StepperModSettingConfiguration
 		};
 }
 
-public sealed class StepperModSetting<T> : ModSetting, OnMouseDown where T : struct
+public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown where T : struct
 {
 	public UIKey StepperLeftKey { get; private set; }
 	public UIKey StepperRightKey { get; private set; }
@@ -78,9 +78,9 @@ public sealed class StepperModSetting<T> : ModSetting, OnMouseDown where T : str
 		this.Configuration = configuration;
 	}
 
-	public override void Initialize(G g, ModSettingsRoute route, Func<UIKey> keyGenerator)
+	public override void Prepare(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
 	{
-		base.Initialize(g, route, keyGenerator);
+		base.Prepare(g, route, keyGenerator);
 
 		if (this.StepperLeftKey == 0)
 			this.StepperLeftKey = keyGenerator();

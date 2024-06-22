@@ -4,11 +4,29 @@ using System;
 
 namespace Nickel.ModSettings;
 
-public sealed class ButtonModSetting : ModSetting, OnMouseDown
+public sealed class ButtonModSetting : BaseModSetting, OnMouseDown, IModSettingsApi.IButtonModSetting
 {
-	public required Func<string> Title { get; init; }
-	public Func<string?>? ValueText { get; init; }
-	public required Action<G, ModSettingsRoute> OnClick { get; init; }
+	public required Func<string> Title { get; set; }
+	public Func<string?>? ValueText { get; set; }
+	public required Action<G, IModSettingsApi.IModSettingsRoute> OnClick { get; set; }
+
+	IModSettingsApi.IButtonModSetting IModSettingsApi.IButtonModSetting.SetTitle(Func<string> value)
+	{
+		this.Title = value;
+		return this;
+	}
+
+	IModSettingsApi.IButtonModSetting IModSettingsApi.IButtonModSetting.SetValueText(Func<string?>? value)
+	{
+		this.ValueText = value;
+		return this;
+	}
+
+	IModSettingsApi.IButtonModSetting IModSettingsApi.IButtonModSetting.SetOnClick(Action<G, IModSettingsApi.IModSettingsRoute> value)
+	{
+		this.OnClick = value;
+		return this;
+	}
 
 	public override Vec? Render(G g, Box box, bool dontDraw)
 	{

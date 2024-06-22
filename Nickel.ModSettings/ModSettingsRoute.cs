@@ -3,12 +3,12 @@ using System;
 
 namespace Nickel.ModSettings;
 
-public sealed class ModSettingsRoute : Route
+public sealed class ModSettingsRoute : Route, IModSettingsApi.IModSettingsRoute
 {
 	private static int NextUK = 500_001;
 
 	[JsonIgnore]
-	public required ModSetting Setting;
+	public required IModSettingsApi.IModSetting Setting;
 
 	public Route? Subroute;
 
@@ -17,6 +17,10 @@ public sealed class ModSettingsRoute : Route
 
 	[JsonProperty]
 	private double ScrollTarget;
+
+	[JsonIgnore]
+	public Route AsRoute
+		=> this;
 
 	public override void Render(G g)
 	{
@@ -31,7 +35,7 @@ public sealed class ModSettingsRoute : Route
 			subroute.Render(g);
 			return;
 		}
-		this.Setting.Initialize(g, this, () => (UK)NextUK++);
+		this.Setting.Prepare(g, this, () => (UK)NextUK++);
 
 		Draw.Fill(Colors.black);
 
@@ -61,5 +65,15 @@ public sealed class ModSettingsRoute : Route
 			return true;
 		}
 		return this.Subroute?.TryCloseSubRoute(g, r, arg) ?? false;
+	}
+
+	public void CloseRoute(G g)
+		=> g.CloseRoute(this);
+
+	public void OpenSubroute(G g, Route route)
+	{
+		if (this.Subroute is { } subroute)
+			g.CloseRoute(subroute);
+		this.Subroute = route;
 	}
 }
