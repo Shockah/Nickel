@@ -1,9 +1,10 @@
+using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using System;
 
 namespace Nickel.ModSettings;
 
-public sealed class ModSettingsRoute : Route, IModSettingsApi.IModSettingsRoute
+public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IModSettingsRoute
 {
 	private static int NextUK = 500_001;
 
@@ -35,6 +36,8 @@ public sealed class ModSettingsRoute : Route, IModSettingsApi.IModSettingsRoute
 			subroute.Render(g);
 			return;
 		}
+
+		g.Push(onInputPhase: this);
 		this.Setting.Prepare(g, this, () => (UK)NextUK++);
 
 		Draw.Fill(Colors.black);
@@ -55,6 +58,13 @@ public sealed class ModSettingsRoute : Route, IModSettingsApi.IModSettingsRoute
 		box = g.Push(this.Setting.Key, rect);
 		this.Setting.Render(g, box, dontDraw: false);
 		g.Pop();
+		g.Pop();
+	}
+
+	public void OnInputPhase(G g, Box b)
+	{
+		if (Input.GetGpDown(Btn.B) || Input.GetKeyDown(Keys.Escape))
+			g.CloseRoute(this);
 	}
 
 	public override bool TryCloseSubRoute(G g, Route r, object? arg)
