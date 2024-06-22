@@ -1,3 +1,4 @@
+using daisyowl.text;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -53,6 +55,10 @@ public sealed class ModEntry : SimpleMod
 	internal readonly Dictionary<IModManifest, UpdateDescriptor?> UpdatesAvailable = [];
 	internal readonly ConcurrentQueue<Action> ToRunInGameLoop = [];
 	internal readonly List<Action> AwaitingUpdateInfo = [];
+	internal Settings Settings = new();
+
+	private IWritableFileInfo SettingsFile
+		=> this.Helper.Storage.GetSingleSettingsFile("json");
 
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
@@ -85,12 +91,57 @@ public sealed class ModEntry : SimpleMod
 		{
 			if (phase != ModLoadPhase.AfterDbInit)
 				return;
+
 			this.ParseManifests(helper, logger);
+
+			if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
+				settingsApi.RegisterModSettings(settingsApi.MakeButton(
+					title: () => "Ignored updates",
+					onClick: (g, route) => route.OpenSubroute(g, this.MakeIgnoredUpdatesModSettingsRoute())
+				));
 		};
 	}
 
 	public override object? GetApi(IModManifest requestingMod)
 		=> new ApiImplementation();
+
+	private void LoadSettings()
+	{
+		if (this.SettingsFile.Exists)
+		{
+			try
+			{
+				using var stream = this.SettingsFile.OpenRead();
+				using var streamReader = new StreamReader(stream);
+				using var jsonReader = new JsonTextReader(streamReader);
+				this.Settings = this.Helper.Storage.JsonSerializer.Deserialize<Settings>(jsonReader) ?? new();
+			}
+			catch
+			{
+				this.Settings = new();
+			}
+		}
+		else
+		{
+			this.Settings = new();
+			this.SaveSettings();
+		}
+	}
+
+	private void SaveSettings()
+	{
+		try
+		{
+			using var stream = this.SettingsFile.OpenWrite();
+			using var streamWriter = new StreamWriter(stream);
+			using var jsonWriter = new JsonTextWriter(streamWriter);
+			this.Helper.Storage.JsonSerializer.Serialize(jsonWriter, this.Settings);
+		}
+		catch (Exception ex)
+		{
+			this.Logger.LogError("Could not save settings file: {Exception}", ex);
+		}
+	}
 
 	private void ParseManifests(IModHelper helper, ILogger logger)
 	{
@@ -206,8 +257,16 @@ public sealed class ModEntry : SimpleMod
 				continue;
 			if (result.Urls.Count == 0)
 				continue;
-			this.Logger.LogWarning("Mod {ModName} has an update {Version} available:\n{Urls}", mod.GetDisplayName(@long: false), result.Version, string.Join("\n", result.Urls.Select(url => $"\t{url}")));
-			hasOutdatedMods = true;
+
+			if (this.Settings.IgnoredUpdates.TryGetValue(mod.UniqueName, out var ignoredUpdate) && ignoredUpdate == result.Version)
+			{
+				this.Logger.LogDebug("Mod {ModName} has an update {Version} available, but it's being ignored:\n{Urls}", mod.GetDisplayName(@long: false), result.Version, string.Join("\n", result.Urls.Select(url => $"\t{url}")));
+			}
+			else
+			{
+				this.Logger.LogWarning("Mod {ModName} has an update {Version} available:\n{Urls}", mod.GetDisplayName(@long: false), result.Version, string.Join("\n", result.Urls.Select(url => $"\t{url}")));
+				hasOutdatedMods = true;
+			}
 		}
 
 		if (!hasOutdatedMods)
@@ -217,6 +276,55 @@ public sealed class ModEntry : SimpleMod
 		callbacks.Clear();
 		foreach (var callback in callbacks)
 			callback();
+	}
+
+	private Route MakeIgnoredUpdatesModSettingsRoute()
+	{
+		var api = this.Helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") ?? throw new InvalidOperationException();
+
+		return api.MakeModSettingsRoute(
+			api.MakeList([
+				api.MakePadding(
+					setting: api.MakeList([
+						api.MakeText(() => this.Package.Manifest.DisplayName ?? this.Package.Manifest.UniqueName)
+							.SetFont(DB.stapler)
+							.SetAlignment(TAlign.Center)
+							.SetWrapText(false),
+						api.MakeText(() => "Ignored updates")
+							.SetAlignment(TAlign.Center)
+					]).SetSpacing(4),
+					padding: 4
+				),
+				api.MakeList([
+					.. Instance.UpdatesAvailable
+						.Where(kvp => kvp.Value is not null)
+						.Select(kvp => new KeyValuePair<IModManifest, UpdateDescriptor>(kvp.Key, kvp.Value!.Value))
+						.Where(kvp => kvp.Value.Version > kvp.Key.Version)
+						.Select(
+							kvp => api.MakeStepper<IgnoredUpdateEnum>(
+								title: () => kvp.Key.DisplayName ?? kvp.Key.UniqueName,
+								getter: () => this.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) && ignoredUpdate == kvp.Value.Version ? IgnoredUpdateEnum.Ignore : IgnoredUpdateEnum.Remind,
+								setter: value =>
+								{
+									switch (value)
+									{
+										case IgnoredUpdateEnum.Remind:
+											this.Settings.IgnoredUpdates.Remove(kvp.Key.UniqueName);
+											break;
+										case IgnoredUpdateEnum.Ignore:
+											this.Settings.IgnoredUpdates[kvp.Key.UniqueName] = kvp.Value.Version;
+											break;
+									}
+								},
+								previousValue: value => value == IgnoredUpdateEnum.Remind ? IgnoredUpdateEnum.Ignore : IgnoredUpdateEnum.Remind,
+								nextValue: value => value == IgnoredUpdateEnum.Remind ? IgnoredUpdateEnum.Ignore : IgnoredUpdateEnum.Remind
+							).SetValueWidth(_ => 60)
+						)
+				]),
+				api.MakeBackButton()
+			])
+			.SetSpacing(8)
+		);
 	}
 
 	private static void G_Render_Postfix()
@@ -250,6 +358,7 @@ public sealed class ModEntry : SimpleMod
 			.Where(kvp => kvp.Value is not null)
 			.Select(kvp => new KeyValuePair<IModManifest, UpdateDescriptor>(kvp.Key, kvp.Value!.Value))
 			.Where(kvp => kvp.Value.Version > kvp.Key.Version)
+			.Where(kvp => !Instance.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) || ignoredUpdate != kvp.Value.Version)
 			.ToList();
 		if (updatesAvailable.Count == 0)
 			return;

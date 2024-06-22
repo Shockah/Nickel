@@ -1,19 +1,27 @@
 using daisyowl.text;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace Nickel.ModSettings;
 
 public interface IModSettingsApi
 {
 	void RegisterModSettings(IModSetting settings);
+	Route MakeModSettingsRouteForAllMods();
+	Route? MakeModSettingsRouteForMod(IModManifest modManifest);
+	Route MakeModSettingsRoute(IModSetting settings);
 
 	ITextModSetting MakeText(Func<string> text);
 	IButtonModSetting MakeButton(Func<string> title, Action<G, IModSettingsRoute> onClick);
+	IStepperModSetting<T> MakeStepper<T>(Func<string> title, Func<T> getter, Action<T> setter, Func<T, T?> previousValue, Func<T, T?> nextValue) where T : struct;
+	IStepperModSetting<T> MakeNumericStepper<T>(Func<string> title, Func<T> getter, Action<T> setter, T? minValue = null, T? maxValue = null, T? step = null) where T : struct, INumber<T>;
 	IPaddingModSetting MakePadding(IModSetting setting, int padding);
 	IPaddingModSetting MakePadding(IModSetting setting, int topPadding, int bottomPadding);
 	IConditionalModSetting MakeConditional(IModSetting setting, Func<bool> isVisible);
 	IListModSetting MakeList(IList<IModSetting> settings);
+
+	IModSetting MakeBackButton();
 
 	public interface IModSetting
 	{
@@ -55,6 +63,27 @@ public interface IModSettingsApi
 		IButtonModSetting SetTitle(Func<string> value);
 		IButtonModSetting SetValueText(Func<string?>? value);
 		IButtonModSetting SetOnClick(Action<G, IModSettingsRoute> value);
+	}
+
+	public interface IStepperModSetting<T> : IModSetting where T : struct
+	{
+		Func<string> Title { get; set; }
+		Func<T> Getter { get; set; }
+		Action<T> Setter { get; set; }
+		Func<T, T?> PreviousValue { get; set; }
+		Func<T, T?> NextValue { get; set; }
+		Func<T, string>? ValueFormatter { get; set; }
+		Func<Rect, double>? ValueWidth { get; set; }
+		Action<G, IModSettingsRoute>? OnClick { get; set; }
+
+		IStepperModSetting<T> SetTitle(Func<string> value);
+		IStepperModSetting<T> SetGetter(Func<T> value);
+		IStepperModSetting<T> SetSetter(Action<T> value);
+		IStepperModSetting<T> SetPreviousValue(Func<T, T?> value);
+		IStepperModSetting<T> SetNextValue(Func<T, T?> value);
+		IStepperModSetting<T> SetValueFormatter(Func<T, string>? value);
+		IStepperModSetting<T> SetValueWidth(Func<Rect, double>? value);
+		IStepperModSetting<T> SetOnClick(Action<G, IModSettingsRoute> value);
 	}
 
 	public interface IPaddingModSetting : IModSetting
