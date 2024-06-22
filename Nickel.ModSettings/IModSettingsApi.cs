@@ -8,9 +8,10 @@ public interface IModSettingsApi
 {
 	void RegisterModSettings(IModSetting settings);
 
-	IHeaderModSetting MakeHeader(Func<string> title);
 	ITextModSetting MakeText(Func<string> text);
 	IButtonModSetting MakeButton(Func<string> title, Action<G, IModSettingsRoute> onClick);
+	IPaddingModSetting MakePadding(IModSetting setting, int padding);
+	IPaddingModSetting MakePadding(IModSetting setting, int topPadding, int bottomPadding);
 	IConditionalModSetting MakeConditional(IModSetting setting, Func<bool> isVisible);
 	IListModSetting MakeList(IList<IModSetting> settings);
 
@@ -30,22 +31,19 @@ public interface IModSettingsApi
 		void OpenSubroute(G g, Route route);
 	}
 
-	public interface IHeaderModSetting : IModSetting
-	{
-		Func<string> Title { get; set; }
-		TAlign Alignment { get; set; }
-
-		IHeaderModSetting SetTitle(Func<string> value);
-		IHeaderModSetting SetAlignment(TAlign value);
-	}
-
 	public interface ITextModSetting : IModSetting
 	{
 		Func<string> Text { get; set; }
+		Font Font { get; set; }
+		Color Color { get; set; }
 		TAlign Alignment { get; set; }
+		bool WrapText { get; set; }
 
 		ITextModSetting SetText(Func<string> value);
+		ITextModSetting SetFont(Font value);
+		ITextModSetting SetColor(Color value);
 		ITextModSetting SetAlignment(TAlign value);
+		ITextModSetting SetWrapText(bool value);
 	}
 
 	public interface IButtonModSetting : IModSetting
@@ -57,6 +55,17 @@ public interface IModSettingsApi
 		IButtonModSetting SetTitle(Func<string> value);
 		IButtonModSetting SetValueText(Func<string?>? value);
 		IButtonModSetting SetOnClick(Action<G, IModSettingsRoute> value);
+	}
+
+	public interface IPaddingModSetting : IModSetting
+	{
+		IModSetting Setting { get; set; }
+		int TopPadding { get; set; }
+		int BottomPadding { get; set; }
+
+		IPaddingModSetting SetSetting(IModSetting value);
+		IPaddingModSetting SetTopPadding(int value);
+		IPaddingModSetting SetBottomPadding(int value);
 	}
 
 	public interface IConditionalModSetting : IModSetting

@@ -1,3 +1,4 @@
+using daisyowl.text;
 using FSPRO;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
@@ -61,7 +62,18 @@ public sealed class ModEntry : SimpleMod
 					{
 						Spacing = 8,
 						Settings = [
-							new HeaderModSetting { Title = () => Instance.Localizations.Localize(["modSettings", "title"]) },
+							new PaddingModSetting
+							{
+								Setting = new TextModSetting
+								{
+									Text = () => Instance.Localizations.Localize(["modSettings", "title"]),
+									Font = DB.stapler,
+									Alignment = TAlign.Center,
+									WrapText = false,
+								},
+								TopPadding = 4,
+								BottomPadding = 4,
+							},
 							new ListModSetting
 							{
 								Settings = [
@@ -78,7 +90,18 @@ public sealed class ModEntry : SimpleMod
 												{
 													Spacing = 8,
 													Settings = [
-														new HeaderModSetting { Title = () => e.Mod.DisplayName ?? e.Mod.UniqueName },
+														new PaddingModSetting
+														{
+															Setting = new TextModSetting
+															{
+																Text = () => e.Mod.DisplayName ?? e.Mod.UniqueName,
+																Font = DB.stapler,
+																Alignment = TAlign.Center,
+																WrapText = false,
+															},
+															TopPadding = 4,
+															BottomPadding = 4,
+														},
 														e.Setting!,
 														new ButtonModSetting
 														{
