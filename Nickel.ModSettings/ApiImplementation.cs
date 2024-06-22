@@ -99,6 +99,9 @@ public sealed class ApiImplementation : IModSettingsApi
 	public IModSettingsApi.IButtonModSetting MakeButton(Func<string> title, Action<G, IModSettingsApi.IModSettingsRoute> onClick)
 		=> new ButtonModSetting { Title = title, OnClick = onClick };
 
+	public IModSettingsApi.ICheckboxModSetting MakeCheckbox(Func<string> title, Func<bool> getter, Action<bool> setter)
+		=> new CheckboxModSetting { Title = title, Getter = getter, Setter = setter };
+
 	public IModSettingsApi.IStepperModSetting<T> MakeStepper<T>(Func<string> title, Func<T> getter, Action<T> setter, Func<T, T?> previousValue, Func<T, T?> nextValue) where T : struct
 		=> new StepperModSetting<T> { Title = title, Getter = getter, Setter = setter, PreviousValue = previousValue, NextValue = nextValue };
 

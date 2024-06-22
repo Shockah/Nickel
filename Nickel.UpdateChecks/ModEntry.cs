@@ -301,24 +301,17 @@ public sealed class ModEntry : SimpleMod
 						.Select(kvp => new KeyValuePair<IModManifest, UpdateDescriptor>(kvp.Key, kvp.Value!.Value))
 						.Where(kvp => kvp.Value.Version > kvp.Key.Version)
 						.Select(
-							kvp => api.MakeStepper<IgnoredUpdateEnum>(
+							kvp => api.MakeCheckbox(
 								title: () => kvp.Key.DisplayName ?? kvp.Key.UniqueName,
-								getter: () => this.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) && ignoredUpdate == kvp.Value.Version ? IgnoredUpdateEnum.Ignore : IgnoredUpdateEnum.Remind,
+								getter: () => this.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) && ignoredUpdate == kvp.Value.Version,
 								setter: value =>
 								{
-									switch (value)
-									{
-										case IgnoredUpdateEnum.Remind:
-											this.Settings.IgnoredUpdates.Remove(kvp.Key.UniqueName);
-											break;
-										case IgnoredUpdateEnum.Ignore:
-											this.Settings.IgnoredUpdates[kvp.Key.UniqueName] = kvp.Value.Version;
-											break;
-									}
-								},
-								previousValue: value => value == IgnoredUpdateEnum.Remind ? IgnoredUpdateEnum.Ignore : IgnoredUpdateEnum.Remind,
-								nextValue: value => value == IgnoredUpdateEnum.Remind ? IgnoredUpdateEnum.Ignore : IgnoredUpdateEnum.Remind
-							).SetValueWidth(_ => 60)
+									if (value)
+										this.Settings.IgnoredUpdates[kvp.Key.UniqueName] = kvp.Value.Version;
+									else
+										this.Settings.IgnoredUpdates.Remove(kvp.Key.UniqueName);
+								}
+							)
 						)
 				]),
 				api.MakeBackButton()

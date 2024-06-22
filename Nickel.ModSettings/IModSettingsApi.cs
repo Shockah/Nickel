@@ -14,6 +14,7 @@ public interface IModSettingsApi
 
 	ITextModSetting MakeText(Func<string> text);
 	IButtonModSetting MakeButton(Func<string> title, Action<G, IModSettingsRoute> onClick);
+	ICheckboxModSetting MakeCheckbox(Func<string> title, Func<bool> getter, Action<bool> setter);
 	IStepperModSetting<T> MakeStepper<T>(Func<string> title, Func<T> getter, Action<T> setter, Func<T, T?> previousValue, Func<T, T?> nextValue) where T : struct;
 	IStepperModSetting<T> MakeNumericStepper<T>(Func<string> title, Func<T> getter, Action<T> setter, T? minValue = null, T? maxValue = null, T? step = null) where T : struct, INumber<T>;
 	IPaddingModSetting MakePadding(IModSetting setting, int padding);
@@ -63,6 +64,17 @@ public interface IModSettingsApi
 		IButtonModSetting SetTitle(Func<string> value);
 		IButtonModSetting SetValueText(Func<string?>? value);
 		IButtonModSetting SetOnClick(Action<G, IModSettingsRoute> value);
+	}
+
+	public interface ICheckboxModSetting : IModSetting
+	{
+		Func<string> Title { get; set; }
+		Func<bool> Getter { get; set; }
+		Action<bool> Setter { get; set; }
+
+		ICheckboxModSetting SetTitle(Func<string> value);
+		ICheckboxModSetting SetGetter(Func<bool> value);
+		ICheckboxModSetting SetSetter(Action<bool> value);
 	}
 
 	public interface IStepperModSetting<T> : IModSetting where T : struct
