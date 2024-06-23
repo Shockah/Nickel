@@ -50,6 +50,9 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 	{
 		if (!dontDraw)
 		{
+			box.onMouseDown = this;
+			box.autoFocus = true;
+
 			var isHover = box.IsHover() || g.hoverKey == this.CheckboxKey;
 			if (isHover)
 				Draw.Rect(box.rect.x, box.rect.y, box.rect.w, box.rect.h, Colors.menuHighlightBox.gain(0.5), BlendMode.Screen);
@@ -63,7 +66,6 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
 		}
 
-		box.onMouseDown = this;
 		return new(box.rect.w, 20);
 	}
 

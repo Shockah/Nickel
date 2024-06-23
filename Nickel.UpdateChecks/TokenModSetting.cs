@@ -90,6 +90,8 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 	{
 		if (!dontDraw)
 		{
+			box.autoFocus = true;
+
 			var isHover = box.IsHover() || g.hoverKey == this.PasteKey || g.hoverKey == this.SetupKey;
 			if (isHover)
 				Draw.Rect(box.rect.x, box.rect.y, box.rect.w, box.rect.h, Colors.menuHighlightBox.gain(0.5), BlendMode.Screen);

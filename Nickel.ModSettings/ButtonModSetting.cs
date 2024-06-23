@@ -40,6 +40,8 @@ public sealed class ButtonModSetting : BaseModSetting, OnMouseDown, IModSettings
 	{
 		if (!dontDraw)
 		{
+			box.autoFocus = true;
+
 			if (box.IsHover())
 				Draw.Rect(box.rect.x, box.rect.y, box.rect.w, box.rect.h, Colors.menuHighlightBox.gain(0.5), BlendMode.Screen);
 			box.onMouseDown = this;

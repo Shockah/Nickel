@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using System;
+using System.Linq;
 
 namespace Nickel.ModSettings;
 
@@ -26,6 +27,9 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 
 	[JsonIgnore]
 	private bool RaisedOnOpen;
+
+	[JsonIgnore]
+	private UIKey? LastGpKey;
 
 	public override void Render(G g)
 	{
@@ -62,11 +66,30 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 		var maxScroll = (int)Math.Max(settingSize.y - preferredHeightOnScreen, 0);
 		ScrollUtils.ReadScrollInputAndUpdate(g.dt, maxScroll, ref this.Scroll, ref this.ScrollTarget);
 
-		rect = new Rect((MG.inst.PIX_W - SettingsRoute.WIDTH) / 2, 10 - this.Scroll, SettingsRoute.WIDTH, settingSize.y);
+		rect = new Rect((MG.inst.PIX_W - SettingsRoute.WIDTH) / 2, 10 + this.Scroll, SettingsRoute.WIDTH, settingSize.y);
 		box = g.Push(this.Setting.Key, rect);
 		this.Setting.Render(g, box, dontDraw: false);
+
 		g.Pop();
 		g.Pop();
+
+		if (Input.gamepadIsActiveInput)
+		{
+			if (Input.currentGpKey != this.LastGpKey && Input.currentGpKey is { } currentGpKey && g.boxes.FirstOrDefault(b => b.key == currentGpKey) is { } currentGpBox)
+			{
+				var scrolled = currentGpBox.rect;
+				var target = scrolled;
+
+				if (target.y2 > MG.inst.PIX_H - 60)
+					target.y = MG.inst.PIX_H - 60 - target.h;
+				if (target.y < 60)
+					target.y = 60;
+
+				this.ScrollTarget = target.y + this.Scroll - scrolled.y;
+				this.ScrollTarget = Math.Clamp(this.ScrollTarget, -maxScroll, 0);
+			}
+			this.LastGpKey = g.hoverKey;
+		}
 	}
 
 	public override void OnExit(State s)
