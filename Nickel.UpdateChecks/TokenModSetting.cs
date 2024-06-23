@@ -8,6 +8,8 @@ namespace Nickel.UpdateChecks;
 public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 {
 	public UIKey Key { get; private set; }
+	public event IModSettingsApi.OnMenuOpen? OnMenuOpen;
+	public event IModSettingsApi.OnMenuClose? OnMenuClose;
 
 	public required Func<string> Title { get; set; }
 	public required Func<bool> HasValue { get; set; }
@@ -20,6 +22,21 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 	private UIKey PasteKey;
 	private UIKey SetupKey;
 	private UIKey CheckboxKey;
+
+	public TokenModSetting()
+	{
+		this.OnMenuOpen += (g, route, keyGenerator) =>
+		{
+			if (this.Key == 0)
+				this.Key = keyGenerator();
+			if (this.PasteKey == 0)
+				this.PasteKey = keyGenerator();
+			if (this.SetupKey == 0)
+				this.SetupKey = keyGenerator();
+			if (this.CheckboxKey == 0)
+				this.CheckboxKey = keyGenerator();
+		};
+	}
 
 	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetTitle(Func<string> value)
 	{
@@ -63,17 +80,11 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 		return this;
 	}
 
-	public void Prepare(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
-	{
-		if (this.Key == 0)
-			this.Key = keyGenerator();
-		if (this.PasteKey == 0)
-			this.PasteKey = keyGenerator();
-		if (this.SetupKey == 0)
-			this.SetupKey = keyGenerator();
-		if (this.CheckboxKey == 0)
-			this.CheckboxKey = keyGenerator();
-	}
+	public void RaiseOnMenuOpen(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
+		=> this.OnMenuOpen?.Invoke(g, route, keyGenerator);
+
+	public void RaiseOnMenuClose(G g)
+		=> this.OnMenuClose?.Invoke(g);
 
 	public Vec? Render(G g, Box box, bool dontDraw)
 	{

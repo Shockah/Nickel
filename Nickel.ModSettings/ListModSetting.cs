@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace Nickel.ModSettings;
@@ -8,6 +7,24 @@ public sealed class ListModSetting : BaseModSetting, IModSettingsApi.IListModSet
 	public required IList<IModSettingsApi.IModSetting> Settings { get; set; }
 	public IModSettingsApi.IModSetting? EmptySetting { get; set; }
 	public int Spacing { get; set; } = 0;
+
+	public ListModSetting() : base()
+	{
+		this.OnMenuOpen += (g, route, keyGenerator) =>
+		{
+			if (this.Settings is { } settings)
+				foreach (var setting in settings)
+					setting.RaiseOnMenuOpen(g, route, keyGenerator);
+			this.EmptySetting?.RaiseOnMenuOpen(g, route, keyGenerator);
+		};
+		this.OnMenuClose += g =>
+		{
+			if (this.Settings is { } settings)
+				foreach (var setting in settings)
+					setting.RaiseOnMenuClose(g);
+			this.EmptySetting?.RaiseOnMenuClose(g);
+		};
+	}
 
 	IModSettingsApi.IListModSetting IModSettingsApi.IListModSetting.SetSettings(IList<IModSettingsApi.IModSetting> value)
 	{
@@ -25,14 +42,6 @@ public sealed class ListModSetting : BaseModSetting, IModSettingsApi.IListModSet
 	{
 		this.Spacing = value;
 		return this;
-	}
-
-	public override void Prepare(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
-	{
-		base.Prepare(g, route, keyGenerator);
-		foreach (var setting in this.Settings)
-			setting.Prepare(g, route, keyGenerator);
-		this.EmptySetting?.Prepare(g, route, keyGenerator);
 	}
 
 	public override Vec? Render(G g, Box box, bool dontDraw)

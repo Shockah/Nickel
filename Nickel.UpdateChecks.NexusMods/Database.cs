@@ -7,6 +7,9 @@ namespace Nickel.UpdateChecks.NexusMods;
 internal sealed class Database
 {
 	[JsonProperty]
+	public bool IsEnabled = true;
+
+	[JsonProperty]
 	public string? ApiKey;
 
 	[JsonProperty]

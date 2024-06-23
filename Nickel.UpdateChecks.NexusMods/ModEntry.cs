@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,6 +24,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		=> this.Helper.Storage.GetSinglePrivateSettingsFile("json");
 
 	private HttpClient? Client;
+	private bool GotUnauthorized;
 
 	private readonly SemaphoreSlim Semaphore = new(1, 1);
 	private Database Database = new();
@@ -41,31 +43,53 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		helper.Storage.ApplyJsonSerializerSettings(s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
 		this.LoadDatabase();
 
-		helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!.RegisterUpdateSource("NexusMods", this);
+		var updateChecksApi = helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!;
+		updateChecksApi.RegisterUpdateSource("NexusMods", this);
 
 		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
 		{
 			if (phase != ModLoadPhase.AfterDbInit)
 				return;
-			helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings")?.RegisterModSettings(new TokenModSetting
-			{
-				Title = () => this.Localizations.Localize(["modSettings", "apiKey", "name"]),
-				HasValue = () => !string.IsNullOrEmpty(this.Database.ApiKey),
-				PasteAction = text =>
-				{
-					this.Database.ApiKey = text;
-					this.SaveDatabase();
-				},
-				SetupAction = () => MainMenu.TryOpenWebsiteLink("https://next.nexusmods.com/settings/api-keys"),
-				BaseTooltips = () => [
-					new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::ApiKey")
+
+			if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
+				settingsApi.RegisterModSettings(
+					settingsApi.MakeList([
+						settingsApi.MakeCheckbox(
+							title: () => this.Localizations.Localize(["modSettings", "enabled", "name"]),
+							getter: () => this.Database.IsEnabled,
+							setter: value => this.Database.IsEnabled = value
+						),
+						settingsApi.MakeConditional(
+							setting: new TokenModSetting
+							{
+								Title = () => this.Localizations.Localize(["modSettings", "apiKey", "name"]),
+								HasValue = () => !string.IsNullOrEmpty(this.Database.ApiKey),
+								PasteAction = text =>
+								{
+									this.Database.ApiKey = text;
+									this.SaveDatabase();
+								},
+								SetupAction = () => MainMenu.TryOpenWebsiteLink("https://next.nexusmods.com/settings/api-keys"),
+								BaseTooltips = () => [
+									new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::ApiKey")
+									{
+										TitleColor = Colors.textChoice,
+										Title = this.Localizations.Localize(["modSettings", "apiKey", "name"]),
+										Description = this.Localizations.Localize(["modSettings", "apiKey", "description"])
+									}
+								]
+							},
+							isVisible: () => this.Database.IsEnabled
+						),
+					]).SubscribeToOnMenuClose(g =>
 					{
-						TitleColor = Colors.textChoice,
-						Title = this.Localizations.Localize(["modSettings", "apiKey", "name"]),
-						Description = this.Localizations.Localize(["modSettings", "apiKey", "description"])
-					}
-				]
-			});
+						this.SaveDatabase();
+						this.Client = this.MakeHttpClient();
+
+						if (this.Database.IsEnabled)
+							updateChecksApi.RequestUpdateInfo(this);
+					})
+				);
 		};
 	}
 
@@ -132,6 +156,8 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		{
 			if (string.IsNullOrEmpty(this.Database.ApiKey))
 				yield return new(UpdateSourceMessageLevel.Error, this.Localizations.Localize(["message", "missingApiKey"]));
+			if (this.GotUnauthorized)
+				yield return new(UpdateSourceMessageLevel.Error, this.Localizations.Localize(["message", "unauthorized"]));
 		}
 	}
 
@@ -378,6 +404,9 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		}
 		catch (Exception ex)
 		{
+			if (ex is HttpRequestException httpRequestException && httpRequestException.StatusCode == HttpStatusCode.Unauthorized)
+				this.GotUnauthorized = true;
+
 			this.Logger.LogDebug("Failed to retrieve mod {ModId}: {Error}", id, ex.Message);
 			throw;
 		}

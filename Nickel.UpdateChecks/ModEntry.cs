@@ -96,13 +96,15 @@ public sealed class ModEntry : SimpleMod
 			if (phase != ModLoadPhase.AfterDbInit)
 				return;
 
-			this.ParseManifests(helper, logger);
+			this.ParseManifestsAndRequestUpdateInfo();
 
 			if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
-				settingsApi.RegisterModSettings(settingsApi.MakeButton(
-					title: () => this.Localizations.Localize(["settings", "ignoredUpdates"]),
-					onClick: (g, route) => route.OpenSubroute(g, this.MakeIgnoredUpdatesModSettingsRoute())
-				));
+				settingsApi.RegisterModSettings(
+					settingsApi.MakeButton(
+						title: () => this.Localizations.Localize(["settings", "ignoredUpdates"]),
+						onClick: (g, route) => route.OpenSubroute(g, this.MakeIgnoredUpdatesModSettingsRoute())
+					)
+				);
 		};
 	}
 
@@ -147,11 +149,11 @@ public sealed class ModEntry : SimpleMod
 		}
 	}
 
-	private void ParseManifests(IModHelper helper, ILogger logger)
+	internal void ParseManifestsAndRequestUpdateInfo(IUpdateSource? sourceToUpdate = null)
 	{
 		Dictionary<IUpdateSource, List<(IModManifest Mod, object? ManifestEntry)>> updateSourceToMod = [];
 
-		foreach (var mod in helper.ModRegistry.LoadedMods.Values)
+		foreach (var mod in this.Helper.ModRegistry.LoadedMods.Values)
 		{
 			Dictionary<string, JObject>? updateChecks;
 
@@ -166,20 +168,20 @@ public sealed class ModEntry : SimpleMod
 			}
 			else if (HardcodedUpdateCheckData.TryGetValue(mod.UniqueName, out var hardcodedUpdateCheckData))
 			{
-				logger.LogDebug("Checking hardcoded update info for mod {ModName}: `UpdateChecks` structure not defined.", mod.GetDisplayName(@long: false));
+				this.Logger.LogDebug("Checking hardcoded update info for mod {ModName}: `UpdateChecks` structure not defined.", mod.GetDisplayName(@long: false));
 				updateChecks = hardcodedUpdateCheckData.ToDictionary(kvp => kvp.Key, kvp => JObject.Parse(kvp.Value));
 			}
 			else
 			{
 				this.UpdatesAvailable[mod] = null;
-				logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure not defined.", mod.GetDisplayName(@long: false));
+				this.Logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure not defined.", mod.GetDisplayName(@long: false));
 				continue;
 			}
 
 			if (updateChecks is null)
 			{
 				this.UpdatesAvailable[mod] = null;
-				logger.LogError("Cannot check updates for mod {ModName}: invalid `UpdateChecks` structure.", mod.GetDisplayName(@long: false));
+				this.Logger.LogError("Cannot check updates for mod {ModName}: invalid `UpdateChecks` structure.", mod.GetDisplayName(@long: false));
 				continue;
 			}
 			if (updateChecks.Count == 0)
@@ -209,12 +211,15 @@ public sealed class ModEntry : SimpleMod
 			if (!hasValidSources)
 			{
 				this.UpdatesAvailable[mod] = null;
-				logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure is defined, but there are no installed compatible update sources.", mod.GetDisplayName(@long: false));
+				this.Logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure is defined, but there are no installed compatible update sources.", mod.GetDisplayName(@long: false));
 				continue;
 			}
 		}
 
-		this.CheckUpdates(updateSourceToMod);
+		if (sourceToUpdate is null)
+			this.CheckUpdates(updateSourceToMod);
+		else if (updateSourceToMod.TryGetValue(sourceToUpdate, out var entriesForSourceToUpdate))
+			this.CheckUpdates(new Dictionary<IUpdateSource, List<(IModManifest Mod, object? ManifestEntry)>> { { sourceToUpdate, entriesForSourceToUpdate } });
 	}
 
 	private void CheckUpdates(Dictionary<IUpdateSource, List<(IModManifest Mod, object? ManifestEntry)>> updateSourceToMod)

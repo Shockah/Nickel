@@ -9,6 +9,8 @@ public interface IUpdateChecksApi
 	void AwaitUpdateInfo(IModManifest mod, Action<IModManifest, UpdateDescriptor?> callback);
 
 	void RegisterUpdateSource(string sourceKey, IUpdateSource source);
+	void RequestUpdateInfo(IUpdateSource source);
+	void RequestUpdateInfo();
 
 	ITokenModSetting MakeTokenSetting(Func<string> title, Func<bool> hasValue, Action setupAction);
 

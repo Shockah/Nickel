@@ -11,34 +11,42 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 	[JsonIgnore]
 	public required IModSettingsApi.IModSetting Setting;
 
+	[JsonProperty]
 	public Route? Subroute;
 
-	[JsonProperty]
+	[JsonIgnore]
 	private double Scroll;
 
-	[JsonProperty]
+	[JsonIgnore]
 	private double ScrollTarget;
 
 	[JsonIgnore]
 	public Route AsRoute
 		=> this;
 
+	[JsonIgnore]
+	private bool RaisedOnOpen;
+
 	public override void Render(G g)
 	{
+		if (this.Subroute is { } subroute)
+		{
+			subroute.Render(g);
+			return;
+		}
 		if (this.Setting is null)
 		{
 			// most likely deserialized; settings are not serializable; aborting
 			g.CloseRoute(this);
 			return;
 		}
-		if (this.Subroute is { } subroute)
-		{
-			subroute.Render(g);
-			return;
-		}
 
 		g.Push(onInputPhase: this);
-		this.Setting.Prepare(g, this, () => (UK)NextUK++);
+		if (!this.RaisedOnOpen)
+		{
+			this.Setting.RaiseOnMenuOpen(MG.inst.g, this, () => (UK)NextUK++);
+			this.RaisedOnOpen = true;
+		}
 
 		Draw.Fill(Colors.black);
 
@@ -61,6 +69,12 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 		g.Pop();
 	}
 
+	public override void OnExit(State s)
+	{
+		this.RaisedOnOpen = false;
+		this.Setting.RaiseOnMenuClose(MG.inst.g);
+	}
+
 	public void OnInputPhase(G g, Box b)
 	{
 		if (Input.GetGpDown(Btn.B) || Input.GetKeyDown(Keys.Escape))
@@ -71,6 +85,7 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 	{
 		if (r == this.Subroute)
 		{
+			r.OnExit(g.state);
 			this.Subroute = null;
 			return true;
 		}

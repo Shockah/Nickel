@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -24,6 +25,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		=> this.Helper.Storage.GetSinglePrivateSettingsFile("json");
 
 	private HttpClient? Client;
+	private bool GotUnauthorized;
 
 	private readonly SemaphoreSlim Semaphore = new(1, 1);
 	private Database Database = new();
@@ -42,31 +44,53 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		helper.Storage.ApplyJsonSerializerSettings(s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
 		this.LoadDatabase();
 
-		helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!.RegisterUpdateSource("GitHub", this);
+		var updateChecksApi = helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!;
+		updateChecksApi.RegisterUpdateSource("GitHub", this);
 
 		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
 		{
 			if (phase != ModLoadPhase.AfterDbInit)
 				return;
-			helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings")?.RegisterModSettings(new TokenModSetting
-			{
-				Title = () => this.Localizations.Localize(["modSettings", "token", "name"]),
-				HasValue = () => !string.IsNullOrEmpty(this.Database.Token),
-				PasteAction = text =>
-				{
-					this.Database.Token = text;
-					this.SaveDatabase();
-				},
-				SetupAction = () => MainMenu.TryOpenWebsiteLink("https://github.com/settings/tokens?type=beta"),
-				BaseTooltips = () => [
-					new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::Token")
+
+			if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
+				settingsApi.RegisterModSettings(
+					settingsApi.MakeList([
+						settingsApi.MakeCheckbox(
+							title: () => this.Localizations.Localize(["modSettings", "enabled", "name"]),
+							getter: () => this.Database.IsEnabled,
+							setter: value => this.Database.IsEnabled = value
+						),
+						settingsApi.MakeConditional(
+							setting: new TokenModSetting
+							{
+								Title = () => this.Localizations.Localize(["modSettings", "token", "name"]),
+								HasValue = () => !string.IsNullOrEmpty(this.Database.Token),
+								PasteAction = text =>
+								{
+									this.Database.Token = text;
+									this.SaveDatabase();
+								},
+								SetupAction = () => MainMenu.TryOpenWebsiteLink("https://github.com/settings/tokens?type=beta"),
+								BaseTooltips = () => [
+									new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::Token")
+									{
+										TitleColor = Colors.textChoice,
+										Title = this.Localizations.Localize(["modSettings", "token", "name"]),
+										Description = this.Localizations.Localize(["modSettings", "token", "description"])
+									}
+								]
+							},
+							isVisible: () => this.Database.IsEnabled
+						),
+					]).SubscribeToOnMenuClose(g =>
 					{
-						TitleColor = Colors.textChoice,
-						Title = this.Localizations.Localize(["modSettings", "token", "name"]),
-						Description = this.Localizations.Localize(["modSettings", "token", "description"])
-					}
-				]
-			});
+						this.SaveDatabase();
+						this.Client = this.MakeHttpClient();
+
+						if (this.Database.IsEnabled)
+							updateChecksApi.RequestUpdateInfo(this);
+					})
+				);
 		};
 	}
 
@@ -125,6 +149,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		if (this.Database.Token is { } token)
 			client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
+		this.GotUnauthorized = false;
 		return client;
 	}
 
@@ -207,6 +232,8 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		{
 			if (string.IsNullOrEmpty(this.Database.Token))
 				yield return new(UpdateSourceMessageLevel.Warning, this.Localizations.Localize(["message", "missingToken"]));
+			if (this.GotUnauthorized)
+				yield return new(UpdateSourceMessageLevel.Error, this.Localizations.Localize(["message", "unauthorized"]));
 		}
 	}
 
@@ -300,6 +327,9 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		}
 		catch (Exception ex)
 		{
+			if (ex is HttpRequestException httpRequestException && httpRequestException.StatusCode == HttpStatusCode.Unauthorized)
+				this.GotUnauthorized = true;
+
 			this.Logger.LogDebug("Failed to retrieve releases for repository {Repository}: {Error}", repository, ex.Message);
 			throw;
 		}

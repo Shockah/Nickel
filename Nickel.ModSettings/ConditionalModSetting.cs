@@ -7,6 +7,12 @@ public sealed class ConditionalModSetting : BaseModSetting, IModSettingsApi.ICon
 	public required IModSettingsApi.IModSetting Setting { get; set; }
 	public required Func<bool> IsVisible { get; set; }
 
+	public ConditionalModSetting() : base()
+	{
+		this.OnMenuOpen += (g, route, keyGenerator) => this.Setting?.RaiseOnMenuOpen(g, route, keyGenerator);
+		this.OnMenuClose += g => this.Setting?.RaiseOnMenuClose(g);
+	}
+
 	IModSettingsApi.IConditionalModSetting IModSettingsApi.IConditionalModSetting.SetSetting(IModSettingsApi.IModSetting value)
 	{
 		this.Setting = value;
@@ -17,12 +23,6 @@ public sealed class ConditionalModSetting : BaseModSetting, IModSettingsApi.ICon
 	{
 		this.IsVisible = value;
 		return this;
-	}
-
-	public override void Prepare(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
-	{
-		base.Prepare(g, route, keyGenerator);
-		this.Setting.Prepare(g, route, keyGenerator);
 	}
 
 	public override Vec? Render(G g, Box box, bool dontDraw)

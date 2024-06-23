@@ -14,15 +14,48 @@ public interface IModSettingsApi
 	ICheckboxModSetting MakeCheckbox(Func<string> title, Func<bool> getter, Action<bool> setter);
 	IStepperModSetting<T> MakeStepper<T>(Func<string> title, Func<T> getter, Action<T> setter, Func<T, T?> previousValue, Func<T, T?> nextValue) where T : struct;
 	IPaddingModSetting MakePadding(IModSetting setting, int padding);
+	IConditionalModSetting MakeConditional(IModSetting setting, Func<bool> isVisible);
 	IListModSetting MakeList(IList<IModSetting> settings);
 
 	IModSetting MakeBackButton();
+
+	public delegate void OnMenuOpen(G g, IModSettingsRoute route, Func<UIKey> keyGenerator);
+	public delegate void OnMenuClose(G g);
 
 	public interface IModSetting
 	{
 		UIKey Key { get; }
 
-		void Prepare(G g, IModSettingsRoute route, Func<UIKey> keyGenerator);
+		event OnMenuOpen OnMenuOpen;
+		event OnMenuClose OnMenuClose;
+
+		void RaiseOnMenuOpen(G g, IModSettingsRoute route, Func<UIKey> keyGenerator);
+		void RaiseOnMenuClose(G g);
+
+		IModSetting SubscribeToOnMenuOpen(OnMenuOpen @delegate)
+		{
+			this.OnMenuOpen += @delegate;
+			return this;
+		}
+
+		IModSetting SubscribeToOnMenuClose(OnMenuClose @delegate)
+		{
+			this.OnMenuClose += @delegate;
+			return this;
+		}
+
+		IModSetting UnsubscribeFromOnMenuOpen(OnMenuOpen @delegate)
+		{
+			this.OnMenuOpen -= @delegate;
+			return this;
+		}
+
+		IModSetting UnsubscribeFromOnMenuClose(OnMenuClose @delegate)
+		{
+			this.OnMenuClose -= @delegate;
+			return this;
+		}
+
 		Vec? Render(G g, Box box, bool dontDraw);
 	}
 
@@ -107,6 +140,15 @@ public interface IModSettingsApi
 		IPaddingModSetting SetSetting(IModSetting value);
 		IPaddingModSetting SetTopPadding(int value);
 		IPaddingModSetting SetBottomPadding(int value);
+	}
+
+	public interface IConditionalModSetting : IModSetting
+	{
+		IModSetting Setting { get; set; }
+		Func<bool> IsVisible { get; set; }
+
+		IConditionalModSetting SetSetting(IModSetting value);
+		IConditionalModSetting SetVisible(Func<bool> value);
 	}
 
 	public interface IListModSetting : IModSetting

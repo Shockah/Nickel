@@ -24,11 +24,43 @@ public interface IModSettingsApi
 
 	IModSetting MakeBackButton();
 
+	public delegate void OnMenuOpen(G g, IModSettingsRoute route, Func<UIKey> keyGenerator);
+	public delegate void OnMenuClose(G g);
+
 	public interface IModSetting
 	{
 		UIKey Key { get; }
 
-		void Prepare(G g, IModSettingsRoute route, Func<UIKey> keyGenerator);
+		event OnMenuOpen OnMenuOpen;
+		event OnMenuClose OnMenuClose;
+
+		void RaiseOnMenuOpen(G g, IModSettingsRoute route, Func<UIKey> keyGenerator);
+		void RaiseOnMenuClose(G g);
+
+		IModSetting SubscribeToOnMenuOpen(OnMenuOpen @delegate)
+		{
+			this.OnMenuOpen += @delegate;
+			return this;
+		}
+
+		IModSetting SubscribeToOnMenuClose(OnMenuClose @delegate)
+		{
+			this.OnMenuClose += @delegate;
+			return this;
+		}
+
+		IModSetting UnsubscribeFromOnMenuOpen(OnMenuOpen @delegate)
+		{
+			this.OnMenuOpen -= @delegate;
+			return this;
+		}
+
+		IModSetting UnsubscribeFromOnMenuClose(OnMenuClose @delegate)
+		{
+			this.OnMenuClose -= @delegate;
+			return this;
+		}
+
 		Vec? Render(G g, Box box, bool dontDraw);
 	}
 

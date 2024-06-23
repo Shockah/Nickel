@@ -13,6 +13,15 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 
 	private UIKey CheckboxKey;
 
+	public CheckboxModSetting() : base()
+	{
+		this.OnMenuOpen += (g, route, keyGenerator) =>
+		{
+			if (this.CheckboxKey == 0)
+				this.CheckboxKey = keyGenerator();
+		};
+	}
+
 	IModSettingsApi.ICheckboxModSetting IModSettingsApi.ICheckboxModSetting.SetTitle(Func<string> value)
 	{
 		this.Title = value;
@@ -35,14 +44,6 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 	{
 		this.Tooltips = value;
 		return this;
-	}
-
-	public override void Prepare(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
-	{
-		base.Prepare(g, route, keyGenerator);
-
-		if (this.CheckboxKey == 0)
-			this.CheckboxKey = keyGenerator();
 	}
 
 	public override Vec? Render(G g, Box box, bool dontDraw)

@@ -20,6 +20,17 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 	private UIKey StepperLeftKey;
 	private UIKey StepperRightKey;
 
+	public StepperModSetting() : base()
+	{
+		this.OnMenuOpen += (g, route, keyGenerator) =>
+		{
+			if (this.StepperLeftKey == 0)
+				this.StepperLeftKey = keyGenerator();
+			if (this.StepperRightKey == 0)
+				this.StepperRightKey = keyGenerator();
+		};
+	}
+
 	IModSettingsApi.IStepperModSetting<T> IModSettingsApi.IStepperModSetting<T>.SetTitle(Func<string> value)
 	{
 		this.Title = value;
@@ -72,16 +83,6 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 	{
 		this.Tooltips = value;
 		return this;
-	}
-
-	public override void Prepare(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
-	{
-		base.Prepare(g, route, keyGenerator);
-
-		if (this.StepperLeftKey == 0)
-			this.StepperLeftKey = keyGenerator();
-		if (this.StepperRightKey == 0)
-			this.StepperRightKey = keyGenerator();
 	}
 
 	public override Vec? Render(G g, Box box, bool dontDraw)

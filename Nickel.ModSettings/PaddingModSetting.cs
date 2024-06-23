@@ -1,5 +1,3 @@
-using System;
-
 namespace Nickel.ModSettings;
 
 public sealed class PaddingModSetting : BaseModSetting, IModSettingsApi.IPaddingModSetting
@@ -7,6 +5,12 @@ public sealed class PaddingModSetting : BaseModSetting, IModSettingsApi.IPadding
 	public required IModSettingsApi.IModSetting Setting { get; set; }
 	public required int TopPadding { get; set; }
 	public required int BottomPadding { get; set; }
+
+	public PaddingModSetting() : base()
+	{
+		this.OnMenuOpen += (g, route, keyGenerator) => this.Setting?.RaiseOnMenuOpen(g, route, keyGenerator);
+		this.OnMenuClose += g => this.Setting?.RaiseOnMenuClose(g);
+	}
 
 	IModSettingsApi.IPaddingModSetting IModSettingsApi.IPaddingModSetting.SetSetting(IModSettingsApi.IModSetting value)
 	{
@@ -24,12 +28,6 @@ public sealed class PaddingModSetting : BaseModSetting, IModSettingsApi.IPadding
 	{
 		this.BottomPadding = value;
 		return this;
-	}
-
-	public override void Prepare(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
-	{
-		base.Prepare(g, route, keyGenerator);
-		this.Setting.Prepare(g, route, keyGenerator);
 	}
 
 	public override Vec? Render(G g, Box box, bool dontDraw)

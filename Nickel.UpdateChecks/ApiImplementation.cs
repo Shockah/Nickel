@@ -17,6 +17,12 @@ public sealed class ApiImplementation : IUpdateChecksApi
 		ModEntry.Instance.AwaitingUpdateInfo.Add(() => this.AwaitUpdateInfo(mod, callback));
 	}
 
+	public void RequestUpdateInfo(IUpdateSource source)
+		=> ModEntry.Instance.ParseManifestsAndRequestUpdateInfo(source);
+
+	public void RequestUpdateInfo()
+		=> ModEntry.Instance.ParseManifestsAndRequestUpdateInfo();
+
 	public void RegisterUpdateSource(string sourceKey, IUpdateSource source)
 		=> ModEntry.Instance.UpdateSources.Add(sourceKey, source);
 
