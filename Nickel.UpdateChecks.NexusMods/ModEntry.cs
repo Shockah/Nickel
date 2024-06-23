@@ -73,7 +73,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 								BaseTooltips = () => [
 									new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::ApiKey")
 									{
-										TitleColor = Colors.textChoice,
+										TitleColor = Colors.textBold,
 										Title = this.Localizations.Localize(["modSettings", "apiKey", "name"]),
 										Description = this.Localizations.Localize(["modSettings", "apiKey", "description"])
 									}

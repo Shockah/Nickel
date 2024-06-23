@@ -10,6 +10,9 @@ internal sealed class Database
 	public bool IsEnabled = true;
 
 	[JsonProperty]
+	public bool WarnOnNoToken = true;
+
+	[JsonProperty]
 	public string? Token;
 
 	[JsonProperty]

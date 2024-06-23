@@ -3,6 +3,10 @@
 		"enabled": {
 			"name": "Enabled"
 		},
+		"warnOnNoToken": {
+			"name": "Warn on no token",
+			"description": "Whether Nickel should keep warning you about not having provided a token. If you do not care, disable this."
+		},
 		"token": {
 			"name": "Token",
 			"description": "Providing your own GitHub token will ensure Nickel is always able to perform update checks for mods hosted on GitHub."
