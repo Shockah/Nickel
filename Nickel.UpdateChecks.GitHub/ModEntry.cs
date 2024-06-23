@@ -81,18 +81,21 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 										}
 									]
 								},
-								settingsApi.MakeCheckbox(
-									title: () => this.Localizations.Localize(["modSettings", "warnOnNoToken", "name"]),
-									getter: () => this.Database.WarnOnNoToken,
-									setter: value => this.Database.WarnOnNoToken = value
-								).SetTooltips(() => [
-									new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::WarnOnNoToken")
-									{
-										TitleColor = Colors.textBold,
-										Title = this.Localizations.Localize(["modSettings", "warnOnNoToken", "name"]),
-										Description = this.Localizations.Localize(["modSettings", "warnOnNoToken", "description"])
-									}
-								])
+								settingsApi.MakeConditional(
+									setting: settingsApi.MakeCheckbox(
+										title: () => this.Localizations.Localize(["modSettings", "warnOnNoToken", "name"]),
+										getter: () => this.Database.WarnOnNoToken,
+										setter: value => this.Database.WarnOnNoToken = value
+									).SetTooltips(() => [
+										new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::WarnOnNoToken")
+										{
+											TitleColor = Colors.textBold,
+											Title = this.Localizations.Localize(["modSettings", "warnOnNoToken", "name"]),
+											Description = this.Localizations.Localize(["modSettings", "warnOnNoToken", "description"])
+										}
+									]),
+									isVisible: () => string.IsNullOrEmpty(this.Database.Token)
+								)
 							]),
 							isVisible: () => this.Database.IsEnabled
 						),

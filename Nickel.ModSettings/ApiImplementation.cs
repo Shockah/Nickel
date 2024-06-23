@@ -25,18 +25,7 @@ public sealed class ApiImplementation : IModSettingsApi
 			{
 				Spacing = 8,
 				Settings = [
-					new PaddingModSetting
-					{
-						Setting = new TextModSetting
-						{
-							Text = () => ModEntry.Instance.Localizations.Localize(["modSettings", "title"]),
-							Font = DB.stapler,
-							Alignment = TAlign.Center,
-							WrapText = false,
-						},
-						TopPadding = 4,
-						BottomPadding = 4,
-					},
+					this.MakeHeader(() => ModEntry.Instance.Localizations.Localize(["modSettings", "title"])),
 					new ListModSetting
 					{
 						Settings = [
@@ -71,18 +60,7 @@ public sealed class ApiImplementation : IModSettingsApi
 			{
 				Spacing = 8,
 				Settings = [
-					new PaddingModSetting
-					{
-						Setting = new TextModSetting
-						{
-							Text = () => modManifest.DisplayName ?? modManifest.UniqueName,
-							Font = DB.stapler,
-							Alignment = TAlign.Center,
-							WrapText = false,
-						},
-						TopPadding = 4,
-						BottomPadding = 4,
-					},
+					this.MakeHeader(() => modManifest.DisplayName ?? modManifest.UniqueName),
 					settings,
 					this.MakeBackButton(),
 				]
@@ -147,6 +125,36 @@ public sealed class ApiImplementation : IModSettingsApi
 
 	public IModSettingsApi.IListModSetting MakeList(IList<IModSettingsApi.IModSetting> settings)
 		=> new ListModSetting { Settings = settings };
+
+	public IModSettingsApi.IModSetting MakeHeader(Func<string> title, Func<string>? subtitle = null)
+		=> new PaddingModSetting
+		{
+			Setting = new ListModSetting
+			{
+				Settings = [
+					new TextModSetting
+					{
+						Text = title,
+						Font = DB.stapler,
+						Alignment = TAlign.Center,
+						WrapText = false,
+					},
+					new ConditionalModSetting
+					{
+						Setting = new TextModSetting
+						{
+							Text = () => subtitle!(),
+							Alignment = TAlign.Center,
+							WrapText = false,
+						},
+						IsVisible = () => subtitle is not null
+					}
+				],
+				Spacing = 4,
+			},
+			TopPadding = 4,
+			BottomPadding = 4,
+		};
 
 	public IModSettingsApi.IModSetting MakeBackButton()
 		=> new ButtonModSetting

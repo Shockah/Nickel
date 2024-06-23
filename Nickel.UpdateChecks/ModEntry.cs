@@ -293,16 +293,9 @@ public sealed class ModEntry : SimpleMod
 
 		return api.MakeModSettingsRoute(
 			api.MakeList([
-				api.MakePadding(
-					setting: api.MakeList([
-						api.MakeText(() => this.Package.Manifest.DisplayName ?? this.Package.Manifest.UniqueName)
-							.SetFont(DB.stapler)
-							.SetAlignment(TAlign.Center)
-							.SetWrapText(false),
-						api.MakeText(() => this.Localizations.Localize(["settings", "ignoredUpdates"]))
-							.SetAlignment(TAlign.Center)
-					]).SetSpacing(4),
-					padding: 4
+				api.MakeHeader(
+					() => this.Package.Manifest.DisplayName ?? this.Package.Manifest.UniqueName,
+					() => this.Localizations.Localize(["settings", "ignoredUpdates"])
 				),
 				api.MakeList([
 					.. Instance.UpdatesAvailable

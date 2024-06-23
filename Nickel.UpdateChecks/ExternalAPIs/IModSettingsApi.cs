@@ -17,6 +17,7 @@ public interface IModSettingsApi
 	IConditionalModSetting MakeConditional(IModSetting setting, Func<bool> isVisible);
 	IListModSetting MakeList(IList<IModSetting> settings);
 
+	IModSetting MakeHeader(Func<string> title, Func<string>? subtitle = null);
 	IModSetting MakeBackButton();
 
 	public delegate void OnMenuOpen(G g, IModSettingsRoute route, Func<UIKey> keyGenerator);
