@@ -49,6 +49,8 @@ public sealed class ModEntry : SimpleMod
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
 	private static ISpriteEntry UpdateAvailableOverlayIcon = null!;
+	private static ISpriteEntry WarningMessageOverlayIcon = null!;
+	private static ISpriteEntry ErrorMessageOverlayIcon = null!;
 	private static ISpriteEntry UpdateAvailableTooltipIcon = null!;
 
 	internal readonly Dictionary<string, IUpdateSource> UpdateSources = [];
@@ -73,6 +75,8 @@ public sealed class ModEntry : SimpleMod
 		);
 
 		UpdateAvailableOverlayIcon = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/UpdateAvailableOverlayIcon.png"));
+		WarningMessageOverlayIcon = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/WarningMessageOverlayIcon.png"));
+		ErrorMessageOverlayIcon = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/ErrorMessageOverlayIcon.png"));
 		UpdateAvailableTooltipIcon = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/UpdateAvailableTooltipIcon.png"));
 
 		var harmony = new Harmony(package.Manifest.UniqueName);
@@ -96,7 +100,7 @@ public sealed class ModEntry : SimpleMod
 
 			if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
 				settingsApi.RegisterModSettings(settingsApi.MakeButton(
-					title: () => "Ignored updates",
+					title: () => this.Localizations.Localize(["settings", "ignoredUpdates"]),
 					onClick: (g, route) => route.OpenSubroute(g, this.MakeIgnoredUpdatesModSettingsRoute())
 				));
 		};
@@ -290,7 +294,7 @@ public sealed class ModEntry : SimpleMod
 							.SetFont(DB.stapler)
 							.SetAlignment(TAlign.Center)
 							.SetWrapText(false),
-						api.MakeText(() => "Ignored updates")
+						api.MakeText(() => this.Localizations.Localize(["settings", "ignoredUpdates"]))
 							.SetAlignment(TAlign.Center)
 					]).SetSpacing(4),
 					padding: 4
@@ -313,7 +317,7 @@ public sealed class ModEntry : SimpleMod
 								}
 							)
 						)
-				]),
+				]).SetEmptySetting(api.MakeText(() => this.Localizations.Localize(["settings", "upToDate"]))),
 				api.MakeBackButton()
 			])
 			.SetSpacing(8)
@@ -347,29 +351,99 @@ public sealed class ModEntry : SimpleMod
 	{
 		Draw.Sprite(id, x, y, flipX, flipY, rotation, originPx, originRel, scale, pixelRect, color, blend, samplerState, effect);
 
+		var updateSourceMessages = Instance.UpdateSources
+			.OrderBy(kvp => kvp.Key)
+			.Select(kvp => kvp.Value)
+			.SelectMany(s => s.Messages)
+			.GroupBy(m => m.Level)
+			.ToDictionary(g => g.Key, g => g.ToList());
+
 		var updatesAvailable = Instance.UpdatesAvailable
 			.Where(kvp => kvp.Value is not null)
 			.Select(kvp => new KeyValuePair<IModManifest, UpdateDescriptor>(kvp.Key, kvp.Value!.Value))
 			.Where(kvp => kvp.Value.Version > kvp.Key.Version)
 			.Where(kvp => !Instance.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) || ignoredUpdate != kvp.Value.Version)
 			.ToList();
-		if (updatesAvailable.Count == 0)
-			return;
 
-		Draw.Sprite(UpdateAvailableOverlayIcon.Sprite, x, y);
+		List<ISpriteEntry> overlaysToShow = [];
+		var addedTooltips = false;
+
+		if (updatesAvailable.Count > 0)
+			overlaysToShow.Add(UpdateAvailableOverlayIcon);
+
+		if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Error, out var messages) && messages.Count > 0)
+			overlaysToShow.Add(ErrorMessageOverlayIcon);
+		else if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Warning, out messages) && messages.Count > 0)
+			overlaysToShow.Add(WarningMessageOverlayIcon);
+
+		if (overlaysToShow.Count > 0)
+		{
+			var overlayToShow = overlaysToShow[(int)MG.inst.g.time % overlaysToShow.Count];
+			Draw.Sprite(overlayToShow.Sprite, x, y);
+		}
 
 		if (MG.inst.g.boxes.FirstOrDefault(b => b.key is { } key && key.k == StableUK.corner_mainmenu) is not { } box)
 			return;
 		if (!box.IsHover())
 			return;
 
-		MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new TTDivider());
-		MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new GlossaryTooltip($"ui.{Instance.Package.Manifest.UniqueName}::UpdatesAvailable")
+		if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Error, out messages) && messages.Count > 0)
 		{
-			Icon = UpdateAvailableTooltipIcon.Sprite,
-			TitleColor = Colors.textBold,
-			Title = Instance.Localizations.Localize(["updatesAvailableTooltip", "name"]),
-			Description = string.Join("\n", updatesAvailable.Select(kvp => $"<c=textFaint>{kvp.Key.GetDisplayName(@long: false)}</c> -> <c=boldPink>{kvp.Value.Version}</c>"))
-		});
+			if (!addedTooltips)
+			{
+				addedTooltips = true;
+				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new TTDivider());
+			}
+
+			var i = 0;
+			foreach (var error in messages)
+			{
+				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new GlossaryTooltip($"ui.{Instance.Package.Manifest.UniqueName}::Error{i++}")
+				{
+					Icon = StableSpr.icons_hurt,
+					TitleColor = Colors.textBold,
+					Title = Instance.Localizations.Localize(["settingsTooltip", "error"]),
+					Description = error.Message,
+				});
+			}
+		}
+
+		if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Warning, out messages) && messages.Count > 0)
+		{
+			if (!addedTooltips)
+			{
+				addedTooltips = true;
+				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new TTDivider());
+			}
+
+			var i = 0;
+			foreach (var error in messages)
+			{
+				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new GlossaryTooltip($"ui.{Instance.Package.Manifest.UniqueName}::Warning{i++}")
+				{
+					Icon = StableSpr.icons_hurtBlockable,
+					TitleColor = Colors.textBold,
+					Title = Instance.Localizations.Localize(["settingsTooltip", "warning"]),
+					Description = error.Message,
+				});
+			}
+		}
+
+		if (updatesAvailable.Count > 0)
+		{
+			if (!addedTooltips)
+			{
+				addedTooltips = true;
+				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new TTDivider());
+			}
+
+			MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new GlossaryTooltip($"ui.{Instance.Package.Manifest.UniqueName}::UpdatesAvailable")
+			{
+				Icon = UpdateAvailableTooltipIcon.Sprite,
+				TitleColor = Colors.textBold,
+				Title = Instance.Localizations.Localize(["settingsTooltip", "updatesAvailableTooltip"]),
+				Description = string.Join("\n", updatesAvailable.Select(kvp => $"<c=textFaint>{kvp.Key.GetDisplayName(@long: false)}</c> -> <c=boldPink>{kvp.Value.Version}</c>"))
+			});
+		}
 	}
 }

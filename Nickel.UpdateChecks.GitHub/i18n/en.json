@@ -4,5 +4,8 @@
 			"name": "Token",
 			"description": "Providing your own GitHub token will ensure Nickel is always able to perform update checks for mods hosted on GitHub."
 		}
+	},
+	"message": {
+		"missingToken": "GitHub token is not provided in mod settings. It is <c=cheevoGold>recommended</c> for Nickel to be able to perform update checks for mods hosted on GitHub."
 	}
 }

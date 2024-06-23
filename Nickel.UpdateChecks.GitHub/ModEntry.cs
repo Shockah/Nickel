@@ -201,6 +201,15 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		return ParseVersionOrNull(model.TagName) ?? ParseVersionOrNull(model.Name);
 	}
 
+	public IEnumerable<UpdateSourceMessage> Messages
+	{
+		get
+		{
+			if (string.IsNullOrEmpty(this.Database.Token))
+				yield return new(UpdateSourceMessageLevel.Warning, this.Localizations.Localize(["message", "missingToken"]));
+		}
+	}
+
 	public async Task<IReadOnlyDictionary<IModManifest, UpdateDescriptor>> GetLatestVersionsAsync(IEnumerable<(IModManifest Mod, object? ManifestEntry)> mods)
 	{
 		await this.Semaphore.WaitAsync();

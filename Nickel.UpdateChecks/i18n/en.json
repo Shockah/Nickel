@@ -1,10 +1,14 @@
 {
-	"updatesAvailableTooltip": {
-		"name": "Updates"
+	"settingsTooltip": {
+		"updatesAvailableTooltip": "Updates",
+		"error": "Update Error",
+		"warning": "Update Warning"
 	},
 	"settings": {
 		"paste": "PASTE",
 		"clear": "CLEAR",
-		"setup": "SETUP"
+		"setup": "SETUP",
+		"ignoredUpdates": "Ignored updates",
+		"upToDate": "All installed mods are up to date."
 	}
 }

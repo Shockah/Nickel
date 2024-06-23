@@ -4,5 +4,8 @@
 			"name": "API key",
 			"description": "Providing your own NexusMods API key is <c=redd>required</c> for Nickel to be able to perform update checks for mods hosted on NexusMods."
 		}
+	},
+	"message": {
+		"missingApiKey": "NexusMods API key is not provided in mod settings. It is <c=redd>required</c> for Nickel to be able to perform update checks for mods hosted on NexusMods."
 	}
 }

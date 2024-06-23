@@ -126,6 +126,15 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		return client;
 	}
 
+	public IEnumerable<UpdateSourceMessage> Messages
+	{
+		get
+		{
+			if (string.IsNullOrEmpty(this.Database.ApiKey))
+				yield return new(UpdateSourceMessageLevel.Error, this.Localizations.Localize(["message", "missingApiKey"]));
+		}
+	}
+
 	public bool TryParseManifestEntry(IModManifest mod, object? rawManifestEntry, out object? manifestEntry)
 	{
 		manifestEntry = JsonConvert.DeserializeObject<ManifestEntry>(JsonConvert.SerializeObject(rawManifestEntry, this.Helper.Storage.JsonSerializerSettings), this.Helper.Storage.JsonSerializerSettings);
