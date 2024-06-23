@@ -110,11 +110,11 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 			);
 
 			if (box.IsHover() && this.BaseTooltips is { } tooltips)
-				g.tooltips.Add(new Vec(box.rect.x + 10), tooltips());
+				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
 			if (g.hoverKey == this.PasteKey && (this.PasteTooltips ?? this.BaseTooltips) is { } pasteTooltips)
-				g.tooltips.Add(new Vec(box.rect.x + 10), pasteTooltips());
+				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), pasteTooltips());
 			if (g.hoverKey == this.SetupKey && (this.SetupTooltips ?? this.BaseTooltips) is { } setupTooltips)
-				g.tooltips.Add(new Vec(box.rect.x + 10), setupTooltips());
+				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), setupTooltips());
 		}
 
 		return new(box.rect.w, 20);

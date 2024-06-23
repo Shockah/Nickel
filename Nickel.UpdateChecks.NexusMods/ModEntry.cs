@@ -17,6 +17,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	private const long UpdateCheckThrottleDuration = 60 * 5;
 
 	internal static ModEntry Instance { get; private set; } = null!;
+	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
 	private IWritableFileInfo DatabaseFile
 		=> this.Helper.Storage.GetSinglePrivateSettingsFile("json");
@@ -29,6 +30,14 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
 		Instance = this;
+		this.Localizations = new MissingPlaceholderLocalizationProvider<IReadOnlyList<string>>(
+			new CurrentLocaleOrEnglishLocalizationProvider<IReadOnlyList<string>>(
+				new JsonLocalizationProvider(
+					tokenExtractor: new SimpleLocalizationTokenExtractor(),
+					localeStreamFunction: locale => package.PackageRoot.GetRelativeFile($"i18n/{locale}.json").OpenRead()
+				)
+			)
+		);
 		helper.Storage.ApplyJsonSerializerSettings(s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
 		this.LoadDatabase();
 
@@ -40,14 +49,22 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				return;
 			helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings")?.RegisterModSettings(new TokenModSetting
 			{
-				Title = () => "NexusMods API key",
+				Title = () => this.Localizations.Localize(["modSettings", "apiKey", "name"]),
 				HasValue = () => !string.IsNullOrEmpty(this.Database.ApiKey),
 				PasteAction = text =>
 				{
 					this.Database.ApiKey = text;
 					this.SaveDatabase();
 				},
-				SetupAction = () => MainMenu.TryOpenWebsiteLink("https://next.nexusmods.com/settings/api-keys")
+				SetupAction = () => MainMenu.TryOpenWebsiteLink("https://next.nexusmods.com/settings/api-keys"),
+				BaseTooltips = () => [
+					new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::ApiKey")
+					{
+						TitleColor = Colors.textChoice,
+						Title = this.Localizations.Localize(["modSettings", "apiKey", "name"]),
+						Description = this.Localizations.Localize(["modSettings", "apiKey", "description"])
+					}
+				]
 			});
 		};
 	}

@@ -1,6 +1,7 @@
 using daisyowl.text;
 using FSPRO;
 using System;
+using System.Collections.Generic;
 
 namespace Nickel.ModSettings;
 
@@ -14,6 +15,7 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 	public Func<T, string>? ValueFormatter { get; set; }
 	public Func<Rect, double>? ValueWidth { get; set; }
 	public Action<G, IModSettingsApi.IModSettingsRoute>? OnClick { get; set; }
+	public Func<IEnumerable<Tooltip>>? Tooltips { get; set; }
 
 	private UIKey StepperLeftKey;
 	private UIKey StepperRightKey;
@@ -66,6 +68,12 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 		return this;
 	}
 
+	IModSettingsApi.IStepperModSetting<T> IModSettingsApi.IStepperModSetting<T>.SetTooltips(Func<IEnumerable<Tooltip>>? value)
+	{
+		this.Tooltips = value;
+		return this;
+	}
+
 	public override void Prepare(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
 	{
 		base.Prepare(g, route, keyGenerator);
@@ -80,7 +88,8 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 	{
 		if (!dontDraw)
 		{
-			if (box.IsHover())
+			var isHover = box.IsHover() || g.hoverKey == this.StepperLeftKey || g.hoverKey == this.StepperRightKey;
+			if (isHover)
 				Draw.Rect(box.rect.x, box.rect.y, box.rect.w, box.rect.h, Colors.menuHighlightBox.gain(0.5), BlendMode.Screen);
 
 			var textColor = box.IsHover() ? Colors.textChoiceHoverActive : Colors.textMain;
@@ -95,6 +104,9 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 				SharedArt.ButtonSprite(g, new Rect(box.rect.w - 10 - 18 * 2 - valueWidth, -1, 18, 21), this.StepperLeftKey, StableSpr.buttons_selectShip, StableSpr.buttons_selectShip_on, boxColor: Colors.buttonBoxNormal, flipX: true, onMouseDown: this, noHover: Input.gamepadIsActiveInput);
 			if (this.NextValue(value) is not null)
 				SharedArt.ButtonSprite(g, new Rect(box.rect.w - 10 - 18, -1, 18, 21), this.StepperRightKey, StableSpr.buttons_selectShip, StableSpr.buttons_selectShip_on, boxColor: Colors.buttonBoxNormal, flipX: false, onMouseDown: this, noHover: Input.gamepadIsActiveInput);
+
+			if (isHover && this.Tooltips is { } tooltips)
+				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
 		}
 
 		return new(box.rect.w, 20);

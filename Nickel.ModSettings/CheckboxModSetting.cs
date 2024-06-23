@@ -1,5 +1,6 @@
 using FSPRO;
 using System;
+using System.Collections.Generic;
 
 namespace Nickel.ModSettings;
 
@@ -8,6 +9,7 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 	public required Func<string> Title { get; set; }
 	public required Func<bool> Getter { get; set; }
 	public required Action<bool> Setter { get; set; }
+	public Func<IEnumerable<Tooltip>>? Tooltips { get; set; }
 
 	private UIKey CheckboxKey;
 
@@ -26,6 +28,12 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 	IModSettingsApi.ICheckboxModSetting IModSettingsApi.ICheckboxModSetting.SetSetter(Action<bool> value)
 	{
 		this.Setter = value;
+		return this;
+	}
+
+	IModSettingsApi.ICheckboxModSetting IModSettingsApi.ICheckboxModSetting.SetTooltips(Func<IEnumerable<Tooltip>>? value)
+	{
+		this.Tooltips = value;
 		return this;
 	}
 
@@ -49,6 +57,9 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 
 			Draw.Text(this.Title(), box.rect.x + 10, box.rect.y + 5, DB.thicket, textColor);
 			SharedArt.CheckboxBig(g, new Vec(box.rect.w - 10 - 15, 1), this.CheckboxKey, this.Getter(), boxColor: Colors.buttonBoxNormal, onMouseDown: this);
+
+			if (isHover && this.Tooltips is { } tooltips)
+				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
 		}
 
 		box.onMouseDown = this;

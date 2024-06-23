@@ -18,6 +18,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	private const long UpdateCheckThrottleDuration = 60 * 5;
 
 	internal static ModEntry Instance { get; private set; } = null!;
+	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
 	private IWritableFileInfo DatabaseFile
 		=> this.Helper.Storage.GetSinglePrivateSettingsFile("json");
@@ -30,6 +31,14 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
 		Instance = this;
+		this.Localizations = new MissingPlaceholderLocalizationProvider<IReadOnlyList<string>>(
+			new CurrentLocaleOrEnglishLocalizationProvider<IReadOnlyList<string>>(
+				new JsonLocalizationProvider(
+					tokenExtractor: new SimpleLocalizationTokenExtractor(),
+					localeStreamFunction: locale => package.PackageRoot.GetRelativeFile($"i18n/{locale}.json").OpenRead()
+				)
+			)
+		);
 		helper.Storage.ApplyJsonSerializerSettings(s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
 		this.LoadDatabase();
 
@@ -41,14 +50,22 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				return;
 			helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings")?.RegisterModSettings(new TokenModSetting
 			{
-				Title = () => "GitHub token",
+				Title = () => this.Localizations.Localize(["modSettings", "token", "name"]),
 				HasValue = () => !string.IsNullOrEmpty(this.Database.Token),
 				PasteAction = text =>
 				{
 					this.Database.Token = text;
 					this.SaveDatabase();
 				},
-				SetupAction = () => MainMenu.TryOpenWebsiteLink("https://github.com/settings/tokens?type=beta")
+				SetupAction = () => MainMenu.TryOpenWebsiteLink("https://github.com/settings/tokens?type=beta"),
+				BaseTooltips = () => [
+					new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::Token")
+					{
+						TitleColor = Colors.textChoice,
+						Title = this.Localizations.Localize(["modSettings", "token", "name"]),
+						Description = this.Localizations.Localize(["modSettings", "token", "description"])
+					}
+				]
 			});
 		};
 	}

@@ -54,10 +54,12 @@ public interface IModSettingsApi
 		Func<string> Title { get; set; }
 		Func<string?>? ValueText { get; set; }
 		Action<G, IModSettingsRoute> OnClick { get; set; }
+		Func<IEnumerable<Tooltip>>? Tooltips { get; set; }
 
 		IButtonModSetting SetTitle(Func<string> value);
 		IButtonModSetting SetValueText(Func<string?>? value);
 		IButtonModSetting SetOnClick(Action<G, IModSettingsRoute> value);
+		IButtonModSetting SetTooltips(Func<IEnumerable<Tooltip>>? value);
 	}
 
 	public interface ICheckboxModSetting : IModSetting
@@ -65,10 +67,12 @@ public interface IModSettingsApi
 		Func<string> Title { get; set; }
 		Func<bool> Getter { get; set; }
 		Action<bool> Setter { get; set; }
+		Func<IEnumerable<Tooltip>>? Tooltips { get; set; }
 
 		ICheckboxModSetting SetTitle(Func<string> value);
 		ICheckboxModSetting SetGetter(Func<bool> value);
 		ICheckboxModSetting SetSetter(Action<bool> value);
+		ICheckboxModSetting SetTooltips(Func<IEnumerable<Tooltip>>? value);
 	}
 
 	public interface IStepperModSetting<T> : IModSetting where T : struct
@@ -81,6 +85,7 @@ public interface IModSettingsApi
 		Func<T, string>? ValueFormatter { get; set; }
 		Func<Rect, double>? ValueWidth { get; set; }
 		Action<G, IModSettingsRoute>? OnClick { get; set; }
+		Func<IEnumerable<Tooltip>>? Tooltips { get; set; }
 
 		IStepperModSetting<T> SetTitle(Func<string> value);
 		IStepperModSetting<T> SetGetter(Func<T> value);
@@ -90,6 +95,7 @@ public interface IModSettingsApi
 		IStepperModSetting<T> SetValueFormatter(Func<T, string>? value);
 		IStepperModSetting<T> SetValueWidth(Func<Rect, double>? value);
 		IStepperModSetting<T> SetOnClick(Action<G, IModSettingsRoute> value);
+		IStepperModSetting<T> SetTooltips(Func<IEnumerable<Tooltip>>? value);
 	}
 
 	public interface IPaddingModSetting : IModSetting
