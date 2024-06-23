@@ -4,14 +4,20 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
 using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Nickel.Essentials;
+
+internal sealed partial class Settings
+{
+	[JsonProperty]
+	public bool DetailedCrewInfo = true;
+}
 
 internal static class CrewSelection
 {
@@ -56,6 +62,20 @@ internal static class CrewSelection
 			transpiler: new HarmonyMethod(typeof(CrewSelection), nameof(NewRunOptions_CharSelect_Transpiler))
 		);
 	}
+
+	public static IModSettingsApi.IModSetting MakeSettings(IModSettingsApi api)
+		=> api.MakeCheckbox(
+			title: () => ModEntry.Instance.Localizations.Localize(["crewSelection", "detailedCrewInfoSetting", "name"]),
+			getter: () => ModEntry.Instance.Settings.DetailedCrewInfo,
+			setter: value => ModEntry.Instance.Settings.DetailedCrewInfo = value
+		).SetTooltips(() => [
+			new GlossaryTooltip($"settings.{ModEntry.Instance.Package.Manifest.UniqueName}::{MethodBase.GetCurrentMethod()!.DeclaringType!.Name}::DetailedCrewInfoSetting")
+			{
+				TitleColor = Colors.textBold,
+				Title = ModEntry.Instance.Localizations.Localize(["crewSelection", "detailedCrewInfoSetting", "name"]),
+				Description = ModEntry.Instance.Localizations.Localize(["crewSelection", "detailedCrewInfoSetting", "description"])
+			}
+		]);
 
 	private static void NewRunOptions_OnEnter_Postfix()
 		// reset the scroll position to the very top
@@ -123,6 +143,9 @@ internal static class CrewSelection
 
 	private static Rect NewRunOptions_CharSelect_Transpiler_HijackDrawCrewText(string str, double x, double y, Font? font, Color? color, Color? colorForce, double? progress, double? maxWidth, TAlign? align, bool dontDraw, int? lineHeight, Color? outline, BlendState? blend, SamplerState? samplerState, Effect? effect, bool dontSubstituteLocFont, double letterSpacing, double extraScale, RunConfig runConfig)
 	{
+		if (!ModEntry.Instance.Settings.DetailedCrewInfo)
+			return Draw.Text(str, x, y, font, color, colorForce, progress, maxWidth, align, dontDraw, lineHeight, outline, blend, samplerState, effect, dontSubstituteLocFont, letterSpacing, extraScale);
+
 		var orderedSelectedChars = runConfig.selectedChars.OrderBy(NewRunOptions.allChars.IndexOf).ToList();
 		for (var i = 0; i < 3; i++)
 		{
@@ -135,10 +158,13 @@ internal static class CrewSelection
 		return new();
 	}
 
-	[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Hijacking a real method call")]
 	private static Rect NewRunOptions_CharSelect_Transpiler_HijackDrawCrewCountText(string str, double x, double y, Font? font, Color? color, Color? colorForce, double? progress, double? maxWidth, TAlign? align, bool dontDraw, int? lineHeight, Color? outline, BlendState? blend, SamplerState? samplerState, Effect? effect, bool dontSubstituteLocFont, double letterSpacing, double extraScale)
-		// do nothing
-		=> new();
+	{
+		if (ModEntry.Instance.Settings.DetailedCrewInfo)
+			return new();
+		else
+			return Draw.Text(str, x, y, font, color, colorForce, progress, maxWidth, align, dontDraw, lineHeight, outline, blend, samplerState, effect, dontSubstituteLocFont, letterSpacing, extraScale);
+	}
 
 	private static List<Deck> NewRunOptions_CharSelect_Transpiler_ModifyAllChars(List<Deck> allChars)
 		=> allChars.Skip(ScrollPosition).Take(MaxCharactersOnScreen).ToList();

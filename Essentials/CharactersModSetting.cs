@@ -1,0 +1,71 @@
+using FSPRO;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Nickel.Essentials;
+
+public sealed class CharactersModSetting : IModSettingsApi.IModSetting
+{
+	public UIKey Key { get; private set; }
+	public event IModSettingsApi.OnMenuOpen? OnMenuOpen;
+	public event IModSettingsApi.OnMenuClose? OnMenuClose;
+
+	public required Func<string> Title { get; set; }
+	public required Func<List<Deck>> AllCharacters { get; set; }
+	public required Func<Deck, bool> IsSelected { get; set; }
+	public required Action<Deck, bool> SetSelected { get; set; }
+	public Func<IEnumerable<Tooltip>>? Tooltips { get; set; }
+
+	private UIKey BaseCharacterKey;
+
+	public CharactersModSetting()
+	{
+		this.OnMenuOpen += (g, route, keyGenerator) =>
+		{
+			if (this.Key == 0)
+				this.Key = keyGenerator();
+			if (this.BaseCharacterKey == 0)
+				this.BaseCharacterKey = keyGenerator();
+		};
+	}
+
+	public void RaiseOnMenuOpen(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
+		=> this.OnMenuOpen?.Invoke(g, route, keyGenerator);
+
+	public void RaiseOnMenuClose(G g)
+		=> this.OnMenuClose?.Invoke(g);
+
+	public Vec? Render(G g, Box box, bool dontDraw)
+	{
+		var width = 35;
+		var height = 33;
+		var perRow = (int)((box.rect.w - 20) / width);
+		var rows = this.AllCharacters().Chunk(perRow).ToList();
+
+		if (!dontDraw)
+		{
+			Draw.Text(this.Title(), box.rect.x + 10, box.rect.y + 5, DB.thicket, Colors.textMain);
+
+			for (var y = 0; y < rows.Count; y++)
+			{
+				var row = rows[y];
+				for (var x = 0; x < row.Length; x++)
+				{
+					var deck = row[x];
+					var character = new Character { type = deck.Key(), deckType = deck };
+					character.Render(g, 10 + x * width, 20 + y * height, mini: true, isSelected: this.IsSelected(deck), onMouseDown: new MouseDownHandler(() =>
+					{
+						Audio.Play(Event.Click);
+						this.SetSelected(deck, !this.IsSelected(deck));
+					}), overrideKey: new UIKey(this.BaseCharacterKey.k, (int)deck, character.type));
+				}
+			}
+
+			if (box.IsHover() && this.Tooltips is { } tooltips)
+				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
+		}
+
+		return new(box.rect.w, 20 + rows.Count * height);
+	}
+}

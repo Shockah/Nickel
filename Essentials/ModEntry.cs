@@ -1,8 +1,10 @@
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Nickel.Essentials;
@@ -12,12 +14,16 @@ public sealed class ModEntry : SimpleMod
 	internal static ModEntry Instance { get; private set; } = null!;
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 	internal ApiImplementation Api { get; private set; }
+	internal Settings Settings = new();
 	internal IMoreDifficultiesApi? MoreDifficultiesApi { get; private set; }
 
 	internal static bool StopStateTransitions = false;
 
 	private readonly Dictionary<Deck, Type?> ExeCache = [];
 	private readonly Dictionary<Type, Deck> ExeTypeToDeck = [];
+
+	private IWritableFileInfo SettingsFile
+		=> this.Helper.Storage.GetSingleSettingsFile("json");
 
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
@@ -31,12 +37,26 @@ public sealed class ModEntry : SimpleMod
 				)
 			)
 		);
+		this.LoadSettings();
 
 		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
 		{
 			if (phase != ModLoadPhase.AfterDbInit)
 				return;
+
 			this.MoreDifficultiesApi = helper.ModRegistry.GetApi<IMoreDifficultiesApi>("TheJazMaster.MoreDifficulties", new(1, 4, 1));
+
+			if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
+				settingsApi.RegisterModSettings(
+					settingsApi.MakeList([
+						CrewSelection.MakeSettings(settingsApi),
+						StarterDeckPreview.MakeSettings(settingsApi),
+						CardBrowseCurrentPile.MakeSettings(settingsApi),
+						ExeBlacklist.MakeSettings(),
+					]).SubscribeToOnMenuClose(
+						_ => this.SaveSettings()
+					)
+				);
 		};
 
 		var harmony = new Harmony(package.Manifest.UniqueName);
@@ -64,6 +84,44 @@ public sealed class ModEntry : SimpleMod
 
 	public override object? GetApi(IModManifest requestingMod)
 		=> new ApiImplementation();
+
+	private void LoadSettings()
+	{
+		if (this.SettingsFile.Exists)
+		{
+			try
+			{
+				using var stream = this.SettingsFile.OpenRead();
+				using var streamReader = new StreamReader(stream);
+				using var jsonReader = new JsonTextReader(streamReader);
+				this.Settings = this.Helper.Storage.JsonSerializer.Deserialize<Settings>(jsonReader) ?? new();
+			}
+			catch
+			{
+				this.Settings = new();
+			}
+		}
+		else
+		{
+			this.Settings = new();
+			this.SaveSettings();
+		}
+	}
+
+	private void SaveSettings()
+	{
+		try
+		{
+			using var stream = this.SettingsFile.OpenWrite();
+			using var streamWriter = new StreamWriter(stream);
+			using var jsonWriter = new JsonTextWriter(streamWriter);
+			this.Helper.Storage.JsonSerializer.Serialize(jsonWriter, this.Settings);
+		}
+		catch (Exception ex)
+		{
+			this.Logger.LogError("Could not save settings file: {Exception}", ex);
+		}
+	}
 
 	private void PrepareExeInfoIfNeeded()
 	{

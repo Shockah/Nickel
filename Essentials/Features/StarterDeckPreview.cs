@@ -1,10 +1,17 @@
 using HarmonyLib;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace Nickel.Essentials;
+
+internal sealed partial class Settings
+{
+	[JsonProperty]
+	public bool StarterDeckPreview = true;
+}
 
 internal static class StarterDeckPreview
 {
@@ -41,6 +48,13 @@ internal static class StarterDeckPreview
 			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Artifact_RenderArtifactList_Prefix))
 		);
 	}
+
+	public static IModSettingsApi.IModSetting MakeSettings(IModSettingsApi api)
+		=> api.MakeCheckbox(
+			title: () => ModEntry.Instance.Localizations.Localize(["starterDeckPreview", "setting", "name"]),
+			getter: () => ModEntry.Instance.Settings.StarterDeckPreview,
+			setter: value => ModEntry.Instance.Settings.StarterDeckPreview = value
+		);
 
 	private static void UpdateStateBasedData(G g)
 	{
@@ -129,6 +143,8 @@ internal static class StarterDeckPreview
 
 	private static void NewRunOptions_Render_Postfix(NewRunOptions __instance, G g)
 	{
+		if (!ModEntry.Instance.Settings.StarterDeckPreview)
+			return;
 		if (__instance.subRoute is not null)
 			return;
 

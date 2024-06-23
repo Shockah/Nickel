@@ -73,6 +73,7 @@ public sealed class ModEntry : SimpleMod
 				)
 			)
 		);
+		this.LoadSettings();
 
 		UpdateAvailableOverlayIcon = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/UpdateAvailableOverlayIcon.png"));
 		WarningMessageOverlayIcon = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/WarningMessageOverlayIcon.png"));

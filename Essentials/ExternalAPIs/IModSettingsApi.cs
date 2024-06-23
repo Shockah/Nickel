@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace Nickel.ModSettings;
+namespace Nickel.Essentials;
 
 public interface IModSettingsApi
 {

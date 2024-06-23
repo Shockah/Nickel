@@ -1,10 +1,22 @@
 using HarmonyLib;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace Nickel.Essentials;
+
+internal sealed partial class Settings
+{
+	[JsonProperty]
+	public CardBrowseCurrentPileSetting CardBrowseCurrentPile = CardBrowseCurrentPileSetting.Both;
+}
+
+public enum CardBrowseCurrentPileSetting
+{
+	Off, Tooltip, Icon, Both
+}
 
 internal static class CardBrowseCurrentPile
 {
@@ -34,6 +46,24 @@ internal static class CardBrowseCurrentPile
 			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Card_GetAllTooltips_Postfix)), priority: Priority.Last)
 		);
 	}
+
+	public static IModSettingsApi.IModSetting MakeSettings(IModSettingsApi api)
+		=> api.MakeEnumStepper(
+			title: () => ModEntry.Instance.Localizations.Localize(["cardBrowseCurrentPile", "setting", "name"]),
+			getter: () => ModEntry.Instance.Settings.CardBrowseCurrentPile,
+			setter: value => ModEntry.Instance.Settings.CardBrowseCurrentPile = value
+		).SetValueFormatter(
+			value => ModEntry.Instance.Localizations.Localize(["cardBrowseCurrentPile", "setting", "value", value.ToString()])
+		).SetValueWidth(
+			_ => 60
+		).SetTooltips(() => [
+			new GlossaryTooltip($"settings.{ModEntry.Instance.Package.Manifest.UniqueName}::{MethodBase.GetCurrentMethod()!.DeclaringType!.Name}::Setting")
+			{
+				TitleColor = Colors.textBold,
+				Title = ModEntry.Instance.Localizations.Localize(["cardBrowseCurrentPile", "setting", "name"]),
+				Description = ModEntry.Instance.Localizations.Localize(["cardBrowseCurrentPile", "setting", "description"])
+			}
+		]);
 
 	private static CardDestination? GetCardCurrentPile(State state, Combat? combat, Card card)
 	{
@@ -90,6 +120,8 @@ internal static class CardBrowseCurrentPile
 	{
 		if (!IsRenderingCardBrowse)
 			return;
+		if (ModEntry.Instance.Settings.CardBrowseCurrentPile is CardBrowseCurrentPileSetting.Off or CardBrowseCurrentPileSetting.Tooltip)
+			return;
 		if (g.state.route is not Combat combat)
 			return;
 		if (GetCardDestinationIcon(GetCardCurrentPile(g.state, combat, __instance)) is not { } icon)
@@ -107,6 +139,8 @@ internal static class CardBrowseCurrentPile
 	private static void Card_GetAllTooltips_Postfix(Card __instance, G g, ref IEnumerable<Tooltip> __result)
 	{
 		if (!IsRenderingCardBrowse)
+			return;
+		if (ModEntry.Instance.Settings.CardBrowseCurrentPile is CardBrowseCurrentPileSetting.Off or CardBrowseCurrentPileSetting.Icon)
 			return;
 		if (g.state.route is not Combat combat)
 			return;

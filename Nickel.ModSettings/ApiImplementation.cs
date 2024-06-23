@@ -114,6 +114,25 @@ public sealed class ApiImplementation : IModSettingsApi
 			}
 		);
 
+	public IModSettingsApi.IStepperModSetting<T> MakeEnumStepper<T>(Func<string> title, Func<T> getter, Action<T> setter) where T : struct, Enum
+		=> this.MakeStepper(
+			title: title,
+			getter: getter,
+			setter: setter,
+			previousValue: value =>
+			{
+				var values = Enum.GetValues<T>();
+				var index = Array.IndexOf(values, value);
+				return index == -1 ? values[0] : values[(values.Length + index - 1) % values.Length];
+			},
+			nextValue: value =>
+			{
+				var values = Enum.GetValues<T>();
+				var index = Array.IndexOf(values, value);
+				return index == -1 ? values[0] : values[(values.Length + index + 1) % values.Length];
+			}
+		);
+
 	public IModSettingsApi.IPaddingModSetting MakePadding(IModSettingsApi.IModSetting setting, int padding)
 		=> this.MakePadding(setting, padding, padding);
 

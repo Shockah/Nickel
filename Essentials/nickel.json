@@ -1,7 +1,7 @@
 {
 	"UniqueName": "Nickel.Essentials",
 	"Version": "0.12.0",
-	"DisplayName": "Essentials",
+	"DisplayName": "Nickel: Essentials",
 	"Description": "Provides functionality and bugfixes essential for playing the modded game.",
 	"Author": "Nickel",
 	"RequiredApiVersion": "0.12.0",

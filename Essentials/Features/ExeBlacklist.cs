@@ -77,6 +77,15 @@ internal static class ExeBlacklist
 		);
 	}
 
+	public static IModSettingsApi.IModSetting MakeSettings()
+		=> new CharactersModSetting
+		{
+			Title = () => ModEntry.Instance.Localizations.Localize(["exeBlacklist", "setting", "name"]),
+			AllCharacters = () => GetAllExeCharacters().ToList(),
+			IsSelected = deck => !MG.inst.g.state.runConfig.IsBlacklistedExe(deck),
+			SetSelected = (deck, value) => MG.inst.g.state.runConfig.SetBlacklistedExe(deck, !value)
+		};
+
 	private static IEnumerable<Deck> GetAllExeCharacters()
 		=> NewRunOptions.allChars.Where(d => d != Deck.colorless && ModEntry.Instance.Api.GetExeCardTypeForDeck(d) is not null);
 

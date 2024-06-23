@@ -95,7 +95,7 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 			if (isHover)
 				Draw.Rect(box.rect.x, box.rect.y, box.rect.w, box.rect.h, Colors.menuHighlightBox.gain(0.5), BlendMode.Screen);
 
-			var textColor = box.IsHover() ? Colors.textChoiceHoverActive : Colors.textMain;
+			var textColor = isHover ? Colors.textChoiceHoverActive : Colors.textMain;
 			var value = this.Getter();
 			var valueText = this.ValueFormatter is { } valueFormatter ? valueFormatter(value) : (value.ToString() ?? "<null>");
 			var valueWidth = this.ValueWidth?.Invoke(box.rect) ?? 44;

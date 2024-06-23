@@ -1,5 +1,15 @@
 {
 	"cardBrowseCurrentPile": {
+		"setting": {
+			"name": "Show card pile",
+			"description": "Whether to show the pile each card is currently in when choosing a card for an action.",
+			"value": {
+				"Off": "Off",
+				"Tooltip": "Tooltip",
+				"Icon": "Icon",
+				"Both": "Both"
+			}
+		},
 		"InDrawPile": {
 			"name": " In Draw Pile",
 			"description": "The card is in the draw pile."
@@ -18,9 +28,16 @@
 		}
 	},
 	"crewSelection": {
+		"detailedCrewInfoSetting": {
+			"name": "Detailed crew info",
+			"description": "Replace selected crew count with a list of selected characters."
+		},
 		"emptySlot": "-- NONE --"
 	},
 	"exeBlacklist": {
+		"setting": {
+			"name": "Enabled starting EXE cards"
+		},
 		"cannotBlacklistWarning": "Enable another EXE first!",
 		"on": "Can be randomly selected for a CAT starter EXE card. Click to disable.",
 		"off": "CANNOT be randomly selected for a CAT starter EXE card. Click to enable."
@@ -31,6 +48,9 @@
 		"button": "IMPORT"
 	},
 	"starterDeckPreview": {
+		"setting": {
+			"name": "Preview starter deck"
+		},
 		"startingDeck": "Starting Deck:",
 		"exeCard": "A random CAT EXE card, like this one:"
 	}
