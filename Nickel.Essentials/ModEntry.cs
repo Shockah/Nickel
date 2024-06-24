@@ -51,7 +51,7 @@ public sealed class ModEntry : SimpleMod
 					settingsApi.MakeList([
 						CrewSelection.MakeSettings(settingsApi),
 						StarterDeckPreview.MakeSettings(settingsApi),
-						ExeBlacklist.MakeSettings(),
+						ExeBlacklist.MakeSettings(settingsApi),
 						CardBrowseCurrentPile.MakeSettings(settingsApi),
 						ModDescriptions.MakeSettings(settingsApi),
 					]).SubscribeToOnMenuClose(

@@ -35,9 +35,11 @@
 		"emptySlot": "-- NONE --"
 	},
 	"exeBlacklist": {
-		"setting": {
-			"name": "Enabled starting EXE cards",
-			"cannotBlacklistWarning": "Enable another EXE first!"
+		"startingBlacklistSetting": {
+			"name": "Enabled starting EXE cards"
+		},
+		"offeringBlacklistSetting": {
+			"name": "Offered EXE cards"
 		},
 		"cannotBlacklistWarning": "Enable another EXE first!",
 		"on": "Can be randomly selected for a CAT starter EXE card. Click to disable.",

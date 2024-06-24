@@ -3,6 +3,7 @@ using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,12 @@ using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Nickel.Essentials;
+
+internal sealed partial class Settings
+{
+	[JsonProperty]
+	public HashSet<Deck> BlacklistedExeOfferings = [];
+}
 
 file static class RunConfigExt
 {
@@ -60,26 +67,46 @@ internal static class ExeBlacklist
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(RunConfig)}.{nameof(RunConfig.IsValid)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(RunConfig_IsValid_Postfix))
 		);
+		harmony.Patch(
+			original: typeof(CardReward).GetNestedTypes(AccessTools.all).SelectMany(t => t.GetMethods(AccessTools.all)).First(m => m.Name.StartsWith("<GetOffering>") && m.ReturnType == typeof(bool))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(CardReward)}.{nameof(CardReward.GetOffering)}+WhereDelegate`"),
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(CardReward_GetOffering_Delegate_Postfix))
+		);
 	}
 
-	public static IModSettingsApi.IModSetting MakeSettings()
-		=> new CharactersModSetting
-		{
-			Title = () => ModEntry.Instance.Localizations.Localize(["exeBlacklist", "setting", "name"]),
-			AllCharacters = () => GetAllExeCharacters().ToList(),
-			IsSelected = deck => !MG.inst.g.state.runConfig.IsBlacklistedExe(deck),
-			SetSelected = (route, deck, value) =>
+	public static IModSettingsApi.IModSetting MakeSettings(IModSettingsApi api)
+		=> api.MakeList([
+			new CharactersModSetting
 			{
-				var oldValue = !MG.inst.g.state.runConfig.IsBlacklistedExe(deck);
-				if (value != oldValue && !value && GetNonBlacklistedExeCharacters(MG.inst.g.state.runConfig).Count() <= 4)
+				Title = () => ModEntry.Instance.Localizations.Localize(["exeBlacklist", "startingBlacklistSetting", "name"]),
+				AllCharacters = () => GetAllExeCharacters().ToList(),
+				IsSelected = deck => !MG.inst.g.state.runConfig.IsBlacklistedExe(deck),
+				SetSelected = (route, deck, value) =>
 				{
-					route.ShowWarning(ModEntry.Instance.Localizations.Localize(["exeBlacklist", "setting", "cannotBlacklistWarning"]), 2);
-					return;
-				}
+					var oldValue = !MG.inst.g.state.runConfig.IsBlacklistedExe(deck);
+					if (value != oldValue && !value && GetNonBlacklistedExeCharacters(MG.inst.g.state.runConfig).Count() <= 4)
+					{
+						route.ShowWarning(ModEntry.Instance.Localizations.Localize(["exeBlacklist", "cannotBlacklistWarning"]), 2);
+						return;
+					}
 
-				MG.inst.g.state.runConfig.SetBlacklistedExe(deck, !value);
-			}
-		};
+					MG.inst.g.state.runConfig.SetBlacklistedExe(deck, !value);
+				}
+			},
+			new CharactersModSetting
+			{
+				Title = () => ModEntry.Instance.Localizations.Localize(["exeBlacklist", "offeringBlacklistSetting", "name"]),
+				AllCharacters = () => GetAllExeCharacters().ToList(),
+				IsSelected = deck => !ModEntry.Instance.Settings.BlacklistedExeOfferings.Contains(deck),
+				SetSelected = (_, deck, value) =>
+				{
+					if (value)
+						ModEntry.Instance.Settings.BlacklistedExeOfferings.Add(deck);
+					else
+						ModEntry.Instance.Settings.BlacklistedExeOfferings.Remove(deck);
+				}
+			},
+		]);
 
 	private static IEnumerable<Deck> GetAllExeCharacters()
 		=> NewRunOptions.allChars.Where(d => d != Deck.colorless && ModEntry.Instance.Api.GetExeCardTypeForDeck(d) is not null);
@@ -167,5 +194,17 @@ internal static class ExeBlacklist
 			return;
 		if (GetNonBlacklistedExeCharacters(__instance).Count() < 2)
 			__result = false;
+	}
+
+	private static void CardReward_GetOffering_Delegate_Postfix(Card c, ref bool __result)
+	{
+		if (!__result)
+			return;
+		if (ModEntry.Instance.Api.GetDeckForExeCardType(c.GetType()) is not { } exeDeck)
+			return;
+		if (!ModEntry.Instance.Settings.BlacklistedExeOfferings.Contains(exeDeck))
+			return;
+
+		__result = false;
 	}
 }
