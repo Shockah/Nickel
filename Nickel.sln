@@ -28,7 +28,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModding.Definitio
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginManager.Tests", "PluginManager.Tests\PluginManager.Tests.csproj", "{28D842D3-14DC-49CB-AE43-1918A25286C4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Essentials", "Essentials\Essentials.csproj", "{6085F930-E08A-4D7A-B3B3-BC97BE20B32E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nickel.Essentials", "Nickel.Essentials\Nickel.Essentials.csproj", "{6085F930-E08A-4D7A-B3B3-BC97BE20B32E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nickel.Legacy", "Nickel.Legacy\Nickel.Legacy.csproj", "{8BE07DC0-82B2-4DED-9FAF-2C7585B4C6E5}"
 EndProject
@@ -38,7 +38,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nickel.UpdateChecks.NexusMo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nickel.UpdateChecks.GitHub", "Nickel.UpdateChecks.GitHub\Nickel.UpdateChecks.GitHub.csproj", "{016B049E-409A-44A6-A1CF-E2E7B573420F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nickel.ModSettings", "Nickel.ModSettings\Nickel.ModSettings.csproj", "{FF7A657E-4BB6-4C93-B43A-EA184D355520}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nickel.ModSettings", "Nickel.ModSettings\Nickel.ModSettings.csproj", "{FF7A657E-4BB6-4C93-B43A-EA184D355520}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
