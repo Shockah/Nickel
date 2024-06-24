@@ -1,4 +1,3 @@
-using daisyowl.text;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
@@ -104,7 +103,20 @@ public sealed class ModEntry : SimpleMod
 					settingsApi.MakeButton(
 						title: () => this.Localizations.Localize(["settings", "ignoredUpdates"]),
 						onClick: (g, route) => route.OpenSubroute(g, this.MakeIgnoredUpdatesModSettingsRoute())
-					)
+					).SetValueText(() =>
+					{
+						var entries = Instance.UpdatesAvailable
+							.Where(kvp => kvp.Value is not null)
+							.Select(kvp => new KeyValuePair<IModManifest, UpdateDescriptor>(kvp.Key, kvp.Value!.Value))
+							.Where(kvp => kvp.Value.Version > kvp.Key.Version)
+							.ToList();
+
+						if (entries.Count == 0)
+							return this.Localizations.Localize(["settings", "ignoredUpdatesNone"]);
+
+						var ignored = entries.Count(kvp => this.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) && ignoredUpdate == kvp.Value.Version);
+						return $"{ignored}/{entries.Count}";
+					})
 				);
 		};
 	}

@@ -9,6 +9,7 @@
 		"clear": "CLEAR",
 		"setup": "SETUP",
 		"ignoredUpdates": "Ignored updates",
+		"ignoredUpdatesNone": "None",
 		"upToDate": "All installed mods are up to date."
 	}
 }
