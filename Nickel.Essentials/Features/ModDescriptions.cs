@@ -2,6 +2,7 @@ using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,20 @@ using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Nickel.Essentials;
+
+internal sealed partial class Settings
+{
+	[JsonProperty]
+	public ModDescriptionsKey ModDescriptionsKey = ModDescriptionsKey.Alt;
+
+	[JsonProperty]
+	public bool ShowVanillaModDescription = true;
+}
+
+public enum ModDescriptionsKey
+{
+	Off, Ctrl, Shift, Alt, Always
+}
 
 internal static class ModDescriptions
 {
@@ -36,15 +51,74 @@ internal static class ModDescriptions
 		);
 	}
 
-	private static List<Tooltip> AddModTooltipIfNeeded(List<Tooltip> tooltips, IModManifest? manifest)
+	public static IModSettingsApi.IModSetting MakeSettings(IModSettingsApi api)
+		=> api.MakeList([
+			api.MakeEnumStepper(
+				title: () => ModEntry.Instance.Localizations.Localize(["modDescriptions", "keySetting", "name"]),
+				getter: () => ModEntry.Instance.Settings.ModDescriptionsKey,
+				setter: value => ModEntry.Instance.Settings.ModDescriptionsKey = value
+			).SetValueFormatter(
+				value => ModEntry.Instance.Localizations.Localize(["modDescriptions", "keySetting", "value", value.ToString()])
+			).SetValueWidth(
+				_ => 60
+			).SetTooltips(() => [
+				new GlossaryTooltip($"settings.{ModEntry.Instance.Package.Manifest.UniqueName}::{MethodBase.GetCurrentMethod()!.DeclaringType!.Name}::KeySetting")
+				{
+					TitleColor = Colors.textBold,
+					Title = ModEntry.Instance.Localizations.Localize(["modDescriptions", "keySetting", "name"]),
+					Description = ModEntry.Instance.Localizations.Localize(["modDescriptions", "keySetting", "description"])
+				}
+			]),
+			api.MakeCheckbox(
+				title: () => ModEntry.Instance.Localizations.Localize(["modDescriptions", "vanillaSetting", "name"]),
+				getter: () => ModEntry.Instance.Settings.ShowVanillaModDescription,
+				setter: value => ModEntry.Instance.Settings.ShowVanillaModDescription = value
+			).SetTooltips(() => [
+				new GlossaryTooltip($"settings.{ModEntry.Instance.Package.Manifest.UniqueName}::{MethodBase.GetCurrentMethod()!.DeclaringType!.Name}::VanillaSetting")
+				{
+					TitleColor = Colors.textBold,
+					Title = ModEntry.Instance.Localizations.Localize(["modDescriptions", "vanillaSetting", "name"]),
+					Description = ModEntry.Instance.Localizations.Localize(["modDescriptions", "vanillaSetting", "description"])
+				}
+			])
+		]);
+
+	private static bool ShouldShowModDescription(IModOwned? content)
+	{
+		switch (ModEntry.Instance.Settings.ModDescriptionsKey)
+		{
+			case ModDescriptionsKey.Ctrl:
+				if (!Input.ctrl)
+					return false;
+				break;
+			case ModDescriptionsKey.Shift:
+				if (!Input.shift)
+					return false;
+				break;
+			case ModDescriptionsKey.Alt:
+				if (!Input.alt)
+					return false;
+				break;
+			case ModDescriptionsKey.Always:
+				break;
+			default:
+				return false;
+		}
+
+		if ((content is null || content.ModOwner.UniqueName == "CobaltCore") && !ModEntry.Instance.Settings.ShowVanillaModDescription)
+			return false;
+		return true;
+	}
+
+	private static List<Tooltip> AddModTooltipIfNeeded(List<Tooltip> tooltips, IModOwned? entry)
 	{
 		if (!Input.alt)
 			return tooltips;
-		if (manifest is null)
+		if (!ShouldShowModDescription(entry))
 			return tooltips;
 
-		var modName = string.IsNullOrEmpty(manifest.DisplayName) ? manifest.UniqueName : manifest.DisplayName;
-		var text = ModEntry.Instance.Localizations.Localize(["modDescription"], new { ModName = modName });
+		var modName = entry is null ? "Cobalt Core" : (string.IsNullOrEmpty(entry.ModOwner.DisplayName) ? entry.ModOwner.UniqueName : entry.ModOwner.DisplayName);
+		var text = ModEntry.Instance.Localizations.Localize(["modDescriptions", "description"], new { ModName = modName });
 		return tooltips
 			.Where(t => t is not CustomTTText)
 			.Prepend(new CustomTTText(text))
@@ -52,13 +126,13 @@ internal static class ModDescriptions
 	}
 
 	private static void Artifact_GetTooltips_Postfix(Artifact __instance, ref List<Tooltip> __result)
-		=> __result = AddModTooltipIfNeeded(__result, ModEntry.Instance.Helper.Content.Artifacts.LookupByArtifactType(__instance.GetType())?.ModOwner);
+		=> __result = AddModTooltipIfNeeded(__result, ModEntry.Instance.Helper.Content.Artifacts.LookupByArtifactType(__instance.GetType()));
 
 	private static void Card_GetAllTooltips_Postfix(Card __instance, ref IEnumerable<Tooltip> __result)
-		=> __result = AddModTooltipIfNeeded(__result.ToList(), ModEntry.Instance.Helper.Content.Cards.LookupByCardType(__instance.GetType())?.ModOwner);
+		=> __result = AddModTooltipIfNeeded(__result.ToList(), ModEntry.Instance.Helper.Content.Cards.LookupByCardType(__instance.GetType()));
 
 	private static void StatusMeta_GetTooltips_Postfix(Status status, ref List<Tooltip> __result)
-		=> __result = AddModTooltipIfNeeded(__result, ModEntry.Instance.Helper.Content.Statuses.LookupByStatus(status)?.ModOwner);
+		=> __result = AddModTooltipIfNeeded(__result, ModEntry.Instance.Helper.Content.Statuses.LookupByStatus(status));
 
 	private static IEnumerable<CodeInstruction> NewRunOptions_Render_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
@@ -90,14 +164,14 @@ internal static class ModDescriptions
 
 	private static string NewRunOptions_Render_Transpiler_ModifyShipDescription(string shipDescription, StarterShip ship)
 	{
-		if (!Input.alt)
-			return shipDescription;
-
 		var entry = ModEntry.Instance.Helper.Content.Ships.LookupByUniqueName(ship.ship.key);
+		if (!ShouldShowModDescription(entry))
+			return shipDescription;
+		
 		var modName = entry is null
 			? "Cobalt Core"
 			: (string.IsNullOrEmpty(entry.ModOwner.DisplayName) ? entry.ModOwner.UniqueName : entry.ModOwner.DisplayName);
-		return $"{shipDescription}\n{ModEntry.Instance.Localizations.Localize(["modDescription"], new { ModName = modName })}";
+		return $"{shipDescription}\n{ModEntry.Instance.Localizations.Localize(["modDescriptions", "description"], new { ModName = modName })}";
 	}
 
 	private static IEnumerable<CodeInstruction> Character_Render_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
@@ -130,14 +204,14 @@ internal static class ModDescriptions
 
 	private static void Character_Render_Transpiler_AddModTooltipIfNeeded(Character character, G g, Vec pos)
 	{
-		if (!Input.alt)
-			return;
-
 		var entry = character.deckType is null ? null : ModEntry.Instance.Helper.Content.Decks.LookupByDeck(character.deckType.Value);
+		if (!ShouldShowModDescription(entry))
+			return;
+		
 		var modName = entry is null
 			? "Cobalt Core"
 			: (string.IsNullOrEmpty(entry.ModOwner.DisplayName) ? entry.ModOwner.UniqueName : entry.ModOwner.DisplayName);
-		var text = ModEntry.Instance.Localizations.Localize(["modDescription"], new { ModName = modName });
+		var text = ModEntry.Instance.Localizations.Localize(["modDescriptions", "description"], new { ModName = modName });
 		g.tooltips.Add(pos, new CustomTTText(text));
 	}
 

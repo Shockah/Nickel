@@ -59,7 +59,7 @@ internal static partial class CardCodexFiltering
 		return niceName;
 	}
 
-	private static void CardBrowse_GetCardList_Postfix(CardBrowse __instance, G g, ref List<Card> __result)
+	private static void CardBrowse_GetCardList_Postfix(CardBrowse __instance, ref List<Card> __result)
 	{
 		if (__instance.browseSource != CardBrowse.Source.Codex)
 			return;
