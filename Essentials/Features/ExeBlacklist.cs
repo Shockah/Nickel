@@ -24,27 +24,17 @@ file static class RunConfigExt
 		else
 			blacklist.Remove(deck.Key());
 	}
-
-	public static void ToggleBlacklistedExe(this RunConfig self, Deck deck)
-		=> self.SetBlacklistedExe(deck, !self.IsBlacklistedExe(deck));
 }
 
 internal static class ExeBlacklist
 {
-	private const UK ExeBlacklistKey = (UK)2136001;
-	private const UK CannotBlacklistWarningKey = (UK)2136002;
-
-	private static ISpriteEntry OnSprite = null!;
-	private static ISpriteEntry OffSprite = null!;
+	private const UK CannotBlacklistWarningKey = (UK)2136001;
 
 	private static State? LastState;
 	private static double CannotBlacklistWarning = 0;
 
 	public static void ApplyPatches(Harmony harmony)
 	{
-		OnSprite = ModEntry.Instance.Helper.Content.Sprites.RegisterSprite(ModEntry.Instance.Package.PackageRoot.GetRelativeFile("assets/ExeOn.png"));
-		OffSprite = ModEntry.Instance.Helper.Content.Sprites.RegisterSprite(ModEntry.Instance.Package.PackageRoot.GetRelativeFile("assets/ExeOff.png"));
-
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.PopulateRun))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.PopulateRun)}`"),
@@ -66,11 +56,6 @@ internal static class ExeBlacklist
 			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(NewRunOptions_OnMouseDown_Prefix))
 		);
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(Character), nameof(Character.Render))
-				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Character)}.{nameof(Character.Render)}`"),
-			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Character_Render_Postfix))
-		);
-		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(RunConfig), nameof(RunConfig.IsValid))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(RunConfig)}.{nameof(RunConfig.IsValid)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(RunConfig_IsValid_Postfix))
@@ -83,7 +68,17 @@ internal static class ExeBlacklist
 			Title = () => ModEntry.Instance.Localizations.Localize(["exeBlacklist", "setting", "name"]),
 			AllCharacters = () => GetAllExeCharacters().ToList(),
 			IsSelected = deck => !MG.inst.g.state.runConfig.IsBlacklistedExe(deck),
-			SetSelected = (deck, value) => MG.inst.g.state.runConfig.SetBlacklistedExe(deck, !value)
+			SetSelected = (route, deck, value) =>
+			{
+				var oldValue = !MG.inst.g.state.runConfig.IsBlacklistedExe(deck);
+				if (value != oldValue && !value && GetNonBlacklistedExeCharacters(MG.inst.g.state.runConfig).Count() <= 4)
+				{
+					route.ShowWarning(ModEntry.Instance.Localizations.Localize(["exeBlacklist", "setting", "cannotBlacklistWarning"]), 2);
+					return;
+				}
+
+				MG.inst.g.state.runConfig.SetBlacklistedExe(deck, !value);
+			}
 		};
 
 	private static IEnumerable<Deck> GetAllExeCharacters()
@@ -160,72 +155,6 @@ internal static class ExeBlacklist
 		CannotBlacklistWarning = 1.5;
 		Audio.Play(Event.ZeroEnergy);
 		return false;
-	}
-
-	private static void Character_Render_Postfix(Character __instance, G g, bool mini, bool? isSelected, bool renderLocked)
-	{
-		if (isSelected == true)
-			return;
-		if (!mini || renderLocked)
-			return;
-		if (g.metaRoute is not null)
-			return;
-		if (g.state.route is not NewRunOptions route)
-			return;
-		if (__instance.deckType is not { } deck)
-			return;
-		if (deck == Deck.colorless)
-			return;
-		if (g.state.runConfig.selectedChars.Contains(deck))
-			return;
-		if (!g.state.runConfig.selectedChars.Contains(Deck.colorless))
-			return;
-		if (ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(g.state, Deck.colorless) == true)
-			return;
-		if (ModEntry.Instance.Api.GetExeCardTypeForDeck(deck) is not { } exeType)
-			return;
-		if (g.boxes.FirstOrDefault(b => b.key is { } key && key.k == StableUK.char_mini && key.v == (int)deck) is not { } characterBox)
-			return;
-
-		var isBlacklisted = g.state.runConfig.IsBlacklistedExe(deck);
-		var exeCard = (Card)Activator.CreateInstance(exeType)!;
-
-		var box = g.Push(new UIKey(ExeBlacklistKey, (int)deck), new Rect(4, 13, 7, 7), onMouseDown: new MouseDownHandler(() =>
-		{
-			if (isBlacklisted)
-			{
-				g.state.runConfig.SetBlacklistedExe(deck, false);
-				Audio.Play(Event.Click);
-				return;
-			}
-
-			if (GetNonBlacklistedExeCharacters(g.state.runConfig).Count() <= 2)
-			{
-				CannotBlacklistWarning = 1.5;
-				Audio.Play(Event.ZeroEnergy);
-				return;
-			}
-
-			g.state.runConfig.SetBlacklistedExe(deck, true);
-			Audio.Play(Event.Click);
-		}), onMouseDownRight: new MouseDownHandler(() =>
-		{
-			route.subRoute = new CardUpgrade
-			{
-				cardCopy = Mutil.DeepCopy(exeCard),
-				isPreview = true
-			};
-		}));
-		
-		Draw.Sprite(isBlacklisted ? OffSprite.Sprite : OnSprite.Sprite, box.rect.x, box.rect.y, color: DB.decks[Deck.colorless].color);
-		if (box.IsHover())
-		{
-			var tooltipPosition = box.rect.xy + new Vec(32);
-			g.tooltips.Add(tooltipPosition, ModEntry.Instance.Localizations.Localize(["exeBlacklist", isBlacklisted ? "off" : "on"]));
-			g.tooltips.Add(tooltipPosition, new TTCard { card = exeCard });
-		}
-
-		g.Pop();
 	}
 
 	private static void RunConfig_IsValid_Postfix(RunConfig __instance, G g, ref bool __result)

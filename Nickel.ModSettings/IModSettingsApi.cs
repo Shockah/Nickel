@@ -72,6 +72,7 @@ public interface IModSettingsApi
 
 		void CloseRoute(G g);
 		void OpenSubroute(G g, Route route);
+		void ShowWarning(string text, double time);
 	}
 
 	public interface ITextModSetting : IModSetting

@@ -1,3 +1,4 @@
+using FSPRO;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using System;
@@ -7,13 +8,13 @@ namespace Nickel.ModSettings;
 
 public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IModSettingsRoute
 {
-	private static int NextUK = 500_001;
-
-	[JsonIgnore]
-	public required IModSettingsApi.IModSetting Setting;
+	private static int NextUK = 500_002;
 
 	[JsonProperty]
 	public Route? Subroute;
+
+	[JsonIgnore]
+	public required IModSettingsApi.IModSetting Setting;
 
 	[JsonIgnore]
 	private double Scroll;
@@ -22,14 +23,17 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 	private double ScrollTarget;
 
 	[JsonIgnore]
-	public Route AsRoute
-		=> this;
-
-	[JsonIgnore]
 	private bool RaisedOnOpen;
 
 	[JsonIgnore]
 	private UIKey? LastGpKey;
+
+	[JsonIgnore]
+	public (string Text, double Time)? Warning;
+
+	[JsonIgnore]
+	public Route AsRoute
+		=> this;
 
 	public override void Render(G g)
 	{
@@ -71,7 +75,6 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 		this.Setting.Render(g, box, dontDraw: false);
 
 		g.Pop();
-		g.Pop();
 
 		if (Input.gamepadIsActiveInput)
 		{
@@ -90,6 +93,16 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 			}
 			this.LastGpKey = g.hoverKey;
 		}
+
+		if (this.Warning is { } warning)
+		{
+			SharedArt.WarningPopup(g, (UK)500_001, warning.Text, new Vec(240, 65));
+
+			var warningTime = Math.Max(0, warning.Time - g.dt);
+			this.Warning = warningTime <= 0 ? null : (Text: warning.Text, Time: warningTime);
+		}
+
+		g.Pop();
 	}
 
 	public override void OnExit(State s)
@@ -123,5 +136,11 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 		if (this.Subroute is { } subroute)
 			g.CloseRoute(subroute);
 		this.Subroute = route;
+	}
+
+	public void ShowWarning(string text, double time)
+	{
+		this.Warning = (Text: text, Time: time);
+		Audio.Play(Event.ZeroEnergy);
 	}
 }

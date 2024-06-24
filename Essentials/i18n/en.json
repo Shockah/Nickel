@@ -36,7 +36,8 @@
 	},
 	"exeBlacklist": {
 		"setting": {
-			"name": "Enabled starting EXE cards"
+			"name": "Enabled starting EXE cards",
+			"cannotBlacklistWarning": "Enable another EXE first!"
 		},
 		"cannotBlacklistWarning": "Enable another EXE first!",
 		"on": "Can be randomly selected for a CAT starter EXE card. Click to disable.",

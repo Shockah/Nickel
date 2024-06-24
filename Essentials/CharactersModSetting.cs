@@ -10,11 +10,12 @@ public sealed class CharactersModSetting : IModSettingsApi.IModSetting
 	public UIKey Key { get; private set; }
 	public event IModSettingsApi.OnMenuOpen? OnMenuOpen;
 	public event IModSettingsApi.OnMenuClose? OnMenuClose;
+	private IModSettingsApi.IModSettingsRoute CurrentRoute = null!;
 
 	public required Func<string> Title { get; set; }
 	public required Func<List<Deck>> AllCharacters { get; set; }
 	public required Func<Deck, bool> IsSelected { get; set; }
-	public required Action<Deck, bool> SetSelected { get; set; }
+	public required Action<IModSettingsApi.IModSettingsRoute, Deck, bool> SetSelected { get; set; }
 	public Func<IEnumerable<Tooltip>>? Tooltips { get; set; }
 
 	private UIKey BaseCharacterKey;
@@ -27,6 +28,7 @@ public sealed class CharactersModSetting : IModSettingsApi.IModSetting
 				this.Key = keyGenerator();
 			if (this.BaseCharacterKey == 0)
 				this.BaseCharacterKey = keyGenerator();
+			this.CurrentRoute = route;
 		};
 	}
 
@@ -57,7 +59,7 @@ public sealed class CharactersModSetting : IModSettingsApi.IModSetting
 					character.Render(g, 10 + x * width, 20 + y * height, mini: true, isSelected: this.IsSelected(deck), onMouseDown: new MouseDownHandler(() =>
 					{
 						Audio.Play(Event.Click);
-						this.SetSelected(deck, !this.IsSelected(deck));
+						this.SetSelected(this.CurrentRoute, deck, !this.IsSelected(deck));
 					}), overrideKey: new UIKey(this.BaseCharacterKey.k, (int)deck, character.type));
 				}
 			}
