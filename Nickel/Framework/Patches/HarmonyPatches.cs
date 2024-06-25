@@ -11,6 +11,11 @@ internal static class HarmonyPatches
 
 	internal static void Apply(Harmony harmony, ILogger logger)
 	{
+		logger.LogInformation("Preparing Harmony for mod usage...");
+		PatchUpdateWrapper();
+		PatchCreateDynamicMethod();
+		return;
+
 		void PatchUpdateWrapper()
 		{
 			var originalMethod = AccessTools.DeclaredMethod(AccessTools.TypeByName("HarmonyLib.PatchFunctions, 0Harmony"), "UpdateWrapper");
@@ -41,10 +46,6 @@ internal static class HarmonyPatches
 				prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(MethodPatcher_CreateDynamicMethod_Prefix))
 			);
 		}
-
-		logger.LogInformation("Preparing Harmony for mod usage...");
-		PatchUpdateWrapper();
-		PatchCreateDynamicMethod();
 	}
 
 	private static void PatchFunctions_UpdateWrapper_Prefix(PatchInfo patchInfo)

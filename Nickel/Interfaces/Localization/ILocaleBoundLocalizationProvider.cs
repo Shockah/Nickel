@@ -1,11 +1,11 @@
 namespace Nickel;
 
-public interface ILocaleBoundLocalizationProvider<TKey>
+public interface ILocaleBoundLocalizationProvider<in TKey>
 {
 	string? Localize(TKey key, object? tokens = null);
 }
 
-public interface ILocaleBoundNonNullLocalizationProvider<TKey> : ILocaleBoundLocalizationProvider<TKey>
+public interface ILocaleBoundNonNullLocalizationProvider<in TKey> : ILocaleBoundLocalizationProvider<TKey>
 {
 	new string Localize(TKey key, object? tokens = null);
 

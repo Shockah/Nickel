@@ -19,7 +19,7 @@ internal sealed class ContentManager
 	public CardTraitManager CardTraits { get; }
 	public EnemyManager Enemies { get; }
 
-	public ContentManager(
+	private ContentManager(
 		SpriteManager sprites,
 		DeckManager decks,
 		StatusManager statuses,

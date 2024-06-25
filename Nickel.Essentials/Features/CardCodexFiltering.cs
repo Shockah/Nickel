@@ -3,11 +3,13 @@ using FSPRO;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Nickel.Essentials;
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static partial class CardCodexFiltering
 {
 	private const UK DeckFilterKey = (UK)2137301;
@@ -15,8 +17,8 @@ internal static partial class CardCodexFiltering
 	private static List<Deck> DeckTypes = [];
 	private static readonly HashSet<Deck> FilteredOutDecks = [];
 	private static readonly Dictionary<Deck, string> DeckNiceNames = [];
-	private static double FilterScroll = 0;
-	private static double FilterScrollTarget = 0;
+	private static double FilterScroll;
+	private static double FilterScrollTarget;
 
 	public static void ApplyPatches(Harmony harmony)
 	{

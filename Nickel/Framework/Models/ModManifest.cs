@@ -13,24 +13,24 @@ internal sealed class ModManifest : IModManifest
 	[JsonProperty]
 	[JsonRequired]
 	[JsonConverter(typeof(SemanticVersionConverter))]
-	public SemanticVersion Version { get; internal set; } = default;
+	public SemanticVersion Version { get; internal set; }
 
 	[JsonProperty]
 	[JsonRequired]
 	[JsonConverter(typeof(SemanticVersionConverter))]
-	public SemanticVersion RequiredApiVersion { get; internal set; } = default;
+	public SemanticVersion RequiredApiVersion { get; internal set; }
 
 	[JsonProperty]
 	public IReadOnlySet<ModDependency> Dependencies { get; internal set; } = new HashSet<ModDependency>();
 
 	[JsonProperty]
-	public string? DisplayName { get; internal set; } = null;
+	public string? DisplayName { get; internal set; }
 
 	[JsonProperty]
-	public string? Description { get; internal set; } = null;
+	public string? Description { get; internal set; }
 
 	[JsonProperty]
-	public string? Author { get; internal set; } = null;
+	public string? Author { get; internal set; }
 
 	[JsonProperty]
 	public string ModType { get; internal set; } = NickelConstants.ModType;

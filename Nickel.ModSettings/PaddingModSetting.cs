@@ -6,7 +6,7 @@ public sealed class PaddingModSetting : BaseModSetting, IModSettingsApi.IPadding
 	public required int TopPadding { get; set; }
 	public required int BottomPadding { get; set; }
 
-	public PaddingModSetting() : base()
+	public PaddingModSetting()
 	{
 		this.OnMenuOpen += (g, route, keyGenerator) => this.Setting?.RaiseOnMenuOpen(g, route, keyGenerator);
 		this.OnMenuClose += g => this.Setting?.RaiseOnMenuClose(g);

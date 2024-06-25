@@ -15,7 +15,7 @@ internal sealed class NamedPipeClientLoggerProvider : ILoggerProvider
 
 	private NamedPipeClientStream? Client { get; set; }
 	private JsonTextWriter? JsonWriter { get; set; }
-	private bool IsClientRunning { get; set; } = false;
+	private bool IsClientRunning { get; set; }
 
 	public NamedPipeClientLoggerProvider(string pipeName)
 	{

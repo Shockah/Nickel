@@ -7,7 +7,7 @@ public sealed class ConditionalModSetting : BaseModSetting, IModSettingsApi.ICon
 	public required IModSettingsApi.IModSetting Setting { get; set; }
 	public required Func<bool> IsVisible { get; set; }
 
-	public ConditionalModSetting() : base()
+	public ConditionalModSetting()
 	{
 		this.OnMenuOpen += (g, route, keyGenerator) => this.Setting?.RaiseOnMenuOpen(g, route, keyGenerator);
 		this.OnMenuClose += g => this.Setting?.RaiseOnMenuClose(g);

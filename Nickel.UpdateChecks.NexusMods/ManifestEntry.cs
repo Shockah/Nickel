@@ -4,7 +4,7 @@ namespace Nickel.UpdateChecks.NexusMods;
 
 internal sealed class ManifestEntry
 {
-	[JsonProperty]
+	[JsonProperty("ID")]
 	[JsonRequired]
-	public int ID { get; internal set; }
+	public int Id { get; internal set; }
 }

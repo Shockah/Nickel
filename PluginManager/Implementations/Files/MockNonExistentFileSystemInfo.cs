@@ -1,6 +1,6 @@
 namespace Nanoray.PluginManager;
 
-public sealed class MockNonExistentFileSystemInfo : MockFileSystemInfo, IFileSystemInfo<MockFileInfo, MockDirectoryInfo>
+public sealed class MockNonExistentFileSystemInfo : MockFileSystemInfo
 {
 	public MockNonExistentFileSystemInfo(string name, MockDirectoryInfo? parent = null) : base(name, exists: false)
 	{

@@ -5,7 +5,7 @@ namespace Nickel.Common;
 
 public static class SemanticVersionParser
 {
-	public static bool TryParseForAssembly(Assembly assembly, [MaybeNullWhen(false)] out SemanticVersion version)
+	public static bool TryParseForAssembly(Assembly assembly, out SemanticVersion version)
 	{
 		if (assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>() is not { } attribute)
 		{
@@ -15,7 +15,7 @@ public static class SemanticVersionParser
 		return TryParse(attribute.InformationalVersion.Split("+")[0], out version);
 	}
 
-	public static bool TryParse(string? versionStr, [MaybeNullWhen(false)] out SemanticVersion version)
+	public static bool TryParse(string? versionStr, out SemanticVersion version)
 	{
 		version = default;
 		var patch = 0;

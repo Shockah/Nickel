@@ -99,7 +99,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 							]),
 							isVisible: () => this.Database.IsEnabled
 						),
-					]).SubscribeToOnMenuClose(g =>
+					]).SubscribeToOnMenuClose(_ =>
 					{
 						this.SaveDatabase();
 						this.Client = this.MakeHttpClient();
@@ -151,7 +151,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		}
 	}
 
-	private HttpClient? MakeHttpClient()
+	private HttpClient MakeHttpClient()
 	{
 		var client = new HttpClient
 		{
@@ -220,6 +220,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		}
 		catch
 		{
+			// ignored
 		}
 
 		try
@@ -238,6 +239,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		}
 		catch
 		{
+			// ignored
 		}
 
 		return ParseVersionOrNull(model.TagName) ?? ParseVersionOrNull(model.Name);
@@ -300,7 +302,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 					}))
 			);
 
-			foreach (var (repository, modEntries, releases) in repositoryReleases)
+			foreach (var (_, modEntries, releases) in repositoryReleases)
 			{
 				foreach (var modEntry in modEntries)
 				{
@@ -312,7 +314,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 					if (matchingReleases.Count == 0)
 						continue;
-					var (release, version) = matchingReleases.MaxBy(e => e.Release.PublishedAt)!;
+					var (release, version) = matchingReleases.MaxBy(e => e.Release.PublishedAt);
 
 					remainingMods.Remove(modEntry);
 					results[modEntry.Mod] = new(version, [release.Url]);
@@ -339,12 +341,12 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			this.Logger.LogDebug("Requesting releases for repository {Repository}...", repository);
 			var stream = await client.GetStreamAsync($"https://api.github.com/repos/{repository}/releases?per_page=100");
 			using var streamReader = new StreamReader(stream);
-			using var jsonReader = new JsonTextReader(streamReader);
+			await using var jsonReader = new JsonTextReader(streamReader);
 			return this.Helper.Storage.JsonSerializer.Deserialize<List<GithubReleaseModel>>(jsonReader) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{
-			if (ex is HttpRequestException httpRequestException && httpRequestException.StatusCode == HttpStatusCode.Unauthorized)
+			if (ex is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized })
 				this.GotUnauthorized = true;
 
 			this.Logger.LogDebug("Failed to retrieve releases for repository {Repository}: {Error}", repository, ex.Message);

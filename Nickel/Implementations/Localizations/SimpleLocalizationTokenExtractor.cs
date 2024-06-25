@@ -11,9 +11,6 @@ public sealed class SimpleLocalizationTokenExtractor : ILocalizationTokenExtract
 		if (@object is null)
 			return results;
 
-		void AddResult(string key, object? value)
-			=> results[key] = value?.ToString() ?? "<null>";
-
 		if (@object is IDictionary dictionary)
 		{
 			foreach (DictionaryEntry entry in dictionary)
@@ -30,5 +27,8 @@ public sealed class SimpleLocalizationTokenExtractor : ILocalizationTokenExtract
 		}
 
 		return results;
+
+		void AddResult(string key, object? value)
+			=> results[key] = value?.ToString() ?? "<null>";
 	}
 }

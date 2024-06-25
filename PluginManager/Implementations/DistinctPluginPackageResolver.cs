@@ -38,7 +38,7 @@ public sealed class DistinctPluginPackageResolver<TPluginManifest, TKey> : IPlug
 			packagesForKey.Add(package);
 		}
 
-		foreach (var (key, packagesForKey) in keyToPackages)
+		foreach (var packagesForKey in keyToPackages.Values)
 		{
 			if (packagesForKey.Count < 2)
 				continue;

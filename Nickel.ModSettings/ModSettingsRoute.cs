@@ -8,7 +8,7 @@ namespace Nickel.ModSettings;
 
 public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IModSettingsRoute
 {
-	private static int NextUK = 500_002;
+	private static int NextUk = 500_002;
 
 	[JsonProperty]
 	public Route? Subroute;
@@ -42,6 +42,7 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 			subroute.Render(g);
 			return;
 		}
+		// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 		if (this.Setting is null)
 		{
 			// most likely deserialized; settings are not serializable; aborting
@@ -52,7 +53,7 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 		g.Push(onInputPhase: this);
 		if (!this.RaisedOnOpen)
 		{
-			this.Setting.RaiseOnMenuOpen(MG.inst.g, this, () => (UK)NextUK++);
+			this.Setting.RaiseOnMenuOpen(MG.inst.g, this, () => (UK)NextUk++);
 			this.RaisedOnOpen = true;
 		}
 
@@ -70,7 +71,7 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 		var maxScroll = (int)Math.Max(settingSize.y - preferredHeightOnScreen, 0);
 		ScrollUtils.ReadScrollInputAndUpdate(g.dt, maxScroll, ref this.Scroll, ref this.ScrollTarget);
 
-		rect = new Rect((MG.inst.PIX_W - SettingsRoute.WIDTH) / 2, 10 + this.Scroll, SettingsRoute.WIDTH, settingSize.y);
+		rect = new Rect((MG.inst.PIX_W - SettingsRoute.WIDTH) / 2, 10 + (int)this.Scroll, SettingsRoute.WIDTH, settingSize.y);
 		box = g.Push(this.Setting.Key, rect);
 		this.Setting.Render(g, box, dontDraw: false);
 
@@ -88,7 +89,7 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 				if (target.y < 60)
 					target.y = 60;
 
-				this.ScrollTarget = target.y + this.Scroll - scrolled.y;
+				this.ScrollTarget = target.y + (int)this.Scroll - scrolled.y;
 				this.ScrollTarget = Math.Clamp(this.ScrollTarget, -maxScroll, 0);
 			}
 			this.LastGpKey = g.hoverKey;

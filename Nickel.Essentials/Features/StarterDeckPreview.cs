@@ -2,6 +2,7 @@ using HarmonyLib;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
@@ -13,6 +14,7 @@ internal sealed partial class Settings
 	public bool StarterDeckPreview = true;
 }
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class StarterDeckPreview
 {
 	private static bool UpdateNextFrame = true;
@@ -84,6 +86,7 @@ internal static class StarterDeckPreview
 			}
 			catch
 			{
+				// ignored
 			}
 
 			if (!g.state.runConfig.IsValid(g))
@@ -130,6 +133,7 @@ internal static class StarterDeckPreview
 
 	private static void G_BubbleEvents_Prefix(G __instance)
 	{
+		// ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
 		if (__instance.state?.route is not NewRunOptions route)
 			return;
 		if (route.subRoute is not null)

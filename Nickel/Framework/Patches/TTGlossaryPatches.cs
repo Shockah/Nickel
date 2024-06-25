@@ -1,11 +1,13 @@
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using WeakEvent;
 
 namespace Nickel;
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class TTGlossaryPatches
 {
 	internal static WeakEventSource<TryGetIconEventArgs> OnTryGetIcon { get; } = new();
@@ -45,7 +47,7 @@ internal static class TTGlossaryPatches
 
 	internal sealed class TryGetIconEventArgs
 	{
-		public TTGlossary Glossary { get; init; }
+		public TTGlossary Glossary { get; }
 		public Spr? Sprite { get; set; }
 
 		public TryGetIconEventArgs(TTGlossary glossary, Spr? sprite)

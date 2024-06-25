@@ -6,7 +6,7 @@ internal sealed class NexusModModel
 {
 	[JsonProperty("mod_id")]
 	[JsonRequired]
-	public int ID { get; internal set; }
+	public int Id { get; internal set; }
 
 	[JsonProperty("version")]
 	[JsonRequired]

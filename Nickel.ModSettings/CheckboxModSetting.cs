@@ -13,9 +13,9 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 
 	private UIKey CheckboxKey;
 
-	public CheckboxModSetting() : base()
+	public CheckboxModSetting()
 	{
-		this.OnMenuOpen += (g, route, keyGenerator) =>
+		this.OnMenuOpen += (_, _, keyGenerator) =>
 		{
 			if (this.CheckboxKey == 0)
 				this.CheckboxKey = keyGenerator();

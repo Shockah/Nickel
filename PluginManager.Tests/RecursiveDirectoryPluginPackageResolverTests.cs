@@ -74,7 +74,6 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 	public void TestResolveNoModsDueToNoDirectories()
 	{
 		IDirectoryInfo directory = new MockDirectoryInfo("/", []);
-		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader();
 
 		var resolver = CreateResolver(directory);
 		var results = resolver.ResolvePluginPackages().ToList();
@@ -90,7 +89,6 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 				new MockFileInfo("moda.dll")
 			])
 		]);
-		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader();
 
 		var resolver = CreateResolver(directory);
 		var results = resolver.ResolvePluginPackages().ToList();
@@ -111,14 +109,13 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 				new MockFileInfo("modb.dll")
 			])
 		]);
-		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader();
 
 		var resolver = CreateResolver(directory);
 		var results = resolver.ResolvePluginPackages().ToList();
 		Assert.AreEqual(1, results.Count);
 
 		var packageOrError = results[0];
-		if (packageOrError.TryPickT0(out var package, out var error))
+		if (packageOrError.TryPickT0(out var package, out _))
 			Assert.Fail("Expected an error, got a package: {0}", package);
 	}
 
@@ -136,7 +133,6 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 				new MockDirectoryInfo("Stuff", [])
 			])
 		]);
-		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader();
 
 		var resolver = CreateResolver(directory);
 		var results = resolver.ResolvePluginPackages().ToList();
@@ -157,7 +153,7 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 		}
 		{
 			var packageOrError = results[1];
-			if (packageOrError.TryPickT0(out var package, out var error))
+			if (packageOrError.TryPickT0(out var package, out _))
 				Assert.Fail("Expected an error, got a package: {0}", package);
 		}
 	}

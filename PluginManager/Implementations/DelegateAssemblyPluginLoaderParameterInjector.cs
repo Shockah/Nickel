@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Nanoray.PluginManager;
 
@@ -13,11 +12,7 @@ public sealed class DelegateAssemblyPluginLoaderParameterInjector<TPluginManifes
 		this.Delegate = @delegate;
 	}
 
-	public bool TryToInjectParameter(
-		IPluginPackage<TPluginManifest> package,
-		Type type,
-		[MaybeNullWhen(false)] out object? toInject
-	)
+	public bool TryToInjectParameter(IPluginPackage<TPluginManifest> package, Type type, out object? toInject)
 	{
 		if (type.IsAssignableFrom(typeof(T)))
 		{

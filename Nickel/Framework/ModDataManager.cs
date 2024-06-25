@@ -15,23 +15,23 @@ internal sealed class ModDataManager
 
 	private static T ConvertExtensionData<T>(object? o)
 	{
-		if (typeof(T).IsInstanceOfType(o))
-			return (T)o;
+		if (o is T t)
+			return t;
 		if (typeof(T) == typeof(int))
 			return (T)(object)Convert.ToInt32(o);
-		else if (typeof(T) == typeof(long))
+		if (typeof(T) == typeof(long))
 			return (T)(object)Convert.ToInt64(o);
-		else if (typeof(T) == typeof(short))
+		if (typeof(T) == typeof(short))
 			return (T)(object)Convert.ToInt16(o);
-		else if (typeof(T) == typeof(byte))
+		if (typeof(T) == typeof(byte))
 			return (T)(object)Convert.ToByte(o);
-		else if (typeof(T) == typeof(bool))
+		if (typeof(T) == typeof(bool))
 			return (T)(object)Convert.ToBoolean(o);
-		else if (typeof(T) == typeof(float))
+		if (typeof(T) == typeof(float))
 			return (T)(object)Convert.ToSingle(o);
-		else if (typeof(T) == typeof(double))
+		if (typeof(T) == typeof(double))
 			return (T)(object)Convert.ToDouble(o);
-		else if (o is null && (!typeof(T).IsValueType || (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))))
+		if (o is null && (!typeof(T).IsValueType || (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))))
 			return default!;
 
 		var stringWriter = new StringWriter();

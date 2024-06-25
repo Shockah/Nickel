@@ -5,6 +5,7 @@ using Nanoray.Shrike.Harmony;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -25,6 +26,7 @@ public enum ModDescriptionsKey
 	Off, Ctrl, Shift, Alt, Always
 }
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class ModDescriptions
 {
 	public static void ApplyPatches(Harmony harmony)
@@ -134,6 +136,7 @@ internal static class ModDescriptions
 	private static void StatusMeta_GetTooltips_Postfix(Status status, ref List<Tooltip> __result)
 		=> __result = AddModTooltipIfNeeded(__result, ModEntry.Instance.Helper.Content.Statuses.LookupByStatus(status));
 
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> NewRunOptions_Render_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
 		try
@@ -174,6 +177,7 @@ internal static class ModDescriptions
 		return $"{shipDescription}\n{ModEntry.Instance.Localizations.Localize(["modDescriptions", "description"], new { ModName = modName })}";
 	}
 
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> Character_Render_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
 		try

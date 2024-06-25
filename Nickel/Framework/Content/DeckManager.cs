@@ -32,6 +32,8 @@ internal sealed class DeckManager
 	{
 		var @checked = new HashSet<object>();
 
+		return ContainsInvalidEntries(state);
+
 		bool ContainsInvalidEntries(object? o)
 		{
 			if (o is null)
@@ -40,18 +42,13 @@ internal sealed class DeckManager
 				return true;
 			if (o.GetType().IsPrimitive)
 				return false;
-			if (@checked.Contains(o))
+			if (!@checked.Add(o))
 				return false;
 
-			@checked.Add(o);
-
-			foreach (var field in o.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-				if (!FieldsAllowedToHaveInvalidEntries.Contains(field) && ContainsInvalidEntries(field.GetValue(o)))
-					return true;
-			return false;
+			return o.GetType()
+				.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+				.Any(field => !this.FieldsAllowedToHaveInvalidEntries.Contains(field) && ContainsInvalidEntries(field.GetValue(o)));
 		}
-
-		return ContainsInvalidEntries(state);
 	}
 
 	internal void ModifyJsonContract(Type type, JsonContract contract)
@@ -141,7 +138,7 @@ internal sealed class DeckManager
 	}
 
 	public IDeckEntry? LookupByUniqueName(string uniqueName)
-		=> this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry) ? typedEntry : null;
+		=> this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
 
 	private static void Inject(Entry entry)
 	{

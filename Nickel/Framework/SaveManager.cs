@@ -49,6 +49,7 @@ internal sealed class SaveManager
 		}
 		catch
 		{
+			// ignored
 		}
 	}
 
@@ -92,6 +93,7 @@ internal sealed class SaveManager
 		}
 		catch
 		{
+			// ignored
 		}
 	}
 
@@ -121,6 +123,7 @@ internal sealed class SaveManager
 		}
 		catch
 		{
+			// ignored
 		}
 	}
 }

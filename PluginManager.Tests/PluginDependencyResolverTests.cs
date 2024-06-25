@@ -117,9 +117,9 @@ internal sealed class PluginDependencyResolverTests
 			if (kvp.Key.UniqueName != "ModA")
 				return false;
 			return kvp.Value.Match(
-				missingDependencies => false,
+				_ => false,
 				dependencyCycle => dependencyCycle.Cycle.Values.Count == 3 && dependencyCycle.Cycle.Values.Any(m => m.UniqueName == "ModA"),
-				unknown => false
+				_ => false
 			);
 		}));
 		Assert.IsTrue(resolveResult.Unresolvable.Any(kvp =>
@@ -127,9 +127,9 @@ internal sealed class PluginDependencyResolverTests
 			if (kvp.Key.UniqueName != "ModB")
 				return false;
 			return kvp.Value.Match(
-				missingDependencies => false,
+				_ => false,
 				dependencyCycle => dependencyCycle.Cycle.Values.Count == 3 && dependencyCycle.Cycle.Values.Any(m => m.UniqueName == "ModB"),
-				unknown => false
+				_ => false
 			);
 		}));
 		Assert.IsTrue(resolveResult.Unresolvable.Any(kvp =>
@@ -137,9 +137,9 @@ internal sealed class PluginDependencyResolverTests
 			if (kvp.Key.UniqueName != "ModC")
 				return false;
 			return kvp.Value.Match(
-				missingDependencies => false,
+				_ => false,
 				dependencyCycle => dependencyCycle.Cycle.Values.Count == 3 && dependencyCycle.Cycle.Values.Any(m => m.UniqueName == "ModC"),
-				unknown => false
+				_ => false
 			);
 		}));
 	}
@@ -160,9 +160,9 @@ internal sealed class PluginDependencyResolverTests
 			if (kvp.Key.UniqueName != "ModA")
 				return false;
 			return kvp.Value.Match(
-				missingDependencies => false,
-				dependencyCycle => dependencyCycle.Cycle.Values.Count == 1 && dependencyCycle.Cycle.Values[0].UniqueName == "ModA",
-				unknown => false
+				_ => false,
+				dependencyCycle => dependencyCycle.Cycle.Values is [ { UniqueName: "ModA" } ],
+				_ => false
 			);
 		}));
 	}
@@ -184,8 +184,8 @@ internal sealed class PluginDependencyResolverTests
 				return false;
 			return kvp.Value.Match(
 				missingDependencies => missingDependencies.Dependencies.Count == 1 && missingDependencies.Dependencies.First().UniqueName == "ModB",
-				dependencyCycle => false,
-				unknown => false
+				_ => false,
+				_ => false
 			);
 		}));
 	}

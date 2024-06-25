@@ -215,7 +215,6 @@ internal class CardTraitManager
 	private readonly Dictionary<Card, IReadOnlyDictionary<ICardTraitEntry, CardTraitState>> CardTraitStateCache = [];
 	private readonly HashSet<Card> CurrentlyCreatingCardTraitStates = [];
 	private readonly Lazy<IReadOnlyDictionary<string, ICardTraitEntry>> SynthesizedVanillaEntries;
-	private readonly IModManifest VanillaModManifest;
 	private readonly IModManifest ModManagerModManifest;
 	private readonly ModDataManager ModDataManager;
 
@@ -233,11 +232,10 @@ internal class CardTraitManager
 
 	public CardTraitManager(Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest, IModManifest modManagerModManifest, ModDataManager modDataManager)
 	{
-		this.VanillaModManifest = vanillaModManifest;
 		this.ModManagerModManifest = modManagerModManifest;
 		this.ModDataManager = modDataManager;
 
-		this.OnOverrideInnateTraitsEvent = new((handler, mod, exception) =>
+		this.OnOverrideInnateTraitsEvent = new((_, mod, exception) =>
 		{
 			var logger = loggerProvider(mod);
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnOverrideInnateTraitsEvent), exception);
@@ -270,14 +268,14 @@ internal class CardTraitManager
 			}
 		};
 
-		this.ExhaustCardTrait = new(() => new VariablePermanenceVanillaEntry(this.VanillaModManifest, nameof(CardData.exhaust), nameof(Card.exhaustOverride), nameof(Card.exhaustOverrideIsPermanent)));
-		this.RetainCardTrait = new(() => new VariablePermanenceVanillaEntry(this.VanillaModManifest, nameof(CardData.retain), nameof(Card.retainOverride), nameof(Card.retainOverrideIsPermanent)));
-		this.RecycleCardTrait = new(() => new VariablePermanenceVanillaEntry(this.VanillaModManifest, nameof(CardData.recycle), nameof(Card.recycleOverride), nameof(Card.recycleOverrideIsPermanent)));
-		this.UnplayableCardTrait = new(() => new VariablePermanenceVanillaEntry(this.VanillaModManifest, nameof(CardData.unplayable), nameof(Card.unplayableOverride), nameof(Card.unplayableOverrideIsPermanent)));
-		this.BuoyantCardTrait = new(() => new VariablePermanenceVanillaEntry(this.VanillaModManifest, nameof(CardData.buoyant), nameof(Card.buoyantOverride), nameof(Card.buoyantOverrideIsPermanent)));
-		this.TemporaryCardTrait = new(() => new TemporaryVanillaEntry(this.VanillaModManifest));
-		this.SingleUseCardTrait = new(() => new ModDataBasedPermanenceVanillaEntry(this.VanillaModManifest, nameof(CardData.singleUse), nameof(Card.singleUseOverride), isPermanentByDefault: true));
-		this.InfiniteCardTrait = new(() => new ModDataBasedPermanenceVanillaEntry(this.VanillaModManifest, nameof(CardData.infinite)));
+		this.ExhaustCardTrait = new(() => new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.exhaust), nameof(Card.exhaustOverride), nameof(Card.exhaustOverrideIsPermanent)));
+		this.RetainCardTrait = new(() => new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.retain), nameof(Card.retainOverride), nameof(Card.retainOverrideIsPermanent)));
+		this.RecycleCardTrait = new(() => new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.recycle), nameof(Card.recycleOverride), nameof(Card.recycleOverrideIsPermanent)));
+		this.UnplayableCardTrait = new(() => new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.unplayable), nameof(Card.unplayableOverride), nameof(Card.unplayableOverrideIsPermanent)));
+		this.BuoyantCardTrait = new(() => new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.buoyant), nameof(Card.buoyantOverride), nameof(Card.buoyantOverrideIsPermanent)));
+		this.TemporaryCardTrait = new(() => new TemporaryVanillaEntry(vanillaModManifest));
+		this.SingleUseCardTrait = new(() => new ModDataBasedPermanenceVanillaEntry(vanillaModManifest, nameof(CardData.singleUse), nameof(Card.singleUseOverride), isPermanentByDefault: true));
+		this.InfiniteCardTrait = new(() => new ModDataBasedPermanenceVanillaEntry(vanillaModManifest, nameof(CardData.infinite)));
 
 		this.SynthesizedVanillaEntries = new(() => new List<ICardTraitEntry>
 		{
@@ -343,9 +341,7 @@ internal class CardTraitManager
 	{
 		if (this.SynthesizedVanillaEntries.Value.TryGetValue(uniqueName, out var vanillaEntry))
 			return vanillaEntry;
-		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var entry))
-			return entry;
-		return null;
+		return this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
 	}
 
 	public ICardTraitEntry RegisterTrait(IModManifest owner, string name, CardTraitConfiguration configuration)

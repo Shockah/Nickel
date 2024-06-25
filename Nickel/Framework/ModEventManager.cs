@@ -49,12 +49,12 @@ internal sealed class ModEventManager
 	{
 		this.ModLoaderModManifest = modLoaderModManifest;
 		this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
-		this.OnModLoadPhaseFinishedEvent = new((handler, mod, exception) =>
+		this.OnModLoadPhaseFinishedEvent = new((_, mod, exception) =>
 		{
 			var logger = loggerProvider(mod);
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnModLoadPhaseFinishedEvent), exception);
 		});
-		this.OnLoadStringsForLocaleEvent = new((handler, mod, exception) =>
+		this.OnLoadStringsForLocaleEvent = new((_, mod, exception) =>
 		{
 			var logger = loggerProvider(mod);
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnLoadStringsForLocaleEvent), exception);

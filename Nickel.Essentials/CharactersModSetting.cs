@@ -22,7 +22,7 @@ public sealed class CharactersModSetting : IModSettingsApi.IModSetting
 
 	public CharactersModSetting()
 	{
-		this.OnMenuOpen += (g, route, keyGenerator) =>
+		this.OnMenuOpen += (_, route, keyGenerator) =>
 		{
 			if (this.Key == 0)
 				this.Key = keyGenerator();

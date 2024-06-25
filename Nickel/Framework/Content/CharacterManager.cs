@@ -119,7 +119,7 @@ internal sealed class CharacterManager
 	}
 
 	public ICharacterEntry? LookupByUniqueName(string uniqueName)
-		=> this.UniqueNameToCharacterEntry.TryGetValue(uniqueName, out var entry) ? entry : null;
+		=> this.UniqueNameToCharacterEntry.GetValueOrDefault(uniqueName);
 
 	public ICharacterEntry RegisterCharacter(IModManifest owner, string name, CharacterConfiguration configuration)
 	{
@@ -272,7 +272,7 @@ internal sealed class CharacterManager
 #pragma warning disable CS0618 // Type or member is obsolete
 		StarterDeck.starterSets[entry.Configuration.Deck] = entry.Configuration.Starters ?? new()
 		{
-			artifacts = entry.Configuration.StarterArtifactTypes?.Select(t => (Artifact)Activator.CreateInstance(t)!)?.ToList() ?? [],
+			artifacts = entry.Configuration.StarterArtifactTypes?.Select(t => (Artifact)Activator.CreateInstance(t)!).ToList() ?? [],
 			cards = entry.Configuration.StarterCardTypes?.Select(t => (Card)Activator.CreateInstance(t)!).ToList() ?? []
 		};
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -310,7 +310,7 @@ internal sealed class CharacterManager
 
 			choice.actions.InsertRange(
 				addCharacterIndex + 1,
-				starter.artifacts.Select(a => Mutil.DeepCopy(a)).Select(a => new AAddArtifact
+				starter.artifacts.Select(Mutil.DeepCopy).Select(a => new AAddArtifact
 				{
 					artifact = a,
 					timer = 0

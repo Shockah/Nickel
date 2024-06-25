@@ -4,6 +4,7 @@ using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 using WeakEvent;
@@ -15,14 +16,13 @@ internal static class ProgramPatches
 	internal static WeakEventSource<StructRef<bool>> OnTryInitSteam { get; } = new();
 
 	internal static void Apply(Harmony harmony)
-	{
-		harmony.Patch(
+		=> harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Program), nameof(Program.TryInitSteam))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Program)}.{nameof(Program.TryInitSteam)}`"),
 			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(TryInitSteam_Transpiler))
 		);
-	}
 
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> TryInitSteam_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
 		try

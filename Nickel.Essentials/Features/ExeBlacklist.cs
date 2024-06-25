@@ -6,6 +6,7 @@ using Nanoray.Shrike.Harmony;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -33,12 +34,13 @@ file static class RunConfigExt
 	}
 }
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class ExeBlacklist
 {
 	private const UK CannotBlacklistWarningKey = (UK)2136001;
 
 	private static State? LastState;
-	private static double CannotBlacklistWarning = 0;
+	private static double CannotBlacklistWarning;
 
 	public static void ApplyPatches(Harmony harmony)
 	{
@@ -117,6 +119,7 @@ internal static class ExeBlacklist
 	private static void State_PopulateRun_Prefix(State __instance)
 		=> LastState = __instance;
 
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> State_PopulateRun_Delegate_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
 		try

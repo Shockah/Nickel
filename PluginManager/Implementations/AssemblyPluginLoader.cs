@@ -32,7 +32,7 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 
 	public OneOf<Yes, No, Error<string>> CanLoadPlugin(IPluginPackage<TPluginManifest> package)
 		=> this.RequiredPluginDataProvider(package).Match<OneOf<Yes, No, Error<string>>>(
-			data => new Yes(),
+			_ => new Yes(),
 			error => error
 		);
 
@@ -85,7 +85,7 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 			return partAssemblerValidationError;
 
 		var parameterInjector = new CompoundAssemblyPluginLoaderParameterInjector<TPluginManifest>(
-			new IAssemblyPluginLoaderParameterInjector<TPluginManifest>?[]
+			new[]
 			{
 				new ValueAssemblyPluginLoaderParameterInjector<TPluginManifest, TPluginManifest>(package.Manifest),
 				new ValueAssemblyPluginLoaderParameterInjector<TPluginManifest, IPluginPackage<TPluginManifest>>(package),
@@ -112,7 +112,7 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 
 			if (!potentialConstructors.Any(c => c.IsValid))
 				return new Error<string>($"The type {pluginPartType} in assembly {assembly} has a constructor with parameters which could not be injected: {string.Join(", ", potentialConstructors.First().Constructor.GetParameters().Select(p => p.Name))}.");
-			var constructor = potentialConstructors.Where(c => c.IsValid).First();
+			var constructor = potentialConstructors.First(c => c.IsValid);
 
 			var parameters = constructor.Parameters.Select(p => p?.Value!).ToArray();
 			var rawPluginPart = constructor.Constructor.Invoke(parameters: parameters);

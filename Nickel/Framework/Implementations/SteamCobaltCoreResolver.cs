@@ -92,7 +92,7 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 				if (!result.TryGetValue("LibraryFolders", out libraryFoldersVdfEntryRaw))
 				{
 					// trying the patience
-					var entry = result.FirstOrDefault(x => x.Key.ToLowerInvariant() == "libraryfolders");
+					var entry = result.FirstOrDefault(x => x.Key.Equals("libraryfolders", StringComparison.InvariantCultureIgnoreCase));
 					if (entry.Key == null)
 					{
 						// nope, not found

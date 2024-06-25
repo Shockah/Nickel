@@ -81,7 +81,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 							},
 							isVisible: () => this.Database.IsEnabled
 						),
-					]).SubscribeToOnMenuClose(g =>
+					]).SubscribeToOnMenuClose(_ =>
 					{
 						this.SaveDatabase();
 						this.Client = this.MakeHttpClient();
@@ -133,7 +133,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		}
 	}
 
-	private HttpClient? MakeHttpClient()
+	private HttpClient MakeHttpClient()
 	{
 		var client = new HttpClient
 		{
@@ -194,8 +194,8 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				.ToList();
 
 			foreach (var modEntry in remainingMods)
-				if (this.Database.ModIdToVersion.TryGetValue(modEntry.Entry.ID, out var version))
-					results[modEntry.Mod] = new(version, [$"https://www.nexusmods.com/cobaltcore/mods/{modEntry.Entry.ID}"]);
+				if (this.Database.ModIdToVersion.TryGetValue(modEntry.Entry.Id, out var version))
+					results[modEntry.Mod] = new(version, [$"https://www.nexusmods.com/cobaltcore/mods/{modEntry.Entry.Id}"]);
 
 			if (now - this.Database.LastUpdate < UpdateCheckThrottleDuration)
 			{
@@ -222,9 +222,9 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 						foreach (var modEntry in remainingMods.ToList())
 						{
-							if (updatedMods.Any(model => model.ID == modEntry.Entry.ID))
+							if (updatedMods.Any(model => model.Id == modEntry.Entry.Id))
 								continue;
-							if (!this.Database.ModIdToVersion.ContainsKey(modEntry.Entry.ID))
+							if (!this.Database.ModIdToVersion.ContainsKey(modEntry.Entry.Id))
 								continue;
 
 							remainingMods.Remove(modEntry);
@@ -237,6 +237,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			}
 			catch
 			{
+				// ignored
 			}
 
 			// updating version data from the 3 10-element lists
@@ -259,13 +260,13 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 						if (ParseVersionOrNull(model.Version) is not { } version)
 							continue;
 
-						this.Database.ModIdToVersion[model.ID] = version;
+						this.Database.ModIdToVersion[model.Id] = version;
 
-						if (remainingMods.FirstOrNull(e => e.Entry.ID == model.ID) is not { } modEntry)
+						if (remainingMods.FirstOrNull(e => e.Entry.Id == model.Id) is not { } modEntry)
 							continue;
 
 						remainingMods.Remove(modEntry);
-						results[modEntry.Mod] = new(version, [$"https://www.nexusmods.com/cobaltcore/mods/{model.ID}"]);
+						results[modEntry.Mod] = new(version, [$"https://www.nexusmods.com/cobaltcore/mods/{model.Id}"]);
 					}
 
 					if (remainingMods.Count == 0)
@@ -274,6 +275,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			}
 			catch
 			{
+				// ignored
 			}
 
 			// if we still have some remaining mods, we gotta fetch them 1-by-1
@@ -284,7 +286,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 					{
 						try
 						{
-							return (ModEntry: modEntry, Model: await this.GetMod(client, modEntry.Entry.ID));
+							return (ModEntry: modEntry, Model: await this.GetMod(client, modEntry.Entry.Id));
 						}
 						catch
 						{
@@ -301,8 +303,8 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 					continue;
 
 				remainingMods.Remove(entry.ModEntry);
-				results[entry.ModEntry.Mod] = new(version, [$"https://www.nexusmods.com/cobaltcore/mods/{entry.Model.ID}"]);
-				this.Database.ModIdToVersion[entry.Model.ID] = version;
+				results[entry.ModEntry.Mod] = new(version, [$"https://www.nexusmods.com/cobaltcore/mods/{entry.Model.Id}"]);
+				this.Database.ModIdToVersion[entry.Model.Id] = version;
 			}
 
 			// if we STILL have remaining mods, then we either exceeded the quota, or failed to get some versions for whatever other reason
@@ -324,11 +326,14 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			this.Logger.LogDebug("Requesting latest added mods...");
 			var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/latest_added.json");
 			using var streamReader = new StreamReader(stream);
-			using var jsonReader = new JsonTextReader(streamReader);
+			await using var jsonReader = new JsonTextReader(streamReader);
 			return this.Helper.Storage.JsonSerializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{
+			if (ex is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized })
+				this.GotUnauthorized = true;
+
 			this.Logger.LogDebug("Failed to retrieve latest added mods: {Error}", ex.Message);
 			throw;
 		}
@@ -341,11 +346,14 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			this.Logger.LogDebug("Requesting latest updated mods...");
 			var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/latest_updated.json");
 			using var streamReader = new StreamReader(stream);
-			using var jsonReader = new JsonTextReader(streamReader);
+			await using var jsonReader = new JsonTextReader(streamReader);
 			return this.Helper.Storage.JsonSerializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{
+			if (ex is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized })
+				this.GotUnauthorized = true;
+
 			this.Logger.LogDebug("Failed to retrieve latest updated mods: {Error}", ex.Message);
 			throw;
 		}
@@ -358,11 +366,14 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			this.Logger.LogDebug("Requesting trending mods...");
 			var stream = await client.GetStreamAsync("https://api.nexusmods.com/v1/games/cobaltcore/mods/trending.json");
 			using var streamReader = new StreamReader(stream);
-			using var jsonReader = new JsonTextReader(streamReader);
+			await using var jsonReader = new JsonTextReader(streamReader);
 			return this.Helper.Storage.JsonSerializer.Deserialize<IReadOnlyList<NexusModModel>>(jsonReader) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{
+			if (ex is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized })
+				this.GotUnauthorized = true;
+
 			this.Logger.LogDebug("Failed to retrieve trending mods: {Error}", ex.Message);
 			throw;
 		}
@@ -382,11 +393,14 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			this.Logger.LogDebug("Requesting updated mods in the {Period} period...", period);
 			var stream = await client.GetStreamAsync($"https://api.nexusmods.com/v1/games/cobaltcore/mods/updated.json?period={period}");
 			using var streamReader = new StreamReader(stream);
-			using var jsonReader = new JsonTextReader(streamReader);
+			await using var jsonReader = new JsonTextReader(streamReader);
 			return this.Helper.Storage.JsonSerializer.Deserialize<IReadOnlyList<NexusModLastUpdateModel>>(jsonReader) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{
+			if (ex is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized })
+				this.GotUnauthorized = true;
+
 			this.Logger.LogDebug("Failed to retrieve updated mods in the {Period} period: {Error}", period, ex.Message);
 			throw;
 		}
@@ -399,12 +413,12 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			this.Logger.LogDebug("Requesting mod {ModId}...", id);
 			var stream = await client.GetStreamAsync($"https://api.nexusmods.com/v1/games/cobaltcore/mods/{id}.json");
 			using var streamReader = new StreamReader(stream);
-			using var jsonReader = new JsonTextReader(streamReader);
+			await using var jsonReader = new JsonTextReader(streamReader);
 			return this.Helper.Storage.JsonSerializer.Deserialize<NexusModModel>(jsonReader) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{
-			if (ex is HttpRequestException httpRequestException && httpRequestException.StatusCode == HttpStatusCode.Unauthorized)
+			if (ex is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized })
 				this.GotUnauthorized = true;
 
 			this.Logger.LogDebug("Failed to retrieve mod {ModId}: {Error}", id, ex.Message);

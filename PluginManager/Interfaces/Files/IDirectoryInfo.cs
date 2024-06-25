@@ -24,7 +24,7 @@ public interface IDirectoryInfo : IFileSystemInfo
 	IDirectoryInfo GetRelativeDirectory(string relativePath);
 }
 
-public interface IDirectoryInfo<TFileInfo, TDirectoryInfo> : IFileSystemInfo<TFileInfo, TDirectoryInfo>, IDirectoryInfo
+public interface IDirectoryInfo<out TFileInfo, out TDirectoryInfo> : IFileSystemInfo<TFileInfo, TDirectoryInfo>, IDirectoryInfo
 	where TFileInfo : class, IFileInfo<TFileInfo, TDirectoryInfo>
 	where TDirectoryInfo : class, IDirectoryInfo<TFileInfo, TDirectoryInfo>
 {

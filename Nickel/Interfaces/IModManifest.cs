@@ -33,7 +33,7 @@ public static class IModManifestExt
 {
 	public static string GetDisplayName(this IModManifest manifest, bool @long)
 	{
-		StringBuilder sb = new();
+		var sb = new StringBuilder();
 		sb.Append(string.IsNullOrEmpty(manifest.DisplayName) ? manifest.UniqueName : $"{manifest.DisplayName} ({manifest.UniqueName})");
 		sb.Append($" {manifest.Version}");
 		if (@long)

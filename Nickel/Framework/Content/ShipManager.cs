@@ -30,7 +30,7 @@ internal sealed class ShipManager
 
 	private void OnGetBlockedArtifacts(object? _, ArtifactRewardPatches.GetBlockedArtifactsEventArgs e)
 	{
-		foreach (var (uniqueName, entry) in this.UniqueNameToEntry)
+		foreach (var entry in this.UniqueNameToEntry.Values)
 		{
 			if (e.State.ship.key == entry.UniqueName)
 				continue;
@@ -62,7 +62,7 @@ internal sealed class ShipManager
 	}
 
 	public IShipEntry? LookupByUniqueName(string uniqueName)
-		=> this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry) ? typedEntry : null;
+		=> this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
 
 	private void Inject(Entry entry)
 	{

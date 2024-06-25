@@ -6,7 +6,7 @@ internal sealed class NexusModLastUpdateModel
 {
 	[JsonProperty("mod_id")]
 	[JsonRequired]
-	public int ID { get; internal set; }
+	public int Id { get; internal set; }
 
 	[JsonProperty("latest_file_update")]
 	[JsonRequired]

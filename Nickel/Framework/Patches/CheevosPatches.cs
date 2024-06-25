@@ -4,22 +4,23 @@ using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Nickel;
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class CheevosPatches
 {
 	internal static void Apply(Harmony harmony)
-	{
-		harmony.Patch(
+		=> harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Cheevos), nameof(Cheevos.TryCheevo))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Cheevos)}.{nameof(Cheevos.TryCheevo)}`"),
 			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(TryCheevo_Transpiler))
 		);
-	}
 
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> TryCheevo_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
 		try

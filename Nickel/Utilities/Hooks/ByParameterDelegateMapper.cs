@@ -9,7 +9,7 @@ namespace Nickel;
 public sealed class ByParameterDelegateMapper
 {
 	private ModuleBuilder ModuleBuilder { get; }
-	private int Counter { get; set; } = 0;
+	private int Counter { get; set; }
 
 	public ByParameterDelegateMapper()
 	{

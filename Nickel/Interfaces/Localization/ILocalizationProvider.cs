@@ -1,6 +1,6 @@
 namespace Nickel;
 
-public interface ILocalizationProvider<TKey>
+public interface ILocalizationProvider<in TKey>
 {
 	string? Localize(string locale, TKey key, object? tokens = null);
 }

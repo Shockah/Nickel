@@ -6,9 +6,9 @@ public sealed class ListModSetting : BaseModSetting, IModSettingsApi.IListModSet
 {
 	public required IList<IModSettingsApi.IModSetting> Settings { get; set; }
 	public IModSettingsApi.IModSetting? EmptySetting { get; set; }
-	public int Spacing { get; set; } = 0;
+	public int Spacing { get; set; }
 
-	public ListModSetting() : base()
+	public ListModSetting()
 	{
 		this.OnMenuOpen += (g, route, keyGenerator) =>
 		{

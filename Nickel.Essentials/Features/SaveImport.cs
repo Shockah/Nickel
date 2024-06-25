@@ -5,6 +5,7 @@ using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -12,6 +13,7 @@ using System.Reflection.Emit;
 
 namespace Nickel.Essentials;
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class SaveImport
 {
 	private const UK ImportProfileKey = (UK)2136011;
@@ -100,6 +102,7 @@ internal static class SaveImport
 		return false;
 	}
 
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> ProfileSelect_Render_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
 		try
@@ -147,6 +150,7 @@ internal static class SaveImport
 		);
 	}
 
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> ProfileSelect_MkSlot_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
 		try
@@ -250,7 +254,6 @@ internal static class SaveImport
 			else
 			{
 				this.OnMouseDown(g, b);
-				return;
 			}
 		}
 	}

@@ -5,7 +5,7 @@ namespace Nickel;
 [AttributeUsage(AttributeTargets.Method)]
 public sealed class EventPriorityAttribute : Attribute
 {
-	public double Priority { get; init; }
+	public double Priority { get; }
 
 	public EventPriorityAttribute(double priority)
 	{

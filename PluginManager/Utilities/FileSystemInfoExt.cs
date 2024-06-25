@@ -27,11 +27,11 @@ public static class FileSystemInfoExt
 			toRoot = next;
 		}
 
-		if (fromRoot != toRoot)
+		if (!Equals(fromRoot, toRoot))
 			throw new ArgumentException("The two file systems are unrelated to each other");
-		var relativePath = to.FullName.Substring(from.FullName.Length);
-		if (relativePath.StartsWith("/"))
-			relativePath = relativePath.Substring(1);
+		var relativePath = to.FullName[from.FullName.Length..];
+		if (relativePath.StartsWith('/'))
+			relativePath = relativePath[1..];
 		return relativePath;
 	}
 }

@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Nanoray.PluginManager;
 
@@ -11,11 +10,7 @@ public sealed class ValidatingAssemblyPluginLoaderParameterInjector<TPluginManif
 	private IAssemblyPluginLoaderParameterInjector<TPluginManifest> Injector { get; } = injector;
 	private Func<IPluginPackage<TPluginManifest>, Type, bool> Validator { get; } = validator;
 
-	public bool TryToInjectParameter(
-		IPluginPackage<TPluginManifest> package,
-		Type type,
-		[MaybeNullWhen(false)] out object? toInject
-	)
+	public bool TryToInjectParameter(IPluginPackage<TPluginManifest> package, Type type, out object? toInject)
 	{
 		if (!this.Validator(package, type))
 		{

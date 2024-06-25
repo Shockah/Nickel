@@ -106,7 +106,7 @@ internal sealed class EnemyManager
 	}
 
 	public IEnemyEntry? LookupByUniqueName(string uniqueName)
-		=> this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry) ? typedEntry : null;
+		=> this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
 
 	private static void Inject(Entry entry)
 	{

@@ -2,7 +2,7 @@ namespace Nanoray.PluginManager;
 
 public abstract class MockFileSystemInfo : IFileSystemInfo<MockFileInfo, MockDirectoryInfo>
 {
-	public string Name { get; init; }
+	public string Name { get; }
 	public MockDirectoryInfo? Parent { get; internal set; }
 	public bool Exists { get; }
 
@@ -23,7 +23,7 @@ public abstract class MockFileSystemInfo : IFileSystemInfo<MockFileInfo, MockDir
 	public MockDirectoryInfo? AsDirectory
 		=> this as MockDirectoryInfo;
 
-	public MockFileSystemInfo(string name, bool exists = true)
+	protected MockFileSystemInfo(string name, bool exists = true)
 	{
 		this.Name = name;
 		this.Exists = exists;

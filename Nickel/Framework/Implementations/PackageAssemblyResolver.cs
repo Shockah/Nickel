@@ -8,24 +8,24 @@ namespace Nickel;
 
 internal class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest>> packages) : IAssemblyResolver
 {
-	private readonly Dictionary<string, AssemblyDefinition> cache = [];
-	private readonly List<Stream> openStreams = [];
-	private readonly DefaultAssemblyResolver fallbackResolver = new();
+	private readonly Dictionary<string, AssemblyDefinition> Cache = [];
+	private readonly List<Stream> OpenStreams = [];
+	private readonly DefaultAssemblyResolver FallbackResolver = new();
 
 	public void Dispose()
 	{
-		foreach (var assembly in this.cache.Values)
+		foreach (var assembly in this.Cache.Values)
 			assembly.Dispose();
-		foreach (var stream in this.openStreams)
+		foreach (var stream in this.OpenStreams)
 			stream.Dispose();
-		this.fallbackResolver.Dispose();
+		this.FallbackResolver.Dispose();
 	}
 
 	public AssemblyDefinition Resolve(AssemblyNameReference name)
 	{
-		if (this.cache.TryGetValue(name.FullName, out var cached))
+		if (this.Cache.TryGetValue(name.FullName, out var cached))
 			return cached;
-		return this.cache[name.FullName] = this.Resolve(name, new ReaderParameters());
+		return this.Cache[name.FullName] = this.Resolve(name, new ReaderParameters());
 	}
 
 	public AssemblyDefinition Resolve(AssemblyNameReference name, ReaderParameters parameters)
@@ -33,11 +33,11 @@ internal class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest
 		parameters.AssemblyResolver ??= this;
 		var stream = this.GetStreamForAssembly(name);
 		if (stream == null)
-			return this.fallbackResolver.Resolve(name, parameters);
+			return this.FallbackResolver.Resolve(name, parameters);
 
 		try
 		{
-			this.openStreams.Add(stream);
+			this.OpenStreams.Add(stream);
 		}
 		catch (Exception)
 		{

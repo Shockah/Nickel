@@ -6,7 +6,6 @@ using Nickel.Common;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -19,8 +18,10 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 	internal static Nickel Instance { get; private set; } = null!;
 	internal Harmony? Harmony { get; private set; }
 	internal ModManager ModManager { get; private set; } = null!;
-	internal SaveManager SaveManager { get; private set; } = null!;
-	internal LaunchArguments LaunchArguments { get; } = launchArguments;
+	private LaunchArguments LaunchArguments { get; } = launchArguments;
+	
+	// ReSharper disable once NotAccessedField.Local
+	private SaveManager SaveManager = null!;
 
 	internal static int Main(string[] args)
 	{
@@ -91,7 +92,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		rootCommand.AddOption(timestampedLogFiles);
 		rootCommand.AddOption(logPipeNameOption);
 
-		rootCommand.SetHandler((InvocationContext context) =>
+		rootCommand.SetHandler(context =>
 		{
 			LaunchArguments launchArguments = new()
 			{
@@ -140,21 +141,21 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 		try
 		{
-			return CreateAndStartInstance(launchArguments, loggerFactory, logger);
+			var instance = new Nickel(launchArguments);
+			Instance = instance;
+			return StartInstance(instance, launchArguments, loggerFactory, logger);
 		}
 		catch (Exception ex)
 		{
 			logger.LogCritical("{ModLoaderName} threw an exception: {e}", NickelConstants.Name, ex);
-			Instance?.ModManager.LogHarmonyPatchesOnce();
+			Instance.ModManager.LogHarmonyPatchesOnce();
 			return -3;
 		}
 	}
 
-	private static int CreateAndStartInstance(LaunchArguments launchArguments, ILoggerFactory loggerFactory, ILogger logger)
+	private static int StartInstance(Nickel instance, LaunchArguments launchArguments, ILoggerFactory loggerFactory, ILogger logger)
 	{
 		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
-		var instance = new Nickel(launchArguments);
-		Instance = instance;
 
 		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor = new(() =>
 			new PackageAssemblyResolver(launchArguments.Vanilla ? [] : instance.ModManager.ResolvedMods)
@@ -338,9 +339,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 	}
 
 	internal static void ApplyLateHarmonyPatches(Harmony harmony)
-	{
-		MapBasePatches.ApplyLate(harmony);
-	}
+		=> MapBasePatches.ApplyLate(harmony);
 
 	[EventPriority(double.MaxValue)]
 	private void OnModLoadPhaseFinished(object? _, ModLoadPhase phase)

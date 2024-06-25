@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace Nickel;
 
-public sealed class JsonLocalizationProvider(
+public sealed partial class JsonLocalizationProvider(
 	ILocalizationTokenExtractor<string> tokenExtractor,
 	Func<string, Stream> localeStreamFunction,
 	JsonSerializer? serializer = null
@@ -44,7 +44,7 @@ public sealed class JsonLocalizationProvider(
 	{
 		if (keyIndex >= key.Count)
 		{
-			if (localization is JValue value && value.Value<string>() is string localizationString)
+			if (localization is JValue value && value.Value<string>() is { } localizationString)
 				return this.Localize(localizationString, tokens);
 			else if (localization is JArray array)
 				return this.Localize(string.Join("\n", array.Select(v => v.Value<string>()).OfType<string>()), tokens);
@@ -70,12 +70,13 @@ public sealed class JsonLocalizationProvider(
 	private string Localize(string localizationString, object? tokens)
 	{
 		var tokenLookup = this.TokenExtractor.ExtractTokens(tokens);
-		return Regex.Replace(localizationString, @"{{([ \w\.\-]+)}}", match =>
+		return TokenRegex().Replace(localizationString, match =>
 		{
 			var key = match.Groups[1].Value.Trim();
-			return tokenLookup.TryGetValue(key, out var value)
-				? (value ?? "")
-				: match.Value;
+			return tokenLookup.TryGetValue(key, out var value) ? value : match.Value;
 		});
 	}
+
+	[GeneratedRegex(@"{{([ \w\.\-]+)}}")]
+	private static partial Regex TokenRegex();
 }

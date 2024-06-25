@@ -13,7 +13,7 @@ public sealed class ManagedEvent<TEventArgs>
 	private readonly OrderedList<ManagedEventHandler, double> Handlers = [];
 	private readonly List<(ManagedEventsModification, ManagedEventHandler)> AwaitingModifications = [];
 	private readonly Action<EventHandler<TEventArgs>, IModManifest, Exception>? ExceptionHandler;
-	private bool IsRaising = false;
+	private bool IsRaising;
 
 	public ManagedEvent(Action<EventHandler<TEventArgs>, IModManifest, Exception>? exceptionHandler)
 	{

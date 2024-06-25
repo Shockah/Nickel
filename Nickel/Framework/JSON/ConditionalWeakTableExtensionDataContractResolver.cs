@@ -47,11 +47,9 @@ internal sealed class ConditionalWeakTableExtensionDataContractResolver : IContr
 
 	private IEnumerable<KeyValuePair<object, object>> ExtensionDataGetter(object o, ExtensionDataGetter? wrapped)
 	{
-		if (o is null)
-			yield break;
 		if (this.Storage.TryGetValue(o, out var allObjectData))
 			yield return new(this.JsonKey, allObjectData);
-		if (wrapped is not null && wrapped.Invoke(o) is { } wrappedData)
+		if (wrapped?.Invoke(o) is { } wrappedData)
 			foreach (var kvp in wrappedData)
 				if (!Equals(kvp.Key, this.JsonKey))
 					yield return kvp;

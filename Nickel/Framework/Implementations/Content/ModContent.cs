@@ -3,14 +3,14 @@ namespace Nickel;
 internal sealed class ModContent
 	: IModContent
 {
-	public IModSprites Sprites { get; init; }
-	public IModDecks Decks { get; init; }
-	public IModStatuses Statuses { get; init; }
-	public IModCards Cards { get; init; }
-	public IModArtifacts Artifacts { get; init; }
-	public IModCharacters Characters { get; init; }
-	public IModShips Ships { get; init; }
-	public IModEnemies Enemies { get; init; }
+	public IModSprites Sprites { get; }
+	public IModDecks Decks { get; }
+	public IModStatuses Statuses { get; }
+	public IModCards Cards { get; }
+	public IModArtifacts Artifacts { get; }
+	public IModCharacters Characters { get; }
+	public IModShips Ships { get; }
+	public IModEnemies Enemies { get; }
 
 	public ModContent(
 		IModSprites sprites,

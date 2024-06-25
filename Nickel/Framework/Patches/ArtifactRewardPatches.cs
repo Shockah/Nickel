@@ -4,6 +4,7 @@ using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -11,6 +12,7 @@ using WeakEvent;
 
 namespace Nickel;
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class ArtifactRewardPatches
 {
 	internal static WeakEventSource<GetBlockedArtifactsEventArgs> OnGetBlockedArtifacts { get; } = new();
@@ -32,6 +34,7 @@ internal static class ArtifactRewardPatches
 	private static void GetBlockedArtifacts_Postfix(State s, ref HashSet<Type> __result)
 		=> OnGetBlockedArtifacts.Raise(null, new() { State = s, BlockedArtifacts = __result });
 
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> GetOffering_Delegate_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
 		try

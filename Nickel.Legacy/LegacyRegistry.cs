@@ -49,7 +49,7 @@ internal sealed class LegacyRegistry
 		this.Database = database;
 	}
 
-	public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
+	public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo workingDirectory)
 		=> throw new NotImplementedException($"This method is not supported in {NickelConstants.Name}");
 
 	public TApi? GetApi<TApi>(string modName) where TApi : class
@@ -61,11 +61,11 @@ internal sealed class LegacyRegistry
 	public ExternalSprite LookupSprite(string globalName)
 		=> this.Database.GetSprite(globalName);
 
-	public bool RegisterArt(ExternalSprite sprite_data, int? overwrite_value = null)
+	public bool RegisterArt(ExternalSprite spriteData, int? overwriteValue = null)
 	{
-		if (overwrite_value is not null)
+		if (overwriteValue is not null)
 			throw new NotImplementedException($"This method is not supported in {NickelConstants.Name}");
-		this.Database.RegisterSprite(this.ModManifest, sprite_data);
+		this.Database.RegisterSprite(this.ModManifest, spriteData);
 		return true;
 	}
 
@@ -156,9 +156,9 @@ internal sealed class LegacyRegistry
 		return true;
 	}
 
-	public bool RegisterRawPart(string global_name, int spr_value, int? off_spr_value = null)
+	public bool RegisterRawPart(string globalName, int sprValue, int? offSprValue = null)
 	{
-		this.Database.RegisterRawPart(this.ModManifest, global_name, spr_value, off_spr_value);
+		this.Database.RegisterRawPart(this.ModManifest, globalName, sprValue, offSprValue);
 		return true;
 	}
 
@@ -171,7 +171,7 @@ internal sealed class LegacyRegistry
 		return true;
 	}
 
-	public bool RegisterShip(object shipObject, string global_name)
+	public bool RegisterShip(object shipObject, string globalName)
 	{
 		if (shipObject is not Ship ship)
 		{
@@ -179,7 +179,7 @@ internal sealed class LegacyRegistry
 			return false;
 		}
 
-		this.Database.RegisterShip(ship, global_name);
+		this.Database.RegisterShip(ship, globalName);
 		return true;
 	}
 

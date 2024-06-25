@@ -20,9 +20,9 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 	private UIKey StepperLeftKey;
 	private UIKey StepperRightKey;
 
-	public StepperModSetting() : base()
+	public StepperModSetting()
 	{
-		this.OnMenuOpen += (g, route, keyGenerator) =>
+		this.OnMenuOpen += (_, _, keyGenerator) =>
 		{
 			if (this.StepperLeftKey == 0)
 				this.StepperLeftKey = keyGenerator();

@@ -13,8 +13,8 @@ public abstract class ZipFileSystemInfo : IFileSystemInfo<ZipFileInfo, ZipDirect
 	{
 		get
 		{
-			if (this.Parent is { } parent)
-				return $"{parent.FullName}{(parent.FullName == "/" ? "" : "/")}{this.Name}";
+			if (this.Parent != null)
+				return $"{this.Parent.FullName}{(this.Parent.FullName == "/" ? "" : "/")}{this.Name}";
 			else
 				return $"{(this.Name == "/" ? "" : "/")}{this.Name}";
 		}
@@ -26,7 +26,7 @@ public abstract class ZipFileSystemInfo : IFileSystemInfo<ZipFileInfo, ZipDirect
 	public ZipDirectoryInfo? AsDirectory
 		=> this as ZipDirectoryInfo;
 
-	public ZipFileSystemInfo(ZipArchive archive, string name, ZipDirectoryInfo? parent, bool exists = true)
+	protected ZipFileSystemInfo(ZipArchive archive, string name, ZipDirectoryInfo? parent, bool exists = true)
 	{
 		this.Archive = archive;
 		this.Name = name;

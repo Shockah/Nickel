@@ -25,7 +25,7 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 
 	public TokenModSetting()
 	{
-		this.OnMenuOpen += (g, route, keyGenerator) =>
+		this.OnMenuOpen += (_, _, keyGenerator) =>
 		{
 			if (this.Key == 0)
 				this.Key = keyGenerator();

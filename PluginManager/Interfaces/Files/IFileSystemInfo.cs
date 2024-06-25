@@ -22,7 +22,7 @@ public interface IFileSystemInfo
 		=> FileSystemInfoExt.GetRelativePath(this, other);
 }
 
-public interface IFileSystemInfo<TFileInfo, TDirectoryInfo> : IFileSystemInfo
+public interface IFileSystemInfo<out TFileInfo, out TDirectoryInfo> : IFileSystemInfo
 	where TFileInfo : class, IFileInfo<TFileInfo, TDirectoryInfo>
 	where TDirectoryInfo : class, IDirectoryInfo<TFileInfo, TDirectoryInfo>
 {

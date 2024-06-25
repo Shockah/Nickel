@@ -4,17 +4,19 @@ using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Nickel.Essentials;
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class MemorySelection
 {
 	private const int MaxCharactersOnScreen = 6;
 
-	private static int ScrollPosition = 0;
+	private static int ScrollPosition;
 
 	private static int MaxScroll
 	{
@@ -77,6 +79,7 @@ internal static class MemorySelection
 		}
 	}
 
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> Vault_Render_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
 		try
@@ -85,7 +88,7 @@ internal static class MemorySelection
 				// limit finale unlock to only 6 vanilla chars
 				.Find(
 					ILMatches.Ldloc<List<Vault.MemorySet>>(originalMethod),
-					ILMatches.Instruction(OpCodes.Ldsfld).Anchor(out var delegateAnchor),
+					ILMatches.Instruction(OpCodes.Ldsfld),
 					ILMatches.Instruction(OpCodes.Dup),
 					ILMatches.Brtrue
 				)

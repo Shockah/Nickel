@@ -65,7 +65,7 @@ internal sealed class LegacyDatabase(
 		foreach (var character in this.GlobalNameToCharacter.Values)
 		{
 			var deck = (Deck)character.Deck.Id!;
-			var id = deck.ToString()!;
+			var id = deck.ToString();
 			var key = deck.Key();
 
 			if (character.GetCharacterName(locale) is { } name)
@@ -514,7 +514,7 @@ internal sealed class LegacyDatabase(
 
 	private static StarterShip ActualizeExternalStarterShip(ExternalStarterShip externalStarterShip, Ship ship)
 	{
-		StarterShip starterShip = new();
+		var starterShip = new StarterShip();
 		starterShip.ship = ship;
 		starterShip.ship.key = externalStarterShip.ShipGlobalName;
 

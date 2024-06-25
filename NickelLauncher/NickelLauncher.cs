@@ -34,7 +34,7 @@ internal class NickelLauncher
 		rootCommand.AddOption(logPathOption);
 		rootCommand.AddOption(timestampedLogFiles);
 
-		rootCommand.SetHandler((InvocationContext context) =>
+		rootCommand.SetHandler(context =>
 		{
 			LaunchArguments launchArguments = new()
 			{

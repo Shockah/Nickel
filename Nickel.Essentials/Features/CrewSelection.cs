@@ -7,6 +7,7 @@ using Nanoray.Shrike.Harmony;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -24,7 +25,7 @@ internal static class CrewSelection
 	private const int CharactersPerRow = 2;
 	private const int MaxCharactersOnScreen = 8;
 
-	private static int ScrollPosition = 0;
+	private static int ScrollPosition;
 
 	private static int MaxScroll
 	{
@@ -106,6 +107,7 @@ internal static class CrewSelection
 		}
 	}
 
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> NewRunOptions_CharSelect_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
 		// hijacking the vanilla "Crew" and "X of 3" texts

@@ -9,9 +9,9 @@ public abstract class BaseModSetting : IModSettingsApi.IModSetting
 	public event IModSettingsApi.OnMenuClose? OnMenuClose;
 	protected IModSettingsApi.IModSettingsRoute CurrentRoute { get; private set; } = null!;
 
-	public BaseModSetting()
+	protected BaseModSetting()
 	{
-		this.OnMenuOpen += (g, route, keyGenerator) =>
+		this.OnMenuOpen += (_, route, keyGenerator) =>
 		{
 			if (this.Key == 0)
 				this.Key = keyGenerator();

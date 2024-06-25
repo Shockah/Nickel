@@ -10,7 +10,7 @@ public sealed class ObjectifiedDelegateMapper
 {
 	private ModuleBuilder ModuleBuilder { get; }
 	private Dictionary<Type, Func<Delegate, Delegate>> Cache { get; } = [];
-	private int Counter { get; set; } = 0;
+	private int Counter { get; set; }
 
 	public ObjectifiedDelegateMapper()
 	{

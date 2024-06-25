@@ -26,13 +26,13 @@ internal sealed class ModManager
 	private readonly ILoggerFactory LoggerFactory;
 	internal readonly ILogger Logger;
 	internal readonly ModEventManager EventManager;
-	internal readonly ModDataManager ModDataManager;
-	internal readonly ModStorageManager ModStorageManager;
+	private readonly ModDataManager ModDataManager;
+	private readonly ModStorageManager ModStorageManager;
 
 	internal readonly IModManifest ModLoaderModManifest;
-	internal ModLoadPhase CurrentModLoadPhase { get; private set; } = ModLoadPhase.BeforeGameAssembly;
+	private ModLoadPhase CurrentModLoadPhase { get; set; } = ModLoadPhase.BeforeGameAssembly;
 	internal ContentManager? ContentManager { get; private set; }
-	internal IModManifest? VanillaModManifest { get; private set; }
+	private IModManifest? VanillaModManifest { get; set; }
 
 	internal readonly List<IPluginPackage<IModManifest>> ResolvedMods = [];
 
@@ -40,7 +40,7 @@ internal sealed class ModManager
 	private readonly IProxyManager<string> ProxyManager;
 	private readonly List<IModManifest> FailedMods = [];
 	private readonly HashSet<IModManifest> OptionalSubmods = [];
-	private bool DidLogHarmonyPatchesOnce = false;
+	private bool DidLogHarmonyPatchesOnce;
 
 	private readonly Dictionary<string, ILogger> UniqueNameToLogger = [];
 	private readonly Dictionary<string, IModHelper> UniqueNameToHelper = [];
@@ -221,7 +221,7 @@ internal sealed class ModManager
 		var toLoadResults = pluginPackageResolver.ResolvePluginPackages().ToList();
 		foreach (var toLoadResult in toLoadResults)
 			toLoadResult.Switch(
-				package => { },
+				_ => { },
 				error => this.Logger.LogError("{PackageResolvingError}", error.Value)
 			);
 		var toLoad = toLoadResults
@@ -273,7 +273,7 @@ internal sealed class ModManager
 						dependencyCycle.Cycle.Values.Append(dependencyCycle.Cycle.Values[0]).Select(m => m.UniqueName)
 					)
 				),
-				unknown => this.Logger.LogError(
+				_ => this.Logger.LogError(
 					"Could not load {UniqueName}: unknown reason.",
 					unresolvableManifest.UniqueName
 				)

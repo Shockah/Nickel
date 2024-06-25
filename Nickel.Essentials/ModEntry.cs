@@ -4,11 +4,13 @@ using Nanoray.PluginManager;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 
 namespace Nickel.Essentials;
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 public sealed class ModEntry : SimpleMod
 {
 	internal static ModEntry Instance { get; private set; } = null!;
@@ -17,7 +19,7 @@ public sealed class ModEntry : SimpleMod
 	internal Settings Settings = new();
 	internal IMoreDifficultiesApi? MoreDifficultiesApi { get; private set; }
 
-	internal static bool StopStateTransitions = false;
+	internal static bool StopStateTransitions;
 
 	private readonly Dictionary<Deck, Type?> ExeCache = [];
 	private readonly Dictionary<Type, Deck> ExeTypeToDeck = [];
@@ -145,7 +147,7 @@ public sealed class ModEntry : SimpleMod
 
 			foreach (var deck in NewRunOptions.allChars)
 			{
-				if (this.Helper.Content.Characters.LookupByDeck(deck) is { } entry && entry.Configuration.ExeCardType is { } entryExeType)
+				if (this.Helper.Content.Characters.LookupByDeck(deck) is { Configuration.ExeCardType: { } entryExeType })
 				{
 					this.ExeCache[deck] = entryExeType;
 					this.ExeTypeToDeck[entryExeType] = deck;
@@ -172,7 +174,7 @@ public sealed class ModEntry : SimpleMod
 				}
 				catch
 				{
-
+					// ignored
 				}
 			}
 		}
@@ -186,7 +188,7 @@ public sealed class ModEntry : SimpleMod
 	internal Type? GetExeCardTypeForDeck(Deck deck)
 	{
 		this.PrepareExeInfoIfNeeded();
-		return this.ExeCache.TryGetValue(deck, out var exeType) ? exeType : null;
+		return this.ExeCache.GetValueOrDefault(deck);
 	}
 
 	internal Deck? GetDeckForExeCardType(Type type)

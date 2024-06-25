@@ -49,6 +49,13 @@ internal sealed class ProxyContractResolver<TContext> : JsonConverter
 			if (serializableProxy is null)
 				return null;
 
+			var proxyType = GetType(serializableProxy.ProxyInfo.Proxy) ?? throw new InvalidDataException($"Cannot deserialize {serializableProxy}");
+			var obtainProxyMethod = typeof(IProxyManagerExtensions)
+				.GetMethods()
+				.First(m => m.Name == "ObtainProxy")
+				.MakeGenericMethod([typeof(TContext), proxyType]);
+			return obtainProxyMethod.Invoke(null, [this.ProxyManager, serializableProxy.Target, serializableProxy.ProxyInfo.Target.Context, serializableProxy.ProxyInfo.Proxy.Context]);
+
 			Type? GetType(SerializableTypeInfo typeInfo)
 			{
 				try
@@ -63,19 +70,6 @@ internal sealed class ProxyContractResolver<TContext> : JsonConverter
 					return null;
 				}
 			}
-
-			var targetType = GetType(serializableProxy.ProxyInfo.Proxy) ?? throw new InvalidDataException($"Cannot deserialize {serializableProxy}");
-			var proxyType = GetType(serializableProxy.ProxyInfo.Proxy) ?? throw new InvalidDataException($"Cannot deserialize {serializableProxy}");
-			var proxyInfo = new ProxyInfo<TContext>(
-				new TypeInfo<TContext>(serializableProxy.ProxyInfo.Target.Context, targetType),
-				new TypeInfo<TContext>(serializableProxy.ProxyInfo.Proxy.Context, proxyType)
-			);
-
-			var obtainProxyMethod = typeof(IProxyManagerExtensions)
-				.GetMethods()
-				.First(m => m.Name == "ObtainProxy")
-				.MakeGenericMethod([typeof(TContext), proxyType]);
-			return obtainProxyMethod.Invoke(null, [this.ProxyManager, serializableProxy.Target, serializableProxy.ProxyInfo.Target.Context, serializableProxy.ProxyInfo.Proxy.Context]);
 		}
 		finally
 		{

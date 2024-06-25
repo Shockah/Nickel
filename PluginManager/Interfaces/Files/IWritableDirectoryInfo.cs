@@ -15,7 +15,7 @@ public interface IWritableDirectoryInfo : IDirectoryInfo, IWritableFileSystemInf
 		=> this.GetRelativeDirectory(relativePath);
 }
 
-public interface IWritableDirectoryInfo<TFileInfo, TDirectoryInfo> : IDirectoryInfo<TFileInfo, TDirectoryInfo>, IWritableFileSystemInfo<TFileInfo, TDirectoryInfo>, IWritableDirectoryInfo
+public interface IWritableDirectoryInfo<out TFileInfo, out TDirectoryInfo> : IDirectoryInfo<TFileInfo, TDirectoryInfo>, IWritableFileSystemInfo<TFileInfo, TDirectoryInfo>, IWritableDirectoryInfo
 	where TFileInfo : class, IWritableFileInfo<TFileInfo, TDirectoryInfo>
 	where TDirectoryInfo : class, IWritableDirectoryInfo<TFileInfo, TDirectoryInfo>
 {

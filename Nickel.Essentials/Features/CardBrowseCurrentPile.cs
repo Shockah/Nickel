@@ -2,7 +2,7 @@ using HarmonyLib;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Nickel.Essentials;
@@ -18,13 +18,14 @@ public enum CardBrowseCurrentPileSetting
 	Off, Tooltip, Icon, Both
 }
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class CardBrowseCurrentPile
 {
 	private static ISpriteEntry InDrawPileIcon = null!;
 	private static ISpriteEntry InDiscardPileIcon = null!;
 	private static ISpriteEntry InExhaustPileIcon = null!;
 
-	private static bool IsRenderingCardBrowse = false;
+	private static bool IsRenderingCardBrowse;
 
 	public static void ApplyPatches(Harmony harmony)
 	{
@@ -130,7 +131,7 @@ internal static class CardBrowseCurrentPile
 			return;
 
 		var position = posOverride ?? __instance.pos;
-		position += new Vec(0.0, __instance.hoverAnim * -2.0 + Mutil.Parabola(__instance.flipAnim) * -10.0 + Mutil.Parabola(Math.Abs(__instance.flopAnim)) * -10.0 * (double)Math.Sign(__instance.flopAnim));
+		position += new Vec(0.0, __instance.hoverAnim * -2.0 + Mutil.Parabola(__instance.flipAnim) * -10.0 + Mutil.Parabola(Math.Abs(__instance.flopAnim)) * -10.0 * Math.Sign(__instance.flopAnim));
 		position = position.round();
 
 		Draw.Sprite(icon, position.x + 28 - texture.Width / 2, position.y + 75);
@@ -147,6 +148,6 @@ internal static class CardBrowseCurrentPile
 		if (GetCardDestinationTooltip(GetCardCurrentPile(g.state, combat, __instance)) is not { } tooltip)
 			return;
 
-		__result = new Tooltip[] { tooltip }.Concat(__result);
+		__result = [tooltip, .. __result];
 	}
 }

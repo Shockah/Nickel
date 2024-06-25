@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Nanoray.PluginManager;
 
@@ -15,7 +14,7 @@ public sealed class CompoundAssemblyPluginLoaderParameterInjector<TPluginManifes
 
 	public CompoundAssemblyPluginLoaderParameterInjector(params IAssemblyPluginLoaderParameterInjector<TPluginManifest>[] parameterInjectors) : this((IReadOnlyList<IAssemblyPluginLoaderParameterInjector<TPluginManifest>>)parameterInjectors) { }
 
-	public bool TryToInjectParameter(IPluginPackage<TPluginManifest> package, Type type, [MaybeNullWhen(false)] out object? toInject)
+	public bool TryToInjectParameter(IPluginPackage<TPluginManifest> package, Type type, out object? toInject)
 	{
 		foreach (var injector in this.ParameterInjectors)
 			if (injector.TryToInjectParameter(package, type, out toInject))

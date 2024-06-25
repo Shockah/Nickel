@@ -11,20 +11,18 @@ public sealed class SingleAssemblyPluginPartAssembler<TPluginManifest, TPlugin> 
 	where TPlugin : notnull
 {
 	public Error<string>? ValidatePluginParts(IPluginPackage<TPluginManifest> package, Assembly assembly, IReadOnlySet<Type> partTypes)
-	{
-		if (partTypes.Count <= 0)
-			return new($"The assembly {assembly} does not include any {typeof(TPlugin)} subclasses.");
-		if (partTypes.Count > 1)
-			return new($"The assembly {assembly} includes multiple {typeof(TPlugin)} subclasses: {string.Join(", ", partTypes.Select(t => t.FullName))}.");
-		return null;
-	}
+		=> partTypes.Count switch
+		{
+			<= 0 => new($"The assembly {assembly} does not include any {typeof(TPlugin)} subclasses."),
+			> 1 => new($"The assembly {assembly} includes multiple {typeof(TPlugin)} subclasses: {string.Join(", ", partTypes.Select(t => t.FullName))}."),
+			_ => null
+		};
 
 	public OneOf<TPlugin, Error<string>> AssemblePluginParts(IPluginPackage<TPluginManifest> package, Assembly assembly, IReadOnlySet<TPlugin> parts)
-	{
-		if (parts.Count <= 0)
-			return new Error<string>($"The assembly {assembly} does not include any {typeof(TPlugin)} subclasses.");
-		if (parts.Count > 1)
-			return new Error<string>($"The assembly {assembly} includes multiple {typeof(TPlugin)} subclasses: {string.Join(", ", parts.Select(p => p.GetType().FullName))}.");
-		return parts.Single();
-	}
+		=> parts.Count switch
+		{
+			<= 0 => new Error<string>($"The assembly {assembly} does not include any {typeof(TPlugin)} subclasses."),
+			> 1 => new Error<string>($"The assembly {assembly} includes multiple {typeof(TPlugin)} subclasses: {string.Join(", ", parts.Select(p => p.GetType().FullName))}."),
+			_ => parts.Single()
+		};
 }

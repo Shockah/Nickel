@@ -31,7 +31,7 @@ public sealed class ApiImplementation : IModSettingsApi
 						Settings = [
 							.. ModEntry.Instance.Helper.ModRegistry.LoadedMods.Values
 								.OrderBy(m => m.DisplayName ?? m.UniqueName)
-								.Select(m => (Mod: m, Setting: ModEntry.Instance.ModSettings.TryGetValue(m.UniqueName, out var setting) ? setting : null))
+								.Select(m => (Mod: m, Setting: ModEntry.Instance.ModSettings.GetValueOrDefault(m.UniqueName)))
 								.Where(e => e.Setting is not null)
 								.Select(e => new ButtonModSetting
 								{

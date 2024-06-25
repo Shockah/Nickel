@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -225,7 +226,6 @@ public sealed class ModEntry : SimpleMod
 			{
 				this.UpdatesAvailable[mod] = null;
 				this.Logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure is defined, but there are no installed compatible update sources.", mod.GetDisplayName(@long: false));
-				continue;
 			}
 		}
 
@@ -341,6 +341,7 @@ public sealed class ModEntry : SimpleMod
 			action();
 	}
 
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> CornerMenu_Render_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
 		try
@@ -444,7 +445,7 @@ public sealed class ModEntry : SimpleMod
 		{
 			if (!addedTooltips)
 			{
-				addedTooltips = true;
+				// addedTooltips = true;
 				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new TTDivider());
 			}
 

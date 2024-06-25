@@ -23,8 +23,8 @@ public static class IModDataClassExt
 
 	public static void SetOptionalModData<T>(this IModData modData, object o, string key, T? data) where T : class
 	{
-		if (data is { } nonNull)
-			modData.SetModData(o, key, nonNull);
+		if (data != null)
+			modData.SetModData(o, key, data);
 		else
 			modData.RemoveModData(o, key);
 	}

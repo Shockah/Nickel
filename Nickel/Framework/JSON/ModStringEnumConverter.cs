@@ -75,12 +75,7 @@ internal sealed class ModStringEnumConverter<T> : JsonConverter
 			return;
 		}
 
-		rawValue = this.ModEnumToStringProvider(typedValue) ?? value.ToString();
-		if (rawValue is null)
-		{
-			writer.WriteNull();
-			return;
-		}
+		rawValue = this.ModEnumToStringProvider(typedValue);
 		this.StringToEnum[rawValue] = typedValue;
 		this.EnumToString[typedValue] = rawValue;
 		writer.WriteValue(rawValue);

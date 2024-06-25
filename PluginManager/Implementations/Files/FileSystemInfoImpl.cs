@@ -25,7 +25,7 @@ public abstract class FileSystemInfoImpl<TFileSystemInfo> : IFileSystemInfo<File
 	public DirectoryInfoImpl? AsDirectory
 		=> this as DirectoryInfoImpl ?? (this.FileSystemInfo is DirectoryInfo info ? new DirectoryInfoImpl(info) : null);
 
-	public FileSystemInfoImpl(TFileSystemInfo fileSystemInfo)
+	protected FileSystemInfoImpl(TFileSystemInfo fileSystemInfo)
 	{
 		this.FileSystemInfo = fileSystemInfo;
 	}

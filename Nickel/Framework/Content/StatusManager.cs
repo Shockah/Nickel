@@ -35,15 +35,12 @@ internal sealed class StatusManager
 				return true;
 			if (o.GetType().IsPrimitive)
 				return false;
-			if (@checked.Contains(o))
+			if (!@checked.Add(o))
 				return false;
 
-			@checked.Add(o);
-
-			foreach (var field in o.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-				if (ContainsInvalidEntries(field.GetValue(o)))
-					return true;
-			return false;
+			return o.GetType()
+				.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+				.Any(field => ContainsInvalidEntries(field.GetValue(o)));
 		}
 
 		return ContainsInvalidEntries(state);
@@ -144,7 +141,7 @@ internal sealed class StatusManager
 	}
 
 	public IStatusEntry? LookupByUniqueName(string uniqueName)
-		=> this.UniqueNameToEntry.TryGetValue(uniqueName, out var typedEntry) ? typedEntry : null;
+		=> this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
 
 	private static void Inject(Entry entry)
 	{

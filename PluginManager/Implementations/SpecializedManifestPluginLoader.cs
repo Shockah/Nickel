@@ -10,12 +10,10 @@ public sealed class SpecializedManifestPluginLoader<TSpecializedPluginManifest, 
 
 	public SpecializedManifestPluginLoader(IPluginLoader<TSpecializedPluginManifest, TPlugin> pluginLoader)
 	{
-		this.ConvertingPluginLoader = new(pluginLoader, m =>
-		{
-			return m is TSpecializedPluginManifest specialized
-				? specialized
-				: new Error<string>($"Cannot convert plugin manifest {m} to {typeof(TSpecializedPluginManifest)}.");
-		});
+		this.ConvertingPluginLoader = new(
+			pluginLoader,
+			m => m is TSpecializedPluginManifest specialized ? specialized : new Error<string>($"Cannot convert plugin manifest {m} to {typeof(TSpecializedPluginManifest)}.")
+		);
 	}
 
 	public OneOf<Yes, No, Error<string>> CanLoadPlugin(IPluginPackage<TPluginManifest> package)

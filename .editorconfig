@@ -110,7 +110,7 @@ csharp_style_prefer_readonly_struct = true:warning
 csharp_style_prefer_readonly_struct_member = true:warning
 
 # Code-block preferences
-csharp_prefer_braces = false:warning
+csharp_prefer_braces = false:silent
 csharp_prefer_simple_using_statement = true:suggestion
 csharp_style_namespace_declarations = file_scoped:warning
 csharp_style_prefer_method_group_conversion = true:silent

@@ -29,9 +29,10 @@ public sealed class MultiPhasePluginDependencyResolver<TPluginManifest, TVersion
 		List<IReadOnlySet<TPluginManifest>> loadSteps = [];
 		Dictionary<TPluginManifest, PluginDependencyUnresolvableResult<TPluginManifest, TVersion>> unresolvable = [];
 
+		var toResolveList = toResolve.ToList();
 		foreach (var loadPhase in this.LoadPhases)
 		{
-			var toResolveThisPhase = toResolve.Where(m => Equals(this.LoadPhaseFunction(m), loadPhase));
+			var toResolveThisPhase = toResolveList.Where(m => Equals(this.LoadPhaseFunction(m), loadPhase));
 			var resolveResultThisPhase = this.Resolver.ResolveDependencies(toResolveThisPhase, runtimeResolved);
 			foreach (var (unresolvableManifest, reason) in resolveResultThisPhase.Unresolvable)
 				unresolvable[unresolvableManifest] = reason;

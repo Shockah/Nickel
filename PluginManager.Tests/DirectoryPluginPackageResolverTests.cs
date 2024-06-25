@@ -56,11 +56,8 @@ internal sealed class DirectoryPluginPackageResolverTests
 		Assert.AreEqual(1, results.Count);
 
 		var packageOrError = results.First();
-		if (packageOrError.TryPickT0(out var package, out var error))
-		{
+		if (packageOrError.TryPickT0(out var package, out _))
 			Assert.Fail("Expected an error, got a package: {0}", package);
-			return;
-		}
 	}
 
 	private sealed class MockPluginManifestLoader<TPluginManifest> : IPluginManifestLoader<TPluginManifest>

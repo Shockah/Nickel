@@ -90,7 +90,7 @@ public sealed class ModEntry : Mod
 					return new ValidatingPluginLoaderResult.Success { Warnings = warnings };
 				}
 			),
-			callback: (Mod mod) =>
+			callback: mod =>
 			{
 				if (mod is not LegacyModWrapper legacy)
 					return;
@@ -210,7 +210,7 @@ public sealed class ModEntry : Mod
 				.DistinctBy(d => d.DependencyName);
 			var optionalDependencies = dependencies
 				.Where(d => d.IgnoreIfMissing)
-				.Where(d => !requiredDependencies.Any(required => required.DependencyName == d.DependencyName))
+				.Where(d => requiredDependencies.All(required => required.DependencyName != d.DependencyName))
 				.DistinctBy(d => d.DependencyName);
 
 			var manifest = new GeneratedLegacyModManifest

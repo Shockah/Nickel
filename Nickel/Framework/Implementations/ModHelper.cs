@@ -4,10 +4,10 @@ namespace Nickel;
 
 internal sealed class ModHelper : IModHelper
 {
-	public IModRegistry ModRegistry { get; init; }
-	public IModEvents Events { get; init; }
-	public IModData ModData { get; init; }
-	public IModStorage Storage { get; init; }
+	public IModRegistry ModRegistry { get; }
+	public IModEvents Events { get; }
+	public IModData ModData { get; }
+	public IModStorage Storage { get; }
 
 	public IModContent Content
 	{
