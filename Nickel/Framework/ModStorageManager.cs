@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 
@@ -39,6 +40,7 @@ internal sealed class ModStorageManager
 			{
 				Formatting = Formatting.Indented,
 			};
+			settings.Converters.Add(new StringEnumConverter());
 			settings.Converters.Add(new SemanticVersionConverter());
 
 			var functions = new OrderedList<Action<JsonSerializerSettings>, double>(this.GlobalSettingsFunctions);
