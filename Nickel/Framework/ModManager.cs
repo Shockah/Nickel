@@ -505,7 +505,13 @@ internal sealed class ModManager
 					new ModEnemies(package.Manifest, () => this.ContentManager!.Enemies)
 				),
 				new ModData(package.Manifest, this.ModDataManager),
-				new ModStorage(package.Manifest, new DirectoryInfoImpl(this.ModSettingsDirectory), new DirectoryInfoImpl(this.PrivateModSettingsDirectory), this.ModStorageManager),
+				new ModStorage(
+					package.Manifest,
+					() => this.ObtainLogger(package.Manifest),
+					new DirectoryInfoImpl(this.ModSettingsDirectory),
+					new DirectoryInfoImpl(this.PrivateModSettingsDirectory),
+					this.ModStorageManager
+				),
 				() => this.CurrentModLoadPhase
 			);
 			this.UniqueNameToHelper[package.Manifest.UniqueName] = helper;

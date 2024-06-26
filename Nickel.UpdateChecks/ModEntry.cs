@@ -10,7 +10,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -57,7 +56,7 @@ public sealed class ModEntry : SimpleMod
 	internal readonly Dictionary<IModManifest, UpdateDescriptor?> UpdatesAvailable = [];
 	internal readonly ConcurrentQueue<Action> ToRunInGameLoop = [];
 	internal readonly List<Action> AwaitingUpdateInfo = [];
-	internal Settings Settings = new();
+	internal readonly Settings Settings;
 
 	private IWritableFileInfo SettingsFile
 		=> this.Helper.Storage.GetSingleSettingsFile("json");
@@ -73,7 +72,7 @@ public sealed class ModEntry : SimpleMod
 				)
 			)
 		);
-		this.LoadSettings();
+		this.Settings = helper.Storage.LoadJson<Settings>(this.SettingsFile);
 
 		UpdateAvailableOverlayIcon = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/UpdateAvailableOverlayIcon.png"));
 		WarningMessageOverlayIcon = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/WarningMessageOverlayIcon.png"));
@@ -117,51 +116,15 @@ public sealed class ModEntry : SimpleMod
 
 						var ignored = entries.Count(kvp => this.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) && ignoredUpdate == kvp.Value.Version);
 						return $"{ignored}/{entries.Count}";
-					})
+					}).SubscribeToOnMenuClose(
+						_ => helper.Storage.SaveJson(this.SettingsFile, this.Settings)
+					)
 				);
 		};
 	}
 
 	public override object? GetApi(IModManifest requestingMod)
 		=> new ApiImplementation();
-
-	private void LoadSettings()
-	{
-		if (this.SettingsFile.Exists)
-		{
-			try
-			{
-				using var stream = this.SettingsFile.OpenRead();
-				using var streamReader = new StreamReader(stream);
-				using var jsonReader = new JsonTextReader(streamReader);
-				this.Settings = this.Helper.Storage.JsonSerializer.Deserialize<Settings>(jsonReader) ?? new();
-			}
-			catch
-			{
-				this.Settings = new();
-			}
-		}
-		else
-		{
-			this.Settings = new();
-			this.SaveSettings();
-		}
-	}
-
-	private void SaveSettings()
-	{
-		try
-		{
-			using var stream = this.SettingsFile.OpenWrite();
-			using var streamWriter = new StreamWriter(stream);
-			using var jsonWriter = new JsonTextWriter(streamWriter);
-			this.Helper.Storage.JsonSerializer.Serialize(jsonWriter, this.Settings);
-		}
-		catch (Exception ex)
-		{
-			this.Logger.LogError("Could not save settings file: {Exception}", ex);
-		}
-	}
 
 	internal void ParseManifestsAndRequestUpdateInfo(IUpdateSource? sourceToUpdate = null)
 	{
@@ -354,7 +317,7 @@ public sealed class ModEntry : SimpleMod
 		}
 		catch (Exception ex)
 		{
-			Instance.Logger.LogError("Could not patch method {Method} - {Mod} probably won't work.\nReason: {Exception}", originalMethod, ModEntry.Instance.Package.Manifest.UniqueName, ex);
+			Instance.Logger.LogError("Could not patch method {Method} - {Mod} probably won't work.\nReason: {Exception}", originalMethod, Instance.Package.Manifest.UniqueName, ex);
 			return instructions;
 		}
 	}

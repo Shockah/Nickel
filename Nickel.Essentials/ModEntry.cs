@@ -1,11 +1,9 @@
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
 
 namespace Nickel.Essentials;
@@ -16,7 +14,7 @@ public sealed class ModEntry : SimpleMod
 	internal static ModEntry Instance { get; private set; } = null!;
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 	internal ApiImplementation Api { get; private set; }
-	internal Settings Settings = new();
+	internal readonly Settings Settings;
 	internal IMoreDifficultiesApi? MoreDifficultiesApi { get; private set; }
 
 	internal static bool StopStateTransitions;
@@ -39,7 +37,7 @@ public sealed class ModEntry : SimpleMod
 				)
 			)
 		);
-		this.LoadSettings();
+		this.Settings = helper.Storage.LoadJson<Settings>(this.SettingsFile);
 
 		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
 		{
@@ -57,7 +55,7 @@ public sealed class ModEntry : SimpleMod
 						CardBrowseCurrentPile.MakeSettings(settingsApi),
 						ModDescriptions.MakeSettings(settingsApi),
 					]).SubscribeToOnMenuClose(
-						_ => this.SaveSettings()
+						_ => helper.Storage.SaveJson(this.SettingsFile, this.Settings)
 					)
 				);
 		};
@@ -87,44 +85,6 @@ public sealed class ModEntry : SimpleMod
 
 	public override object? GetApi(IModManifest requestingMod)
 		=> new ApiImplementation();
-
-	private void LoadSettings()
-	{
-		if (this.SettingsFile.Exists)
-		{
-			try
-			{
-				using var stream = this.SettingsFile.OpenRead();
-				using var streamReader = new StreamReader(stream);
-				using var jsonReader = new JsonTextReader(streamReader);
-				this.Settings = this.Helper.Storage.JsonSerializer.Deserialize<Settings>(jsonReader) ?? new();
-			}
-			catch
-			{
-				this.Settings = new();
-			}
-		}
-		else
-		{
-			this.Settings = new();
-			this.SaveSettings();
-		}
-	}
-
-	private void SaveSettings()
-	{
-		try
-		{
-			using var stream = this.SettingsFile.OpenWrite();
-			using var streamWriter = new StreamWriter(stream);
-			using var jsonWriter = new JsonTextWriter(streamWriter);
-			this.Helper.Storage.JsonSerializer.Serialize(jsonWriter, this.Settings);
-		}
-		catch (Exception ex)
-		{
-			this.Logger.LogError("Could not save settings file: {Exception}", ex);
-		}
-	}
 
 	private void PrepareExeInfoIfNeeded()
 	{

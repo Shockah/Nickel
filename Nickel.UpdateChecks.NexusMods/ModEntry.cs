@@ -27,7 +27,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	private bool GotUnauthorized;
 
 	private readonly SemaphoreSlim Semaphore = new(1, 1);
-	private Database Database = new();
+	private readonly Database Database;
 
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
@@ -41,7 +41,8 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			)
 		);
 		helper.Storage.ApplyJsonSerializerSettings(s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
-		this.LoadDatabase();
+		this.Database = helper.Storage.LoadJson<Database>(this.DatabaseFile);
+		this.Client = this.MakeHttpClient();
 
 		var updateChecksApi = helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!;
 		updateChecksApi.RegisterUpdateSource("NexusMods", this);
@@ -64,11 +65,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 							{
 								Title = () => this.Localizations.Localize(["modSettings", "apiKey", "name"]),
 								HasValue = () => !string.IsNullOrEmpty(this.Database.ApiKey),
-								PasteAction = text =>
-								{
-									this.Database.ApiKey = text;
-									this.SaveDatabase();
-								},
+								PasteAction = text => this.Database.ApiKey = text,
 								SetupAction = () => MainMenu.TryOpenWebsiteLink("https://next.nexusmods.com/settings/api-keys"),
 								BaseTooltips = () => [
 									new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::ApiKey")
@@ -83,7 +80,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 						),
 					]).SubscribeToOnMenuClose(_ =>
 					{
-						this.SaveDatabase();
+						helper.Storage.SaveJson(this.DatabaseFile, this.Database);
 						this.Client = this.MakeHttpClient();
 
 						if (this.Database.IsEnabled)
@@ -91,46 +88,6 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 					})
 				);
 		};
-	}
-
-	private void LoadDatabase()
-	{
-		if (this.DatabaseFile.Exists)
-		{
-			try
-			{
-				using var stream = this.DatabaseFile.OpenRead();
-				using var streamReader = new StreamReader(stream);
-				using var jsonReader = new JsonTextReader(streamReader);
-				this.Database = this.Helper.Storage.JsonSerializer.Deserialize<Database>(jsonReader) ?? new();
-			}
-			catch
-			{
-				this.Database = new();
-			}
-		}
-		else
-		{
-			this.Database = new();
-			this.SaveDatabase();
-		}
-
-		this.Client = this.MakeHttpClient();
-	}
-
-	private void SaveDatabase()
-	{
-		try
-		{
-			using var stream = this.DatabaseFile.OpenWrite();
-			using var streamWriter = new StreamWriter(stream);
-			using var jsonWriter = new JsonTextWriter(streamWriter);
-			this.Helper.Storage.JsonSerializer.Serialize(jsonWriter, this.Database);
-		}
-		catch (Exception ex)
-		{
-			this.Logger.LogError("Could not save database file: {Exception}", ex);
-		}
 	}
 
 	private HttpClient MakeHttpClient()
@@ -314,7 +271,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		}
 		finally
 		{
-			this.SaveDatabase();
+			this.Helper.Storage.SaveJson(this.DatabaseFile, this.Database);
 			this.Semaphore.Release();
 		}
 	}
