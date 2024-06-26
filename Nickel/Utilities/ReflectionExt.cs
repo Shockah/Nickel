@@ -84,7 +84,7 @@ public static class ReflectionExt
 		var method = new DynamicMethod($"get_{property.Name}", typeof(TValue), [typeof(TOwner)]);
 		var il = method.GetILGenerator();
 		il.Emit(OpCodes.Ldarg_0);
-		il.Emit(propertyAccessor.IsVirtual && !propertyAccessor.IsFinal ? OpCodes.Callvirt : OpCodes.Call, propertyAccessor);
+		il.Emit(propertyAccessor is { IsVirtual: true, IsFinal: false } ? OpCodes.Callvirt : OpCodes.Call, propertyAccessor);
 		il.Emit(OpCodes.Ret);
 		return method.CreateDelegate<Func<TOwner, TValue>>();
 	}
@@ -120,7 +120,7 @@ public static class ReflectionExt
 		var il = method.GetILGenerator();
 		il.Emit(OpCodes.Ldarg_0);
 		il.Emit(OpCodes.Ldarg_1);
-		il.Emit(propertyAccessor.IsVirtual && !propertyAccessor.IsFinal ? OpCodes.Callvirt : OpCodes.Call, propertyAccessor);
+		il.Emit(propertyAccessor is { IsVirtual: true, IsFinal: false } ? OpCodes.Callvirt : OpCodes.Call, propertyAccessor);
 		il.Emit(OpCodes.Ret);
 		return method.CreateDelegate<Action<TOwner, TValue>>();
 	}

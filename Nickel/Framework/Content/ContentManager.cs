@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
-using Nickel.Framework;
 using System;
 using System.Collections.Generic;
 

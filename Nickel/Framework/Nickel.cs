@@ -20,7 +20,6 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 	internal ModManager ModManager { get; private set; } = null!;
 	private LaunchArguments LaunchArguments { get; } = launchArguments;
 	
-	// ReSharper disable once NotAccessedField.Local
 	private SaveManager SaveManager = null!;
 
 	internal static int Main(string[] args)

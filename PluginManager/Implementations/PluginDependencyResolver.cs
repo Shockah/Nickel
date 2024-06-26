@@ -4,17 +4,27 @@ using System.Linq;
 
 namespace Nanoray.PluginManager;
 
+/// <summary>
+/// The default <see cref="IPluginDependencyResolver{TPluginManifest,TVersion}"/> implementation.
+/// </summary>
+/// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
+/// <typeparam name="TVersion">The type representing a plugin version.</typeparam>
 public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPluginDependencyResolver<TPluginManifest, TVersion>
 	where TPluginManifest : notnull
 	where TVersion : struct, IEquatable<TVersion>, IComparable<TVersion>
 {
 	private Func<TPluginManifest, RequiredManifestData> RequiredManifestDataProvider { get; }
 
+	/// <summary>
+	/// Creates a new <see cref="PluginDependencyResolver{TPluginManifest,TVersion}"/>.
+	/// </summary>
+	/// <param name="requiredManifestDataProvider">A function which maps plugin manifests to the data required for this resolver.</param>
 	public PluginDependencyResolver(Func<TPluginManifest, RequiredManifestData> requiredManifestDataProvider)
 	{
 		this.RequiredManifestDataProvider = requiredManifestDataProvider;
 	}
 
+	/// <inheritdoc/>
 	public PluginDependencyResolveResult<TPluginManifest, TVersion> ResolveDependencies(IEnumerable<TPluginManifest> toResolve, IReadOnlySet<TPluginManifest>? resolved = null)
 	{
 		var toResolveLeft = toResolve.ToList();
@@ -153,10 +163,18 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 		return new PluginDependencyResolveResult<TPluginManifest, TVersion> { LoadSteps = loadSteps, Unresolvable = unresolvable };
 	}
 
+	/// <summary>
+	/// Describes data required for resolving plugin load order via <see cref="PluginDependencyResolver{TPluginManifest,TVersion}"/>.
+	/// </summary>
 	public readonly struct RequiredManifestData
 	{
+		/// <summary>The unique name of the plugin.</summary>
 		public string UniqueName { get; init; }
+		
+		/// <summary>The version of the plugin.</summary>
 		public TVersion Version { get; init; }
+		
+		/// <summary>The plugin's dependencies.</summary>
 		public IReadOnlySet<PluginDependency<TVersion>> Dependencies { get; init; }
 	}
 

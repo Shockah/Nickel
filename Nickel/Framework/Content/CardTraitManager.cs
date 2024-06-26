@@ -1,6 +1,5 @@
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using Nickel.Framework;
 using Nickel.Models.Content;
 using System;
 using System.Collections.Generic;

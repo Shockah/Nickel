@@ -7,10 +7,15 @@ using System.Linq;
 
 namespace Nanoray.PluginManager.Cecil;
 
+/// <summary>
+/// An <see cref="IAssemblyEditor"/> which allows registering <see cref="IAssemblyDefinitionEditor"/> implementations.
+/// </summary>
+/// <param name="cecilAssemblyResolverProducer">An <see cref="IAssemblyResolver"/> provider function.</param>
 public sealed class ExtendableAssemblyDefinitionEditor(Func<IAssemblyResolver> cecilAssemblyResolverProducer) : IAssemblyEditor
 {
 	private readonly List<IAssemblyDefinitionEditor> DefinitionEditors = [];
 
+	/// <inheritdoc/>
 	public void EditAssemblyStream(string name, ref Stream assemblyStream, ref Stream? symbolsStream)
 	{
 		var interestedEditors = this.DefinitionEditors.Where(x => x.WillEditAssembly(name)).ToList();
@@ -44,10 +49,18 @@ public sealed class ExtendableAssemblyDefinitionEditor(Func<IAssemblyResolver> c
 		assemblyStream = newAssemblyStream;
 		symbolsStream = newSymbolsStream;
 	}
-
+	
+	/// <summary>
+	/// Register a definition editor.
+	/// </summary>
+	/// <param name="definitionEditor">The definition editor.</param>
 	public void RegisterDefinitionEditor(IAssemblyDefinitionEditor definitionEditor)
 		=> this.DefinitionEditors.Add(definitionEditor);
 
+	/// <summary>
+	/// Unregister a definition editor.
+	/// </summary>
+	/// <param name="definitionEditor">The definition editor.</param>
 	public void UnregisterDefinitionEditor(IAssemblyDefinitionEditor definitionEditor)
 		=> this.DefinitionEditors.Remove(definitionEditor);
 }

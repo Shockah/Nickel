@@ -6,11 +6,20 @@ using System.IO.Compression;
 
 namespace Nanoray.PluginManager;
 
+/// <summary>
+/// An <see cref="IPluginPackageResolver{TPluginManifest}"/> which resolves plugins from a ZIP file.
+/// </summary>
+/// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
 public sealed class ZipPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
 	private IFileInfo ZipFile { get; }
 	private Func<IDirectoryInfo, IPluginPackageResolver<TPluginManifest>> ResolverFactory { get; }
 
+	/// <summary>
+	/// Creates a new <see cref="ZipPluginPackageResolver{TPluginManifest}"/>
+	/// </summary>
+	/// <param name="zipFile">The ZIP file to resolve plugins from.</param>
+	/// <param name="resolverFactory">A function providing a plugin package resolver for a given directory.</param>
 	public ZipPluginPackageResolver(
 		IFileInfo zipFile,
 		Func<IDirectoryInfo, IPluginPackageResolver<TPluginManifest>> resolverFactory
@@ -20,6 +29,7 @@ public sealed class ZipPluginPackageResolver<TPluginManifest> : IPluginPackageRe
 		this.ResolverFactory = resolverFactory;
 	}
 
+	/// <inheritdoc/>
 	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
 	{
 		if (!this.ZipFile.Exists)

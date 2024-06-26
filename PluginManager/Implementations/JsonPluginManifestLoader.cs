@@ -5,10 +5,15 @@ using System.IO;
 
 namespace Nanoray.PluginManager;
 
+/// <summary>
+/// An <see cref="IPluginManifestLoader{TPluginManifest}"/> which loads manifests from JSON files.
+/// </summary>
+/// <typeparam name="TPluginManifest"></typeparam>
 public sealed class JsonPluginManifestLoader<TPluginManifest> : IPluginManifestLoader<TPluginManifest>
 {
 	private JsonSerializer Serializer { get; } = new();
 
+	/// <inheritdoc/>
 	public OneOf<TPluginManifest, Error<string>> LoadPluginManifest(Stream stream)
 	{
 		using StreamReader reader = new(stream);

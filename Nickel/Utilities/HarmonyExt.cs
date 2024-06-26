@@ -5,8 +5,21 @@ using System.Reflection;
 
 namespace Nickel;
 
+/// <summary>
+/// Hosts extensions for Harmony.
+/// </summary>
 public static class HarmonyExt
 {
+	/// <summary>
+	/// Patches all overrides of the given method with the same set of patches.
+	/// </summary>
+	/// <param name="harmony">The Harmony instance.</param>
+	/// <param name="original">The method to find overrides of.</param>
+	/// <param name="prefix">The prefix patch.</param>
+	/// <param name="postfix">The postfix patch.</param>
+	/// <param name="transpiler">The transpiler patch.</param>
+	/// <param name="finalizer">The finalizer patch.</param>
+	/// <param name="includeBaseMethod">Whether to also patch the given original method, or only its overrides.</param>
 	public static void PatchVirtual(this Harmony harmony, MethodBase? original, HarmonyMethod? prefix = null, HarmonyMethod? postfix = null, HarmonyMethod? transpiler = null, HarmonyMethod? finalizer = null, bool includeBaseMethod = true)
 	{
 		if (original is null)

@@ -6,7 +6,7 @@ using System.Reflection.Emit;
 
 namespace Nickel;
 
-public sealed class ObjectifiedDelegateMapper
+internal sealed class ObjectifiedDelegateMapper
 {
 	private ModuleBuilder ModuleBuilder { get; }
 	private Dictionary<Type, Func<Delegate, Delegate>> Cache { get; } = [];
@@ -126,7 +126,7 @@ public sealed class ObjectifiedDelegateMapper
 			il.Emit(OpCodes.Ret);
 		}
 
-		var builtType = typeBuilder.CreateType()!;
+		var builtType = typeBuilder.CreateType();
 		var actualConstructor = builtType.GetConstructor([typeof(TDelegate)])!;
 		var actualInvokeMethod = builtType.GetMethod("Invoke")!;
 		compiledFactory = @delegate =>

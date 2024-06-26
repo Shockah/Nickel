@@ -5,8 +5,12 @@ using System.Linq;
 
 namespace Nanoray.PluginManager;
 
+/// <summary>
+/// An <see cref="IDirectoryInfo{TFileInfo,TDirectoryInfo}"/> exposing entries in a ZIP file.
+/// </summary>
 public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFileInfo, ZipDirectoryInfo>
 {
+	/// <inheritdoc/>
 	public IEnumerable<IFileSystemInfo<ZipFileInfo, ZipDirectoryInfo>> Children
 		=> this.LazyChildren.Value;
 
@@ -17,6 +21,11 @@ public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFile
 		this.LazyChildren = new(() => GetDirectChildren(archive, this).ToList());
 	}
 
+	/// <summary>
+	/// Creates a <see cref="ZipDirectoryInfo"/> exposing entries in the given ZIP archive.
+	/// </summary>
+	/// <param name="archive">The archive.</param>
+	/// <returns>A <see cref="ZipDirectoryInfo"/> representing entries in the given ZIP archive.</returns>
 	public static ZipDirectoryInfo From(ZipArchive archive)
 		=> new(archive, "/", null);
 
@@ -63,6 +72,7 @@ public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFile
 		}
 	}
 
+	/// <inheritdoc/>
 	public IFileSystemInfo<ZipFileInfo, ZipDirectoryInfo> GetRelative(string relativePath)
 	{
 		var split = relativePath.Replace("\\", "/").Split("/");
@@ -92,6 +102,7 @@ public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFile
 			?? new NonExistentZipFileSystemInfo(this.Archive, split[^1], current);
 	}
 
+	/// <inheritdoc/>
 	public ZipFileInfo GetRelativeFile(string relativePath)
 	{
 		var child = this.GetRelative(relativePath);
@@ -100,6 +111,7 @@ public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFile
 		return new ZipFileInfo(this.Archive, child.Name, child.Parent, exists: false);
 	}
 
+	/// <inheritdoc/>
 	public ZipDirectoryInfo GetRelativeDirectory(string relativePath)
 	{
 		var child = this.GetRelative(relativePath);

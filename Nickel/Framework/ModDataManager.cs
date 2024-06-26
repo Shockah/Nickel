@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace Nickel.Framework;
+namespace Nickel;
 
 internal sealed class ModDataManager
 {

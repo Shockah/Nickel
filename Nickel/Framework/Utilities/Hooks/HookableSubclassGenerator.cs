@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -9,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 namespace Nickel;
 
-public sealed class HookableSubclassGenerator
+internal sealed class HookableSubclassGenerator
 {
 	private AssemblyBuilder AssemblyBuilder { get; }
 	private ModuleBuilder ModuleBuilder { get; }
@@ -28,10 +27,9 @@ public sealed class HookableSubclassGenerator
 
 	private void AddAccessCheckIgnoreAttribute(Assembly assembly)
 	{
-		if (this.IgnoresAccessChecksToAssemblies.Contains(assembly))
+		if (!this.IgnoresAccessChecksToAssemblies.Add(assembly))
 			return;
 
-		this.IgnoresAccessChecksToAssemblies.Add(assembly);
 		this.AssemblyBuilder.SetCustomAttribute(
 			new CustomAttributeBuilder(
 				typeof(IgnoresAccessChecksToAttribute).GetConstructor([typeof(string)])!,
@@ -397,7 +395,7 @@ public sealed class HookableSubclassGenerator
 			il.Emit(OpCodes.Ret);
 		}
 
-		var builtType = typeBuilder.CreateType()!;
+		var builtType = typeBuilder.CreateType();
 		var actualConstructor = builtType.GetConstructor([typeof(HookSubclassGlue)])!;
 		return new()
 		{
@@ -422,7 +420,7 @@ file sealed class HookSubclassStaticGlue(
 	public ObjectifiedDelegateMapper ObjectifiedDelegateMapper { get; } = objectifiedDelegateMapper;
 	private List<(MethodInfo Method, Func<List<object?>, object?>? ResultReducer)> HookedMethods { get; } = [];
 
-	public bool TryGetHookedMethod(int hookedMethodIndex, [MaybeNullWhen(false)] out (MethodInfo Method, Func<List<object?>, object?>? ResultReducer) result)
+	public bool TryGetHookedMethod(int hookedMethodIndex, out (MethodInfo Method, Func<List<object?>, object?>? ResultReducer) result)
 	{
 		result = default;
 		if (hookedMethodIndex < 0 || hookedMethodIndex >= this.HookedMethods.Count)
@@ -548,21 +546,13 @@ file sealed class HookSubclassGlue(
 	}
 }
 
-file sealed class DelegateHolder<TDelegate>(
-	TDelegate @delegate
-)
-	where TDelegate : Delegate
-{
-	public TDelegate Delegate { get; } = @delegate;
-}
-
 file static class TypeExtensions
 {
 	public static IEnumerable<MethodInfo> FindClassMethods(this Type baseType, bool includePrivate, Func<MethodInfo, bool>? filter = null)
 	{
 		filter ??= (_) => true;
 		return baseType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy | (includePrivate ? BindingFlags.NonPublic : 0))
-			.Where(m => m.IsVirtual && !m.IsFinal && filter(m));
+			.Where(m => m is { IsVirtual: true, IsFinal: false } && filter(m));
 	}
 
 	public static IEnumerable<MethodInfo> FindInterfaceMethods(this Type baseType, bool includePrivate, Func<MethodInfo, bool>? filter = null)

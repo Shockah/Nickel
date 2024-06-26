@@ -129,7 +129,7 @@ internal sealed class ModEventManager
 		}
 		else
 		{
-			this.OnModLoadPhaseFinishedEvent.Add((sender, phase) =>
+			this.OnModLoadPhaseFinishedEvent.Add((_, phase) =>
 			{
 				if (phase == ModLoadPhase.AfterDbInit)
 					RegisterArtifact();

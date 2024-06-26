@@ -4,10 +4,16 @@ using System.Linq;
 
 namespace Nanoray.PluginManager;
 
+/// <summary>
+/// Describes a chain of plugins depending on each other, possibly in a cycle.
+/// </summary>
+/// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
 public readonly struct PluginDependencyChain<TPluginManifest> : IEquatable<PluginDependencyChain<TPluginManifest>>
 {
+	/// <summary>The actual plugins taking part in the chain.</summary>
 	public IReadOnlyList<TPluginManifest> Values { get; init; }
 
+	/// <inheritdoc/>
 	public bool Equals(PluginDependencyChain<TPluginManifest> other)
 	{
 		if (this.Values.Count != other.Values.Count)
@@ -24,9 +30,11 @@ public readonly struct PluginDependencyChain<TPluginManifest> : IEquatable<Plugi
 		return false;
 	}
 
+	/// <inheritdoc/>
 	public override bool Equals(object? obj)
 		=> obj is PluginDependencyChain<TPluginManifest> chain && this.Equals(chain);
 
+	/// <inheritdoc/>
 	public override int GetHashCode()
 		=> this.Values.Sum(m => m?.GetHashCode() ?? 0);
 

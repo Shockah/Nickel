@@ -7,6 +7,12 @@ using System.Reflection;
 
 namespace Nanoray.PluginManager;
 
+/// <summary>
+/// An <see cref="IPluginLoader{TPluginManifest,TPlugin}"/> which loads <see cref="Assembly">Assemblies</see> as plugins.
+/// </summary>
+/// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
+/// <typeparam name="TPluginPart">The plugin part type.</typeparam>
+/// <typeparam name="TPlugin">The plugin type.</typeparam>
 public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 {
 	private Func<IPluginPackage<TPluginManifest>, OneOf<AssemblyPluginLoaderRequiredPluginData, Error<string>>> RequiredPluginDataProvider { get; }
@@ -15,6 +21,14 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 	private IAssemblyPluginLoaderParameterInjector<TPluginManifest>? ParameterInjector { get; }
 	private IAssemblyEditor? AssemblyEditor { get; }
 
+	/// <summary>
+	/// Creates a new <see cref="AssemblyPluginLoader{TPluginManifest,TPluginPart,TPlugin}"/>.
+	/// </summary>
+	/// <param name="requiredPluginDataProvider">A function which maps plugin manifests to the data required for this loader.</param>
+	/// <param name="loadContextProvider">A load context provider.</param>
+	/// <param name="partAssembler">A part assembler.</param>
+	/// <param name="parameterInjector">An optional parameter injector.</param>
+	/// <param name="assemblyEditor">An optional assembly editor.</param>
 	public AssemblyPluginLoader(
 		Func<IPluginPackage<TPluginManifest>, OneOf<AssemblyPluginLoaderRequiredPluginData, Error<string>>> requiredPluginDataProvider,
 		IAssemblyPluginLoaderLoadContextProvider<TPluginManifest> loadContextProvider,
@@ -30,12 +44,14 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 		this.AssemblyEditor = assemblyEditor;
 	}
 
+	/// <inheritdoc/>
 	public OneOf<Yes, No, Error<string>> CanLoadPlugin(IPluginPackage<TPluginManifest> package)
 		=> this.RequiredPluginDataProvider(package).Match<OneOf<Yes, No, Error<string>>>(
 			_ => new Yes(),
 			error => error
 		);
 
+	/// <inheritdoc/>
 	public PluginLoadResult<TPlugin> LoadPlugin(IPluginPackage<TPluginManifest> package)
 	{
 		if (!this.RequiredPluginDataProvider(package).TryPickT0(out var requiredPluginData, out _))

@@ -3,12 +3,16 @@ using System.IO.Compression;
 
 namespace Nanoray.PluginManager;
 
+/// <summary>
+/// An <see cref="IFileInfo{TFileInfo,TDirectoryInfo}"/> exposing entries in a ZIP file.
+/// </summary>
 public sealed class ZipFileInfo : ZipFileSystemInfo, IFileInfo<ZipFileInfo, ZipDirectoryInfo>
 {
 	internal ZipFileInfo(ZipArchive archive, string name, ZipDirectoryInfo? parent, bool exists = true) : base(archive, name, parent, exists)
 	{
 	}
 
+	/// <inheritdoc/>
 	public Stream OpenRead()
 	{
 		var entryName = this.FullName;
@@ -18,7 +22,7 @@ public sealed class ZipFileInfo : ZipFileSystemInfo, IFileInfo<ZipFileInfo, ZipD
 
 		// DeflateStream is dumb and doesn't support `Length`, which breaks assembly loading - copy it to MemoryStream first
 		using var stream = entry.Open();
-		MemoryStream memoryStream = new();
+		var memoryStream = new MemoryStream();
 		stream.CopyTo(memoryStream);
 		memoryStream.Position = 0;
 		return memoryStream;

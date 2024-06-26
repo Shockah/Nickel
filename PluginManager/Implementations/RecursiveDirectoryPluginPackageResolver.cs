@@ -5,6 +5,10 @@ using System.Collections.Generic;
 
 namespace Nanoray.PluginManager;
 
+/// <summary>
+/// An <see cref="IPluginPackageResolver{TPluginManifest}"/> which resolves plugins from a directory recursively.
+/// </summary>
+/// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
 public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
 	private IDirectoryInfo Directory { get; }
@@ -14,6 +18,15 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 	private Func<IDirectoryInfo, IPluginPackageResolver<TPluginManifest>?>? DirectoryResolverFactory { get; }
 	private Func<IFileInfo, IPluginPackageResolver<TPluginManifest>?>? FileResolverFactory { get; }
 
+	/// <summary>
+	/// Creates a new <see cref="RecursiveDirectoryPluginPackageResolver{TPluginManifest}"/>.
+	/// </summary>
+	/// <param name="directory">The directory</param>
+	/// <param name="manifestFileName">The manifest file name to look for.</param>
+	/// <param name="ignoreDotNames">Whether to ignore directory names starting with a dot.</param>
+	/// <param name="allowPluginsInRoot">Whether plugins placed directly in the root directory should be allowed.</param>
+	/// <param name="directoryResolverFactory">A function providing a plugin package resolver for a given directory.</param>
+	/// <param name="fileResolverFactory">A function providing a plugin package resolver for a given file.</param>
 	public RecursiveDirectoryPluginPackageResolver(
 		IDirectoryInfo directory,
 		string manifestFileName,
@@ -31,6 +44,7 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 		this.FileResolverFactory = fileResolverFactory;
 	}
 
+	/// <inheritdoc/>
 	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
 	{
 		if (this.DirectoryResolverFactory is null && this.FileResolverFactory is null)

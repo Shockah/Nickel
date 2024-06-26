@@ -4,12 +4,23 @@ using System;
 
 namespace Nanoray.PluginManager;
 
+/// <summary>
+/// An <see cref="IPluginLoader{TPluginManifest,TPlugin}"/> which first converts the plugin manifest to the specialized manifest subclass.
+/// </summary>
+/// <typeparam name="TSpecializedPluginManifest">The specialized type of the plugin manifest.</typeparam>
+/// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
+/// <typeparam name="TPlugin">The plugin type.</typeparam>
 public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPluginManifest, TPluginManifest, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 	where TSpecializedPluginManifest : TPluginManifest
 {
 	private IPluginLoader<TSpecializedPluginManifest, TPlugin> Loader { get; }
 	private Func<TPluginManifest, OneOf<TSpecializedPluginManifest, Error<string>>> Converter { get; }
 
+	/// <summary>
+	/// Creates a new <see cref="SpecializedConvertingManifestPluginLoader{TSpecializedPluginManifest,TPluginManifest,TPlugin}"/>.
+	/// </summary>
+	/// <param name="loader">The underlying plugin loader.</param>
+	/// <param name="converter">A function that converts a plugin manifest to the specialized manifest subclass.</param>
 	public SpecializedConvertingManifestPluginLoader(
 		IPluginLoader<TSpecializedPluginManifest, TPlugin> loader,
 		Func<TPluginManifest, OneOf<TSpecializedPluginManifest, Error<string>>> converter
@@ -19,6 +30,7 @@ public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPlugin
 		this.Converter = converter;
 	}
 
+	/// <inheritdoc/>
 	public OneOf<Yes, No, Error<string>> CanLoadPlugin(IPluginPackage<TPluginManifest> package)
 	{
 		var specializedManifestOrError = this.Converter(package.Manifest);
@@ -28,6 +40,7 @@ public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPlugin
 		return this.Loader.CanLoadPlugin(specializedPackage);
 	}
 
+	/// <inheritdoc/>
 	public PluginLoadResult<TPlugin> LoadPlugin(IPluginPackage<TPluginManifest> package)
 	{
 		var specializedManifestOrError = this.Converter(package.Manifest);

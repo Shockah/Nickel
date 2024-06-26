@@ -13,8 +13,6 @@ internal sealed class CompoundCobaltCoreResolver : ICobaltCoreResolver
 		this.Resolvers = resolvers;
 	}
 
-	public CompoundCobaltCoreResolver(params ICobaltCoreResolver[] resolvers) : this((IReadOnlyList<ICobaltCoreResolver>)resolvers) { }
-
 	public OneOf<CobaltCoreResolveResult, Error<string>> ResolveCobaltCore()
 	{
 		List<string> errors = [];

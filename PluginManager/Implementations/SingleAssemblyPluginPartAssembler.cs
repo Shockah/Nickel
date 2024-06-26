@@ -7,9 +7,15 @@ using System.Reflection;
 
 namespace Nanoray.PluginManager;
 
+/// <summary>
+/// An <see cref="IAssemblyPluginLoaderPartAssembler{TPluginManifest,TPluginPart,TPlugin}"/> that does no real assembling and only returns a singular plugin part as the assembled plugin.
+/// </summary>
+/// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
+/// <typeparam name="TPlugin">The plugin type.</typeparam>
 public sealed class SingleAssemblyPluginPartAssembler<TPluginManifest, TPlugin> : IAssemblyPluginLoaderPartAssembler<TPluginManifest, TPlugin, TPlugin>
 	where TPlugin : notnull
 {
+	/// <inheritdoc/>
 	public Error<string>? ValidatePluginParts(IPluginPackage<TPluginManifest> package, Assembly assembly, IReadOnlySet<Type> partTypes)
 		=> partTypes.Count switch
 		{
@@ -18,6 +24,7 @@ public sealed class SingleAssemblyPluginPartAssembler<TPluginManifest, TPlugin> 
 			_ => null
 		};
 
+	/// <inheritdoc/>
 	public OneOf<TPlugin, Error<string>> AssemblePluginParts(IPluginPackage<TPluginManifest> package, Assembly assembly, IReadOnlySet<TPlugin> parts)
 		=> parts.Count switch
 		{

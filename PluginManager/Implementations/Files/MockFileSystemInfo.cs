@@ -1,11 +1,20 @@
 namespace Nanoray.PluginManager;
 
+/// <summary>
+/// A mock <see cref="IFileSystemInfo{TFileInfo,TDirectoryInfo}"/>.
+/// </summary>
 public abstract class MockFileSystemInfo : IFileSystemInfo<MockFileInfo, MockDirectoryInfo>
 {
+	/// <inheritdoc/>
 	public string Name { get; }
+	
+	/// <inheritdoc/>
 	public MockDirectoryInfo? Parent { get; internal set; }
+	
+	/// <inheritdoc/>
 	public bool Exists { get; }
 
+	/// <inheritdoc/>
 	public string FullName
 	{
 		get
@@ -17,9 +26,11 @@ public abstract class MockFileSystemInfo : IFileSystemInfo<MockFileInfo, MockDir
 		}
 	}
 
+	/// <inheritdoc/>
 	public MockFileInfo? AsFile
 		=> this as MockFileInfo;
 
+	/// <inheritdoc/>
 	public MockDirectoryInfo? AsDirectory
 		=> this as MockDirectoryInfo;
 
@@ -29,15 +40,19 @@ public abstract class MockFileSystemInfo : IFileSystemInfo<MockFileInfo, MockDir
 		this.Exists = exists;
 	}
 
+	/// <inheritdoc/>
 	public override string ToString()
 		=> this.FullName;
 
+	/// <inheritdoc/>
 	public override bool Equals(object? obj)
 		=> obj is IFileSystemInfo other && this.IsInSameFileSystemType(other) && Equals(this.FullName, other.FullName);
 
+	/// <inheritdoc/>
 	public override int GetHashCode()
 		=> this.FullName.GetHashCode();
 
+	/// <inheritdoc/>
 	public bool IsInSameFileSystemType(IFileSystemInfo other)
 		=> other is MockFileSystemInfo;
 }

@@ -6,7 +6,6 @@ using Nanoray.PluginManager.Cecil;
 using Nanoray.PluginManager.Implementations;
 using Newtonsoft.Json.Serialization;
 using Nickel.Common;
-using Nickel.Framework;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;

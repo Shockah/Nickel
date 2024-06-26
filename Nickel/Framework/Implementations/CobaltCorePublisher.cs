@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace Nickel;
 
-public class CobaltCorePublisher : IAssemblyDefinitionEditor
+internal sealed class CobaltCorePublisher : IAssemblyDefinitionEditor
 {
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName == "CobaltCore.dll";

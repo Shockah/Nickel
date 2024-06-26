@@ -4,10 +4,20 @@ using System.Linq;
 
 namespace Nanoray.PluginManager;
 
+/// <summary>
+/// A mock <see cref="IDirectoryInfo{TFileInfo,TDirectoryInfo}"/>.
+/// </summary>
 public sealed class MockDirectoryInfo : MockFileSystemInfo, IDirectoryInfo<MockFileInfo, MockDirectoryInfo>
 {
+	/// <inheritdoc/>
 	public IEnumerable<IFileSystemInfo<MockFileInfo, MockDirectoryInfo>> Children { get; }
-
+	
+	/// <summary>
+	/// Creates a new instance of <see cref="MockDirectoryInfo"/>.
+	/// </summary>
+	/// <param name="name">The entry's name in its <see cref="IFileSystemInfo.Parent"/>.</param>
+	/// <param name="children">The entries contained directly in this directory.</param>
+	/// <param name="exists">Whether this file exists.</param>
 	public MockDirectoryInfo(string name, ICollection<IFileSystemInfo<MockFileInfo, MockDirectoryInfo>>? children = null, bool exists = true) : base(name, exists)
 	{
 		this.Children = children ?? [];
@@ -18,13 +28,14 @@ public sealed class MockDirectoryInfo : MockFileSystemInfo, IDirectoryInfo<MockF
 				file.Parent = this;
 			else if (child is MockDirectoryInfo directory)
 				directory.Parent = this;
-			else if (child is MockNonExistentFileSystemInfo nonExistent)
+			else if (child is NonExistentMockFileSystemInfo nonExistent)
 				nonExistent.Parent = this;
 			else
 				throw new InvalidDataException($"Unrecognized type {child.GetType()}");
 		}
 	}
 
+	/// <inheritdoc/>
 	public IFileSystemInfo<MockFileInfo, MockDirectoryInfo> GetRelative(string relativePath)
 	{
 		var split = relativePath.Replace("\\", "/").Split("/");
@@ -60,9 +71,10 @@ public sealed class MockDirectoryInfo : MockFileSystemInfo, IDirectoryInfo<MockF
 			};
 
 		return current.Children.FirstOrDefault(c => c.Name == split[^1])
-			?? new MockNonExistentFileSystemInfo(split[^1], current);
+			?? new NonExistentMockFileSystemInfo(split[^1], current);
 	}
 
+	/// <inheritdoc/>
 	public MockFileInfo GetRelativeFile(string relativePath)
 	{
 		var child = this.GetRelative(relativePath);
@@ -74,6 +86,7 @@ public sealed class MockDirectoryInfo : MockFileSystemInfo, IDirectoryInfo<MockF
 		};
 	}
 
+	/// <inheritdoc/>
 	public MockDirectoryInfo GetRelativeDirectory(string relativePath)
 	{
 		var child = this.GetRelative(relativePath);

@@ -1,4 +1,3 @@
-using Nickel.Framework;
 using System;
 using System.Diagnostics.CodeAnalysis;
 

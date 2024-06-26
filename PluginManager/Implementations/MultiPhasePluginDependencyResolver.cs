@@ -4,18 +4,30 @@ using System.Linq;
 
 namespace Nanoray.PluginManager;
 
+/// <summary>
+/// An <see cref="IPluginDependencyResolver{TPluginManifest,TVersion}"/> which resolves the plugins in multiple phases.
+/// </summary>
+/// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
+/// <typeparam name="TVersion">The type representing a plugin version.</typeparam>
+/// <typeparam name="TLoadPhase">The type representing a load phase.</typeparam>
 public sealed class MultiPhasePluginDependencyResolver<TPluginManifest, TVersion, TLoadPhase> : IPluginDependencyResolver<TPluginManifest, TVersion>
 	where TPluginManifest : notnull
 	where TVersion : struct, IEquatable<TVersion>, IComparable<TVersion>
 {
 	private IPluginDependencyResolver<TPluginManifest, TVersion> Resolver { get; }
 	private Func<TPluginManifest, TLoadPhase> LoadPhaseFunction { get; }
-	private IEnumerable<TLoadPhase> LoadPhases { get; }
+	private IReadOnlyList<TLoadPhase> LoadPhases { get; }
 
+	/// <summary>
+	/// Creates a new <see cref="MultiPhasePluginDependencyResolver{TPluginManifest,TVersion,TLoadPhase}"/>.
+	/// </summary>
+	/// <param name="resolver">The underlying resolver.</param>
+	/// <param name="loadPhaseFunction">A function controlling which phase a plugin is to be loaded in.</param>
+	/// <param name="loadPhases">A list of all load phases.</param>
 	public MultiPhasePluginDependencyResolver(
 		IPluginDependencyResolver<TPluginManifest, TVersion> resolver,
 		Func<TPluginManifest, TLoadPhase> loadPhaseFunction,
-		IEnumerable<TLoadPhase> loadPhases
+		IReadOnlyList<TLoadPhase> loadPhases
 	)
 	{
 		this.Resolver = resolver;
@@ -23,6 +35,7 @@ public sealed class MultiPhasePluginDependencyResolver<TPluginManifest, TVersion
 		this.LoadPhases = loadPhases;
 	}
 
+	/// <inheritdoc/>
 	public PluginDependencyResolveResult<TPluginManifest, TVersion> ResolveDependencies(IEnumerable<TPluginManifest> toResolve, IReadOnlySet<TPluginManifest>? resolved = null)
 	{
 		var runtimeResolved = resolved?.ToHashSet() ?? [];

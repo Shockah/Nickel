@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace Nickel;
 
-public sealed class ByParameterDelegateMapper
+internal sealed class ByParameterDelegateMapper
 {
 	private ModuleBuilder ModuleBuilder { get; }
 	private int Counter { get; set; }
@@ -102,19 +102,19 @@ public sealed class ByParameterDelegateMapper
 			var il = methodBuilder.GetILGenerator();
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Ldfld, delegateField);
-			for (var i = 0; i < parameterMapping.Length; i++)
-				il.Emit(OpCodes.Ldarg, parameterMapping[i] + 1);
+			foreach (var argumentIndex in parameterMapping)
+				il.Emit(OpCodes.Ldarg, argumentIndex + 1);
 			il.Emit(OpCodes.Call, shortDelegateInvokeMethod);
 			il.Emit(OpCodes.Ret);
 		}
 
 		(this.ModuleBuilder.Assembly as AssemblyBuilder)?.SetCustomAttribute(new CustomAttributeBuilder
 		(
-			typeof(IgnoresAccessChecksToAttribute).GetConstructor(new Type[] { typeof(string) })!,
-			new object[] { shortDelegateInvokeMethod.DeclaringType!.Assembly.GetName().Name! }
+			typeof(IgnoresAccessChecksToAttribute).GetConstructor([typeof(string)])!,
+			[shortDelegateInvokeMethod.DeclaringType!.Assembly.GetName().Name!]
 		));
 
-		var builtType = typeBuilder.CreateType()!;
+		var builtType = typeBuilder.CreateType();
 		var actualConstructor = builtType.GetConstructor([typeof(TShortDelegate)])!;
 		var actualInvokeMethod = builtType.GetMethod("Invoke")!;
 		var @object = actualConstructor.Invoke([@delegate]);
