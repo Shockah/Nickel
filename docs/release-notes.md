@@ -4,7 +4,11 @@
 
 ## Upcoming release
 
+* `Essentials` is renamed to `Nickel.Essentials`. Be sure to remove the old `Essentials` folder when updating Nickel.
 * Added APIs for storing mod settings in a common place.
+* Added `Nickel.ModSettings`, creating a common interface for all mods to add their settings to.
+* Added various settings for all Nickel modules.
+* Update checks now remind you to set them up properly, and when your API key / token gets revoked or expires.
 
 ## 0.12.0
 Released 15 May 2024.
