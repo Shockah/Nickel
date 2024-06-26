@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Nickel;
 
@@ -16,6 +17,18 @@ internal sealed class PartManager
 	{
 		this.PartTypeManager = new(currentModLoadPhaseProvider, Inject);
 		this.PartInstanceManager = new(currentModLoadPhaseProvider, Inject);
+		ArtifactRewardPatches.OnGetBlockedArtifacts.Subscribe(this.OnGetBlockedArtifacts);
+	}
+
+	private void OnGetBlockedArtifacts(object? _, ArtifactRewardPatches.GetBlockedArtifactsEventArgs e)
+	{
+		foreach (var entry in this.UniqueNameToPartTypeEntry.Values)
+		{
+			if (e.State.ship.parts.Any(p => p.type != entry.PartType))
+				continue;
+			foreach (var artifactType in entry.Configuration.ExclusiveArtifactTypes ?? Enumerable.Empty<Type>())
+				e.BlockedArtifacts.Add(artifactType);
+		}
 	}
 
 	internal void InjectQueuedEntries()

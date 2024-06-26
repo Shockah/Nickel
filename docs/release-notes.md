@@ -9,6 +9,7 @@
 * Added `Nickel.ModSettings`, creating a common interface for all mods to add their settings to.
 * Added various settings for all Nickel modules.
 * Update checks now remind you to set them up properly, and when your API key / token gets revoked or expires.
+* Actually implemented part-type-exclusive artifacts (these used to do nothing).
 
 ## 0.12.0
 Released 15 May 2024.
