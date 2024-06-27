@@ -31,13 +31,17 @@ internal static class MemorySelection
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Route), nameof(Route.OnEnter)),
-			postfix: new HarmonyMethod(typeof(MemorySelection), nameof(Route_OnEnter_Postfix))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Route_OnEnter_Postfix))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Vault), nameof(Vault.Render)),
-			prefix: new HarmonyMethod(typeof(MemorySelection), nameof(Vault_Render_Prefix)),
-			postfix: new HarmonyMethod(typeof(MemorySelection), nameof(Vault_Render_Postfix)),
-			transpiler: new HarmonyMethod(typeof(MemorySelection), nameof(Vault_Render_Transpiler))
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Vault_Render_Prefix)),
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Vault_Render_Postfix)),
+			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Vault_Render_Transpiler))
+		);
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(RunWinHelpers), nameof(RunWinHelpers.GetChoices)),
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(RunWinHelpers_GetChoices_Postfix))
 		);
 	}
 
@@ -146,6 +150,30 @@ internal static class MemorySelection
 		{
 			ModEntry.Instance.Logger.LogError("Could not patch method {Method} - {Mod} probably won't work.\nReason: {Exception}", originalMethod, ModEntry.Instance.Package.Manifest.UniqueName, ex);
 			return instructions;
+		}
+	}
+
+	private static void RunWinHelpers_GetChoices_Postfix(State s, ref List<Choice> __result)
+	{
+		var allMemories = Vault.GetVaultMemories(s);
+		
+		foreach (var character in s.characters)
+		{
+			if (character.deckType is not { } deck)
+				continue;
+			if (HasMemoriesToUnlock(deck))
+				continue;
+
+			var index = __result.FindIndex(c => c.key == $".runWin_{deck.Key()}");
+			if (index >= 0)
+				__result.RemoveAt(index);
+		}
+
+		bool HasMemoriesToUnlock(Deck deck)
+		{
+			if (allMemories.FirstOrDefault(m => m.deck == deck) is not { } memories)
+				return false;
+			return memories.memoryKeys.Any(m => !m.unlocked);
 		}
 	}
 }
