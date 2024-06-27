@@ -449,7 +449,19 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 	}
 
 	private void OnSettingsUpdateAfterGameLoaded()
-		=> FeatureFlags.Debug = this.DebugMode != DebugMode.Disabled;
+	{
+		FeatureFlags.Debug = this.DebugMode != DebugMode.Disabled;
+
+		// ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+		if (MG.inst?.g is not { } g)
+			return;
+
+		if (g.e is null)
+		{
+			g.e = new Editor();
+			g.e.IMGUI_Setup(MG.inst);
+		}
+	}
 
 	[GeneratedRegex(@"(\d+)\.(\d+)\.(\d+)(?: (.+))?")]
 	private static partial Regex GameVersionRegex();
