@@ -27,6 +27,12 @@ internal sealed class ModEvents : IModEvents
 		remove => this.EventManager.OnLoadStringsForLocaleEvent.Remove(value, this.ModManifest);
 	}
 
+	public event EventHandler<Exception?> OnGameClosing
+	{
+		add => this.EventManager.OnGameClosingEvent.Add(value, this.ModManifest);
+		remove => this.EventManager.OnGameClosingEvent.Remove(value, this.ModManifest);
+	}
+
 	public void RegisterBeforeArtifactsHook<THookDelegate>(string eventName, THookDelegate @delegate, double priority)
 		where THookDelegate : Delegate
 	{

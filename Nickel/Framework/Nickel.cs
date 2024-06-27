@@ -307,13 +307,18 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			var result = handlerResult.EntryPoint.Invoke(null, BindingFlags.DoNotWrapExceptions, null, [gameArguments.ToArray()], null);
 			if (result is not null)
 				logger.LogInformation("Cobalt Core closed with result: {Result}", result);
+			if (!launchArguments.Vanilla)
+				instance.ModManager.EventManager.OnGameClosingEvent.Raise(null, null);
 			return 0;
 		}
 		catch (Exception e)
 		{
 			logger.LogCritical("Cobalt Core threw an exception: {e}", e);
 			if (!launchArguments.Vanilla)
+			{
 				instance.ModManager.LogHarmonyPatchesOnce();
+				instance.ModManager.EventManager.OnGameClosingEvent.Raise(null, e);
+			}
 			if (instance.LaunchArguments.LogPipeName is null)
 				Console.ReadLine();
 			return 1;

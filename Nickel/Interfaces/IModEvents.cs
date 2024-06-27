@@ -15,6 +15,10 @@ public interface IModEvents
 	/// <summary>An event fired whenever the game loads a localization (when it first starts, and when a new language gets selected).</summary>
 	event EventHandler<LoadStringsForLocaleEventArgs> OnLoadStringsForLocale;
 
+	/// <summary>An event fired when the game is about to close, either normally, or via an exception being thrown.</summary>
+	/// <remarks>This event will not be fired for critical exceptions, like <see cref="StackOverflowException"/> or <see cref="AccessViolationException"/>.</remarks>
+	event EventHandler<Exception?> OnGameClosing;
+
 	/// <summary>
 	/// Subscribes to an artifact hook, before any actual artifacts get a chance to execute their code.
 	/// </summary>

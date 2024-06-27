@@ -9,6 +9,7 @@ internal sealed class ModEventManager
 	private readonly IModManifest ModLoaderModManifest;
 	public ManagedEvent<ModLoadPhase> OnModLoadPhaseFinishedEvent { get; }
 	public ManagedEvent<LoadStringsForLocaleEventArgs> OnLoadStringsForLocaleEvent { get; }
+	public ManagedEvent<Exception?> OnGameClosingEvent { get; }
 
 	public Artifact PrefixArtifact
 	{
@@ -58,6 +59,11 @@ internal sealed class ModEventManager
 		{
 			var logger = loggerProvider(mod);
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnLoadStringsForLocaleEvent), exception);
+		});
+		this.OnGameClosingEvent = new((_, mod, exception) =>
+		{
+			var logger = loggerProvider(mod);
+			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnGameClosingEvent), exception);
 		});
 
 		this.OnModLoadPhaseFinishedEvent.Add(this.OnModLoadPhaseFinished, modLoaderModManifest);

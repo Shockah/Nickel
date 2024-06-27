@@ -8,6 +8,7 @@
 * Added APIs for storing mod settings in a common place.
 * Added `Nickel.ModSettings`, creating a common interface for all mods to add their settings to.
 * Added various settings for all Nickel modules.
+* Added an event mods can subscribe to to get informed about the game closing, either normally or via an exception being thrown.
 * Update checks now remind you to set them up properly, and when your API key / token gets revoked or expires.
 * Actually implemented part-type-exclusive artifacts (these used to do nothing).
 
