@@ -69,17 +69,22 @@ internal static class MemorySelection
 			return;
 
 		// rendering character list scrolling arrow buttons
+		var pulseColor = new Color(0.0, 0.5, 1.0).gain((Math.Sin(g.time * Math.PI) + 1) / 4 + 0.25);
 		if (ScrollPosition > 0)
 		{
-			Rect rect = new(8, 114, 24, 33);
-			OnMouseDown onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Max(0, ScrollPosition - MaxCharactersOnScreen));
-			SharedArt.ButtonSprite(g, rect, StableUK.btn_move_left, StableSpr.buttons_move, StableSpr.buttons_move_on, flipX: true, onMouseDown: onMouseDown);
+			var rect = new Rect(8, 114, 24, 33);
+			var onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Max(0, ScrollPosition - MaxCharactersOnScreen));
+			var result = SharedArt.ButtonSprite(g, rect, StableUK.btn_move_left, StableSpr.buttons_move, StableSpr.buttons_move_on, flipX: true, onMouseDown: onMouseDown);
+			if (!result.isHover && Vault.GetVaultMemories(g.state).Take(ScrollPosition).Any(m => m.memoryKeys.Any(mk => mk is { unlocked: true, seen: false })))
+				Glow.Draw(rect.Center() + new Vec(2, -1), 64, pulseColor);
 		}
 		if (ScrollPosition < MaxScroll)
 		{
-			Rect rect = new(446, 114, 24, 33);
-			OnMouseDown onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Clamp(ScrollPosition + MaxCharactersOnScreen, 0, MaxScroll));
-			SharedArt.ButtonSprite(g, rect, StableUK.btn_move_right, StableSpr.buttons_move, StableSpr.buttons_move_on, flipX: false, onMouseDown: onMouseDown);
+			var rect = new Rect(446, 114, 24, 33);
+			var onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Clamp(ScrollPosition + MaxCharactersOnScreen, 0, MaxScroll));
+			var result = SharedArt.ButtonSprite(g, rect, StableUK.btn_move_right, StableSpr.buttons_move, StableSpr.buttons_move_on, flipX: false, onMouseDown: onMouseDown);
+			if (!result.isHover && Vault.GetVaultMemories(g.state).Skip(ScrollPosition + 6).Any(m => m.memoryKeys.Any(mk => mk is { unlocked: true, seen: false })))
+				Glow.Draw(rect.Center() + new Vec(-2, -1), 64, pulseColor);
 		}
 	}
 

@@ -4,14 +4,19 @@
 
 ## Upcoming release
 
-* `Essentials` is renamed to `Nickel.Essentials`. Be sure to remove the old `Essentials` folder when updating Nickel.
-* Added APIs for storing mod settings in a common place.
+### For players:
+* The pre-installed `Essentials` mod is now renamed to `Nickel.Essentials`. **Be sure to remove the old `Essentials` folder when updating Nickel.**
 * Added `Nickel.ModSettings`, creating a common interface for all mods to add their settings to.
 * Added various settings for all Nickel modules.
-* Added an event mods can subscribe to to get informed about the game closing, either normally or via an exception being thrown.
-* Added a way for mods to get a list of all resolved mods (including ones which may not have been loaded, for various reasons).
 * Update checks now remind you to set them up properly, and when your API key / token gets revoked or expires.
 * Update checks now happen much earlier and even for mods which failed to load.
+* The game no longer proposes memories which don't exist (for modded characters).
+* The Memories menu now highlights the arrow buttons if you have any unlocked but not yet seen memories scrolled away.
+
+### For developers:
+* Added APIs for storing mod settings in a common place.
+* Added an event mods can subscribe to to get informed about the game closing, either normally or via an exception being thrown.
+* Added a way for mods to get a list of all resolved mods (including ones which may not have been loaded, for various reasons).
 * Actually implemented part-type-exclusive artifacts (these used to do nothing).
 
 ## 0.12.0
