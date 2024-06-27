@@ -3,15 +3,8 @@ using System.Collections.Generic;
 
 namespace Nickel.UpdateChecks;
 
-public interface IUpdateChecksApi
+public interface IUpdateChecksApi : IUpdateChecksTrimmedApi
 {
-	bool TryGetUpdateInfo(IModManifest mod, out UpdateDescriptor? update);
-	void AwaitUpdateInfo(IModManifest mod, Action<IModManifest, UpdateDescriptor?> callback);
-
-	void RegisterUpdateSource(string sourceKey, IUpdateSource source);
-	void RequestUpdateInfo(IUpdateSource source);
-	void RequestUpdateInfo();
-
 	ITokenModSetting MakeTokenSetting(Func<string> title, Func<bool> hasValue, Action setupAction);
 
 	public interface ITokenModSetting : IModSettingsApi.IModSetting

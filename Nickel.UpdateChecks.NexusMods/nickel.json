@@ -6,6 +6,8 @@
 	"Author": "Nickel",
 	"RequiredApiVersion": "0.12.0",
 	"EntryPointAssembly": "Nickel.UpdateChecks.NexusMods.dll",
+	"EntryPointType": "Nickel.UpdateChecks.NexusMods.ModEntry",
+	"LoadPhase": "BeforeGameAssembly",
 	"Dependencies": [
 		{
 			"UniqueName": "Nickel.UpdateChecks",

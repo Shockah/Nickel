@@ -6,6 +6,8 @@
 	"Author": "Nickel",
 	"RequiredApiVersion": "0.12.0",
 	"EntryPointAssembly": "Nickel.UpdateChecks.GitHub.dll",
+	"EntryPointType": "Nickel.UpdateChecks.GitHub.ModEntry",
+	"LoadPhase": "BeforeGameAssembly",
 	"Dependencies": [
 		{
 			"UniqueName": "Nickel.UpdateChecks",

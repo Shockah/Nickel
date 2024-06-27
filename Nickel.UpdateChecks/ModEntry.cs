@@ -13,6 +13,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Nickel.UpdateChecks;
@@ -47,16 +48,18 @@ public sealed class ModEntry : SimpleMod
 	internal static ModEntry Instance { get; private set; } = null!;
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
-	private static ISpriteEntry UpdateAvailableOverlayIcon = null!;
-	private static ISpriteEntry WarningMessageOverlayIcon = null!;
-	private static ISpriteEntry ErrorMessageOverlayIcon = null!;
-	private static ISpriteEntry UpdateAvailableTooltipIcon = null!;
+	private static object UpdateAvailableOverlayIcon = null!;
+	private static object WarningMessageOverlayIcon = null!;
+	private static object ErrorMessageOverlayIcon = null!;
+	private static object UpdateAvailableTooltipIcon = null!;
 
 	internal readonly Dictionary<string, IUpdateSource> UpdateSources = [];
 	internal readonly Dictionary<IModManifest, UpdateDescriptor?> UpdatesAvailable = [];
 	internal readonly ConcurrentQueue<Action> ToRunInGameLoop = [];
 	internal readonly List<Action> AwaitingUpdateInfo = [];
 	internal readonly Settings Settings;
+
+	private (Task Task, CancellationTokenSource Token)? CurrentUpdateCheckTask;
 
 	private IWritableFileInfo SettingsFile
 		=> this.Helper.Storage.GetSingleSettingsFile("json");
@@ -74,53 +77,96 @@ public sealed class ModEntry : SimpleMod
 		);
 		this.Settings = helper.Storage.LoadJson<Settings>(this.SettingsFile);
 
-		UpdateAvailableOverlayIcon = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/UpdateAvailableOverlayIcon.png"));
-		WarningMessageOverlayIcon = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/WarningMessageOverlayIcon.png"));
-		ErrorMessageOverlayIcon = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/ErrorMessageOverlayIcon.png"));
-		UpdateAvailableTooltipIcon = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/UpdateAvailableTooltipIcon.png"));
+		helper.Events.OnGameClosing += (_, _) =>
+		{
+			if (this.CurrentUpdateCheckTask?.Task is { IsCompleted: false } task)
+			{
+				try
+				{
+					this.Logger.LogInformation("Update checks not done, waiting up to 15s...");
+					task.Wait(TimeSpan.FromSeconds(15));
+				}
+				catch
+				{
+					// ignored
+				}
+			}
+			
+			this.ProcessActionsToRunInGameLoop();
+		};
+		
+		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
+		{
+			switch (phase)
+			{
+				case ModLoadPhase.BeforeGameAssembly:
+					this.SetupBeforeGameAssembly();
+					break;
+				case ModLoadPhase.AfterGameAssembly:
+					this.SetupAfterGameAssembly();
+					break;
+				case ModLoadPhase.AfterDbInit:
+					this.SetupAfterDbInit();
+					break;
+			}
+			
+			this.ProcessActionsToRunInGameLoop();
+		};
+	}
 
-		var harmony = new Harmony(package.Manifest.UniqueName);
+	private void ProcessActionsToRunInGameLoop()
+	{
+		while (this.ToRunInGameLoop.TryDequeue(out var action))
+			action();
+	}
+
+	private void SetupBeforeGameAssembly()
+		=> this.ParseManifestsAndRequestUpdateInfo();
+
+	private void SetupAfterGameAssembly()
+	{
+		UpdateAvailableOverlayIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/UpdateAvailableOverlayIcon.png"));
+		WarningMessageOverlayIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/WarningMessageOverlayIcon.png"));
+		ErrorMessageOverlayIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/ErrorMessageOverlayIcon.png"));
+		UpdateAvailableTooltipIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/UpdateAvailableTooltipIcon.png"));
+		
+		var harmony = new Harmony(this.Package.Manifest.UniqueName);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(G), nameof(G.Render))
-				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(G)}.{nameof(G.Render)}`"),
+					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(G)}.{nameof(G.Render)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(G_Render_Postfix))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(CornerMenu), nameof(CornerMenu.Render))
-				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(CornerMenu)}.{nameof(CornerMenu.Render)}`"),
+					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(CornerMenu)}.{nameof(CornerMenu.Render)}`"),
 			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(CornerMenu_Render_Transpiler))
 		);
+	}
 
-		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
-		{
-			if (phase != ModLoadPhase.AfterDbInit)
-				return;
+	private void SetupAfterDbInit()
+	{
+		if (this.Helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
+			settingsApi.RegisterModSettings(
+				settingsApi.MakeButton(
+					title: () => this.Localizations.Localize(["settings", "ignoredUpdates"]),
+					onClick: (g, route) => route.OpenSubroute(g, this.MakeIgnoredUpdatesModSettingsRoute())
+				).SetValueText(() =>
+				{
+					var entries = Instance.UpdatesAvailable
+						.Where(kvp => kvp.Value is not null)
+						.Select(kvp => new KeyValuePair<IModManifest, UpdateDescriptor>(kvp.Key, kvp.Value!.Value))
+						.Where(kvp => kvp.Value.Version > kvp.Key.Version)
+						.ToList();
 
-			this.ParseManifestsAndRequestUpdateInfo();
+					if (entries.Count == 0)
+						return this.Localizations.Localize(["settings", "ignoredUpdatesNone"]);
 
-			if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
-				settingsApi.RegisterModSettings(
-					settingsApi.MakeButton(
-						title: () => this.Localizations.Localize(["settings", "ignoredUpdates"]),
-						onClick: (g, route) => route.OpenSubroute(g, this.MakeIgnoredUpdatesModSettingsRoute())
-					).SetValueText(() =>
-					{
-						var entries = Instance.UpdatesAvailable
-							.Where(kvp => kvp.Value is not null)
-							.Select(kvp => new KeyValuePair<IModManifest, UpdateDescriptor>(kvp.Key, kvp.Value!.Value))
-							.Where(kvp => kvp.Value.Version > kvp.Key.Version)
-							.ToList();
-
-						if (entries.Count == 0)
-							return this.Localizations.Localize(["settings", "ignoredUpdatesNone"]);
-
-						var ignored = entries.Count(kvp => this.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) && ignoredUpdate == kvp.Value.Version);
-						return $"{ignored}/{entries.Count}";
-					}).SubscribeToOnMenuClose(
-						_ => helper.Storage.SaveJson(this.SettingsFile, this.Settings)
-					)
-				);
-		};
+					var ignored = entries.Count(kvp => this.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) && ignoredUpdate == kvp.Value.Version);
+					return $"{ignored}/{entries.Count}";
+				}).SubscribeToOnMenuClose(
+					_ => this.Helper.Storage.SaveJson(this.SettingsFile, this.Settings)
+				)
+			);
 	}
 
 	public override object? GetApi(IModManifest requestingMod)
@@ -130,7 +176,7 @@ public sealed class ModEntry : SimpleMod
 	{
 		Dictionary<IUpdateSource, List<(IModManifest Mod, object? ManifestEntry)>> updateSourceToMod = [];
 
-		foreach (var mod in this.Helper.ModRegistry.LoadedMods.Values)
+		foreach (var mod in this.Helper.ModRegistry.ResolvedMods.Values)
 		{
 			Dictionary<string, JObject>? updateChecks;
 
@@ -199,38 +245,46 @@ public sealed class ModEntry : SimpleMod
 	}
 
 	private void CheckUpdates(Dictionary<IUpdateSource, List<(IModManifest Mod, object? ManifestEntry)>> updateSourceToMod)
-		=> Task.Run(async () =>
-		{
-			var updateSourceToModVersion = (await Task.WhenAll(updateSourceToMod.Select(kvp => Task.Run(async () => (Source: kvp.Key, Versions: await kvp.Key.GetLatestVersionsAsync(kvp.Value)))))).ToDictionary();
+	{
+		this.CurrentUpdateCheckTask?.Token.Cancel();
 
-			var allMods = updateSourceToMod
-				.SelectMany(kvp => kvp.Value)
-				.Select(e => e.Mod)
-				.ToHashSet();
+		var token = new CancellationTokenSource();
+		this.CurrentUpdateCheckTask = (
+			Task: Task.Run(async () =>
+			{
+				var updateSourceToModVersion = (await Task.WhenAll(updateSourceToMod.Select(kvp => Task.Run(async () => (Source: kvp.Key, Versions: await kvp.Key.GetLatestVersionsAsync(kvp.Value)), token.Token)))).ToDictionary();
 
-			var modToVersion = allMods
-				.Select(m =>
-				{
-					var versions = updateSourceToModVersion
-						.SelectMany(kvp => kvp.Value)
-						.Where(kvp => kvp.Key == m)
-						.Select(kvp => kvp.Value)
-						.ToList();
+				var allMods = updateSourceToMod
+					.SelectMany(kvp => kvp.Value)
+					.Select(e => e.Mod)
+					.ToHashSet();
 
-					if (versions.Count == 0)
-						return (Mod: m, Descriptor: (UpdateDescriptor?)null);
+				var modToVersion = allMods
+					.Select(m =>
+					{
+						var versions = updateSourceToModVersion
+							.SelectMany(kvp => kvp.Value)
+							.Where(kvp => kvp.Key == m)
+							.Select(kvp => kvp.Value)
+							.ToList();
 
-					var maxVersion = versions.Select(e => e.Version).Max();
-					var maxVersionUrls = versions
-						.Where(e => e.Version == maxVersion)
-						.SelectMany(e => e.Urls);
-					return (Mod: m, Descriptor: new UpdateDescriptor(maxVersion, maxVersionUrls.ToList()));
-				})
-				.Where(e => e.Descriptor is not null)
-				.ToDictionary(e => e.Mod, e => e.Descriptor!.Value);
+						if (versions.Count == 0)
+							return (Mod: m, Descriptor: (UpdateDescriptor?)null);
 
-			this.ToRunInGameLoop.Enqueue(() => this.ReportUpdates(modToVersion));
-		});
+						var maxVersion = versions.Select(e => e.Version).Max();
+						var maxVersionUrls = versions
+							.Where(e => e.Version == maxVersion)
+							.SelectMany(e => e.Urls);
+						return (Mod: m, Descriptor: new UpdateDescriptor(maxVersion, maxVersionUrls.ToList()));
+					})
+					.Where(e => e.Descriptor is not null)
+					.ToDictionary(e => e.Mod, e => e.Descriptor!.Value);
+
+				this.ToRunInGameLoop.Enqueue(() => this.ReportUpdates(modToVersion));
+			}, token.Token),
+			Token: token
+		);
+	}
 
 	private void ReportUpdates(Dictionary<IModManifest, UpdateDescriptor> updates)
 	{
@@ -299,10 +353,7 @@ public sealed class ModEntry : SimpleMod
 	}
 
 	private static void G_Render_Postfix()
-	{
-		while (Instance.ToRunInGameLoop.TryDequeue(out var action))
-			action();
-	}
+		=> Instance.ProcessActionsToRunInGameLoop();
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> CornerMenu_Render_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
@@ -344,12 +395,12 @@ public sealed class ModEntry : SimpleMod
 		var addedTooltips = false;
 
 		if (updatesAvailable.Count > 0)
-			overlaysToShow.Add(UpdateAvailableOverlayIcon);
+			overlaysToShow.Add((ISpriteEntry)UpdateAvailableOverlayIcon);
 
 		if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Error, out var messages) && messages.Count > 0)
-			overlaysToShow.Add(ErrorMessageOverlayIcon);
+			overlaysToShow.Add((ISpriteEntry)ErrorMessageOverlayIcon);
 		else if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Warning, out messages) && messages.Count > 0)
-			overlaysToShow.Add(WarningMessageOverlayIcon);
+			overlaysToShow.Add((ISpriteEntry)WarningMessageOverlayIcon);
 
 		if (overlaysToShow.Count > 0)
 		{
@@ -414,7 +465,7 @@ public sealed class ModEntry : SimpleMod
 
 			MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new GlossaryTooltip($"ui.{Instance.Package.Manifest.UniqueName}::UpdatesAvailable")
 			{
-				Icon = UpdateAvailableTooltipIcon.Sprite,
+				Icon = ((ISpriteEntry)UpdateAvailableTooltipIcon).Sprite,
 				TitleColor = Colors.textBold,
 				Title = Instance.Localizations.Localize(["settingsTooltip", "updatesAvailableTooltip"]),
 				Description = string.Join("\n", updatesAvailable.Select(kvp => $"<c=textFaint>{kvp.Key.GetDisplayName(@long: false)}</c> -> <c=boldPink>{kvp.Value.Version}</c>"))

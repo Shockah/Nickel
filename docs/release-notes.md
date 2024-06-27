@@ -11,6 +11,7 @@
 * Added an event mods can subscribe to to get informed about the game closing, either normally or via an exception being thrown.
 * Added a way for mods to get a list of all resolved mods (including ones which may not have been loaded, for various reasons).
 * Update checks now remind you to set them up properly, and when your API key / token gets revoked or expires.
+* Update checks now happen much earlier and even for mods which failed to load.
 * Actually implemented part-type-exclusive artifacts (these used to do nothing).
 
 ## 0.12.0

@@ -44,16 +44,21 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		helper.Storage.ApplyJsonSerializerSettings(s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
 		this.Database = helper.Storage.LoadJson<Database>(this.DatabaseFile);
 		this.Client = this.MakeHttpClient();
-
-		var updateChecksApi = helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!;
-		updateChecksApi.RegisterUpdateSource("GitHub", this);
-
+		
+		helper.ModRegistry.GetApi<IUpdateChecksTrimmedApi>("Nickel.UpdateChecks")!.RegisterUpdateSource("GitHub", this);
+		
 		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
 		{
 			if (phase != ModLoadPhase.AfterDbInit)
 				return;
+			this.SetupAfterDbInit();
+		};
+	}
 
-			if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
+	private void SetupAfterDbInit()
+	{
+		var updateChecksApi = this.Helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!;
+			if (this.Helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
 				settingsApi.RegisterModSettings(
 					settingsApi.MakeList([
 						settingsApi.MakeCheckbox(
@@ -98,14 +103,13 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 						),
 					]).SubscribeToOnMenuClose(_ =>
 					{
-						helper.Storage.SaveJson(this.DatabaseFile, this.Database);
+						this.Helper.Storage.SaveJson(this.DatabaseFile, this.Database);
 						this.Client = this.MakeHttpClient();
 
 						if (this.Database.IsEnabled)
 							updateChecksApi.RequestUpdateInfo(this);
 					})
 				);
-		};
 	}
 
 	private HttpClient MakeHttpClient()

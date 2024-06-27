@@ -43,51 +43,55 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		helper.Storage.ApplyJsonSerializerSettings(s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
 		this.Database = helper.Storage.LoadJson<Database>(this.DatabaseFile);
 		this.Client = this.MakeHttpClient();
-
-		var updateChecksApi = helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!;
-		updateChecksApi.RegisterUpdateSource("NexusMods", this);
+		
+		helper.ModRegistry.GetApi<IUpdateChecksTrimmedApi>("Nickel.UpdateChecks")!.RegisterUpdateSource("NexusMods", this);
 
 		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
 		{
 			if (phase != ModLoadPhase.AfterDbInit)
 				return;
-
-			if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
-				settingsApi.RegisterModSettings(
-					settingsApi.MakeList([
-						settingsApi.MakeCheckbox(
-							title: () => this.Localizations.Localize(["modSettings", "enabled", "name"]),
-							getter: () => this.Database.IsEnabled,
-							setter: value => this.Database.IsEnabled = value
-						),
-						settingsApi.MakeConditional(
-							setting: new TokenModSetting
-							{
-								Title = () => this.Localizations.Localize(["modSettings", "apiKey", "name"]),
-								HasValue = () => !string.IsNullOrEmpty(this.Database.ApiKey),
-								PasteAction = text => this.Database.ApiKey = text,
-								SetupAction = () => MainMenu.TryOpenWebsiteLink("https://next.nexusmods.com/settings/api-keys"),
-								BaseTooltips = () => [
-									new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::ApiKey")
-									{
-										TitleColor = Colors.textBold,
-										Title = this.Localizations.Localize(["modSettings", "apiKey", "name"]),
-										Description = this.Localizations.Localize(["modSettings", "apiKey", "description"])
-									}
-								]
-							},
-							isVisible: () => this.Database.IsEnabled
-						),
-					]).SubscribeToOnMenuClose(_ =>
-					{
-						helper.Storage.SaveJson(this.DatabaseFile, this.Database);
-						this.Client = this.MakeHttpClient();
-
-						if (this.Database.IsEnabled)
-							updateChecksApi.RequestUpdateInfo(this);
-					})
-				);
+			this.SetupAfterDbInit();
 		};
+	}
+
+	private void SetupAfterDbInit()
+	{
+		var updateChecksApi = this.Helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!;
+		if (this.Helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
+			settingsApi.RegisterModSettings(
+				settingsApi.MakeList([
+					settingsApi.MakeCheckbox(
+						title: () => this.Localizations.Localize(["modSettings", "enabled", "name"]),
+						getter: () => this.Database.IsEnabled,
+						setter: value => this.Database.IsEnabled = value
+					),
+					settingsApi.MakeConditional(
+						setting: new TokenModSetting
+						{
+							Title = () => this.Localizations.Localize(["modSettings", "apiKey", "name"]),
+							HasValue = () => !string.IsNullOrEmpty(this.Database.ApiKey),
+							PasteAction = text => this.Database.ApiKey = text,
+							SetupAction = () => MainMenu.TryOpenWebsiteLink("https://next.nexusmods.com/settings/api-keys"),
+							BaseTooltips = () => [
+								new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::ApiKey")
+								{
+									TitleColor = Colors.textBold,
+									Title = this.Localizations.Localize(["modSettings", "apiKey", "name"]),
+									Description = this.Localizations.Localize(["modSettings", "apiKey", "description"])
+								}
+							]
+						},
+						isVisible: () => this.Database.IsEnabled
+					),
+				]).SubscribeToOnMenuClose(_ =>
+				{
+					this.Helper.Storage.SaveJson(this.DatabaseFile, this.Database);
+					this.Client = this.MakeHttpClient();
+
+					if (this.Database.IsEnabled)
+						updateChecksApi.RequestUpdateInfo(this);
+				})
+			);
 	}
 
 	private HttpClient MakeHttpClient()
