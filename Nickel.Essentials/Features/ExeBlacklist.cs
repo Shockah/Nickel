@@ -103,9 +103,9 @@ internal static class ExeBlacklist
 				SetSelected = (_, deck, value) =>
 				{
 					if (value)
-						ModEntry.Instance.Settings.BlacklistedExeOfferings.Add(deck);
-					else
 						ModEntry.Instance.Settings.BlacklistedExeOfferings.Remove(deck);
+					else
+						ModEntry.Instance.Settings.BlacklistedExeOfferings.Add(deck);
 				}
 			},
 		]);
