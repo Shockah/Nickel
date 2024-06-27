@@ -5,7 +5,7 @@ using System.Numerics;
 
 namespace Nickel;
 
-public interface IModSettingsApi
+internal interface IModSettingsApi
 {
 	void RegisterModSettings(IModSetting settings);
 	Route MakeModSettingsRouteForAllMods();

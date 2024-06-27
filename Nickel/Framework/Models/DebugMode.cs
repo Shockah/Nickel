@@ -1,6 +1,6 @@
 namespace Nickel;
 
-public enum DebugMode
+internal enum DebugMode
 {
 	Disabled,
 	Enabled,

@@ -62,7 +62,7 @@ internal sealed class ModManager
 		this.Logger = logger;
 
 		this.ModLoaderPackage = new FakePluginPackage(
-			manifest: new ModManifest()
+			manifest: new ModManifest
 			{
 				UniqueName = NickelConstants.Name,
 				Version = NickelConstants.Version,
