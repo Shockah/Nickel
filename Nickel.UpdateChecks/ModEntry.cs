@@ -48,17 +48,13 @@ public sealed class ModEntry : SimpleMod
 	internal static ModEntry Instance { get; private set; } = null!;
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
-	private static object UpdateAvailableOverlayIcon = null!;
-	private static object WarningMessageOverlayIcon = null!;
-	private static object ErrorMessageOverlayIcon = null!;
-	private static object UpdateAvailableTooltipIcon = null!;
-
 	internal readonly Dictionary<string, IUpdateSource> UpdateSources = [];
 	internal readonly Dictionary<IModManifest, UpdateDescriptor?> UpdatesAvailable = [];
 	internal readonly ConcurrentQueue<Action> ToRunInGameLoop = [];
 	internal readonly List<Action> AwaitingUpdateInfo = [];
 	internal readonly Settings Settings;
-
+	
+	private Content Content = null!;
 	private (Task Task, CancellationTokenSource Token)? CurrentUpdateCheckTask;
 
 	private IWritableFileInfo SettingsFile
@@ -125,11 +121,14 @@ public sealed class ModEntry : SimpleMod
 
 	private void SetupAfterGameAssembly()
 	{
-		UpdateAvailableOverlayIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/UpdateAvailableOverlayIcon.png"));
-		WarningMessageOverlayIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/WarningMessageOverlayIcon.png"));
-		ErrorMessageOverlayIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/ErrorMessageOverlayIcon.png"));
-		UpdateAvailableTooltipIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/UpdateAvailableTooltipIcon.png"));
-		
+		this.Content = new()
+		{
+			UpdateAvailableOverlayIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/UpdateAvailableOverlayIcon.png")),
+			WarningMessageOverlayIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/WarningMessageOverlayIcon.png")),
+			ErrorMessageOverlayIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/ErrorMessageOverlayIcon.png")),
+			UpdateAvailableTooltipIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/UpdateAvailableTooltipIcon.png"))
+		};
+
 		var harmony = new Harmony(this.Package.Manifest.UniqueName);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(G), nameof(G.Render))
@@ -395,12 +394,12 @@ public sealed class ModEntry : SimpleMod
 		var addedTooltips = false;
 
 		if (updatesAvailable.Count > 0)
-			overlaysToShow.Add((ISpriteEntry)UpdateAvailableOverlayIcon);
+			overlaysToShow.Add(Instance.Content.UpdateAvailableOverlayIcon);
 
 		if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Error, out var messages) && messages.Count > 0)
-			overlaysToShow.Add((ISpriteEntry)ErrorMessageOverlayIcon);
+			overlaysToShow.Add(Instance.Content.ErrorMessageOverlayIcon);
 		else if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Warning, out messages) && messages.Count > 0)
-			overlaysToShow.Add((ISpriteEntry)WarningMessageOverlayIcon);
+			overlaysToShow.Add(Instance.Content.WarningMessageOverlayIcon);
 
 		if (overlaysToShow.Count > 0)
 		{
@@ -465,7 +464,7 @@ public sealed class ModEntry : SimpleMod
 
 			MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new GlossaryTooltip($"ui.{Instance.Package.Manifest.UniqueName}::UpdatesAvailable")
 			{
-				Icon = ((ISpriteEntry)UpdateAvailableTooltipIcon).Sprite,
+				Icon = Instance.Content.UpdateAvailableTooltipIcon.Sprite,
 				TitleColor = Colors.textBold,
 				Title = Instance.Localizations.Localize(["settingsTooltip", "updatesAvailableTooltip"]),
 				Description = string.Join("\n", updatesAvailable.Select(kvp => $"<c=textFaint>{kvp.Key.GetDisplayName(@long: false)}</c> -> <c=boldPink>{kvp.Value.Version}</c>"))
