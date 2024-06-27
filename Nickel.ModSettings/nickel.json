@@ -1,9 +1,9 @@
 {
 	"UniqueName": "Nickel.ModSettings",
-	"Version": "0.12.0",
+	"Version": "1.0.0-alpha1",
 	"DisplayName": "Nickel: Mod settings",
 	"Description": "Allows mods to create their own custom settings menus.",
 	"Author": "Nickel",
-	"RequiredApiVersion": "0.12.0",
+	"RequiredApiVersion": "1.0.0-alpha1",
 	"EntryPointAssembly": "Nickel.ModSettings.dll"
 }

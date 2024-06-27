@@ -1,9 +1,9 @@
 {
 	"UniqueName": "Nickel.Essentials",
-	"Version": "0.12.0",
+	"Version": "1.0.0-alpha1",
 	"DisplayName": "Nickel: Essentials",
 	"Description": "Provides functionality and bugfixes essential for playing the modded game.",
 	"Author": "Nickel",
-	"RequiredApiVersion": "0.12.0",
+	"RequiredApiVersion": "1.0.0-alpha1",
 	"EntryPointAssembly": "Nickel.Essentials.dll"
 }
