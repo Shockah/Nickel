@@ -264,7 +264,7 @@ internal sealed class CharacterManager
 		NewRunOptions.allChars = NewRunOptions.allChars
 			.Append(entry.Configuration.Deck)
 			.Select(this.Decks.LookupByDeck)
-			.Where(e => e != null)
+			.Where(e => e is not null)
 			.Select(e => e!)
 			.OrderBy(e => e.ModOwner == this.VanillaModManifest ? "" : e.ModOwner.UniqueName)
 			.Select(e => e.Deck)

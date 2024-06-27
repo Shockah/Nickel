@@ -1,3 +1,4 @@
+using FSPRO;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager.Cecil;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -19,6 +21,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 	internal Harmony? Harmony { get; private set; }
 	internal ModManager ModManager { get; private set; } = null!;
 	private LaunchArguments LaunchArguments { get; } = launchArguments;
+	internal DebugMode DebugMode { get; private set; } = DebugMode.Disabled;
+	private Settings Settings = new();
 	
 	private SaveManager SaveManager = null!;
 
@@ -154,6 +158,9 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static int StartInstance(Nickel instance, LaunchArguments launchArguments, ILoggerFactory loggerFactory, ILogger logger)
 	{
+		var modSettingsDirectory = launchArguments.ModSettingsPath ?? new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModSettings"));
+		logger.LogInformation("ModSettingsPath: {Path}", modSettingsDirectory.FullName);
+		
 		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
 
 		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor = new(() =>
@@ -172,13 +179,15 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			var modsDirectory = launchArguments.ModsPath ?? GetOrCreateDefaultModLibraryDirectory();
 			logger.LogInformation("ModsPath: {Path}", modsDirectory.FullName);
 
-			var modSettingsDirectory = launchArguments.ModSettingsPath ?? new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModSettings"));
-			logger.LogInformation("ModSettingsPath: {Path}", modSettingsDirectory.FullName);
-
 			var privateModSettingsDirectory = launchArguments.PrivateModSettingsPath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name));
 			logger.LogInformation("PrivateModSettingsPath: {Path}", privateModSettingsDirectory.FullName);
 
 			instance.ModManager = new(modsDirectory, modSettingsDirectory, privateModSettingsDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
+
+			var helper = instance.ModManager.ObtainModHelper(instance.ModManager.ModLoaderPackage);
+			instance.Settings = helper.Storage.LoadJson<Settings>(helper.Storage.GetSingleSettingsFile("json"));
+			instance.OnSettingsUpdate();
+			
 			try
 			{
 				instance.ModManager.ResolveMods();
@@ -236,11 +245,17 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static int ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony? harmony, ILogger logger, ILogger gameLogger, CobaltCoreHandlerResult handlerResult)
 	{
+		if (launchArguments.Debug is { } debugArg)
+		{
+			if (debugArg)
+				instance.DebugMode = (launchArguments.SaveInDebug ?? true) ? DebugMode.EnabledWithSaving : DebugMode.Enabled;
+			else
+				instance.DebugMode = DebugMode.Disabled;
+		}
+		logger.LogInformation("DebugMode: {Value}", instance.DebugMode);
+		
 		var version = GetVanillaVersion();
 		logger.LogInformation("Game version: {Version}", version);
-
-		var debug = launchArguments.Debug ?? !launchArguments.Vanilla;
-		logger.LogInformation("Debug: {Value}", debug);
 
 		var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? handlerResult.WorkingDirectory;
 		logger.LogInformation("GameWorkingDirectory: {Path}", gameWorkingDirectory.FullName);
@@ -254,17 +269,14 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			);
 
 			instance.ModManager.ContinueAfterLoadingGameAssembly(version);
-			instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderModManifest);
-			instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderModManifest);
-
-			var saveInDebug = launchArguments.SaveInDebug ?? true;
-			logger.LogInformation("SaveInDebug: {Value}", saveInDebug);
+			instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderPackage.Manifest);
+			instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderPackage.Manifest);
 
 			var savePath = launchArguments.SavePath?.FullName ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModSaves");
 			logger.LogInformation("SavePath: {Path}", savePath);
 
 			if (harmony is not null)
-				ApplyHarmonyPatches(harmony, saveInDebug);
+				ApplyHarmonyPatches(harmony);
 
 			LogPatches.OnLine.Subscribe(instance, (_, obj) => gameLogger.LogDebug("{GameLogLine}", obj.ToString()));
 			ProgramPatches.OnTryInitSteam.Subscribe(instance, instance.OnTryInitSteam);
@@ -272,7 +284,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 			FeatureFlags.OverrideSaveLocation = savePath;
 		}
-		FeatureFlags.Modded = debug || !launchArguments.Vanilla;
+		FeatureFlags.Modded = instance.DebugMode != DebugMode.Disabled || !launchArguments.Vanilla;
 
 		var oldWorkingDirectory = Directory.GetCurrentDirectory();
 		Directory.SetCurrentDirectory(gameWorkingDirectory.FullName);
@@ -287,8 +299,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 		try
 		{
-			List<string> gameArguments = new();
-			if (debug)
+			List<string> gameArguments = [];
+			if (instance.DebugMode != DebugMode.Disabled)
 				gameArguments.Add("--debug");
 			gameArguments.AddRange(launchArguments.UnmatchedArguments);
 
@@ -312,7 +324,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		}
 	}
 
-	private static void ApplyHarmonyPatches(Harmony harmony, bool saveInDebug)
+	private static void ApplyHarmonyPatches(Harmony harmony)
 	{
 		AIPatches.Apply(harmony);
 		ArtifactPatches.Apply(harmony);
@@ -327,7 +339,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		ProgramPatches.Apply(harmony);
 		RunSummaryPatches.Apply(harmony);
 		SpriteLoaderPatches.Apply(harmony);
-		StatePatches.Apply(harmony, saveInDebug);
+		StatePatches.Apply(harmony);
 		StoryVarsPatches.Apply(harmony);
 		TTGlossaryPatches.Apply(harmony);
 		WizardPatches.Apply(harmony);
@@ -340,12 +352,65 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 	internal static void ApplyLateHarmonyPatches(Harmony harmony)
 		=> MapBasePatches.ApplyLate(harmony);
 
-	[EventPriority(double.MaxValue)]
+	[EventPriority(double.PositiveInfinity)]
 	private void OnModLoadPhaseFinished(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterDbInit)
 			return;
+
+		if (this.Harmony is not null)
+			ApplyLateHarmonyPatches(this.Harmony);
+		this.ModManager.LogHarmonyPatchesOnce();
 		this.ModManager.ContentManager?.InjectQueuedEntries();
+
+		this.SetupModSettings();
+	}
+
+	private void SetupModSettings()
+	{
+		var helper = this.ModManager.ObtainModHelper(this.ModManager.ModLoaderPackage);
+		if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
+			settingsApi.RegisterModSettings(settingsApi.MakeList([
+				settingsApi.MakeConditional(
+					setting: settingsApi.MakeEnumStepper(
+							title: () => "Debug", // TODO: localize
+							getter: () => this.Settings.DebugMode,
+							setter: value =>
+							{
+								this.Settings.DebugMode = value;
+								this.OnSettingsUpdate();
+							}
+						).SetValueFormatter(
+							mode => mode switch
+							{
+								DebugMode.Disabled => "Off",
+								DebugMode.Enabled => "On",
+								DebugMode.EnabledWithSaving => "On w/ auto-save",
+								_ => mode.ToString()
+							}
+						)
+						.SetValueWidth(
+							_ => 120
+						),
+					isVisible: () => Instance.LaunchArguments.Debug is null
+				),
+				settingsApi.MakeConditional(
+					setting: settingsApi.MakeButton(
+						title: () => "Toggle debug menu",
+						(g, _) =>
+						{
+							Audio.Play(Event.Click);
+							if (g.e is { } editor)
+								editor.isActive = !editor.isActive;
+						}
+					),
+					isVisible: () => FeatureFlags.Debug
+				)
+			]).SubscribeToOnMenuClose(_ =>
+			{
+				helper.Storage.SaveJson(helper.Storage.GetSingleSettingsFile("json"), this.Settings);
+				this.OnSettingsUpdate();
+			}));
 	}
 
 	[EventPriority(double.MaxValue)]
@@ -371,6 +436,16 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		return directoryInfo;
 	}
 
-	[GeneratedRegex("(\\d+)\\.(\\d+)\\.(\\d+)(?: (.+))?")]
+	private void OnSettingsUpdate()
+	{
+		this.DebugMode = this.Settings.DebugMode;
+		if (AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == "CobaltCore"))
+			this.OnSettingsUpdateAfterGameLoaded();
+	}
+
+	private void OnSettingsUpdateAfterGameLoaded()
+		=> FeatureFlags.Debug = this.DebugMode != DebugMode.Disabled;
+
+	[GeneratedRegex(@"(\d+)\.(\d+)\.(\d+)(?: (.+))?")]
 	private static partial Regex GameVersionRegex();
 }

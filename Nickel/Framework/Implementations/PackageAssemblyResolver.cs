@@ -32,7 +32,7 @@ internal class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest
 	{
 		parameters.AssemblyResolver ??= this;
 		var stream = this.GetStreamForAssembly(name);
-		if (stream == null)
+		if (stream is null)
 			return this.FallbackResolver.Resolve(name, parameters);
 
 		try

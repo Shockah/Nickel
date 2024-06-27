@@ -13,6 +13,9 @@ public interface IModRegistry
 {
 	/// <summary>A virtual manifest, representing the vanilla game itself.</summary>
 	IModManifest VanillaModManifest { get; }
+	
+	/// <summary>A virtual manifest, representing the mod loader itself.</summary>
+	IModManifest ModLoaderModManifest { get; }
 
 	/// <summary>A dictionary mapping all loaded mods' <see cref="IModManifest.UniqueName"/>s to their manifests.</summary>
 	IReadOnlyDictionary<string, IModManifest> LoadedMods { get; }

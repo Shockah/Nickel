@@ -118,10 +118,10 @@ public static class IModDataClassExt
 	/// <param name="data">The data to store.</param>
 	public static void SetOptionalModData<T>(this IModData modData, object o, string key, T? data) where T : class
 	{
-		if (data != null)
-			modData.SetModData(o, key, data);
-		else
+		if (data is null)
 			modData.RemoveModData(o, key);
+		else
+			modData.SetModData(o, key, data);
 	}
 }
 

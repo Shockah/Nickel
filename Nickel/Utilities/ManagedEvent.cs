@@ -101,7 +101,7 @@ public sealed class ManagedEvent<TEventArgs>
 			this.IsRaising = true;
 			try
 			{
-				if (this.ExceptionHandler != null)
+				if (this.ExceptionHandler is not null)
 				{
 					IModManifest? previousSubscriber = null;
 					foreach (var handler in this.Handlers)

@@ -81,12 +81,12 @@ internal sealed class ShipManager
 		}
 
 		var vanillaShips = StarterShip.ships
-			.Where(kvp => this.LookupByUniqueName(kvp.Key) == null)
+			.Where(kvp => this.LookupByUniqueName(kvp.Key) is null)
 			.ToList();
 		var moddedShips = StarterShip.ships
 			.Append(new KeyValuePair<string, StarterShip>(entry.UniqueName, entry.Configuration.Ship))
 			.Select(kvp => this.LookupByUniqueName(kvp.Key))
-			.Where(e => e != null)
+			.Where(e => e is not null)
 			.Select(e => e!)
 			.OrderBy(e => e.ModOwner == this.VanillaModManifest ? "" : e.ModOwner.UniqueName)
 			.Select(e => new KeyValuePair<string, StarterShip>(e.UniqueName, e.Configuration.Ship));

@@ -21,7 +21,7 @@ internal static class StatePatches
 	internal static WeakEventSource<LoadEventArgs> OnLoad { get; } = new();
 	internal static WeakEventSource<State> OnUpdate { get; } = new();
 
-	internal static void Apply(Harmony harmony, bool saveInDebug)
+	internal static void Apply(Harmony harmony)
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.EnumerateAllArtifacts))
@@ -37,7 +37,7 @@ internal static class StatePatches
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.SaveIfRelease))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.SaveIfRelease)}`"),
 			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(SaveIfRelease_Prefix)),
-			postfix: saveInDebug ? new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(SaveIfRelease_Postfix)) : null
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(SaveIfRelease_Postfix))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.Load))
@@ -103,6 +103,8 @@ internal static class StatePatches
 
 	private static void SaveIfRelease_Postfix(State __instance)
 	{
+		if (Nickel.Instance.DebugMode != DebugMode.EnabledWithSaving)
+			return;
 		if (FeatureFlags.Debug && !StopSavingOverride)
 			__instance.Save();
 	}

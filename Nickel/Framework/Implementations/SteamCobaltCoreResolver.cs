@@ -93,7 +93,7 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 				{
 					// trying the patience
 					var entry = result.FirstOrDefault(x => x.Key.Equals("libraryfolders", StringComparison.InvariantCultureIgnoreCase));
-					if (entry.Key == null)
+					if (entry.Key is null)
 					{
 						// nope, not found
 						continue;

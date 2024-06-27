@@ -29,10 +29,16 @@ public sealed class ApiImplementation : IModSettingsApi
 					new ListModSetting
 					{
 						Settings = [
-							.. ModEntry.Instance.Helper.ModRegistry.LoadedMods.Values
-								.OrderBy(m => m.DisplayName ?? m.UniqueName)
-								.Select(m => (Mod: m, Setting: ModEntry.Instance.ModSettings.GetValueOrDefault(m.UniqueName)))
-								.Where(e => e.Setting is not null)
+							.. ModEntry.Instance.ModSettings
+								.Select(kvp =>
+								{
+									if (ModEntry.Instance.Helper.ModRegistry.LoadedMods.TryGetValue(kvp.Key, out var mod))
+										return (Mod: mod, Settings: kvp.Value);
+									if (kvp.Key == ModEntry.Instance.Helper.ModRegistry.ModLoaderModManifest.UniqueName)
+										return (Mod: ModEntry.Instance.Helper.ModRegistry.ModLoaderModManifest, Settings: kvp.Value);
+									throw new ArgumentException($"Unknown mod {kvp.Key}");
+								})
+								.OrderBy(e => e.Mod.DisplayName ?? e.Mod.UniqueName)
 								.Select(e => new ButtonModSetting
 								{
 									Title = () => e.Mod.DisplayName ?? e.Mod.UniqueName,

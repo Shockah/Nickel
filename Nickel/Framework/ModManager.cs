@@ -28,7 +28,7 @@ internal sealed class ModManager
 	private readonly ModDataManager ModDataManager;
 	private readonly ModStorageManager ModStorageManager;
 
-	internal readonly IModManifest ModLoaderModManifest;
+	internal readonly IPluginPackage<IModManifest> ModLoaderPackage;
 	private ModLoadPhase CurrentModLoadPhase { get; set; } = ModLoadPhase.BeforeGameAssembly;
 	internal ContentManager? ContentManager { get; private set; }
 	private IModManifest? VanillaModManifest { get; set; }
@@ -61,19 +61,22 @@ internal sealed class ModManager
 		this.LoggerFactory = loggerFactory;
 		this.Logger = logger;
 
-		this.ModLoaderModManifest = new ModManifest()
-		{
-			UniqueName = NickelConstants.Name,
-			Version = NickelConstants.Version,
-			DisplayName = NickelConstants.Name,
-			Author = NickelConstants.Name,
-			RequiredApiVersion = NickelConstants.Version
-		};
+		this.ModLoaderPackage = new FakePluginPackage(
+			manifest: new ModManifest()
+			{
+				UniqueName = NickelConstants.Name,
+				Version = NickelConstants.Version,
+				DisplayName = NickelConstants.Name,
+				Author = NickelConstants.Name,
+				RequiredApiVersion = NickelConstants.Version
+			},
+			packageRoot: new DirectoryInfoImpl(new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory))
+		);
 
 		this.EventManager = new(
 			() => this.CurrentModLoadPhase,
 			this.ObtainLogger,
-			this.ModLoaderModManifest
+			this.ModLoaderPackage.Manifest
 		);
 		this.ModDataManager = new();
 		this.ModStorageManager = new();
@@ -419,7 +422,7 @@ internal sealed class ModManager
 			RequiredApiVersion = NickelConstants.Version
 		};
 
-		this.ContentManager = ContentManager.Create(() => this.CurrentModLoadPhase, this.ObtainLogger, this.VanillaModManifest, this.ModLoaderModManifest, this.ModDataManager);
+		this.ContentManager = ContentManager.Create(() => this.CurrentModLoadPhase, this.ObtainLogger, this.VanillaModManifest, this.ModLoaderPackage.Manifest, this.ModDataManager);
 		this.PrepareJsonSerialization();
 	}
 
@@ -479,7 +482,7 @@ internal sealed class ModManager
 		return this.ObtainModHelper(package);
 	}
 
-	private IModHelper ObtainModHelper(IPluginPackage<IModManifest> package)
+	internal IModHelper ObtainModHelper(IPluginPackage<IModManifest> package)
 	{
 		if (!this.UniqueNameToHelper.TryGetValue(package.Manifest.UniqueName, out var helper))
 		{
@@ -487,6 +490,7 @@ internal sealed class ModManager
 				new ModRegistry(
 					package.Manifest,
 					() => this.VanillaModManifest,
+					() => this.ModLoaderPackage.Manifest,
 					this.ModsDirectory,
 					this.UniqueNameToInstance,
 					this.UniqueNameToPackage,
@@ -517,5 +521,15 @@ internal sealed class ModManager
 		}
 
 		return helper;
+	}
+
+	private sealed class FakePluginPackage(IModManifest manifest, IDirectoryInfo packageRoot) : IPluginPackage<IModManifest>
+	{
+		public IModManifest Manifest { get; } = manifest;
+		public IDirectoryInfo PackageRoot { get; } = packageRoot;
+		
+		public void Dispose()
+		{
+		}
 	}
 }

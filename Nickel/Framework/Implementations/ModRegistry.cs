@@ -21,6 +21,9 @@ internal sealed class ModRegistry : IModRegistry
 		}
 	}
 
+	public IModManifest ModLoaderModManifest
+		=> this.ModLoaderModManifestProvider();
+
 	public IReadOnlyDictionary<string, IModManifest> LoadedMods
 		=> this.ModUniqueNameToPackage
 			.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Manifest);
@@ -33,10 +36,12 @@ internal sealed class ModRegistry : IModRegistry
 	private Dictionary<string, object?> ApiCache { get; } = [];
 	private IProxyManager<string> ProxyManager { get; }
 	private Func<IModManifest?> VanillaModManifestProvider { get; }
+	private Func<IModManifest> ModLoaderModManifestProvider { get; }
 
 	public ModRegistry(
 		IModManifest modManifest,
 		Func<IModManifest?> vanillaModManifestProvider,
+		Func<IModManifest> modLoaderModManifestProvider,
 		DirectoryInfo modsDirectory,
 		IReadOnlyDictionary<string, Mod> modUniqueNameToInstance,
 		IReadOnlyDictionary<string, IPluginPackage<IModManifest>> modUniqueNameToPackage,
@@ -45,6 +50,7 @@ internal sealed class ModRegistry : IModRegistry
 	{
 		this.ModManifest = modManifest;
 		this.VanillaModManifestProvider = vanillaModManifestProvider;
+		this.ModLoaderModManifestProvider = modLoaderModManifestProvider;
 		this.ModsDirectory = modsDirectory;
 		this.ModUniqueNameToInstance = modUniqueNameToInstance;
 		this.ModUniqueNameToPackage = modUniqueNameToPackage;

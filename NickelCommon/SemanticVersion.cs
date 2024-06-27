@@ -38,7 +38,7 @@ public readonly struct SemanticVersion : IEquatable<SemanticVersion>, IComparabl
 	public override string ToString()
 	{
 		var version = $"{this.MajorVersion}.{this.MinorVersion}.{this.PatchVersion}";
-		if (this.PrereleaseTag != null)
+		if (this.PrereleaseTag is not null)
 			version += $"-{this.PrereleaseTag}";
 		return version;
 	}

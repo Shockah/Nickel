@@ -20,15 +20,9 @@ public abstract class ZipFileSystemInfo : IFileSystemInfo<ZipFileInfo, ZipDirect
 
 	/// <inheritdoc/>
 	public string FullName
-	{
-		get
-		{
-			if (this.Parent != null)
-				return $"{this.Parent.FullName}{(this.Parent.FullName == "/" ? "" : "/")}{this.Name}";
-			else
-				return $"{(this.Name == "/" ? "" : "/")}{this.Name}";
-		}
-	}
+		=> this.Parent is not null
+			? $"{this.Parent.FullName}{(this.Parent.FullName == "/" ? "" : "/")}{this.Name}"
+			: $"{(this.Name == "/" ? "" : "/")}{this.Name}";
 
 	/// <inheritdoc/>
 	public ZipFileInfo? AsFile
