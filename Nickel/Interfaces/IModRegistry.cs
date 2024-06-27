@@ -16,8 +16,11 @@ public interface IModRegistry
 	
 	/// <summary>A virtual manifest, representing the mod loader itself.</summary>
 	IModManifest ModLoaderModManifest { get; }
+	
+	/// <summary>A dictionary mapping all resolved mods' <see cref="IModManifest.UniqueName"/>s to their manifests. Resolved mods are ones that were detected, but not necessarily loaded.</summary>
+	IReadOnlyDictionary<string, IModManifest> ResolvedMods { get; }
 
-	/// <summary>A dictionary mapping all loaded mods' <see cref="IModManifest.UniqueName"/>s to their manifests.</summary>
+	/// <summary>A dictionary mapping all loaded mods' <see cref="IModManifest.UniqueName"/>s to their manifests. Loaded mods are ones that actually managed to load successfully.</summary>
 	IReadOnlyDictionary<string, IModManifest> LoadedMods { get; }
 
 	/// <summary>The directory containing the mods.</summary>

@@ -24,19 +24,24 @@ internal sealed class ModRegistry : IModRegistry
 	public IModManifest ModLoaderModManifest
 		=> this.ModLoaderModManifestProvider();
 
+	public IReadOnlyDictionary<string, IModManifest> ResolvedMods
+		=> this.ResolvedModPackages
+			.ToDictionary(m => m.Manifest.UniqueName, m => m.Manifest);
+
 	public IReadOnlyDictionary<string, IModManifest> LoadedMods
 		=> this.ModUniqueNameToPackage
 			.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Manifest);
 
 	public DirectoryInfo ModsDirectory { get; }
 
-	private IModManifest ModManifest { get; }
-	private IReadOnlyDictionary<string, Mod> ModUniqueNameToInstance { get; }
-	private IReadOnlyDictionary<string, IPluginPackage<IModManifest>> ModUniqueNameToPackage { get; }
-	private Dictionary<string, object?> ApiCache { get; } = [];
-	private IProxyManager<string> ProxyManager { get; }
-	private Func<IModManifest?> VanillaModManifestProvider { get; }
-	private Func<IModManifest> ModLoaderModManifestProvider { get; }
+	private readonly IModManifest ModManifest;
+	private readonly IReadOnlyDictionary<string, Mod> ModUniqueNameToInstance;
+	private readonly IReadOnlyDictionary<string, IPluginPackage<IModManifest>> ModUniqueNameToPackage;
+	private readonly IReadOnlyList<IPluginPackage<IModManifest>> ResolvedModPackages;
+	private readonly IProxyManager<string> ProxyManager;
+	private readonly Func<IModManifest?> VanillaModManifestProvider;
+	private readonly Func<IModManifest> ModLoaderModManifestProvider;
+	private readonly Dictionary<string, object?> ApiCache = [];
 
 	public ModRegistry(
 		IModManifest modManifest,
@@ -45,6 +50,7 @@ internal sealed class ModRegistry : IModRegistry
 		DirectoryInfo modsDirectory,
 		IReadOnlyDictionary<string, Mod> modUniqueNameToInstance,
 		IReadOnlyDictionary<string, IPluginPackage<IModManifest>> modUniqueNameToPackage,
+		IReadOnlyList<IPluginPackage<IModManifest>> resolvedModPackages,
 		IProxyManager<string> proxyManager
 	)
 	{
@@ -54,6 +60,7 @@ internal sealed class ModRegistry : IModRegistry
 		this.ModsDirectory = modsDirectory;
 		this.ModUniqueNameToInstance = modUniqueNameToInstance;
 		this.ModUniqueNameToPackage = modUniqueNameToPackage;
+		this.ResolvedModPackages = resolvedModPackages;
 		this.ProxyManager = proxyManager;
 	}
 

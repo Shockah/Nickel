@@ -494,6 +494,7 @@ internal sealed class ModManager
 					this.ModsDirectory,
 					this.UniqueNameToInstance,
 					this.UniqueNameToPackage,
+					this.ResolvedMods,
 					this.ProxyManager
 				),
 				new ModEvents(package.Manifest, this.EventManager),
