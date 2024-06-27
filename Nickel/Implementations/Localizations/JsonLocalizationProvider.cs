@@ -16,35 +16,45 @@ namespace Nickel;
 /// <param name="serializer">The JSON serializer to use for deserializing.</param>
 public sealed partial class JsonLocalizationProvider(
 	ILocalizationTokenExtractor<string> tokenExtractor,
-	Func<string, Stream> localeStreamFunction,
+	Func<string, Stream?> localeStreamFunction,
 	JsonSerializer? serializer = null
 ) : ILocalizationProvider<IReadOnlyList<string>>
 {
-	private ILocalizationTokenExtractor<string> TokenExtractor { get; } = tokenExtractor;
-	private Func<string, Stream> LocaleStreamFunction { get; } = localeStreamFunction;
-	private JsonSerializer Serializer { get; } = serializer ?? new();
+	private readonly JsonSerializer Serializer = serializer ?? new();
 
-	private Dictionary<string, JObject> LocalizationCache { get; } = [];
+	private readonly Dictionary<string, JObject?> LocalizationCache = [];
 
 	/// <inheritdoc/>
 	public string? Localize(string locale, IReadOnlyList<string> key, object? tokens = null)
 	{
-		var localization = this.GetLocalization(locale);
+		if (this.GetLocalization(locale) is not { } localization)
+			return null;
 		return this.Localize(localization, key, 0, tokens);
 	}
 
-	private JObject GetLocalization(string locale)
+	private JObject? GetLocalization(string locale)
 	{
 		if (this.LocalizationCache.TryGetValue(locale, out var localization))
 			return localization;
 
-		using var stream = this.LocaleStreamFunction(locale);
-		using var streamReader = new StreamReader(stream);
-		using var jsonReader = new JsonTextReader(streamReader);
+		try
+		{
+			using var stream = localeStreamFunction(locale);
+			if (stream is null)
+				return null;
+		
+			using var streamReader = new StreamReader(stream);
+			using var jsonReader = new JsonTextReader(streamReader);
 
-		localization = this.Serializer.Deserialize<JObject>(jsonReader) ?? new JObject();
-		this.LocalizationCache[locale] = localization;
-		return localization;
+			localization = this.Serializer.Deserialize<JObject>(jsonReader) ?? new JObject();
+			this.LocalizationCache[locale] = localization;
+			return localization;
+		}
+		catch
+		{
+			this.LocalizationCache[locale] = null;
+			return localization;
+		}
 	}
 
 	private string? Localize(JToken localization, IReadOnlyList<string> key, int keyIndex, object? tokens)
@@ -76,7 +86,7 @@ public sealed partial class JsonLocalizationProvider(
 
 	private string Localize(string localizationString, object? tokens)
 	{
-		var tokenLookup = this.TokenExtractor.ExtractTokens(tokens);
+		var tokenLookup = tokenExtractor.ExtractTokens(tokens);
 		return TokenRegex().Replace(localizationString, match =>
 		{
 			var key = match.Groups[1].Value.Trim();

@@ -12,6 +12,7 @@
 * Update checks now happen much earlier and even for mods which failed to load.
 * The game no longer proposes memories which don't exist (for modded characters).
 * The Memories menu now highlights the arrow buttons if you have any unlocked but not yet seen memories scrolled away.
+* Fixed Nickel crashing when starting the game in a non-English language or when switching to one.
 
 ### For developers:
 * Added APIs for storing mod settings in a common place.
