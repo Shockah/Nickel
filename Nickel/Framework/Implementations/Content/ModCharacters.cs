@@ -11,10 +11,13 @@ internal sealed class ModCharacters : IModCharacters
 	{
 		this.ModManifest = modManifest;
 		this.CharacterManagerProvider = characterManagerProvider;
+		this.V2 = new ModCharactersV2(modManifest, characterManagerProvider);
 	}
+	
+	public IModCharactersV2 V2 { get; }
 
 	public ICharacterAnimationEntry RegisterCharacterAnimation(CharacterAnimationConfiguration configuration)
-		=> this.RegisterCharacterAnimation(configuration.LoopTag, configuration);
+		=> this.RegisterCharacterAnimation($"{configuration.Deck.Key()}::{configuration.LoopTag}", configuration);
 
 	public ICharacterAnimationEntry RegisterCharacterAnimation(string name, CharacterAnimationConfiguration configuration)
 		=> this.CharacterManagerProvider().RegisterCharacterAnimation(this.ModManifest, name, configuration);

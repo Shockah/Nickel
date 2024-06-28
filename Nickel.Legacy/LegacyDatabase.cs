@@ -221,6 +221,11 @@ internal sealed class LegacyDatabase(
 
 	public void RegisterSprite(IModManifest mod, ExternalSprite value)
 	{
+
+		var entry = this.HelperProvider(mod).Content.Sprites.RegisterSprite(value.GlobalName, GetStreamProvider());
+		value.Id = (int)entry.Sprite;
+		this.GlobalNameToSprite[value.GlobalName] = value;
+
 		Func<Stream> GetStreamProvider()
 		{
 			if (value.virtual_location is { } provider)
@@ -229,10 +234,6 @@ internal sealed class LegacyDatabase(
 				return () => path.OpenRead().ToMemoryStream();
 			throw new ArgumentException("Unsupported ExternalSprite");
 		}
-
-		var entry = this.HelperProvider(mod).Content.Sprites.RegisterSprite(value.GlobalName, GetStreamProvider());
-		value.Id = (int)entry.Sprite;
-		this.GlobalNameToSprite[value.GlobalName] = value;
 	}
 
 	public void RegisterGlossary(ExternalGlossary glossary)
@@ -343,13 +344,15 @@ internal sealed class LegacyDatabase(
 			Frames = value.Frames.Select(s => (Spr)s.Id!.Value).ToList()
 		};
 
+#pragma warning disable CS0618 // Type or member is obsolete
 		this.HelperProvider(mod).Content.Characters.RegisterCharacterAnimation(value.GlobalName, configuration);
+#pragma warning restore CS0618 // Type or member is obsolete
 		this.GlobalNameToAnimation[value.GlobalName] = value;
 	}
 
 	public void RegisterCharacter(IModManifest mod, ExternalCharacter value)
 	{
-		CharacterConfiguration configuration = new()
+		PlayableCharacterConfigurationV2 configuration = new()
 		{
 			Deck = (Deck)value.Deck.Id!.Value,
 			BorderSprite = (Spr)value.CharPanelSpr.Id!.Value,
@@ -360,7 +363,7 @@ internal sealed class LegacyDatabase(
 			}
 		};
 
-		this.HelperProvider(mod).Content.Characters.RegisterCharacter(value.GlobalName, configuration);
+		this.HelperProvider(mod).Content.Characters.V2.RegisterPlayableCharacter(value.GlobalName, configuration);
 		this.GlobalNameToCharacter[value.GlobalName] = value;
 	}
 

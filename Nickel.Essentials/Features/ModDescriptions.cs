@@ -208,7 +208,7 @@ internal static class ModDescriptions
 
 	private static void Character_Render_Transpiler_AddModTooltipIfNeeded(Character character, G g, Vec pos)
 	{
-		var entry = character.deckType is null ? null : ModEntry.Instance.Helper.Content.Decks.LookupByDeck(character.deckType.Value);
+		var entry = ModEntry.Instance.Helper.Content.Characters.V2.LookupByCharacterType(character.type);
 		if (!ShouldShowModDescription(entry))
 			return;
 		
