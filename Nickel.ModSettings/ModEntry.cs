@@ -17,10 +17,13 @@ public sealed class ModEntry : SimpleMod
 
 	internal readonly Dictionary<string, IModSettingsApi.IModSetting> ModSettings = [];
 	internal readonly ApiImplementation Api;
+	
+	private static UK ModSettingsButtonKey;
 
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
 		Instance = this;
+		ModSettingsButtonKey = Instance.Helper.Utilities.ObtainEnumCase<UK>();
 		this.Localizations = new MissingPlaceholderLocalizationProvider<IReadOnlyList<string>>(
 			new CurrentLocaleOrEnglishLocalizationProvider<IReadOnlyList<string>>(
 				new JsonLocalizationProvider(
@@ -50,7 +53,7 @@ public sealed class ModEntry : SimpleMod
 
 		SharedArt.ButtonText(
 			g, new Vec(405.0, 42.0),
-			(UK)500_000,
+			ModSettingsButtonKey,
 			Instance.Localizations.Localize(["mainMenu", "buttonTitle"]),
 			onMouseDown: new MouseDownHandler(() =>
 			{

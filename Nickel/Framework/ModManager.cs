@@ -27,6 +27,7 @@ internal sealed class ModManager
 	internal readonly ModEventManager EventManager;
 	private readonly ModDataManager ModDataManager;
 	private readonly ModStorageManager ModStorageManager;
+	private readonly EnumCasePool EnumCasePool;
 
 	internal readonly IPluginPackage<IModManifest> ModLoaderPackage;
 	private ModLoadPhase CurrentModLoadPhase { get; set; } = ModLoadPhase.BeforeGameAssembly;
@@ -80,6 +81,7 @@ internal sealed class ModManager
 		);
 		this.ModDataManager = new();
 		this.ModStorageManager = new();
+		this.EnumCasePool = new();
 
 		var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"{this.GetType().Namespace}.Proxies, Version={this.GetType().Assembly.GetName().Version}, Culture=neutral"), AssemblyBuilderAccess.Run);
 		var moduleBuilder = assemblyBuilder.DefineDynamicModule($"{this.GetType().Namespace}.Proxies");
@@ -516,6 +518,7 @@ internal sealed class ModManager
 					new DirectoryInfoImpl(this.PrivateModSettingsDirectory),
 					this.ModStorageManager
 				),
+				new ModUtilities(this.EnumCasePool),
 				() => this.CurrentModLoadPhase
 			);
 			this.UniqueNameToHelper[package.Manifest.UniqueName] = helper;

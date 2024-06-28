@@ -1,5 +1,3 @@
-using System;
-
 namespace Nickel.ModSettings;
 
 public abstract class BaseModSetting : IModSettingsApi.IModSetting
@@ -11,16 +9,16 @@ public abstract class BaseModSetting : IModSettingsApi.IModSetting
 
 	protected BaseModSetting()
 	{
-		this.OnMenuOpen += (_, route, keyGenerator) =>
+		this.OnMenuOpen += (_, route) =>
 		{
 			if (this.Key == 0)
-				this.Key = keyGenerator();
+				this.Key = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 			this.CurrentRoute = route;
 		};
 	}
 
-	public void RaiseOnMenuOpen(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
-		=> this.OnMenuOpen?.Invoke(g, route, keyGenerator);
+	public void RaiseOnMenuOpen(G g, IModSettingsApi.IModSettingsRoute route)
+		=> this.OnMenuOpen?.Invoke(g, route);
 
 	public void RaiseOnMenuClose(G g)
 		=> this.OnMenuClose?.Invoke(g);

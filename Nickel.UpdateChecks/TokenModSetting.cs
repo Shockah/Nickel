@@ -25,16 +25,16 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 
 	public TokenModSetting()
 	{
-		this.OnMenuOpen += (_, _, keyGenerator) =>
+		this.OnMenuOpen += (_, _) =>
 		{
 			if (this.Key == 0)
-				this.Key = keyGenerator();
+				this.Key = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 			if (this.PasteKey == 0)
-				this.PasteKey = keyGenerator();
+				this.PasteKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 			if (this.SetupKey == 0)
-				this.SetupKey = keyGenerator();
+				this.SetupKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 			if (this.CheckboxKey == 0)
-				this.CheckboxKey = keyGenerator();
+				this.CheckboxKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 		};
 	}
 
@@ -80,8 +80,8 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 		return this;
 	}
 
-	public void RaiseOnMenuOpen(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
-		=> this.OnMenuOpen?.Invoke(g, route, keyGenerator);
+	public void RaiseOnMenuOpen(G g, IModSettingsApi.IModSettingsRoute route)
+		=> this.OnMenuOpen?.Invoke(g, route);
 
 	public void RaiseOnMenuClose(G g)
 		=> this.OnMenuClose?.Invoke(g);

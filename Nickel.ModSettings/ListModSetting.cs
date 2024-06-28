@@ -10,12 +10,12 @@ public sealed class ListModSetting : BaseModSetting, IModSettingsApi.IListModSet
 
 	public ListModSetting()
 	{
-		this.OnMenuOpen += (g, route, keyGenerator) =>
+		this.OnMenuOpen += (g, route) =>
 		{
 			if (this.Settings is { } settings)
 				foreach (var setting in settings)
-					setting.RaiseOnMenuOpen(g, route, keyGenerator);
-			this.EmptySetting?.RaiseOnMenuOpen(g, route, keyGenerator);
+					setting.RaiseOnMenuOpen(g, route);
+			this.EmptySetting?.RaiseOnMenuOpen(g, route);
 		};
 		this.OnMenuClose += g =>
 		{

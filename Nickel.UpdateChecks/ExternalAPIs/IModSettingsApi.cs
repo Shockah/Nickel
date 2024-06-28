@@ -20,7 +20,7 @@ public interface IModSettingsApi
 	IModSetting MakeHeader(Func<string> title, Func<string>? subtitle = null);
 	IModSetting MakeBackButton();
 
-	public delegate void OnMenuOpen(G g, IModSettingsRoute route, Func<UIKey> keyGenerator);
+	public delegate void OnMenuOpen(G g, IModSettingsRoute route);
 	public delegate void OnMenuClose(G g);
 
 	public interface IModSetting
@@ -30,7 +30,7 @@ public interface IModSettingsApi
 		event OnMenuOpen OnMenuOpen;
 		event OnMenuClose OnMenuClose;
 
-		void RaiseOnMenuOpen(G g, IModSettingsRoute route, Func<UIKey> keyGenerator);
+		void RaiseOnMenuOpen(G g, IModSettingsRoute route);
 		void RaiseOnMenuClose(G g);
 
 		IModSetting SubscribeToOnMenuOpen(OnMenuOpen @delegate)

@@ -16,8 +16,8 @@ namespace Nickel.Essentials;
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class SaveImport
 {
-	private const UK ImportProfileKey = (UK)2136011;
-	private const UK ImportProfileBackKey = (UK)2136012;
+	private static readonly UK ImportProfileKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
+	private static readonly UK ImportProfileBackKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 
 	public static void ApplyPatches(Harmony harmony)
 	{

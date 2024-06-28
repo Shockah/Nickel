@@ -37,7 +37,7 @@ file static class RunConfigExt
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class ExeBlacklist
 {
-	private const UK CannotBlacklistWarningKey = (UK)2136001;
+	private static readonly UK CannotBlacklistWarningKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 
 	private static State? LastState;
 	private static double CannotBlacklistWarning;

@@ -22,18 +22,18 @@ public sealed class CharactersModSetting : IModSettingsApi.IModSetting
 
 	public CharactersModSetting()
 	{
-		this.OnMenuOpen += (_, route, keyGenerator) =>
+		this.OnMenuOpen += (_, route) =>
 		{
 			if (this.Key == 0)
-				this.Key = keyGenerator();
+				this.Key = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 			if (this.BaseCharacterKey == 0)
-				this.BaseCharacterKey = keyGenerator();
+				this.BaseCharacterKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 			this.CurrentRoute = route;
 		};
 	}
 
-	public void RaiseOnMenuOpen(G g, IModSettingsApi.IModSettingsRoute route, Func<UIKey> keyGenerator)
-		=> this.OnMenuOpen?.Invoke(g, route, keyGenerator);
+	public void RaiseOnMenuOpen(G g, IModSettingsApi.IModSettingsRoute route)
+		=> this.OnMenuOpen?.Invoke(g, route);
 
 	public void RaiseOnMenuClose(G g)
 		=> this.OnMenuClose?.Invoke(g);

@@ -37,4 +37,9 @@ public interface IModHelper
 	/// Allows mods to save and load arbitrary files within common save file directories.
 	/// </summary>
 	IModStorage Storage { get; }
+	
+	/// <summary>
+	/// A mod-specific accessor for various utilities.
+	/// </summary>
+	IModUtilities Utilities { get; }
 }

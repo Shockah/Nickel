@@ -12,7 +12,7 @@ namespace Nickel.Essentials;
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static partial class CardCodexFiltering
 {
-	private const UK DeckFilterKey = (UK)2137301;
+	private static readonly UK DeckFilterKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 
 	private static List<Deck> DeckTypes = [];
 	private static readonly HashSet<Deck> FilteredOutDecks = [];

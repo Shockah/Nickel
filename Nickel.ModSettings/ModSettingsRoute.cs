@@ -8,7 +8,7 @@ namespace Nickel.ModSettings;
 
 public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IModSettingsRoute
 {
-	private static int NextUk = 500_002;
+	private static readonly UK WarningPopupKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 
 	[JsonProperty]
 	public Route? Subroute;
@@ -53,7 +53,7 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 		g.Push(onInputPhase: this);
 		if (!this.RaisedOnOpen)
 		{
-			this.Setting.RaiseOnMenuOpen(MG.inst.g, this, () => (UK)NextUk++);
+			this.Setting.RaiseOnMenuOpen(MG.inst.g, this);
 			this.RaisedOnOpen = true;
 		}
 
@@ -97,7 +97,7 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 
 		if (this.Warning is { } warning)
 		{
-			SharedArt.WarningPopup(g, (UK)500_001, warning.Text, new Vec(240, 65));
+			SharedArt.WarningPopup(g, WarningPopupKey, warning.Text, new Vec(240, 65));
 
 			var warningTime = Math.Max(0, warning.Time - g.dt);
 			this.Warning = warningTime <= 0 ? null : (Text: warning.Text, Time: warningTime);

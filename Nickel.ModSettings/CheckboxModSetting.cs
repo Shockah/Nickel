@@ -15,10 +15,10 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 
 	public CheckboxModSetting()
 	{
-		this.OnMenuOpen += (_, _, keyGenerator) =>
+		this.OnMenuOpen += (_, _) =>
 		{
 			if (this.CheckboxKey == 0)
-				this.CheckboxKey = keyGenerator();
+				this.CheckboxKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 		};
 	}
 

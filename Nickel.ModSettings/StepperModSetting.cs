@@ -22,12 +22,12 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 
 	public StepperModSetting()
 	{
-		this.OnMenuOpen += (_, _, keyGenerator) =>
+		this.OnMenuOpen += (_, _) =>
 		{
 			if (this.StepperLeftKey == 0)
-				this.StepperLeftKey = keyGenerator();
+				this.StepperLeftKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 			if (this.StepperRightKey == 0)
-				this.StepperRightKey = keyGenerator();
+				this.StepperRightKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 		};
 	}
 

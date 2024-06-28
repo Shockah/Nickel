@@ -8,7 +8,7 @@ public sealed class PaddingModSetting : BaseModSetting, IModSettingsApi.IPadding
 
 	public PaddingModSetting()
 	{
-		this.OnMenuOpen += (g, route, keyGenerator) => this.Setting?.RaiseOnMenuOpen(g, route, keyGenerator);
+		this.OnMenuOpen += (g, route) => this.Setting?.RaiseOnMenuOpen(g, route);
 		this.OnMenuClose += g => this.Setting?.RaiseOnMenuClose(g);
 	}
 

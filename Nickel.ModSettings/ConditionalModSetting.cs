@@ -9,7 +9,7 @@ public sealed class ConditionalModSetting : BaseModSetting, IModSettingsApi.ICon
 
 	public ConditionalModSetting()
 	{
-		this.OnMenuOpen += (g, route, keyGenerator) => this.Setting?.RaiseOnMenuOpen(g, route, keyGenerator);
+		this.OnMenuOpen += (g, route) => this.Setting?.RaiseOnMenuOpen(g, route);
 		this.OnMenuClose += g => this.Setting?.RaiseOnMenuClose(g);
 	}
 
