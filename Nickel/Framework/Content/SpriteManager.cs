@@ -7,13 +7,14 @@ namespace Nickel;
 
 internal sealed class SpriteManager
 {
-	private int NextId { get; set; } = 10_000_001;
-	private IModManifest VanillaModManifest { get; }
-	private Dictionary<Spr, Entry> SpriteToEntry { get; } = [];
-	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
+	private readonly EnumCasePool EnumCasePool;
+	private readonly IModManifest VanillaModManifest;
+	private readonly Dictionary<Spr, Entry> SpriteToEntry = [];
+	private readonly Dictionary<string, Entry> UniqueNameToEntry = [];
 
-	public SpriteManager(IModManifest vanillaModManifest)
+	public SpriteManager(EnumCasePool enumCasePool, IModManifest vanillaModManifest)
 	{
+		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
 		SpriteLoaderPatches.OnGetTexture.Subscribe(this.OnGetTexture);
 	}
@@ -23,7 +24,7 @@ internal sealed class SpriteManager
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A sprite with the unique name `{uniqueName}` is already registered", nameof(name));
-		return this.RegisterSprite(new(owner, uniqueName, name, (Spr)this.NextId++, textureProvider));
+		return this.RegisterSprite(new(owner, uniqueName, name, this.EnumCasePool.ObtainEnumCase<Spr>(), textureProvider));
 	}
 
 	public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Stream> streamProvider)
@@ -31,7 +32,7 @@ internal sealed class SpriteManager
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A sprite with the unique name `{uniqueName}` is already registered", nameof(name));
-		return this.RegisterSprite(new(owner, uniqueName, name, (Spr)this.NextId++, streamProvider));
+		return this.RegisterSprite(new(owner, uniqueName, name, this.EnumCasePool.ObtainEnumCase<Spr>(), streamProvider));
 	}
 
 	private Entry RegisterSprite(Entry entry)

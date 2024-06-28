@@ -424,7 +424,7 @@ internal sealed class ModManager
 			RequiredApiVersion = NickelConstants.Version
 		};
 
-		this.ContentManager = ContentManager.Create(() => this.CurrentModLoadPhase, this.ObtainLogger, this.VanillaModManifest, this.ModLoaderPackage.Manifest, this.ModDataManager);
+		this.ContentManager = ContentManager.Create(() => this.CurrentModLoadPhase, this.ObtainLogger, this.EnumCasePool, this.VanillaModManifest, this.ModLoaderPackage.Manifest, this.ModDataManager);
 		this.PrepareJsonSerialization();
 	}
 

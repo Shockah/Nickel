@@ -8,17 +8,18 @@ namespace Nickel;
 
 internal sealed class StatusManager
 {
-	private int NextId { get; set; } = 10_000_001;
-	private AfterDbInitManager<Entry> Manager { get; }
-	private IModManifest VanillaModManifest { get; }
-	private Dictionary<Status, Entry> StatusToEntry { get; } = [];
-	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
-	private Dictionary<string, Status> ReservedNameToStatus { get; } = [];
-	private Dictionary<Status, string> ReservedStatusToName { get; } = [];
+	private readonly AfterDbInitManager<Entry> Manager;
+	private readonly EnumCasePool EnumCasePool;
+	private readonly IModManifest VanillaModManifest;
+	private readonly Dictionary<Status, Entry> StatusToEntry = [];
+	private readonly Dictionary<string, Entry> UniqueNameToEntry = [];
+	private readonly Dictionary<string, Status> ReservedNameToStatus = [];
+	private readonly Dictionary<Status, string> ReservedStatusToName = [];
 
-	public StatusManager(Func<ModLoadPhase> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
+	public StatusManager(Func<ModLoadPhase> currentModLoadPhaseProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
 		TTGlossaryPatches.OnTryGetIcon.Subscribe(this.OnTryGetIcon);
 	}
@@ -70,7 +71,7 @@ internal sealed class StatusManager
 					if (this.ReservedNameToStatus.TryGetValue(s, out var @enum))
 						return @enum;
 
-					@enum = (Status)this.NextId++;
+					@enum = this.EnumCasePool.ObtainEnumCase<Status>();
 					this.ReservedNameToStatus[s] = @enum;
 					this.ReservedStatusToName[@enum] = s;
 					return @enum;
@@ -109,7 +110,7 @@ internal sealed class StatusManager
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A status with the unique name `{uniqueName}` is already registered", nameof(name));
-		var status = this.ReservedNameToStatus.TryGetValue(uniqueName, out var reservedStatus) ? reservedStatus : (Status)this.NextId++;
+		var status = this.ReservedNameToStatus.TryGetValue(uniqueName, out var reservedStatus) ? reservedStatus : this.EnumCasePool.ObtainEnumCase<Status>();
 		this.ReservedNameToStatus.Remove(uniqueName);
 		this.ReservedStatusToName.Remove(status);
 

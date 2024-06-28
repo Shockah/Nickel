@@ -43,15 +43,15 @@ internal sealed class ContentManager
 		this.Enemies = enemies;
 	}
 
-	public static ContentManager Create(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest, IModManifest modManagerModManifest, ModDataManager modDataManager)
+	public static ContentManager Create(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest, IModManifest modManagerModManifest, ModDataManager modDataManager)
 	{
-		var sprites = new SpriteManager(vanillaModManifest);
-		var decks = new DeckManager(currentModLoadPhaseProvider, vanillaModManifest);
-		var statuses = new StatusManager(currentModLoadPhaseProvider, vanillaModManifest);
+		var sprites = new SpriteManager(enumCasePool, vanillaModManifest);
+		var decks = new DeckManager(currentModLoadPhaseProvider, enumCasePool, vanillaModManifest);
+		var statuses = new StatusManager(currentModLoadPhaseProvider, enumCasePool, vanillaModManifest);
 		var cards = new CardManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
 		var artifacts = new ArtifactManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
 		var characters = new CharacterManager(currentModLoadPhaseProvider, loggerProvider, sprites, decks, statuses, vanillaModManifest);
-		var parts = new PartManager(currentModLoadPhaseProvider);
+		var parts = new PartManager(enumCasePool, currentModLoadPhaseProvider);
 		var ships = new ShipManager(currentModLoadPhaseProvider, vanillaModManifest);
 		var cardTraits = new CardTraitManager(loggerProvider, vanillaModManifest, modManagerModManifest, modDataManager);
 		var enemies = new EnemyManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);

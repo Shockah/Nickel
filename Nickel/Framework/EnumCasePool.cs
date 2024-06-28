@@ -13,6 +13,15 @@ internal sealed class EnumCasePool
 		private readonly Dictionary<Type, HashSet<TRaw>> FreedCases = [];
 		private readonly Dictionary<Type, TRaw> NextCaseValue = [];
 
+		private static TRaw GetInitialNextCase(TRaw maxDefinedCase)
+		{
+			var result = maxDefinedCase;
+			result += result; // x 2
+			result += result; // x 2 (for a total of x 4)
+			result += result; // x 2 (for a total of x 8)
+			return result + TRaw.One;
+		}
+
 		public TEnum ObtainEnumCase<TEnum>() where TEnum : struct, Enum
 		{
 			if (this.FreedCases.TryGetValue(typeof(TEnum), out var freedCases) && freedCases.Count != 0)
@@ -25,7 +34,7 @@ internal sealed class EnumCasePool
 			if (!this.NextCaseValue.TryGetValue(typeof(TEnum), out var nextCaseValue))
 			{
 				var maxDefinedCase = (TRaw)(object)Enum.GetValues<TEnum>().Max();
-				nextCaseValue = maxDefinedCase + maxDefinedCase + maxDefinedCase + TRaw.One;
+				nextCaseValue = GetInitialNextCase(maxDefinedCase);
 			}
 
 			if (!this.ObtainedCases.TryGetValue(typeof(TEnum), out var obtainedCases))

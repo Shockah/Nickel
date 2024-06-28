@@ -9,22 +9,23 @@ namespace Nickel;
 
 internal sealed class DeckManager
 {
-	private int NextId { get; set; } = 10_000_001;
-	private AfterDbInitManager<Entry> Manager { get; }
-	private IModManifest VanillaModManifest { get; }
-	private Dictionary<Deck, Entry> DeckToEntry { get; } = [];
-	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
-	private Dictionary<string, Deck> ReservedNameToDeck { get; } = [];
-	private Dictionary<Deck, string> ReservedDeckToName { get; } = [];
+	private readonly AfterDbInitManager<Entry> Manager;
+	private readonly EnumCasePool EnumCasePool;
+	private readonly IModManifest VanillaModManifest;
+	private readonly Dictionary<Deck, Entry> DeckToEntry = [];
+	private readonly Dictionary<string, Entry> UniqueNameToEntry = [];
+	private readonly Dictionary<string, Deck> ReservedNameToDeck = [];
+	private readonly Dictionary<Deck, string> ReservedDeckToName = [];
 
 	private readonly FieldInfo[] FieldsAllowedToHaveInvalidEntries = [
 		AccessTools.DeclaredField(typeof(StoryVars), nameof(StoryVars.unlockedChars)),
 		AccessTools.DeclaredField(typeof(StoryVars), nameof(StoryVars.memoryUnlockLevel)),
 	];
 
-	public DeckManager(Func<ModLoadPhase> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
+	public DeckManager(Func<ModLoadPhase> currentModLoadPhaseProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
 	}
 
@@ -63,7 +64,7 @@ internal sealed class DeckManager
 					if (this.ReservedNameToDeck.TryGetValue(s, out var @enum))
 						return @enum;
 
-					@enum = (Deck)this.NextId++;
+					@enum = this.EnumCasePool.ObtainEnumCase<Deck>();
 					this.ReservedNameToDeck[s] = @enum;
 					this.ReservedDeckToName[@enum] = s;
 					return @enum;
@@ -102,7 +103,7 @@ internal sealed class DeckManager
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A deck with the unique name `{uniqueName}` is already registered", nameof(name));
-		var deck = this.ReservedNameToDeck.TryGetValue(uniqueName, out var reservedStatus) ? reservedStatus : (Deck)this.NextId++;
+		var deck = this.ReservedNameToDeck.TryGetValue(uniqueName, out var reservedStatus) ? reservedStatus : this.EnumCasePool.ObtainEnumCase<Deck>();
 		this.ReservedNameToDeck.Remove(uniqueName);
 		this.ReservedDeckToName.Remove(deck);
 

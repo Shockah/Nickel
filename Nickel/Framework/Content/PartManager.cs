@@ -7,16 +7,17 @@ namespace Nickel;
 
 internal sealed class PartManager
 {
-	private int NextPartTypeId { get; set; } = 10_000_001;
-	private AfterDbInitManager<PartTypeEntry> PartTypeManager { get; }
-	private AfterDbInitManager<PartEntry> PartInstanceManager { get; }
-	private Dictionary<string, PartTypeEntry> UniqueNameToPartTypeEntry { get; } = [];
-	private Dictionary<string, PartEntry> UniqueNameToPartInstanceEntry { get; } = [];
+	private readonly AfterDbInitManager<PartTypeEntry> PartTypeManager;
+	private readonly AfterDbInitManager<PartEntry> PartInstanceManager;
+	private readonly EnumCasePool EnumCasePool;
+	private readonly Dictionary<string, PartTypeEntry> UniqueNameToPartTypeEntry = [];
+	private readonly Dictionary<string, PartEntry> UniqueNameToPartInstanceEntry = [];
 
-	public PartManager(Func<ModLoadPhase> currentModLoadPhaseProvider)
+	public PartManager(EnumCasePool enumCasePool, Func<ModLoadPhase> currentModLoadPhaseProvider)
 	{
 		this.PartTypeManager = new(currentModLoadPhaseProvider, Inject);
 		this.PartInstanceManager = new(currentModLoadPhaseProvider, Inject);
+		this.EnumCasePool = enumCasePool;
 		ArtifactRewardPatches.OnGetBlockedArtifacts.Subscribe(this.OnGetBlockedArtifacts);
 	}
 
@@ -39,7 +40,7 @@ internal sealed class PartManager
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToPartTypeEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A part type with the unique name `{uniqueName}` is already registered", nameof(name));
-		PartTypeEntry entry = new(owner, uniqueName, (PType)this.NextPartTypeId++, configuration);
+		PartTypeEntry entry = new(owner, uniqueName, this.EnumCasePool.ObtainEnumCase<PType>(), configuration);
 		this.UniqueNameToPartTypeEntry[entry.UniqueName] = entry;
 
 		this.PartTypeManager.QueueOrInject(entry);
