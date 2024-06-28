@@ -183,7 +183,31 @@ internal sealed class PluginDependencyResolverTests
 			if (kvp.Key.UniqueName != "ModA")
 				return false;
 			return kvp.Value.Match(
-				missingDependencies => missingDependencies.Dependencies.Count == 1 && missingDependencies.Dependencies.First().UniqueName == "ModB",
+				missingDependencies => missingDependencies.Missing.Count == 1 && missingDependencies.Missing.First().UniqueName == "ModB",
+				_ => false,
+				_ => false
+			);
+		}));
+	}
+
+	[Test]
+	public void TestMisversionedDependency()
+	{
+		List<Manifest> packages = [
+			new Manifest("ModA", 1, [new("ModB", Version: 2)]),
+			new Manifest("ModB", 1, [])
+		];
+
+		var resolver = CreateResolver();
+		var resolveResult = resolver.ResolveDependencies(packages);
+		Assert.AreEqual(1, resolveResult.LoadSteps.Count);
+		Assert.AreEqual(1, resolveResult.Unresolvable.Count);
+		Assert.IsTrue(resolveResult.Unresolvable.Any(kvp =>
+		{
+			if (kvp.Key.UniqueName != "ModA")
+				return false;
+			return kvp.Value.Match(
+				missingDependencies => missingDependencies.Misversioned.Count == 1 && missingDependencies.Misversioned.First().UniqueName == "ModB",
 				_ => false,
 				_ => false
 			);

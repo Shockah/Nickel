@@ -40,9 +40,11 @@ public partial class PluginDependencyUnresolvableResult<TPluginManifest, TVersio
 	/// <summary>
 	/// The plugin requires dependencies which are not available.
 	/// </summary>
-	/// <param name="Dependencies">The dependencies that were not available.</param>
+	/// <param name="Missing">The dependencies that were not available.</param>
+	/// <param name="Misversioned">The dependencies that were available, but at wrong versions.</param>
 	public record struct MissingDependencies(
-		IReadOnlySet<PluginDependency<TVersion>> Dependencies
+		IReadOnlySet<PluginDependency<TVersion>> Missing,
+		IReadOnlySet<PluginDependency<TVersion>> Misversioned
 	);
 
 	/// <summary>

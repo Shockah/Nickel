@@ -37,15 +37,15 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 		List<IReadOnlySet<TPluginManifest>> loadSteps = [];
 		Dictionary<TPluginManifest, PluginDependencyUnresolvableResult<TPluginManifest, TVersion>> unresolvable = [];
 
-		bool MatchesDependency(TPluginManifest manifest, PluginDependency<TVersion> dependency)
+		bool MatchesDependency(TPluginManifest manifest, PluginDependency<TVersion> dependency, bool ignoreVersion = false)
 		{
 			if (!manifestEntries.TryGetValue(manifest, out var entry))
 				return false;
-			return entry.Data.UniqueName == dependency.UniqueName && (dependency.Version is null || dependency.Version.Value.CompareTo(entry.Data.Version) <= 0);
+			return entry.Data.UniqueName == dependency.UniqueName && (ignoreVersion || dependency.Version is null || dependency.Version.Value.CompareTo(entry.Data.Version) <= 0);
 		}
 
-		bool ContainsDependency(IEnumerable<TPluginManifest> enumerable, PluginDependency<TVersion> dependency)
-			=> enumerable.Any(m => MatchesDependency(m, dependency));
+		bool ContainsDependency(IEnumerable<TPluginManifest> enumerable, PluginDependency<TVersion> dependency, bool ignoreVersion = false)
+			=> enumerable.Any(m => MatchesDependency(m, dependency, ignoreVersion));
 
 		bool CanDependencyBeResolved(PluginDependency<TVersion> dependency)
 			=> ContainsDependency(allResolved, dependency);
@@ -59,6 +59,12 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 
 		while (toResolveLeft.Count > 0)
 		{
+			var oldCount = toResolveLeft.Count;
+			Loop(onlyRequiredDependencies: false);
+			Loop(onlyRequiredDependencies: true);
+			if (toResolveLeft.Count == oldCount)
+				break;
+
 			void Loop(bool onlyRequiredDependencies)
 			{
 				while (toResolveLeft.Count > 0)
@@ -72,12 +78,6 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 					toResolveLeft.RemoveAll(loadStep.Contains);
 				}
 			}
-
-			var oldCount = toResolveLeft.Count;
-			Loop(onlyRequiredDependencies: false);
-			Loop(onlyRequiredDependencies: true);
-			if (toResolveLeft.Count == oldCount)
-				break;
 		}
 
 		if (toResolveLeft.Count == 0)
@@ -105,7 +105,15 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 
 			foreach (var kvp in missingDependencyManifests)
 			{
-				unresolvable[kvp.Key] = new PluginDependencyUnresolvableResult<TPluginManifest, TVersion>.MissingDependencies { Dependencies = kvp.Value };
+				var misverionedDependencies = kvp.Value
+					.Where(d => d.Version is not null && (ContainsDependency(allResolved, d, ignoreVersion: true) || ContainsDependency(toResolveLeft, d, ignoreVersion: true)))
+					.ToHashSet();
+				
+				unresolvable[kvp.Key] = new PluginDependencyUnresolvableResult<TPluginManifest, TVersion>.MissingDependencies
+				{
+					Missing = kvp.Value.Where(d => !misverionedDependencies.Contains(d)).ToHashSet(),
+					Misversioned = misverionedDependencies
+				};
 				toResolveLeft.Remove(kvp.Key);
 			}
 		}

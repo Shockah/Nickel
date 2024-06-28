@@ -242,11 +242,37 @@ internal sealed class ModManager
 			if (this.OptionalSubmods.Contains(unresolvableManifest))
 				continue;
 			reason.Switch(
-				missingDependencies => this.Logger.LogError(
-					"Could not load {UniqueName}: missing dependencies: {Dependencies}",
-					unresolvableManifest.UniqueName,
-					string.Join(", ", missingDependencies.Dependencies.Select(d => d.UniqueName))
-				),
+				missingDependencies =>
+				{
+					if (missingDependencies.Missing.Count > 0)
+					{
+						this.Logger.LogError(
+							"Could not load {UniqueName}: missing dependencies: {Dependencies}",
+							unresolvableManifest.UniqueName,
+							string.Join(", ", missingDependencies.Missing.Select(d => d.UniqueName))
+						);
+					}
+					else if (missingDependencies.Misversioned.Count > 0)
+					{
+						this.Logger.LogError(
+							"Could not load {UniqueName}:\n{Dependencies}",
+							unresolvableManifest.UniqueName,
+							string.Join(
+								"\n",
+								missingDependencies.Misversioned
+									.Where(d => d.Version is not null) // this should always be true, but just in case
+									.Select(d => $"\trequires {d.UniqueName} at version {d.Version!} or higher")
+							)
+						);
+					}
+					else
+					{
+						this.Logger.LogError(
+							"Could not load {UniqueName}: unknown reason.",
+							unresolvableManifest.UniqueName
+						);
+					}
+				},
 				dependencyCycle => this.Logger.LogError(
 					"Could not load {UniqueName}: dependency cycle: {Cycle}",
 					unresolvableManifest.UniqueName,
