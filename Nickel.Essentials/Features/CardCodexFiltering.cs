@@ -96,9 +96,11 @@ internal static partial class CardCodexFiltering
 			return;
 
 		var topOffset = 54;
-		var bottomOffset = 54;
+		var bottomOffset = 62;
 		var scale = 0.875;
-		var maxFilterScroll = Math.Max((DeckTypes.Count + 1) / 2 * 16 - 253, 0) * 2;
+		
+		var preferredHeightOnScreen = MG.inst.PIX_H - topOffset - bottomOffset;
+		var maxFilterScroll = Math.Max((DeckTypes.Count + 1) / 2 * 16 - preferredHeightOnScreen, 0);
 
 		for (var i = 0; i < DeckTypes.Count; i++)
 		{
@@ -110,7 +112,7 @@ internal static partial class CardCodexFiltering
 
 			var box = g.Push(
 				new UIKey(DeckFilterKey, i),
-				new Rect(i % 2 * 56 + 4, bottomOffset + i / 2 * 16 + FilterScroll, 48 / scale, 16),
+				new Rect(i % 2 * 56 + 4, topOffset + i / 2 * 16 + (int)FilterScroll, 48 / scale, 16),
 				onMouseDown: new MouseDownHandler(() =>
 				{
 					Audio.Play(Event.Click);
