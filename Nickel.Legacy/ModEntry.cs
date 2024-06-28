@@ -193,7 +193,7 @@ public sealed class ModEntry : Mod
 
 		try
 		{
-			this.Logger.LogInformation("Generating a `{ManifestFileName}` file for a legacy mod that is missing one at `{Directory}`...", NickelConstants.ManifestFileName, directory.FullName);
+			this.Logger.LogInformation("Generating a `{ManifestFileName}` file for a legacy mod that is missing one at `{Directory}`...", NickelConstants.ManifestFileName, PathUtilities.SanitizePath(directory.FullName));
 
 			var manifests = manifestTypes
 				.Select(t => (ILegacyManifest)Activator.CreateInstance(t)!)
@@ -238,7 +238,7 @@ public sealed class ModEntry : Mod
 			using var streamWriter = new StreamWriter(stream);
 			serializer.Serialize(streamWriter, manifest);
 
-			this.Logger.LogWarning("Successfully generated a `{ManifestFileName}` file for a legacy mod at `{Directory}`. The mod will be loaded the next time you start {ModLoaderName}.", NickelConstants.ManifestFileName, directory.FullName, NickelConstants.Name);
+			this.Logger.LogWarning("Successfully generated a `{ManifestFileName}` file for a legacy mod at `{Directory}`. The mod will be loaded the next time you start {ModLoaderName}.", NickelConstants.ManifestFileName, PathUtilities.SanitizePath(directory.FullName), NickelConstants.Name);
 			return true;
 		}
 		catch (Exception ex)

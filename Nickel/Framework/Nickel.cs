@@ -159,7 +159,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 	private static int StartInstance(Nickel instance, LaunchArguments launchArguments, ILoggerFactory loggerFactory, ILogger logger)
 	{
 		var modSettingsDirectory = launchArguments.ModSettingsPath ?? new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModSettings"));
-		logger.LogInformation("ModSettingsPath: {Path}", modSettingsDirectory.FullName);
+		logger.LogInformation("ModSettingsPath: {Path}", PathUtilities.SanitizePath(modSettingsDirectory.FullName));
 		
 		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
 
@@ -177,10 +177,10 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			HarmonyPatches.Apply(harmony, logger);
 
 			var modsDirectory = launchArguments.ModsPath ?? GetOrCreateDefaultModLibraryDirectory();
-			logger.LogInformation("ModsPath: {Path}", modsDirectory.FullName);
+			logger.LogInformation("ModsPath: {Path}", PathUtilities.SanitizePath(modsDirectory.FullName));
 
 			var privateModSettingsDirectory = launchArguments.PrivateModSettingsPath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name));
-			logger.LogInformation("PrivateModSettingsPath: {Path}", privateModSettingsDirectory.FullName);
+			logger.LogInformation("PrivateModSettingsPath: {Path}", PathUtilities.SanitizePath(privateModSettingsDirectory.FullName));
 
 			instance.ModManager = new(modsDirectory, modSettingsDirectory, privateModSettingsDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
 
@@ -258,7 +258,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		logger.LogInformation("Game version: {Version}", version);
 
 		var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? handlerResult.WorkingDirectory;
-		logger.LogInformation("GameWorkingDirectory: {Path}", gameWorkingDirectory.FullName);
+		logger.LogInformation("GameWorkingDirectory: {Path}", PathUtilities.SanitizePath(gameWorkingDirectory.FullName));
 
 		if (!launchArguments.Vanilla)
 		{
@@ -273,7 +273,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderPackage.Manifest);
 
 			var savePath = launchArguments.SavePath?.FullName ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModSaves");
-			logger.LogInformation("SavePath: {Path}", savePath);
+			logger.LogInformation("SavePath: {Path}", PathUtilities.SanitizePath(savePath));
 
 			if (harmony is not null)
 				ApplyHarmonyPatches(harmony);

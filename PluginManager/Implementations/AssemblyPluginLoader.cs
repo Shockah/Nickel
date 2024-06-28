@@ -69,7 +69,7 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 
 			var assemblyName = requiredPluginData.EntryPointAssembly;
 			if (assemblyName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
-				assemblyName = assemblyName.Substring(0, assemblyName.Length - 4);
+				assemblyName = assemblyName[..^4];
 
 			var context = this.LoadContextProvider.GetLoadContext(package);
 			assembly = context.LoadFromAssemblyName(new AssemblyName(assemblyName));

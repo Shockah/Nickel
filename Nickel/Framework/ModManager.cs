@@ -185,28 +185,6 @@ internal sealed class ModManager
 
 		var pluginManifestLoader = new SpecializedPluginManifestLoader<ModManifest, IModManifest>(new JsonPluginManifestLoader<ModManifest>());
 
-		IPluginPackageResolver<IModManifest> CreatePluginPackageResolver(IDirectoryInfo directory, bool allowModsInRoot)
-			=> new SubpluginPluginPackageResolver<IModManifest>(
-				baseResolver: new RecursiveDirectoryPluginPackageResolver<IModManifest>(
-					directory: directory,
-					manifestFileName: NickelConstants.ManifestFileName,
-					ignoreDotNames: true,
-					allowPluginsInRoot: allowModsInRoot,
-					directoryResolverFactory: d => new DirectoryPluginPackageResolver<IModManifest>(d, NickelConstants.ManifestFileName, pluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Empty),
-					fileResolverFactory: f => f.Name.EndsWith(".zip")
-						? new ZipPluginPackageResolver<IModManifest>(f, d => CreatePluginPackageResolver(d, allowModsInRoot: true))
-						: null
-				),
-				subpluginResolverFactory: p =>
-				{
-					foreach (var optionalSubmod in p.Manifest.Submods.Where(submod => submod.IsOptional))
-						this.OptionalSubmods.Add(optionalSubmod.Manifest);
-					return p.Manifest.Submods.Select(
-						submod => new InnerPluginPackageResolver<IModManifest>(p, submod.Manifest, disposesOuterPackage: false)
-					);
-				}
-			);
-
 		var pluginPackageResolver = new ValidatingPluginPackageResolver<IModManifest>(
 			resolver: new DistinctPluginPackageResolver<IModManifest, string>(
 				resolver: CreatePluginPackageResolver(new DirectoryInfoImpl(this.ModsDirectory), allowModsInRoot: false),
@@ -292,6 +270,30 @@ internal sealed class ModManager
 						?? throw new InvalidOperationException()
 				)
 		);
+
+		IPluginPackageResolver<IModManifest> CreatePluginPackageResolver(IDirectoryInfo directory, bool allowModsInRoot)
+			=> new SubpluginPluginPackageResolver<IModManifest>(
+				baseResolver: new RecursiveDirectoryPluginPackageResolver<IModManifest>(
+					directory: directory,
+					manifestFileName: NickelConstants.ManifestFileName,
+					ignoreDotNames: true,
+					allowPluginsInRoot: allowModsInRoot,
+					directoryResolverFactory: d => new SanitizingPluginPackageResolver<IModManifest>(
+						new DirectoryPluginPackageResolver<IModManifest>(d, NickelConstants.ManifestFileName, pluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Empty)
+					),
+					fileResolverFactory: f => f.Name.EndsWith(".zip")
+						? new ZipPluginPackageResolver<IModManifest>(f, d => CreatePluginPackageResolver(d, allowModsInRoot: true))
+						: null
+				),
+				subpluginResolverFactory: p =>
+				{
+					foreach (var optionalSubmod in p.Manifest.Submods.Where(submod => submod.IsOptional))
+						this.OptionalSubmods.Add(optionalSubmod.Manifest);
+					return p.Manifest.Submods.Select(
+						submod => new InnerPluginPackageResolver<IModManifest>(p, submod.Manifest, disposesOuterPackage: false)
+					);
+				}
+			);
 	}
 
 	public void LoadMods(ModLoadPhase phase)

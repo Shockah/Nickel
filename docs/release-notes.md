@@ -12,6 +12,7 @@
 * Update checks now happen much earlier and even for mods which failed to load.
 * The game no longer proposes memories which don't exist (for modded characters).
 * The Memories menu now highlights the arrow buttons if you have any unlocked but not yet seen memories scrolled away.
+* Nickel now sanitizes any file system paths it logs, by replacing full user home paths with just `~`.
 * Fixed Nickel crashing when starting the game in a non-English language or when switching to one.
 * Fixed starter deck preview sometimes showing up an extra Basic Shot on Normal difficulty, even though Hard+ was selected.
 
