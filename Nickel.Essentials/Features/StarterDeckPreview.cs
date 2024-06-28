@@ -76,7 +76,7 @@ internal static class StarterDeckPreview
 					shipTemplate: shipTemplate,
 					newMap: new MapDemo(),
 					chars: NewRunOptions.allChars.Where(d => d != Deck.colorless),
-					difficulty: fakeState.runConfig.difficulty,
+					difficulty: fakeState.runConfig.hardmode ? fakeState.runConfig.difficulty : 0,
 					seed: fakeState.seed,
 					giveRunStartRewards: true
 				);
@@ -98,7 +98,7 @@ internal static class StarterDeckPreview
 					shipTemplate: shipTemplate,
 					newMap: new MapDemo(),
 					chars: fakeState.runConfig.selectedChars,
-					difficulty: fakeState.runConfig.difficulty,
+					difficulty: fakeState.runConfig.hardmode ? fakeState.runConfig.difficulty : 0,
 					seed: fakeState.seed,
 					giveRunStartRewards: true
 				);
