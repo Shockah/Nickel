@@ -14,18 +14,22 @@ namespace Nickel;
 
 internal sealed class LegacyModWrapper : Mod
 {
+	internal IPluginPackage<IModManifest> Package { get; }
+	internal IModHelper Helper { get; }
 	internal IReadOnlySet<ILegacyManifest> LegacyManifests { get; }
 	private ICustomEventHub EventHub { get; }
 	internal LegacyRegistry Registry { get; }
 
-	public LegacyModWrapper(IReadOnlySet<ILegacyManifest> legacyManifests, LegacyRegistry legacyRegistry, IDirectoryInfo directory, IModHelper helper, ILogger logger)
+	public LegacyModWrapper(IPluginPackage<IModManifest> package, IReadOnlySet<ILegacyManifest> legacyManifests, LegacyRegistry legacyRegistry, IModHelper helper, ILogger logger)
 	{
+		this.Package = package;
+		this.Helper = helper;
 		this.LegacyManifests = legacyManifests;
 		this.Registry = legacyRegistry;
 		this.EventHub = new LegacyPerModEventHub(legacyRegistry.GlobalEventHub, logger);
 
 		DirectoryInfo gameRootFolder = new(Directory.GetCurrentDirectory());
-		DirectoryInfo modRootFolder = new(directory.FullName);
+		DirectoryInfo modRootFolder = new(package.PackageRoot.FullName);
 
 		foreach (var manifest in this.LegacyManifests)
 		{

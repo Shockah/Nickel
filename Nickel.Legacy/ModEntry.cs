@@ -16,12 +16,12 @@ namespace Nickel.Legacy;
 
 public sealed class ModEntry : Mod
 {
-	public static string LegacyModType { get; } = $"{typeof(NickelConstants).Namespace!}.Legacy";
+	public static readonly string LegacyModType = $"{typeof(NickelConstants).Namespace!}.Legacy";
 
-	private LegacyDatabase Database { get; }
-	private ILogger Logger { get; }
-	private IModHelper Helper { get; }
-	private IModManifest Manifest { get; }
+	private readonly LegacyDatabase Database;
+	private readonly ILogger Logger;
+	private readonly IModHelper Helper;
+	private readonly IModManifest Manifest;
 
 	public ModEntry(
 		IPluginPackage<IModManifest> package,
@@ -75,7 +75,7 @@ public sealed class ModEntry : Mod
 							return new No();
 						return package.PackageRoot is IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>
 							? new Yes()
-							: new Error<string>($"Found a legacy mod, but it is not stored directly on disk (is it in a ZIP file?).");
+							: new Error<string>("Found a legacy mod, but it is not stored directly on disk (is it in a ZIP file?).");
 					}
 				),
 				validator: (package, mod) =>
@@ -98,6 +98,8 @@ public sealed class ModEntry : Mod
 				this.Database.LegacyManifests.AddRange(legacy.LegacyManifests);
 				foreach (var manifest in legacy.LegacyManifests)
 					this.Database.LegacyManifestToMod[manifest] = legacy;
+				foreach (var manifest in legacy.LegacyManifests)
+					(manifest as INickelManifest)?.OnNickelLoad(legacy.Package, legacy.Helper);
 			}
 		);
 

@@ -39,7 +39,7 @@ internal sealed class LegacyAssemblyPluginLoaderPartAssembler : IAssemblyPluginL
 			return new Error<string>($"The assembly {assembly} does not include any {typeof(ILegacyManifest)} subclasses.");
 		var helper = this.HelperProvider(package);
 		var logger = this.LoggerProvider(package.Manifest);
-		LegacyRegistry registry = new(package.Manifest, helper, logger, this.Database);
-		return new LegacyModWrapper(parts, registry, package.PackageRoot, helper, logger);
+		var registry = new LegacyRegistry(package.Manifest, helper, logger, this.Database);
+		return new LegacyModWrapper(package, parts, registry, helper, logger);
 	}
 }
