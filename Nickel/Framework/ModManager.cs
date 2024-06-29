@@ -187,7 +187,17 @@ internal sealed class ModManager
 
 		var pluginPackageResolver = new ValidatingPluginPackageResolver<IModManifest>(
 			resolver: new DistinctPluginPackageResolver<IModManifest, string>(
-				resolver: CreatePluginPackageResolver(new DirectoryInfoImpl(this.ModsDirectory), allowModsInRoot: false),
+				resolver: new SubpluginPluginPackageResolver<IModManifest>(
+					baseResolver: CreatePluginPackageResolver(new DirectoryInfoImpl(this.ModsDirectory), allowModsInRoot: false),
+					subpluginResolverFactory: p =>
+					{
+						foreach (var optionalSubmod in p.Manifest.Submods.Where(submod => submod.IsOptional))
+							this.OptionalSubmods.Add(optionalSubmod.Manifest);
+						return p.Manifest.Submods.Select(
+							submod => new InnerPluginPackageResolver<IModManifest>(p, submod.Manifest, disposesOuterPackage: false)
+						);
+					}
+				),
 				keyFunction: package => package.Manifest.UniqueName
 			),
 			validator: package =>
@@ -203,7 +213,11 @@ internal sealed class ModManager
 		var toLoadResults = pluginPackageResolver.ResolvePluginPackages().ToList();
 		foreach (var toLoadResult in toLoadResults)
 			toLoadResult.Switch(
-				_ => { },
+				success =>
+				{
+					foreach (var warning in success.Warnings)
+						this.Logger.LogInformation("{PackageResolvingWarning}", warning);
+				},
 				error => this.Logger.LogError("{PackageResolvingError}", error.Value)
 			);
 		var toLoad = toLoadResults
@@ -234,7 +248,7 @@ internal sealed class ModManager
 
 		var dependencyResolverResult = pluginDependencyResolver.ResolveDependencies(
 			toLoad
-				.Select(p => p.Manifest)
+				.Select(p => p.Package.Manifest)
 				.OrderBy(m => m.UniqueName)
 		);
 		foreach (var (unresolvableManifest, reason) in dependencyResolverResult.Unresolvable)
@@ -292,33 +306,31 @@ internal sealed class ModManager
 			dependencyResolverResult.LoadSteps
 				.SelectMany(step => step)
 				.Select(
-					m => toLoad.FirstOrDefault(p => p.Manifest.UniqueName == m.UniqueName)
+					m => toLoad.FirstOrNull(p => p.Package.Manifest.UniqueName == m.UniqueName)?.Package
 						?? throw new InvalidOperationException()
 				)
 		);
 
 		IPluginPackageResolver<IModManifest> CreatePluginPackageResolver(IDirectoryInfo directory, bool allowModsInRoot)
-			=> new SubpluginPluginPackageResolver<IModManifest>(
-				baseResolver: new RecursiveDirectoryPluginPackageResolver<IModManifest>(
+			=> new PrioritizingPluginPackageResolver<IModManifest, double, string>(
+				resolver: new RecursiveDirectoryPluginPackageResolver<PluginManifestWithPriority<IModManifest, double>>(
 					directory: directory,
 					manifestFileName: NickelConstants.ManifestFileName,
 					ignoreDotNames: true,
 					allowPluginsInRoot: allowModsInRoot,
-					directoryResolverFactory: d => new SanitizingPluginPackageResolver<IModManifest>(
-						new DirectoryPluginPackageResolver<IModManifest>(d, NickelConstants.ManifestFileName, pluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Empty)
+					directoryResolverFactory: d => new PriorityPluginPackageResolver<IModManifest, double>(
+						resolver: new SanitizingPluginPackageResolver<IModManifest>(
+							new DirectoryPluginPackageResolver<IModManifest>(d, NickelConstants.ManifestFileName, pluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Empty)
+						),
+						priority: 1
 					),
 					fileResolverFactory: f => f.Name.EndsWith(".zip")
-						? new ZipPluginPackageResolver<IModManifest>(f, d => CreatePluginPackageResolver(d, allowModsInRoot: true))
-						: null
+						? new PriorityPluginPackageResolver<IModManifest, double>(
+							resolver: new ZipPluginPackageResolver<IModManifest>(f, d => CreatePluginPackageResolver(d, allowModsInRoot: true)),
+							priority: 0.5
+						) : null
 				),
-				subpluginResolverFactory: p =>
-				{
-					foreach (var optionalSubmod in p.Manifest.Submods.Where(submod => submod.IsOptional))
-						this.OptionalSubmods.Add(optionalSubmod.Manifest);
-					return p.Manifest.Submods.Select(
-						submod => new InnerPluginPackageResolver<IModManifest>(p, submod.Manifest, disposesOuterPackage: false)
-					);
-				}
+				keyFunction: p => p.Manifest.Manifest.UniqueName
 			);
 	}
 

@@ -43,30 +43,30 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 		Assert.AreEqual(2, results.Count);
 
 		{
-			var packageOrError = results[0];
-			if (packageOrError.TryPickT1(out var error, out var package))
+			var resolveResult = results[0];
+			if (resolveResult.TryPickT1(out var error, out var success))
 			{
 				Assert.Fail("Expected a package, got an error: {0}", error.Value);
 				return;
 			}
 
-			Assert.AreEqual("moda", package.Manifest);
-			Assert.AreEqual(2, package.PackageRoot.Children.Count());
-			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
-			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "moda.dll"));
+			Assert.AreEqual("moda", success.Package.Manifest);
+			Assert.AreEqual(2, success.Package.PackageRoot.Children.Count());
+			Assert.IsTrue(success.Package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
+			Assert.IsTrue(success.Package.PackageRoot.Children.Any(c => c.Name == "moda.dll"));
 		}
 		{
-			var packageOrError = results[1];
-			if (packageOrError.TryPickT1(out var error, out var package))
+			var resolveResult = results[1];
+			if (resolveResult.TryPickT1(out var error, out var success))
 			{
 				Assert.Fail("Expected a package, got an error: {0}", error.Value);
 				return;
 			}
 
-			Assert.AreEqual("modb", package.Manifest);
-			Assert.AreEqual(3, package.PackageRoot.Children.Count());
-			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
-			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "modb.dll"));
+			Assert.AreEqual("modb", success.Package.Manifest);
+			Assert.AreEqual(3, success.Package.PackageRoot.Children.Count());
+			Assert.IsTrue(success.Package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
+			Assert.IsTrue(success.Package.PackageRoot.Children.Any(c => c.Name == "modb.dll"));
 		}
 	}
 
@@ -114,8 +114,8 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 		var results = resolver.ResolvePluginPackages().ToList();
 		Assert.AreEqual(1, results.Count);
 
-		var packageOrError = results[0];
-		if (packageOrError.TryPickT0(out var package, out _))
+		var resolveResult = results[0];
+		if (resolveResult.TryPickT0(out var package, out _))
 			Assert.Fail("Expected an error, got a package: {0}", package);
 	}
 
@@ -139,17 +139,17 @@ internal sealed class RecursiveDirectoryPluginPackageResolverTests
 		Assert.AreEqual(2, results.Count);
 
 		{
-			var packageOrError = results[0];
-			if (packageOrError.TryPickT1(out var error, out var package))
+			var resolveResult = results[0];
+			if (resolveResult.TryPickT1(out var error, out var success))
 			{
 				Assert.Fail("Expected a package, got an error: {0}", error.Value);
 				return;
 			}
 
-			Assert.AreEqual("moda", package.Manifest);
-			Assert.AreEqual(2, package.PackageRoot.Children.Count());
-			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
-			Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "moda.dll"));
+			Assert.AreEqual("moda", success.Package.Manifest);
+			Assert.AreEqual(2, success.Package.PackageRoot.Children.Count());
+			Assert.IsTrue(success.Package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
+			Assert.IsTrue(success.Package.PackageRoot.Children.Any(c => c.Name == "moda.dll"));
 		}
 		{
 			var packageOrError = results[1];

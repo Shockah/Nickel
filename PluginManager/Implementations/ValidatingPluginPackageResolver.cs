@@ -1,4 +1,3 @@
-using OneOf;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
@@ -27,13 +26,17 @@ public sealed class ValidatingPluginPackageResolver<TPluginManifest> : IPluginPa
 	}
 
 	/// <inheritdoc/>
-	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
-		=> this.Resolver.ResolvePluginPackages().Select(packageOrError =>
+	public IEnumerable<PluginPackageResolveResult<TPluginManifest>> ResolvePluginPackages()
+		=> this.Resolver.ResolvePluginPackages().Select(resolveResult =>
 		{
-			if (packageOrError.TryPickT1(out var error, out var package))
+			if (resolveResult.TryPickT1(out var error, out var success))
 				return error;
-			if (this.Validator(package) is { } validationError)
+			if (this.Validator(success.Package) is { } validationError)
 				return validationError;
-			return OneOf<IPluginPackage<TPluginManifest>, Error<string>>.FromT0(package);
+			return (PluginPackageResolveResult<TPluginManifest>)new PluginPackageResolveResult<TPluginManifest>.Success
+			{
+				Package = success.Package,
+				Warnings = success.Warnings
+			};
 		});
 }

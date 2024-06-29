@@ -1,4 +1,3 @@
-using OneOf;
 using OneOf.Types;
 using System.Collections.Generic;
 
@@ -36,7 +35,7 @@ public sealed class DirectoryPluginPackageResolver<TPluginManifest> : IPluginPac
 	}
 
 	/// <inheritdoc/>
-	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
+	public IEnumerable<PluginPackageResolveResult<TPluginManifest>> ResolvePluginPackages()
 	{
 		var manifestFile = this.Directory.GetRelativeFile(this.ManifestFileName);
 		if (!manifestFile.Exists)
@@ -48,8 +47,12 @@ public sealed class DirectoryPluginPackageResolver<TPluginManifest> : IPluginPac
 
 		using var stream = manifestFile.OpenRead();
 		var manifest = this.PluginManifestLoader.LoadPluginManifest(stream);
-		yield return manifest.Match<OneOf<IPluginPackage<TPluginManifest>, Error<string>>>(
-			manifest => new DirectoryPluginPackage<TPluginManifest>(manifest, this.Directory),
+		yield return manifest.Match<PluginPackageResolveResult<TPluginManifest>>(
+			manifest => new PluginPackageResolveResult<TPluginManifest>.Success
+			{
+				Package = new DirectoryPluginPackage<TPluginManifest>(manifest, this.Directory),
+				Warnings = []
+			},
 			error => new Error<string>($"Could not process the manifest file at `{manifestFile.FullName}`: {error.Value}")
 		);
 	}

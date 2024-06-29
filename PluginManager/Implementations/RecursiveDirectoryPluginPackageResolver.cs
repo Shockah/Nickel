@@ -1,4 +1,3 @@
-using OneOf;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
@@ -45,14 +44,14 @@ public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : I
 	}
 
 	/// <inheritdoc/>
-	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
+	public IEnumerable<PluginPackageResolveResult<TPluginManifest>> ResolvePluginPackages()
 	{
 		if (this.DirectoryResolverFactory is null && this.FileResolverFactory is null)
 			return [];
 		return this.ResolvePluginPackages(this.Directory, isRoot: true);
 	}
 
-	private IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages(IDirectoryInfo directory, bool isRoot = false)
+	private IEnumerable<PluginPackageResolveResult<TPluginManifest>> ResolvePluginPackages(IDirectoryInfo directory, bool isRoot = false)
 	{
 		var manifestFile = directory.GetRelativeFile(this.ManifestFileName);
 		if (manifestFile.Exists)

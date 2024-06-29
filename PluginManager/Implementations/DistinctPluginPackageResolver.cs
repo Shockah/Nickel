@@ -1,4 +1,3 @@
-using OneOf;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
@@ -29,31 +28,31 @@ public sealed class DistinctPluginPackageResolver<TPluginManifest, TKey> : IPlug
 	}
 
 	/// <inheritdoc/>
-	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
+	public IEnumerable<PluginPackageResolveResult<TPluginManifest>> ResolvePluginPackages()
 	{
-		List<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> results = [];
+		List<PluginPackageResolveResult<TPluginManifest>> results = [];
 		Dictionary<TKey, List<IPluginPackage<TPluginManifest>>> keyToPackages = [];
 
-		foreach (var packageOrError in this.Resolver.ResolvePluginPackages())
+		foreach (var resolveResult in this.Resolver.ResolvePluginPackages())
 		{
-			results.Add(packageOrError);
-			if (packageOrError.TryPickT1(out _, out var package))
+			results.Add(resolveResult);
+			if (resolveResult.TryPickT1(out _, out var success))
 				continue;
 
-			var key = this.KeyFunction(package);
+			var key = this.KeyFunction(success.Package);
 			if (!keyToPackages.TryGetValue(key, out var packagesForKey))
 			{
 				packagesForKey = [];
 				keyToPackages[key] = packagesForKey;
 			}
-			packagesForKey.Add(package);
+			packagesForKey.Add(success.Package);
 		}
 
 		foreach (var packagesForKey in keyToPackages.Values)
 		{
 			if (packagesForKey.Count < 2)
 				continue;
-			results.RemoveAll(result => result.TryPickT0(out var package, out _) && packagesForKey.Contains(package));
+			results.RemoveAll(result => result.TryPickT0(out var success, out _) && packagesForKey.Contains(success.Package));
 			results.Add(new Error<string>($"Found duplicate packages, none will be loaded:\n{string.Join("\n", packagesForKey.Select(p => $"\t{p}"))}"));
 		}
 

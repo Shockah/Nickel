@@ -14,5 +14,5 @@ public interface IPluginPackageResolver<TPluginManifest>
 	/// Resolves and enumerates plugin packages.
 	/// </summary>
 	/// <returns>An enumerator over plugin packages and potential errors when resolving.</returns>
-	IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages();
+	IEnumerable<PluginPackageResolveResult<TPluginManifest>> ResolvePluginPackages();
 }

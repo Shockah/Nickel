@@ -1,6 +1,4 @@
 using Nanoray.PluginManager;
-using OneOf;
-using OneOf.Types;
 using System.Collections.Generic;
 
 namespace Nickel;
@@ -15,13 +13,13 @@ public sealed class SanitizingPluginPackageResolver<TPluginManifest>(
 ) : IPluginPackageResolver<TPluginManifest>
 {
 	/// <inheritdoc/>
-	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
+	public IEnumerable<PluginPackageResolveResult<TPluginManifest>> ResolvePluginPackages()
 	{
-		foreach (var result in resolver.ResolvePluginPackages())
+		foreach (var resolveResult in resolver.ResolvePluginPackages())
 		{
-			if (result.TryPickT1(out var error, out var package))
+			if (resolveResult.TryPickT1(out var error, out var success))
 				yield return error;
-			yield return new SanitizingPluginPackage<TPluginManifest>(package);
+			yield return success with { Package = new SanitizingPluginPackage<TPluginManifest>(success.Package) };
 		}
 	}
 }

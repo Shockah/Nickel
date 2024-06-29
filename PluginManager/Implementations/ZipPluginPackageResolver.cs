@@ -1,4 +1,3 @@
-using OneOf;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
@@ -30,7 +29,7 @@ public sealed class ZipPluginPackageResolver<TPluginManifest> : IPluginPackageRe
 	}
 
 	/// <inheritdoc/>
-	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
+	public IEnumerable<PluginPackageResolveResult<TPluginManifest>> ResolvePluginPackages()
 	{
 		if (!this.ZipFile.Exists)
 		{
@@ -39,9 +38,13 @@ public sealed class ZipPluginPackageResolver<TPluginManifest> : IPluginPackageRe
 		}
 
 		ZipArchive archive = new(this.ZipFile.OpenRead(), ZipArchiveMode.Read, leaveOpen: true);
-		foreach (var packageOrError in this.ResolverFactory(ZipDirectoryInfo.From(archive)).ResolvePluginPackages())
-			yield return packageOrError.Match<OneOf<IPluginPackage<TPluginManifest>, Error<string>>>(
-				package => new InnerPluginPackage<TPluginManifest>(package, package.Manifest, disposesOuterPackage: false),
+		foreach (var resolveResult in this.ResolverFactory(ZipDirectoryInfo.From(archive)).ResolvePluginPackages())
+			yield return resolveResult.Match<PluginPackageResolveResult<TPluginManifest>>(
+				success => new PluginPackageResolveResult<TPluginManifest>.Success
+				{
+					Package = new InnerPluginPackage<TPluginManifest>(success.Package, success.Package.Manifest, disposesOuterPackage: false),
+					Warnings = success.Warnings
+				},
 				error => error
 			);
 	}

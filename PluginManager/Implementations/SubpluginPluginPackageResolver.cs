@@ -1,5 +1,3 @@
-using OneOf;
-using OneOf.Types;
 using System;
 using System.Collections.Generic;
 
@@ -29,14 +27,14 @@ public sealed class SubpluginPluginPackageResolver<TPluginManifest> : IPluginPac
 	}
 
 	/// <inheritdoc/>
-	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
+	public IEnumerable<PluginPackageResolveResult<TPluginManifest>> ResolvePluginPackages()
 	{
-		foreach (var basePackageResult in this.BaseResolver.ResolvePluginPackages())
+		foreach (var baseResult in this.BaseResolver.ResolvePluginPackages())
 		{
-			yield return basePackageResult;
-			if (basePackageResult.TryPickT1(out _, out var basePackage))
+			yield return baseResult;
+			if (baseResult.TryPickT1(out _, out var baseSuccess))
 				continue;
-			foreach (var subpluginResolver in this.SubpluginResolverFactory(basePackage))
+			foreach (var subpluginResolver in this.SubpluginResolverFactory(baseSuccess.Package))
 				foreach (var subpackage in subpluginResolver.ResolvePluginPackages())
 					yield return subpackage;
 		}

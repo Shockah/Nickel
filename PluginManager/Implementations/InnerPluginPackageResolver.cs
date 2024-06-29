@@ -1,5 +1,3 @@
-using OneOf;
-using OneOf.Types;
 using System.Collections.Generic;
 
 namespace Nanoray.PluginManager.Implementations;
@@ -28,8 +26,12 @@ public sealed class InnerPluginPackageResolver<TPluginManifest> : IPluginPackage
 	}
 
 	/// <inheritdoc/>
-	public IEnumerable<OneOf<IPluginPackage<TPluginManifest>, Error<string>>> ResolvePluginPackages()
+	public IEnumerable<PluginPackageResolveResult<TPluginManifest>> ResolvePluginPackages()
 	{
-		yield return new InnerPluginPackage<TPluginManifest>(this.OuterPackage, this.InnerManifest, this.DisposesOuterPackage);
+		yield return new PluginPackageResolveResult<TPluginManifest>.Success
+		{
+			Package = new InnerPluginPackage<TPluginManifest>(this.OuterPackage, this.InnerManifest, this.DisposesOuterPackage),
+			Warnings = []
+		};
 	}
 }

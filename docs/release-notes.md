@@ -12,6 +12,7 @@
 * Update checks now happen much earlier and even for mods which failed to load.
 * The game no longer proposes memories which don't exist (for modded characters).
 * The Memories menu now highlights the arrow buttons if you have any unlocked but not yet seen memories scrolled away.
+* Nickel now ignores mods in ZIP files, if they also exist extracted.
 * Nickel now sanitizes any file system paths it logs, by replacing full user home paths with just `~`.
 * Nickel now has a different error log message when a mod cannot be loaded due to a missing dependency at a specific version (as compared to missing altogether).
 * Fixed Nickel crashing when starting the game in a non-English language or when switching to one.

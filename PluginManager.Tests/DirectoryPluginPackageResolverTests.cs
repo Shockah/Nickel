@@ -26,17 +26,17 @@ internal sealed class DirectoryPluginPackageResolverTests
 		var results = resolver.ResolvePluginPackages().ToList();
 		Assert.AreEqual(1, results.Count);
 
-		var packageOrError = results.First();
-		if (packageOrError.TryPickT1(out var error, out var package))
+		var resolveResult = results.First();
+		if (resolveResult.TryPickT1(out var error, out var success))
 		{
 			Assert.Fail("Expected a package, got an error: {0}", error.Value);
 			return;
 		}
 
-		Assert.AreEqual("manifest", package.Manifest);
-		Assert.AreEqual(2, package.PackageRoot.Children.Count());
-		Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
-		Assert.IsTrue(package.PackageRoot.Children.Any(c => c.Name == "mod.dll"));
+		Assert.AreEqual("manifest", success.Package.Manifest);
+		Assert.AreEqual(2, success.Package.PackageRoot.Children.Count());
+		Assert.IsTrue(success.Package.PackageRoot.Children.Any(c => c.Name == "manifest.json"));
+		Assert.IsTrue(success.Package.PackageRoot.Children.Any(c => c.Name == "mod.dll"));
 	}
 
 	[Test]
