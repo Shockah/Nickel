@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<RootNamespace>Nanoray.PluginManager</RootNamespace>
 		<Version>$(NickelVersion)</Version>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="OneOf" Version="3.0.263" />

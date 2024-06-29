@@ -43,7 +43,6 @@
 		<IncludedModProjectPaths Condition="'$(IncludedModProjectPaths)' == ''"></IncludedModProjectPaths>
 		<ModVersionValidation Condition="'$(ModVersionValidation)' == ''">Error</ModVersionValidation>
 		<EnableGameDebugging Condition="'$(EnableGameDebugging)' == ''">true</EnableGameDebugging>
-		<IgnoreAccessChecks>true</IgnoreAccessChecks>
 	</PropertyGroup>
 
 	<!-- Trying to find the game path - needed if ModLoaderPath, GameDllPath or GameExePath is not set -->

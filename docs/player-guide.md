@@ -17,7 +17,7 @@ Note: Nickel requires Windows 10+.
 
 TBD.
 
-# Where to find mods
+# Getting mods
 
 The two great places to find Cobalt Core mods are:
 * The [Cobalt Core section on NexusMods](https://www.nexusmods.com/cobaltcore).

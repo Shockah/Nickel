@@ -107,7 +107,8 @@ public readonly struct SemanticVersion : IEquatable<SemanticVersion>, IComparabl
 		// fallback (this should never happen)
 		return string.Compare($"{this}", $"{other}", StringComparison.OrdinalIgnoreCase);
 	}
-
+	
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 	public static bool operator ==(SemanticVersion left, SemanticVersion right)
 		=> left.Equals(right);
 
@@ -125,4 +126,5 @@ public readonly struct SemanticVersion : IEquatable<SemanticVersion>, IComparabl
 
 	public static bool operator >=(SemanticVersion left, SemanticVersion right)
 		=> left.CompareTo(right) >= 0;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

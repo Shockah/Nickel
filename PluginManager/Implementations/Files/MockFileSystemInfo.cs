@@ -34,7 +34,7 @@ public abstract class MockFileSystemInfo : IFileSystemInfo<MockFileInfo, MockDir
 	public MockDirectoryInfo? AsDirectory
 		=> this as MockDirectoryInfo;
 
-	protected MockFileSystemInfo(string name, bool exists = true)
+	internal MockFileSystemInfo(string name, bool exists = true)
 	{
 		this.Name = name;
 		this.Exists = exists;

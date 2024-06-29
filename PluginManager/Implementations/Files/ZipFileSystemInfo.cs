@@ -16,7 +16,7 @@ public abstract class ZipFileSystemInfo : IFileSystemInfo<ZipFileInfo, ZipDirect
 	/// <inheritdoc/>
 	public bool Exists { get; }
 	
-	protected ZipArchive Archive { get; }
+	internal ZipArchive Archive { get; }
 
 	/// <inheritdoc/>
 	public string FullName
@@ -32,7 +32,7 @@ public abstract class ZipFileSystemInfo : IFileSystemInfo<ZipFileInfo, ZipDirect
 	public ZipDirectoryInfo? AsDirectory
 		=> this as ZipDirectoryInfo;
 
-	protected ZipFileSystemInfo(ZipArchive archive, string name, ZipDirectoryInfo? parent, bool exists = true)
+	internal ZipFileSystemInfo(ZipArchive archive, string name, ZipDirectoryInfo? parent, bool exists = true)
 	{
 		this.Archive = archive;
 		this.Name = name;

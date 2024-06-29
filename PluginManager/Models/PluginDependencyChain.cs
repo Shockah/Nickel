@@ -38,9 +38,11 @@ public readonly struct PluginDependencyChain<TPluginManifest> : IEquatable<Plugi
 	public override int GetHashCode()
 		=> this.Values.Sum(m => m?.GetHashCode() ?? 0);
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 	public static bool operator ==(PluginDependencyChain<TPluginManifest> left, PluginDependencyChain<TPluginManifest> right)
 		=> left.Equals(right);
-
+	
 	public static bool operator !=(PluginDependencyChain<TPluginManifest> left, PluginDependencyChain<TPluginManifest> right)
 		=> !(left == right);
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

@@ -22,11 +22,11 @@ To configure GitHub update checks:
 1. Make sure you have followed the steps from the main *Update checks* section.
 2. Click "Nickel: GitHub update checks".
 3. Double-check the "Enabled" option is ticked, and if not, click on it.
-4. Click on the "Setup" button next to the "Token" setting. This will open your web browser on a GitHub page that lets you generate new tokens. If it does not, open this link manually: https://github.com/settings/tokens?type=beta
+4. Click on the "Setup" button next to the "Token" setting. This will open your web browser. If it does not, open this link manually: https://github.com/settings/tokens?type=beta
 5. If needed, log in to your GitHub account.
 6. Click the "Generate new token" button.
 7. Fill out the fields:
-	1. Give the token any name - it is only used to help you identify what each token is.
+	1. Give the token any name - it is only used to help you identify the token.
 	2. Choose the expiration time for the token.
 	3. Leave the other options as-is. Nickel does not require any additional permissions.
 8. Click the "Generate token" button at the bottom.
@@ -47,7 +47,7 @@ To configure NexusMods update checks:
 1. Make sure you have followed the steps from the main *Update checks* section.
 2. Click "Nickel: NexusMods update checks".
 3. Double-check the "Enabled" option is ticked, and if not, click on it.
-4. Click on the "Setup" button next to the "API key" setting. This will open your web browser on a GitHub page that lets you generate new tokens. If it does not, open this link manually: https://next.nexusmods.com/settings/api-keys
+4. Click on the "Setup" button next to the "API key" setting. This will open your web browser. If it does not, open this link manually: https://next.nexusmods.com/settings/api-keys
 5. If needed, log in to your NexusMods account.
 6. Scroll the page to the "Nickel"/"The community-created mod loader for Cobalt Core." entry, which should be somewhere near the bottom.
 7. Click the "REQUEST API KEY" button next to Nickel's entry.
