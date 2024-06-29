@@ -18,7 +18,7 @@ public interface IModCards
 	ICardEntry? LookupByCardType(Type cardType);
 	
 	/// <summary>
-	/// Lookup an <see cref="Card"/> entry by its full <see cref="ICardEntry.UniqueName"/>.
+	/// Lookup an <see cref="Card"/> entry by its full <see cref="IModOwned.UniqueName"/>.
 	/// </summary>
 	/// <param name="uniqueName">The unique name to retrieve an entry for.</param>
 	/// <returns>An entry, or <c>null</c> if the unique name does not match any known cards.</returns>
@@ -64,7 +64,7 @@ public interface IModCards
 	ICardTraitEntry SingleUseCardTrait { get; }
 
 	/// <summary>
-	/// Lookup a card trait entry by its full <see cref="ICardTraitEntry.UniqueName"/>.
+	/// Lookup a card trait entry by its full <see cref="IModOwned.UniqueName"/>.
 	/// </summary>
 	/// <param name="uniqueName">The unique name to retrieve an entry for.</param>
 	/// <returns>An entry, or <c>null</c> if the unique name does not match any known card traits.</returns>

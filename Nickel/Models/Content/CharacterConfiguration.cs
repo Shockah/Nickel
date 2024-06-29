@@ -37,9 +37,11 @@ public readonly struct CharacterConfiguration
 	/// <summary>A localization provider for the description of the playable <see cref="Character"/>.</summary>
 	public SingleLocalizationProvider? Description { get; init; }
 
+	/// <summary>The card types this playable <see cref="Character"/> starts with.</summary>
 	[Obsolete($"Use `{nameof(Starters)}` instead.")]
 	public IReadOnlyList<Type>? StarterCardTypes { get; init; }
 
+	/// <summary>The artifact types this playable <see cref="Character"/> starts with.</summary>
 	[Obsolete($"Use `{nameof(Starters)}` instead.")]
 	public IReadOnlyList<Type>? StarterArtifactTypes { get; init; }
 

@@ -16,7 +16,7 @@ public interface IModArtifacts
 	IArtifactEntry? LookupByArtifactType(Type artifactType);
 	
 	/// <summary>
-	/// Lookup an <see cref="Artifact"/> entry by its full <see cref="IArtifactEntry.UniqueName"/>.
+	/// Lookup an <see cref="Artifact"/> entry by its full <see cref="IModOwned.UniqueName"/>.
 	/// </summary>
 	/// <param name="uniqueName">The unique name to retrieve an entry for.</param>
 	/// <returns>An entry, or <c>null</c> if the unique name does not match any known artifacts.</returns>

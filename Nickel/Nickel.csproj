@@ -17,6 +17,7 @@
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 		<NoWarn>$(NoWarn);CS0436</NoWarn>
 		<IgnoreAccessChecks>true</IgnoreAccessChecks>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup>

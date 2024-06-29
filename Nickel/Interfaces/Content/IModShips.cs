@@ -7,7 +7,7 @@ namespace Nickel;
 public interface IModShips
 {
 	/// <summary>
-	/// Lookup a <see cref="StarterShip"/> entry by its full <see cref="IShipEntry.UniqueName"/>.
+	/// Lookup a <see cref="StarterShip"/> entry by its full <see cref="IModOwned.UniqueName"/>.
 	/// </summary>
 	/// <param name="uniqueName">The unique name to retrieve an entry for.</param>
 	/// <returns>An entry, or <c>null</c> if the unique name does not match any known ships.</returns>

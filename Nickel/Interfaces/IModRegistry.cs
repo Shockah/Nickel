@@ -40,7 +40,7 @@ public interface IModRegistry
 	/// </summary>
 	/// <typeparam name="TProxy">The interface type to proxy the object to.</typeparam>
 	/// <param name="object">The object to proxy.</param>
-	/// <returns>The proxied object, or <c>null</c> if <see cref="@object"/> was <c>null</c> or it failed to proxy.</returns>
+	/// <returns>The proxied object, or <c>null</c> if <see cref="object"/> was <c>null</c> or it failed to proxy.</returns>
 	TProxy? AsProxy<TProxy>(object? @object) where TProxy : class;
 
 	/// <summary>

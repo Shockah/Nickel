@@ -405,7 +405,7 @@ internal sealed class HookableSubclassGenerator
 	}
 }
 
-public readonly struct GeneratedHookableSubclass<T>
+internal readonly struct GeneratedHookableSubclass<T>
 {
 	public Type Type { get; init; }
 	public Func<T> Factory { get; init; }

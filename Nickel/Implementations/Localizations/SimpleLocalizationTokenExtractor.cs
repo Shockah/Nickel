@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Nickel;
 
+/// <summary>
+/// An <see cref="ILocalizationTokenExtractor{TValue}"/> which extracts tokens from either an <see cref="IDictionary{TKey,TValue}"/>, or from an object's properties and fields.
+/// </summary>
 public sealed class SimpleLocalizationTokenExtractor : ILocalizationTokenExtractor<string>
 {
 	/// <inheritdoc/>
