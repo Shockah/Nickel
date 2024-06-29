@@ -33,23 +33,24 @@ internal static class ModDescriptions
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Artifact), nameof(Artifact.GetTooltips)),
-			postfix: new HarmonyMethod(AccessTools.Method(typeof(ModDescriptions), nameof(Artifact_GetTooltips_Postfix)), priority: Priority.Last)
+			postfix: new HarmonyMethod(AccessTools.Method(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Artifact_GetTooltips_Postfix)), priority: Priority.Last)
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Card), nameof(Card.GetAllTooltips)),
-			postfix: new HarmonyMethod(AccessTools.Method(typeof(ModDescriptions), nameof(Card_GetAllTooltips_Postfix)), priority: Priority.Last)
+			postfix: new HarmonyMethod(AccessTools.Method(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Card_GetAllTooltips_Postfix)), priority: Priority.Last)
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(StatusMeta), nameof(StatusMeta.GetTooltips)),
-			postfix: new HarmonyMethod(AccessTools.Method(typeof(ModDescriptions), nameof(StatusMeta_GetTooltips_Postfix)), priority: Priority.Last)
+			postfix: new HarmonyMethod(AccessTools.Method(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(StatusMeta_GetTooltips_Postfix)), priority: Priority.Last)
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(NewRunOptions), nameof(NewRunOptions.Render)),
-			transpiler: new HarmonyMethod(AccessTools.Method(typeof(ModDescriptions), nameof(NewRunOptions_Render_Transpiler)))
+			transpiler: new HarmonyMethod(AccessTools.Method(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(NewRunOptions_Render_Transpiler)))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Character), nameof(Character.Render)),
-			transpiler: new HarmonyMethod(AccessTools.Method(typeof(ModDescriptions), nameof(Character_Render_Transpiler)))
+			postfix: new HarmonyMethod(AccessTools.Method(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Character_Render_Postfix))),
+			transpiler: new HarmonyMethod(AccessTools.Method(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Character_Render_Transpiler)))
 		);
 	}
 
@@ -175,6 +176,41 @@ internal static class ModDescriptions
 			? "Cobalt Core"
 			: (string.IsNullOrEmpty(entry.ModOwner.DisplayName) ? entry.ModOwner.UniqueName : entry.ModOwner.DisplayName);
 		return $"{shipDescription}\n{ModEntry.Instance.Localizations.Localize(["modDescriptions", "description"], new { ModName = modName })}";
+	}
+
+	private static void Character_Render_Postfix(Character __instance, G g, bool flipX, bool mini, UIKey? overrideKey, bool showTooltips)
+	{
+		if (!showTooltips)
+			return;
+		if (__instance.deckType is not null)
+			return;
+
+		var key = overrideKey ?? new UIKey(mini ? UK.char_mini : UK.character, 0, __instance.type);
+		if (g.boxes.FirstOrDefault(b => b.key == key) is not { } box || !box.IsHover())
+			return;
+		
+		var entry = ModEntry.Instance.Helper.Content.Characters.V2.LookupByCharacterType(__instance.type);
+		if (!ShouldShowModDescription(entry))
+			return;
+		
+		var modName = entry is null
+			? "Cobalt Core"
+			: (string.IsNullOrEmpty(entry.ModOwner.DisplayName) ? entry.ModOwner.UniqueName : entry.ModOwner.DisplayName);
+		var text = ModEntry.Instance.Localizations.Localize(["modDescriptions", "description"], new { ModName = modName });
+		var tooltip = new CustomTTText(text);
+		
+		var pos = new Vec(
+			box.rect.x + (
+				flipX
+					? - tooltip.Render(g, dontDraw: true).w - 12
+					: (mini ? 35 : 64)
+			),
+			box.rect.y + 1
+		);
+		g.tooltips.Add(pos, tooltip);
+		
+		if (ModEntry.Instance.Settings.ModDescriptionsKey != ModDescriptionsKey.Always)
+			g.tooltips.tooltipTimer = 1;
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
