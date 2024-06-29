@@ -135,7 +135,7 @@ internal interface IModSettingsApi
 		IStepperModSetting<T> SetNextValue(Func<T, T?> value);
 		IStepperModSetting<T> SetValueFormatter(Func<T, string>? value);
 		IStepperModSetting<T> SetValueWidth(Func<Rect, double>? value);
-		IStepperModSetting<T> SetOnClick(Action<G, IModSettingsRoute> value);
+		IStepperModSetting<T> SetOnClick(Action<G, IModSettingsRoute>? value);
 		IStepperModSetting<T> SetTooltips(Func<IEnumerable<Tooltip>>? value);
 	}
 

@@ -73,7 +73,7 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 		return this;
 	}
 
-	IModSettingsApi.IStepperModSetting<T> IModSettingsApi.IStepperModSetting<T>.SetOnClick(Action<G, IModSettingsApi.IModSettingsRoute> value)
+	IModSettingsApi.IStepperModSetting<T> IModSettingsApi.IStepperModSetting<T>.SetOnClick(Action<G, IModSettingsApi.IModSettingsRoute>? value)
 	{
 		this.OnClick = value;
 		return this;
