@@ -454,6 +454,27 @@ public sealed class ModEntry : SimpleMod
 			}
 		}
 
+		if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Info, out messages) && messages.Count > 0)
+		{
+			if (!addedTooltips)
+			{
+				addedTooltips = true;
+				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new TTDivider());
+			}
+
+			var i = 0;
+			foreach (var error in messages)
+			{
+				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new GlossaryTooltip($"ui.{Instance.Package.Manifest.UniqueName}::Info{i++}")
+				{
+					Icon = StableSpr.icons_hurtBlockable,
+					TitleColor = Colors.textBold,
+					Title = Instance.Localizations.Localize(["settingsTooltip", "info"]),
+					Description = error.Message,
+				});
+			}
+		}
+
 		if (updatesAvailable.Count > 0)
 		{
 			if (!addedTooltips)

@@ -11,26 +11,26 @@ namespace Nickel.ModSettings;
 public interface IModSettingsApi
 {
 	/// <summary>
-	/// Register settings for a mod.
+	/// Registers settings for a mod.
 	/// </summary>
 	/// <param name="settings">The settings.</param>
 	void RegisterModSettings(IModSetting settings);
 	
 	/// <summary>
-	/// Create a <see cref="Route"/> which shows all settings for all mods.
+	/// Creates a <see cref="Route"/> which shows all settings for all mods.
 	/// </summary>
 	/// <returns>The route.</returns>
 	Route MakeModSettingsRouteForAllMods();
 	
 	/// <summary>
-	/// Create a <see cref="Route"/> which shows the settings for the given mod.
+	/// Creates a <see cref="Route"/> which shows the settings for the given mod.
 	/// </summary>
 	/// <param name="modManifest">The mod to show settings for.</param>
 	/// <returns>The route, or <c>null</c> if the given mod does did not register any settings.</returns>
 	Route? MakeModSettingsRouteForMod(IModManifest modManifest);
 	
 	/// <summary>
-	/// Create a <see cref="Route"/> which shows the given arbitrary settings.
+	/// Creates a <see cref="Route"/> which shows the given arbitrary settings.
 	/// </summary>
 	/// <param name="settings">The settings to show.</param>
 	/// <returns>The route.</returns>

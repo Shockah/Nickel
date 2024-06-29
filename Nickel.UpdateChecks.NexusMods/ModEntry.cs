@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Nickel.Common;
 using System;
 using System.Collections.Generic;
@@ -122,9 +123,9 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		}
 	}
 
-	public bool TryParseManifestEntry(IModManifest mod, object? rawManifestEntry, out object? manifestEntry)
+	public bool TryParseManifestEntry(IModManifest mod, JObject rawManifestEntry, out object? manifestEntry)
 	{
-		manifestEntry = JsonConvert.DeserializeObject<ManifestEntry>(JsonConvert.SerializeObject(rawManifestEntry, this.Helper.Storage.JsonSerializerSettings), this.Helper.Storage.JsonSerializerSettings);
+		manifestEntry = rawManifestEntry.ToObject<ManifestEntry>(this.Helper.Storage.JsonSerializer);
 		if (manifestEntry is null)
 			this.Logger.LogError("Cannot check NexusMods updates for mod {ModName}: invalid `UpdateChecks` structure.", mod.GetDisplayName(@long: false));
 		return manifestEntry is not null;

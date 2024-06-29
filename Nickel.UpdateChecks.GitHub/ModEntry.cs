@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Nickel.Common;
 using System;
 using System.Collections.Generic;
@@ -131,11 +132,11 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		return client;
 	}
 
-	public bool TryParseManifestEntry(IModManifest mod, object? rawManifestEntry, out object? manifestEntry)
+	public bool TryParseManifestEntry(IModManifest mod, JObject rawManifestEntry, out object? manifestEntry)
 	{
 		manifestEntry = null;
 
-		if (JsonConvert.DeserializeObject<ManifestEntry>(JsonConvert.SerializeObject(rawManifestEntry, this.Helper.Storage.JsonSerializerSettings), this.Helper.Storage.JsonSerializerSettings) is not { } entry)
+		if (rawManifestEntry.ToObject<ManifestEntry>(this.Helper.Storage.JsonSerializer) is not { } entry)
 		{
 			this.Logger.LogError("Cannot check GitHub updates for mod {ModName}: invalid `UpdateChecks` structure.", mod.GetDisplayName(@long: false));
 			return false;

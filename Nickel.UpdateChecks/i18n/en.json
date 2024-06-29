@@ -2,7 +2,8 @@
 	"settingsTooltip": {
 		"updatesAvailableTooltip": "Updates",
 		"error": "Update Error",
-		"warning": "Update Warning"
+		"warning": "Update Warning",
+		"info": "Update Info"
 	},
 	"settings": {
 		"paste": "PASTE",
