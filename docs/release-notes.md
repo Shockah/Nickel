@@ -20,6 +20,7 @@
 * Fixed card Codex deck filters sometimes not being properly scrollable, and weirdly jumping visually.
 
 ### For developers:
+* Nickel now has full XML documentation for all public members.
 * Added APIs for storing mod settings in a common place.
 * Added APIs for registering non-playable characters (enemies or story characters).
 * Added an event mods can subscribe to to get informed about the game closing, either normally or via an exception being thrown.
