@@ -101,7 +101,7 @@
 		<EnableDllExtract Condition="'$(EnableDllExtract)' == '' And Exists('$(GameExePath)')">true</EnableDllExtract>
 		<EnableDllExtract Condition="'$(EnableDllExtract)' == '' And !Exists('$(GameDllPath)')">true</EnableDllExtract>
 		<EnableDllExtract Condition="'$(EnableDllExtract)' == ''">false</EnableDllExtract>
-		<NickelLegacyDllPath Condition="'$(NickelLegacyDllPath)' == ''">$(ModDeployModsPath)\Nickel.Legacy\Nickel.Legacy.dll</NickelLegacyDllPath>
+		<LegacyModPath Condition="'$(LegacyModPath)' == ''">$(ModDeployModsPath)\Nickel.Legacy</LegacyModPath>
 	</PropertyGroup>
 
 	<Target Name="ValidateProperties" BeforeTargets="CoreCompile">
@@ -142,9 +142,9 @@
 		<Reference Include="Shrike" Private="False" HintPath="$(ModLoaderPath)\Shrike.dll" />
 		<Reference Include="Shrike.Harmony" Private="False" HintPath="$(ModLoaderPath)\Shrike.Harmony.dll" />
 		<Reference Include="OneOf" Private="False" HintPath="$(ModLoaderPath)\OneOf.dll" />
-		<Reference Condition="!$(IsLegacyMod)" Include="Microsoft.Extensions.Logging.Abstractions" Private="False" HintPath="$(ModLoaderPath)\Microsoft.Extensions.Logging.Abstractions.dll" />
-		<Reference Condition="$(IsLegacyMod)" Include="CobaltCoreModding.Definitions" Private="False" HintPath="$(ModDeployModsPath)\Nickel.Legacy\CobaltCoreModding.Definitions.dll" />
-		<Reference Condition="$(IsLegacyMod) And Exists('$(NickelLegacyDllPath)')" Include="Nickel.Legacy" Private="False" HintPath="$(NickelLegacyDllPath)" />
+		<Reference Include="Microsoft.Extensions.Logging.Abstractions" Private="False" HintPath="$(ModLoaderPath)\Microsoft.Extensions.Logging.Abstractions.dll" />
+		<Reference Condition="$(IsLegacyMod) And Exists('$(LegacyModPath)')" Include="CobaltCoreModding.Definitions" Private="False" HintPath="$(LegacyModPath)\CobaltCoreModding.Definitions.dll" />
+		<Reference Condition="$(IsLegacyMod) And Exists('$(LegacyModPath)')" Include="Nickel.Legacy" Private="False" HintPath="$(LegacyModPath)\Nickel.Legacy.dll" />
 	</ItemGroup>
 
 	<!-- Enable game debugging -->

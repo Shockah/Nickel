@@ -66,8 +66,7 @@
 		<Reference Include="CobaltCore" HintPath="$(IntermediateOutputPath)/CobaltCore.dll" Private="False" />
 
 		<!-- mod management -->
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
-		<PackageReference Include="Lib.Harmony" Version="2.3.0-prerelease.5" />
+		<PackageReference Include="Lib.Harmony.Thin" Version="2.3.3" />
 		<PackageReference Include="Pintail" Version="2.4.3" />
 
 		<!-- mod utilities -->
