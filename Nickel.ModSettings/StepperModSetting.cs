@@ -7,6 +7,8 @@ namespace Nickel.ModSettings;
 
 public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSettingsApi.IStepperModSetting<T> where T : struct
 {
+	private const double PreferredHeight = 20;
+	
 	public required Func<string> Title { get; set; }
 	public required Func<T> Getter { get; set; }
 	public required Action<T> Setter { get; set; }
@@ -100,19 +102,19 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 			var valueText = this.ValueFormatter is { } valueFormatter ? valueFormatter(value) : (value.ToString() ?? "<null>");
 			var valueWidth = this.ValueWidth?.Invoke(box.rect) ?? 44;
 
-			Draw.Text(this.Title(), box.rect.x + 10, box.rect.y + 5, DB.thicket, textColor);
-			Draw.Text(valueText, (int)(box.rect.x2 - 10 - 18 - valueWidth / 2), box.rect.y + 5, DB.thicket, textColor, align: TAlign.Center);
+			Draw.Text(this.Title(), box.rect.x + 10, box.rect.y + 5 + (int)((box.rect.h - PreferredHeight) / 2), DB.thicket, textColor);
+			Draw.Text(valueText, (int)(box.rect.x2 - 10 - 18 - valueWidth / 2), box.rect.y + 5 + (int)((box.rect.h - PreferredHeight) / 2), DB.thicket, textColor, align: TAlign.Center);
 
 			if (this.PreviousValue(value) is not null)
-				SharedArt.ButtonSprite(g, new Rect(box.rect.w - 10 - 18 * 2 - valueWidth, -1, 18, 21), this.StepperLeftKey, StableSpr.buttons_selectShip, StableSpr.buttons_selectShip_on, boxColor: Colors.buttonBoxNormal, flipX: true, onMouseDown: this, noHover: Input.gamepadIsActiveInput);
+				SharedArt.ButtonSprite(g, new Rect(box.rect.w - 10 - 18 * 2 - valueWidth, -1 + (int)((box.rect.h - PreferredHeight) / 2), 18, 21), this.StepperLeftKey, StableSpr.buttons_selectShip, StableSpr.buttons_selectShip_on, boxColor: Colors.buttonBoxNormal, flipX: true, onMouseDown: this, noHover: Input.gamepadIsActiveInput);
 			if (this.NextValue(value) is not null)
-				SharedArt.ButtonSprite(g, new Rect(box.rect.w - 10 - 18, -1, 18, 21), this.StepperRightKey, StableSpr.buttons_selectShip, StableSpr.buttons_selectShip_on, boxColor: Colors.buttonBoxNormal, flipX: false, onMouseDown: this, noHover: Input.gamepadIsActiveInput);
+				SharedArt.ButtonSprite(g, new Rect(box.rect.w - 10 - 18, -1 + (int)((box.rect.h - PreferredHeight) / 2), 18, 21), this.StepperRightKey, StableSpr.buttons_selectShip, StableSpr.buttons_selectShip_on, boxColor: Colors.buttonBoxNormal, flipX: false, onMouseDown: this, noHover: Input.gamepadIsActiveInput);
 
 			if (isHover && this.Tooltips is { } tooltips)
 				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
 		}
 
-		return new(box.rect.w, 20);
+		return new(box.rect.w, dontDraw ? PreferredHeight : box.rect.h);
 	}
 
 	public void OnMouseDown(G g, Box b)

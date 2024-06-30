@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace Nickel.Essentials;
 
-internal sealed partial class Settings
+internal sealed partial class ProfileSettings
 {
 	[JsonProperty]
 	public CardBrowseCurrentPileSetting CardBrowseCurrentPile = CardBrowseCurrentPileSetting.Both;
@@ -51,8 +51,8 @@ internal static class CardBrowseCurrentPile
 	public static IModSettingsApi.IModSetting MakeSettings(IModSettingsApi api)
 		=> api.MakeEnumStepper(
 			title: () => ModEntry.Instance.Localizations.Localize(["cardBrowseCurrentPile", "setting", "name"]),
-			getter: () => ModEntry.Instance.Settings.CardBrowseCurrentPile,
-			setter: value => ModEntry.Instance.Settings.CardBrowseCurrentPile = value
+			getter: () => ModEntry.Instance.Settings.ProfileBased.Current.CardBrowseCurrentPile,
+			setter: value => ModEntry.Instance.Settings.ProfileBased.Current.CardBrowseCurrentPile = value
 		).SetValueFormatter(
 			value => ModEntry.Instance.Localizations.Localize(["cardBrowseCurrentPile", "setting", "value", value.ToString()])
 		).SetValueWidth(
@@ -121,7 +121,7 @@ internal static class CardBrowseCurrentPile
 	{
 		if (!IsRenderingCardBrowse)
 			return;
-		if (ModEntry.Instance.Settings.CardBrowseCurrentPile is CardBrowseCurrentPileSetting.Off or CardBrowseCurrentPileSetting.Tooltip)
+		if (ModEntry.Instance.Settings.ProfileBased.Current.CardBrowseCurrentPile is CardBrowseCurrentPileSetting.Off or CardBrowseCurrentPileSetting.Tooltip)
 			return;
 		if (g.state.route is not Combat combat)
 			return;
@@ -141,7 +141,7 @@ internal static class CardBrowseCurrentPile
 	{
 		if (!IsRenderingCardBrowse)
 			return;
-		if (ModEntry.Instance.Settings.CardBrowseCurrentPile is CardBrowseCurrentPileSetting.Off or CardBrowseCurrentPileSetting.Icon)
+		if (ModEntry.Instance.Settings.ProfileBased.Current.CardBrowseCurrentPile is CardBrowseCurrentPileSetting.Off or CardBrowseCurrentPileSetting.Icon)
 			return;
 		if (g.state.route is not Combat combat)
 			return;

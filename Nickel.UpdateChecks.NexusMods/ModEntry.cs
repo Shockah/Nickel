@@ -64,7 +64,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 					settingsApi.MakeCheckbox(
 						title: () => this.Localizations.Localize(["modSettings", "enabled", "name"]),
 						getter: () => this.Database.IsEnabled,
-						setter: value => this.Database.IsEnabled = value
+						setter: (_, _, value) => this.Database.IsEnabled = value
 					),
 					settingsApi.MakeConditional(
 						setting: new TokenModSetting

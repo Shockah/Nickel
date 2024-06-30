@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace Nickel.Essentials;
 
-internal sealed partial class Settings
+internal sealed partial class ProfileSettings
 {
 	[JsonProperty]
 	public bool StarterDeckPreview = true;
@@ -54,8 +54,8 @@ internal static class StarterDeckPreview
 	public static IModSettingsApi.IModSetting MakeSettings(IModSettingsApi api)
 		=> api.MakeCheckbox(
 			title: () => ModEntry.Instance.Localizations.Localize(["starterDeckPreview", "setting", "name"]),
-			getter: () => ModEntry.Instance.Settings.StarterDeckPreview,
-			setter: value => ModEntry.Instance.Settings.StarterDeckPreview = value
+			getter: () => ModEntry.Instance.Settings.ProfileBased.Current.StarterDeckPreview,
+			setter: (_, _, value) => ModEntry.Instance.Settings.ProfileBased.Current.StarterDeckPreview = value
 		);
 
 	private static void UpdateStateBasedData(G g)
@@ -147,7 +147,7 @@ internal static class StarterDeckPreview
 
 	private static void NewRunOptions_Render_Postfix(NewRunOptions __instance, G g)
 	{
-		if (!ModEntry.Instance.Settings.StarterDeckPreview)
+		if (!ModEntry.Instance.Settings.ProfileBased.Current.StarterDeckPreview)
 			return;
 		if (__instance.subRoute is not null)
 			return;

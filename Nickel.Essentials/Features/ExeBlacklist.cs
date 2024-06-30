@@ -13,7 +13,7 @@ using System.Reflection.Emit;
 
 namespace Nickel.Essentials;
 
-internal sealed partial class Settings
+internal sealed partial class ProfileSettings
 {
 	[JsonProperty]
 	public HashSet<Deck> BlacklistedExeOfferings = [];
@@ -99,13 +99,13 @@ internal static class ExeBlacklist
 			{
 				Title = () => ModEntry.Instance.Localizations.Localize(["exeBlacklist", "offeringBlacklistSetting", "name"]),
 				AllCharacters = () => GetAllExeCharacters().ToList(),
-				IsSelected = deck => !ModEntry.Instance.Settings.BlacklistedExeOfferings.Contains(deck),
+				IsSelected = deck => !ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeOfferings.Contains(deck),
 				SetSelected = (_, deck, value) =>
 				{
 					if (value)
-						ModEntry.Instance.Settings.BlacklistedExeOfferings.Remove(deck);
+						ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeOfferings.Remove(deck);
 					else
-						ModEntry.Instance.Settings.BlacklistedExeOfferings.Add(deck);
+						ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeOfferings.Add(deck);
 				}
 			},
 		]);
@@ -205,7 +205,7 @@ internal static class ExeBlacklist
 			return;
 		if (ModEntry.Instance.Api.GetDeckForExeCardType(c.GetType()) is not { } exeDeck)
 			return;
-		if (!ModEntry.Instance.Settings.BlacklistedExeOfferings.Contains(exeDeck))
+		if (!ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeOfferings.Contains(exeDeck))
 			return;
 
 		__result = false;

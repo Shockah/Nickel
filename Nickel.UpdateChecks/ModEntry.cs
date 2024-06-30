@@ -335,7 +335,7 @@ public sealed class ModEntry : SimpleMod
 							kvp => api.MakeCheckbox(
 								title: () => kvp.Key.DisplayName ?? kvp.Key.UniqueName,
 								getter: () => this.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) && ignoredUpdate == kvp.Value.Version,
-								setter: value =>
+								setter: (_, _, value) =>
 								{
 									if (value)
 										this.Settings.IgnoredUpdates[kvp.Key.UniqueName] = kvp.Value.Version;

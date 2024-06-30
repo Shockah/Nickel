@@ -83,7 +83,7 @@ public sealed class ApiImplementation : IModSettingsApi
 	public IModSettingsApi.IButtonModSetting MakeButton(Func<string> title, Action<G, IModSettingsApi.IModSettingsRoute> onClick)
 		=> new ButtonModSetting { Title = title, OnClick = onClick };
 
-	public IModSettingsApi.ICheckboxModSetting MakeCheckbox(Func<string> title, Func<bool> getter, Action<bool> setter)
+	public IModSettingsApi.ICheckboxModSetting MakeCheckbox(Func<string> title, Func<bool> getter, Action<G, IModSettingsApi.IModSettingsRoute, bool> setter)
 		=> new CheckboxModSetting { Title = title, Getter = getter, Setter = setter };
 
 	public IModSettingsApi.IStepperModSetting<T> MakeStepper<T>(Func<string> title, Func<T> getter, Action<T> setter, Func<T, T?> previousValue, Func<T, T?> nextValue) where T : struct
@@ -139,6 +139,72 @@ public sealed class ApiImplementation : IModSettingsApi
 			}
 		);
 
+	public IModSettingsApi.IModSetting MakeProfileSelector(Func<string> switchProfileTitle, Func<IModSettingsApi.ProfileMode> getter, Action<IModSettingsApi.ProfileMode> setter, Action<IModSettingsApi.ProfileMode> importAction)
+		=> this.MakeButton(
+			() => ModEntry.Instance.Localizations.Localize(["modSettings", "profile", "title"]),
+			(g, route) =>
+			{
+				route.OpenSubroute(g, new ModSettingsRoute
+				{
+					Setting = new ListModSetting
+					{
+						Spacing = 8,
+						Settings =
+						[
+							this.MakeHeader(
+								switchProfileTitle,
+								() => ModEntry.Instance.Localizations.Localize(["modSettings", "profile", "switchProfile"])
+							),
+							this.MakeList([
+								MakeProfileModeSetting(IModSettingsApi.ProfileMode.Global, () => ModEntry.Instance.Localizations.Localize(["modSettings", "profile", "global"])),
+								MakeProfileModeSetting(IModSettingsApi.ProfileMode.Slot, () => ModEntry.Instance.Localizations.Localize(["modSettings", "profile", "slot"]))
+							]),
+							this.MakeBackButton(),
+						],
+					},
+				});
+
+				IModSettingsApi.IModSetting MakeProfileModeSetting(IModSettingsApi.ProfileMode mode, Func<string> title)
+					=> this.MakeList([
+						this.MakeConditional(
+							MakeProfileModeCheckboxSetting(mode, title),
+							() => getter() == mode
+						),
+						this.MakeConditional(
+							this.MakeTwoColumn(
+								MakeProfileModeCheckboxSetting(mode, title),
+								this.MakeButton(
+									() => ModEntry.Instance.Localizations.Localize(["modSettings", "profile", "import"]),
+									(g, route) =>
+									{
+										importAction(mode);
+										route.CloseRoute(g);
+									}
+								).SetTitleHorizontalAlignment(IModSettingsApi.HorizontalAlignment.Center)
+							).SetRightWidth(_ => 80),
+							() => getter() != mode
+						)
+					]);
+
+				IModSettingsApi.IModSetting MakeProfileModeCheckboxSetting(IModSettingsApi.ProfileMode mode, Func<string> title)
+					=> this.MakeCheckbox(
+						title,
+						() => getter() == mode,
+						(g, route, value) =>
+						{
+							if (value)
+								setter(mode);
+							route.CloseRoute(g);
+						}
+					);
+			}
+		).SetValueText(() => getter() switch
+		{
+			IModSettingsApi.ProfileMode.Global => ModEntry.Instance.Localizations.Localize(["modSettings", "profile", "global"]),
+			IModSettingsApi.ProfileMode.Slot => ModEntry.Instance.Localizations.Localize(["modSettings", "profile", "slot"]),
+			_ => throw new ArgumentOutOfRangeException()
+		});
+
 	public IModSettingsApi.IPaddingModSetting MakePadding(IModSettingsApi.IModSetting setting, int padding)
 		=> this.MakePadding(setting, padding, padding);
 
@@ -150,6 +216,9 @@ public sealed class ApiImplementation : IModSettingsApi
 
 	public IModSettingsApi.IListModSetting MakeList(IList<IModSettingsApi.IModSetting> settings)
 		=> new ListModSetting { Settings = settings };
+
+	public IModSettingsApi.ITwoColumnModSetting MakeTwoColumn(IModSettingsApi.IModSetting left, IModSettingsApi.IModSetting right)
+		=> new TwoColumnModSetting { Left = left, Right = right};
 
 	public IModSettingsApi.IModSetting MakeHeader(Func<string> title, Func<string>? subtitle = null)
 		=> new PaddingModSetting

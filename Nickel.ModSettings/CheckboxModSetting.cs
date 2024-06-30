@@ -6,9 +6,11 @@ namespace Nickel.ModSettings;
 
 public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettingsApi.ICheckboxModSetting
 {
+	private const double PreferredHeight = 20;
+
 	public required Func<string> Title { get; set; }
 	public required Func<bool> Getter { get; set; }
-	public required Action<bool> Setter { get; set; }
+	public required Action<G, IModSettingsApi.IModSettingsRoute, bool> Setter { get; set; }
 	public Func<IEnumerable<Tooltip>>? Tooltips { get; set; }
 
 	private UIKey CheckboxKey;
@@ -34,7 +36,7 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 		return this;
 	}
 
-	IModSettingsApi.ICheckboxModSetting IModSettingsApi.ICheckboxModSetting.SetSetter(Action<bool> value)
+	IModSettingsApi.ICheckboxModSetting IModSettingsApi.ICheckboxModSetting.SetSetter(Action<G, IModSettingsApi.IModSettingsRoute, bool> value)
 	{
 		this.Setter = value;
 		return this;
@@ -59,14 +61,14 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 
 			var textColor = isHover ? Colors.textChoiceHoverActive : Colors.textMain;
 
-			Draw.Text(this.Title(), box.rect.x + 10, box.rect.y + 5, DB.thicket, textColor);
-			SharedArt.CheckboxBig(g, new Vec(box.rect.w - 10 - 15, 1), this.CheckboxKey, this.Getter(), boxColor: Colors.buttonBoxNormal, onMouseDown: this);
+			Draw.Text(this.Title(), box.rect.x + 10, box.rect.y + 5 + (int)((box.rect.h - PreferredHeight) / 2), DB.thicket, textColor);
+			SharedArt.CheckboxBig(g, new Vec(box.rect.w - 10 - 15, 1 + (int)((box.rect.h - PreferredHeight) / 2)), this.CheckboxKey, this.Getter(), boxColor: Colors.buttonBoxNormal, onMouseDown: this);
 
 			if (isHover && this.Tooltips is { } tooltips)
 				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
 		}
 
-		return new(box.rect.w, 20);
+		return new(box.rect.w, dontDraw ? PreferredHeight : box.rect.h);
 	}
 
 	public void OnMouseDown(G g, Box b)
@@ -74,6 +76,6 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 		Audio.Play(Event.Click);
 
 		if (b.key == this.Key || b.key == this.CheckboxKey)
-			this.Setter(!this.Getter());
+			this.Setter(g, this.CurrentRoute, !this.Getter());
 	}
 }

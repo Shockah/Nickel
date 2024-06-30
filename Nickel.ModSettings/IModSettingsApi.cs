@@ -58,7 +58,7 @@ public interface IModSettingsApi
 	/// <param name="getter">The getter callback (<see cref="ICheckboxModSetting.Getter"/>). Depending on its value, the checkbox will have a checkmark or not.</param>
 	/// <param name="setter">The setter callback (<see cref="ICheckboxModSetting.Setter"/>). It will be invoked when the setting or the checkbox is clicked.</param>
 	/// <returns>The UI element.</returns>
-	ICheckboxModSetting MakeCheckbox(Func<string> title, Func<bool> getter, Action<bool> setter);
+	ICheckboxModSetting MakeCheckbox(Func<string> title, Func<bool> getter, Action<G, IModSettingsRoute, bool> setter);
 	
 	/// <summary>
 	/// Creates a new stepper mod setting UI element.
@@ -126,6 +126,14 @@ public interface IModSettingsApi
 	/// <param name="settings">The list of settings (<see cref="IListModSetting.Settings"/>).</param>
 	/// <returns>The UI element.</returns>
 	IListModSetting MakeList(IList<IModSetting> settings);
+	
+	/// <summary>
+	/// Creates a new two column mod setting UI element.
+	/// </summary>
+	/// <param name="left">The left settings (<see cref="ITwoColumnModSetting.Left"/>).</param>
+	/// <param name="right">The right settings (<see cref="ITwoColumnModSetting.Right"/>).</param>
+	/// <returns>The UI element.</returns>
+	ITwoColumnModSetting MakeTwoColumn(IModSetting left, IModSetting right);
 
 	/// <summary>
 	/// Creates a common mod setting UI element, representing a menu header.
@@ -140,6 +148,16 @@ public interface IModSettingsApi
 	/// </summary>
 	/// <returns>The UI element.</returns>
 	IModSetting MakeBackButton();
+
+	/// <summary>
+	/// Creates a new profile selector mod setting UI element.
+	/// </summary>
+	/// <param name="switchProfileTitle">The title for the switch profile menu.</param>
+	/// <param name="getter">The selected profile getter.</param>
+	/// <param name="setter">The selected profile setter.</param>
+	/// <param name="importAction">The action callback when the user chooses to import a profile.</param>
+	/// <returns>The UI element.</returns>
+	IModSetting MakeProfileSelector(Func<string> switchProfileTitle, Func<ProfileMode> getter, Action<ProfileMode> setter, Action<ProfileMode> importAction);
 
 	/// <summary>
 	/// An event raised when a menu displaying this setting is opened.
@@ -328,6 +346,9 @@ public interface IModSettingsApi
 		
 		/// <summary>The optional tooltips for the element.</summary>
 		Func<IEnumerable<Tooltip>>? Tooltips { get; set; }
+		
+		/// <summary>The horizontal alignment of the title.</summary>
+		HorizontalAlignment TitleHorizontalAlignment { get; set; }
 
 		/// <summary>Sets the <see cref="Title"/>.</summary>
 		/// <param name="value">The new value.</param>
@@ -348,6 +369,11 @@ public interface IModSettingsApi
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
 		IButtonModSetting SetTooltips(Func<IEnumerable<Tooltip>>? value);
+
+		/// <summary>Sets the <see cref="TitleHorizontalAlignment"/>.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		IButtonModSetting SetTitleHorizontalAlignment(HorizontalAlignment value);
 	}
 
 	/// <summary>
@@ -364,7 +390,7 @@ public interface IModSettingsApi
 		Func<bool> Getter { get; set; }
 		
 		/// <summary>The setter callback. It will be invoked when the setting or the checkbox is clicked.</summary>
-		Action<bool> Setter { get; set; }
+		Action<G, IModSettingsRoute, bool> Setter { get; set; }
 		
 		/// <summary>The optional tooltips for the element.</summary>
 		Func<IEnumerable<Tooltip>>? Tooltips { get; set; }
@@ -382,7 +408,7 @@ public interface IModSettingsApi
 		/// <summary>Sets the <see cref="Setter"/> callback.</summary>
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
-		ICheckboxModSetting SetSetter(Action<bool> value);
+		ICheckboxModSetting SetSetter(Action<G, IModSettingsRoute, bool> value);
 		
 		/// <summary>Sets the <see cref="Tooltips"/>.</summary>
 		/// <param name="value">The new value.</param>
@@ -551,5 +577,114 @@ public interface IModSettingsApi
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
 		IListModSetting SetSpacing(int value);
+	}
+	
+	/// <summary>
+	/// Represents a mod setting UI element which displays two columns of further elements.
+	/// </summary>
+	public interface ITwoColumnModSetting : IModSetting
+	{
+		/// <summary>The left column settings.</summary>
+		IModSetting Left { get; set; }
+		
+		/// <summary>The right column settings.</summary>
+		IModSetting Right { get; set; }
+		
+		/// <summary>The width of the left column.</summary>
+		/// <remarks>Out of the three <see cref="LeftWidth"/>, <see cref="RightWidth"/> and <see cref="Spacing"/> properties, at most two can be set.</remarks>
+		Func<Rect, double>? LeftWidth { get; set; }
+		
+		/// <summary>The width of the right column.</summary>
+		/// <remarks>Out of the three <see cref="LeftWidth"/>, <see cref="RightWidth"/> and <see cref="Spacing"/> properties, at most two can be set.</remarks>
+		Func<Rect, double>? RightWidth { get; set; }
+		
+		/// <summary>The spacing between the two columns.</summary>
+		/// <remarks>Out of the three <see cref="LeftWidth"/>, <see cref="RightWidth"/> and <see cref="Spacing"/> properties, at most two can be set.</remarks>
+		Func<Rect, double>? Spacing { get; set; }
+		
+		/// <summary>The vertical alignment of the two columns.</summary>
+		VerticalAlignmentOrFill Alignment { get; set; }
+		
+		/// <summary>Sets the <see cref="Left"/> settings.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		ITwoColumnModSetting SetLeft(IModSetting value);
+		
+		/// <summary>Sets the <see cref="Right"/> settings.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		ITwoColumnModSetting SetRight(IModSetting value);
+		
+		/// <summary>Sets the width of the left settings (<see cref="LeftWidth"/>).</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		ITwoColumnModSetting SetLeftWidth(Func<Rect, double>? value);
+		
+		/// <summary>Sets the width of the right settings (<see cref="LeftWidth"/>).</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		ITwoColumnModSetting SetRightWidth(Func<Rect, double>? value);
+		
+		/// <summary>Sets the <see cref="Spacing"/>.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		ITwoColumnModSetting SetSpacing(Func<Rect, double>? value);
+		
+		/// <summary>Sets the <see cref="Alignment"/>.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		ITwoColumnModSetting SetAlignment(VerticalAlignmentOrFill value);
+	}
+	
+	/// <summary>Describes the active profile type.</summary>
+	public enum ProfileMode
+	{
+		/// <summary>The global profile, usually stored in a separate file.</summary>
+		Global,
+		
+		/// <summary>A slot profile, usually stored directly in the profile save file.</summary>
+		Slot
+	}
+
+	/// <summary>Describes horizontal alignment of a collection of UI elements.</summary>
+	public enum HorizontalAlignment
+	{
+		/// <summary>Elements aligned to the left of the parent.</summary>
+		Left,
+		
+		/// <summary>Elements centered in the parent.</summary>
+		Center,
+		
+		/// <summary>Elements aligned to the right of the parent.</summary>
+		Right
+	}
+
+	/// <summary>Describes vertical alignment of a collection of UI elements.</summary>
+	public enum VerticalAlignment
+	{
+		/// <summary>Elements aligned to the top of the parent.</summary>
+		Top,
+		
+		/// <summary>Elements centered in the parent.</summary>
+		Center,
+		
+		/// <summary>Elements aligned to the bottom of the parent.</summary>
+		Bottom
+	}
+
+	/// <summary>Describes vertical alignment of a collection of UI elements.</summary>
+	public enum VerticalAlignmentOrFill
+	{
+		/// <summary>Elements aligned to the top of the parent.</summary>
+		Top,
+		
+		/// <summary>Elements centered in the parent.</summary>
+		Center,
+		
+		/// <summary>Elements aligned to the bottom of the parent.</summary>
+		Bottom,
+		
+		/// <summary>Elements fill their parent.</summary>
+		Fill
 	}
 }

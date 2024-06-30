@@ -47,6 +47,12 @@ public sealed class ModEntry : SimpleMod
 			"Nickel.ModSettings",
 			api => api.RegisterModSettings(
 				api.MakeList([
+					api.MakeProfileSelector(
+						() => package.Manifest.DisplayName ?? package.Manifest.UniqueName,
+						() => this.Settings.ProfileBased.ActiveProfile,
+						value => this.Settings.ProfileBased.ActiveProfile = value,
+						profile => this.Settings.ProfileBased.Import(profile)
+					),
 					CrewSelection.MakeSettings(api),
 					StarterDeckPreview.MakeSettings(api),
 					ExeBlacklist.MakeSettings(api),

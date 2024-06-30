@@ -5,6 +5,13 @@
 	"modSettings": {
 		"title": "MOD SETTINGS",
 		"back": "BACK",
+		"profile": {
+			"title": "Profile",
+			"switchProfile": "Switch profile",
+			"global": "Global",
+			"slot": "Save slot",
+			"import": "Import"
+		},
 		"noMods": "There are no mods installed with settings."
 	}
 }

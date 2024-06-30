@@ -12,7 +12,7 @@ using System.Reflection.Emit;
 
 namespace Nickel.Essentials;
 
-internal sealed partial class Settings
+internal sealed partial class ProfileSettings
 {
 	[JsonProperty]
 	public ModDescriptionsKey ModDescriptionsKey = ModDescriptionsKey.Alt;
@@ -58,8 +58,8 @@ internal static class ModDescriptions
 		=> api.MakeList([
 			api.MakeEnumStepper(
 				title: () => ModEntry.Instance.Localizations.Localize(["modDescriptions", "keySetting", "name"]),
-				getter: () => ModEntry.Instance.Settings.ModDescriptionsKey,
-				setter: value => ModEntry.Instance.Settings.ModDescriptionsKey = value
+				getter: () => ModEntry.Instance.Settings.ProfileBased.Current.ModDescriptionsKey,
+				setter: value => ModEntry.Instance.Settings.ProfileBased.Current.ModDescriptionsKey = value
 			).SetValueFormatter(
 				value => ModEntry.Instance.Localizations.Localize(["modDescriptions", "keySetting", "value", value.ToString()])
 			).SetValueWidth(
@@ -74,8 +74,8 @@ internal static class ModDescriptions
 			]),
 			api.MakeCheckbox(
 				title: () => ModEntry.Instance.Localizations.Localize(["modDescriptions", "vanillaSetting", "name"]),
-				getter: () => ModEntry.Instance.Settings.ShowVanillaModDescription,
-				setter: value => ModEntry.Instance.Settings.ShowVanillaModDescription = value
+				getter: () => ModEntry.Instance.Settings.ProfileBased.Current.ShowVanillaModDescription,
+				setter: (_, _, value) => ModEntry.Instance.Settings.ProfileBased.Current.ShowVanillaModDescription = value
 			).SetTooltips(() => [
 				new GlossaryTooltip($"settings.{ModEntry.Instance.Package.Manifest.UniqueName}::{MethodBase.GetCurrentMethod()!.DeclaringType!.Name}::VanillaSetting")
 				{
@@ -88,7 +88,7 @@ internal static class ModDescriptions
 
 	private static bool ShouldShowModDescription(IModOwned? content)
 	{
-		switch (ModEntry.Instance.Settings.ModDescriptionsKey)
+		switch (ModEntry.Instance.Settings.ProfileBased.Current.ModDescriptionsKey)
 		{
 			case ModDescriptionsKey.Ctrl:
 				if (!Input.ctrl)
@@ -108,7 +108,7 @@ internal static class ModDescriptions
 				return false;
 		}
 
-		if ((content is null || content.ModOwner.UniqueName == "CobaltCore") && !ModEntry.Instance.Settings.ShowVanillaModDescription)
+		if ((content is null || content.ModOwner.UniqueName == "CobaltCore") && !ModEntry.Instance.Settings.ProfileBased.Current.ShowVanillaModDescription)
 			return false;
 		return true;
 	}
@@ -209,7 +209,7 @@ internal static class ModDescriptions
 		);
 		g.tooltips.Add(pos, tooltip);
 		
-		if (ModEntry.Instance.Settings.ModDescriptionsKey != ModDescriptionsKey.Always)
+		if (ModEntry.Instance.Settings.ProfileBased.Current.ModDescriptionsKey != ModDescriptionsKey.Always)
 			g.tooltips.tooltipTimer = 1;
 	}
 

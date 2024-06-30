@@ -14,7 +14,7 @@ using System.Reflection.Emit;
 
 namespace Nickel.Essentials;
 
-internal sealed partial class Settings
+internal sealed partial class ProfileSettings
 {
 	[JsonProperty]
 	public bool DetailedCrewInfo = true;
@@ -67,8 +67,8 @@ internal static class CrewSelection
 	public static IModSettingsApi.IModSetting MakeSettings(IModSettingsApi api)
 		=> api.MakeCheckbox(
 			title: () => ModEntry.Instance.Localizations.Localize(["crewSelection", "detailedCrewInfoSetting", "name"]),
-			getter: () => ModEntry.Instance.Settings.DetailedCrewInfo,
-			setter: value => ModEntry.Instance.Settings.DetailedCrewInfo = value
+			getter: () => ModEntry.Instance.Settings.ProfileBased.Current.DetailedCrewInfo,
+			setter: (_, _, value) => ModEntry.Instance.Settings.ProfileBased.Current.DetailedCrewInfo = value
 		).SetTooltips(() => [
 			new GlossaryTooltip($"settings.{ModEntry.Instance.Package.Manifest.UniqueName}::{MethodBase.GetCurrentMethod()!.DeclaringType!.Name}::DetailedCrewInfoSetting")
 			{
@@ -145,7 +145,7 @@ internal static class CrewSelection
 
 	private static Rect NewRunOptions_CharSelect_Transpiler_HijackDrawCrewText(string str, double x, double y, Font? font, Color? color, Color? colorForce, double? progress, double? maxWidth, TAlign? align, bool dontDraw, int? lineHeight, Color? outline, BlendState? blend, SamplerState? samplerState, Effect? effect, bool dontSubstituteLocFont, double letterSpacing, double extraScale, RunConfig runConfig)
 	{
-		if (!ModEntry.Instance.Settings.DetailedCrewInfo)
+		if (!ModEntry.Instance.Settings.ProfileBased.Current.DetailedCrewInfo)
 			return Draw.Text(str, x, y, font, color, colorForce, progress, maxWidth, align, dontDraw, lineHeight, outline, blend, samplerState, effect, dontSubstituteLocFont, letterSpacing, extraScale);
 
 		var orderedSelectedChars = runConfig.selectedChars.OrderBy(NewRunOptions.allChars.IndexOf).ToList();
@@ -162,7 +162,7 @@ internal static class CrewSelection
 
 	private static Rect NewRunOptions_CharSelect_Transpiler_HijackDrawCrewCountText(string str, double x, double y, Font? font, Color? color, Color? colorForce, double? progress, double? maxWidth, TAlign? align, bool dontDraw, int? lineHeight, Color? outline, BlendState? blend, SamplerState? samplerState, Effect? effect, bool dontSubstituteLocFont, double letterSpacing, double extraScale)
 	{
-		if (ModEntry.Instance.Settings.DetailedCrewInfo)
+		if (ModEntry.Instance.Settings.ProfileBased.Current.DetailedCrewInfo)
 			return new();
 		else
 			return Draw.Text(str, x, y, font, color, colorForce, progress, maxWidth, align, dontDraw, lineHeight, outline, blend, samplerState, effect, dontSubstituteLocFont, letterSpacing, extraScale);

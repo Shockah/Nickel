@@ -65,7 +65,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 					settingsApi.MakeCheckbox(
 						title: () => this.Localizations.Localize(["modSettings", "enabled", "name"]),
 						getter: () => this.Database.IsEnabled,
-						setter: value => this.Database.IsEnabled = value
+						setter: (_, _, value) => this.Database.IsEnabled = value
 					),
 					settingsApi.MakeConditional(
 						setting: settingsApi.MakeList([
@@ -88,7 +88,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 								setting: settingsApi.MakeCheckbox(
 									title: () => this.Localizations.Localize(["modSettings", "warnOnNoToken", "name"]),
 									getter: () => this.Database.WarnOnNoToken,
-									setter: value => this.Database.WarnOnNoToken = value
+									setter: (_, _, value) => this.Database.WarnOnNoToken = value
 								).SetTooltips(() => [
 									new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::WarnOnNoToken")
 									{
