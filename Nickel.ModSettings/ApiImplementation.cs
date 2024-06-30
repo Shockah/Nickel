@@ -139,7 +139,7 @@ public sealed class ApiImplementation : IModSettingsApi
 			}
 		);
 
-	public IModSettingsApi.IModSetting MakeProfileSelector(Func<string> switchProfileTitle, Func<IModSettingsApi.ProfileMode> getter, Action<IModSettingsApi.ProfileMode> setter, Action<IModSettingsApi.ProfileMode> importAction)
+	public IModSettingsApi.IModSetting MakeProfileSelector<T>(Func<string> switchProfileTitle, IProfileBasedValue<IModSettingsApi.ProfileMode, T> profileBasedValue)
 		=> this.MakeButton(
 			() => ModEntry.Instance.Localizations.Localize(["modSettings", "profile", "title"]),
 			(g, route) =>
@@ -164,41 +164,41 @@ public sealed class ApiImplementation : IModSettingsApi
 					},
 				});
 
-				IModSettingsApi.IModSetting MakeProfileModeSetting(IModSettingsApi.ProfileMode mode, Func<string> title)
+				IModSettingsApi.IModSetting MakeProfileModeSetting(IModSettingsApi.ProfileMode profile, Func<string> title)
 					=> this.MakeList([
 						this.MakeConditional(
-							MakeProfileModeCheckboxSetting(mode, title),
-							() => getter() == mode
+							MakeProfileModeCheckboxSetting(profile, title),
+							() => profileBasedValue.ActiveProfile == profile
 						),
 						this.MakeConditional(
 							this.MakeTwoColumn(
-								MakeProfileModeCheckboxSetting(mode, title),
+								MakeProfileModeCheckboxSetting(profile, title),
 								this.MakeButton(
 									() => ModEntry.Instance.Localizations.Localize(["modSettings", "profile", "import"]),
 									(g, route) =>
 									{
-										importAction(mode);
+										profileBasedValue.Import(profile);
 										route.CloseRoute(g);
 									}
 								).SetTitleHorizontalAlignment(IModSettingsApi.HorizontalAlignment.Center)
 							).SetRightWidth(_ => 80),
-							() => getter() != mode
+							() => profileBasedValue.ActiveProfile != profile
 						)
 					]);
 
-				IModSettingsApi.IModSetting MakeProfileModeCheckboxSetting(IModSettingsApi.ProfileMode mode, Func<string> title)
+				IModSettingsApi.IModSetting MakeProfileModeCheckboxSetting(IModSettingsApi.ProfileMode profile, Func<string> title)
 					=> this.MakeCheckbox(
 						title,
-						() => getter() == mode,
+						() => profileBasedValue.ActiveProfile == profile,
 						(g, route, value) =>
 						{
 							if (value)
-								setter(mode);
+								profileBasedValue.ActiveProfile = profile;
 							route.CloseRoute(g);
 						}
 					);
 			}
-		).SetValueText(() => getter() switch
+		).SetValueText(() => profileBasedValue.ActiveProfile switch
 		{
 			IModSettingsApi.ProfileMode.Global => ModEntry.Instance.Localizations.Localize(["modSettings", "profile", "global"]),
 			IModSettingsApi.ProfileMode.Slot => ModEntry.Instance.Localizations.Localize(["modSettings", "profile", "slot"]),

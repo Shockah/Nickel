@@ -152,12 +152,11 @@ public interface IModSettingsApi
 	/// <summary>
 	/// Creates a new profile selector mod setting UI element.
 	/// </summary>
+	/// <typeparam name="T">The data type.</typeparam>
 	/// <param name="switchProfileTitle">The title for the switch profile menu.</param>
-	/// <param name="getter">The selected profile getter.</param>
-	/// <param name="setter">The selected profile setter.</param>
-	/// <param name="importAction">The action callback when the user chooses to import a profile.</param>
+	/// <param name="profileBasedValue">The accessor for profile-based values.</param>
 	/// <returns>The UI element.</returns>
-	IModSetting MakeProfileSelector(Func<string> switchProfileTitle, Func<ProfileMode> getter, Action<ProfileMode> setter, Action<ProfileMode> importAction);
+	IModSetting MakeProfileSelector<T>(Func<string> switchProfileTitle, IProfileBasedValue<ProfileMode, T> profileBasedValue);
 
 	/// <summary>
 	/// An event raised when a menu displaying this setting is opened.

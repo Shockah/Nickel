@@ -7,7 +7,7 @@ namespace Nickel;
 /// </summary>
 /// <typeparam name="TProfile">The profiles type.</typeparam>
 /// <typeparam name="TData">The data type.</typeparam>
-public sealed class ProfileBasedValue<TProfile, TData>
+public sealed class ProfileBasedValue<TProfile, TData> : IProfileBasedValue<TProfile, TData>
 {
 	private readonly Func<TProfile> ActiveProfileGetter;
 	private readonly Action<TProfile> ActiveProfileSetter;
@@ -30,24 +30,21 @@ public sealed class ProfileBasedValue<TProfile, TData>
 		this.DataCopier = dataCopier;
 	}
 	
-	/// <summary>The currently active profile.</summary>
+	/// <inheritdoc/>
 	public TProfile ActiveProfile
 	{
 		get => this.ActiveProfileGetter();
 		set => this.ActiveProfileSetter(value);
 	}
 
-	/// <summary>The data for the currently active profile (<see cref="ActiveProfile"/>).</summary>
+	/// <inheritdoc/>
 	public TData Current
 	{
 		get => this.DataGetter(this.ActiveProfile);
 		set => this.DataSetter(this.ActiveProfile, value);
 	}
 
-	/// <summary>
-	/// Imports data from the given profile to the currently active profile (<see cref="ActiveProfile"/>).
-	/// </summary>
-	/// <param name="profile">The profile to import data from.</param>
+	/// <inheritdoc/>
 	public void Import(TProfile profile)
 	{
 		if (Equals(profile, this.ActiveProfile))

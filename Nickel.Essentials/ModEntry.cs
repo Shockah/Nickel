@@ -49,9 +49,7 @@ public sealed class ModEntry : SimpleMod
 				api.MakeList([
 					api.MakeProfileSelector(
 						() => package.Manifest.DisplayName ?? package.Manifest.UniqueName,
-						() => this.Settings.ProfileBased.ActiveProfile,
-						value => this.Settings.ProfileBased.ActiveProfile = value,
-						profile => this.Settings.ProfileBased.Import(profile)
+						this.Settings.ProfileBased
 					),
 					CrewSelection.MakeSettings(api),
 					StarterDeckPreview.MakeSettings(api),
