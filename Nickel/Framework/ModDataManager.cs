@@ -13,8 +13,9 @@ internal sealed class ModDataManager
 
 	internal ConditionalWeakTable<object, Dictionary<string, Dictionary<string, object?>>> ModDataStorage { get; } = [];
 
-	private static T ConvertExtensionData<T>(object? o)
+	private static T ConvertExtensionData<T>(object? o, out bool reserialized)
 	{
+		reserialized = false;
 		if (o is T t)
 			return t;
 		if (typeof(T) == typeof(int))
@@ -37,7 +38,10 @@ internal sealed class ModDataManager
 		var stringWriter = new StringWriter();
 		JSONSettings.serializer.Serialize(new JsonTextWriter(stringWriter), o);
 		if (JSONSettings.serializer.Deserialize<T>(new JsonTextReader(new StringReader(stringWriter.ToString()))) is { } deserialized)
+		{
+			reserialized = true;
 			return deserialized;
+		}
 
 		throw new ArgumentException($"Cannot convert {o} to extension data type {typeof(T)}", nameof(T));
 	}
@@ -52,7 +56,11 @@ internal sealed class ModDataManager
 			throw new KeyNotFoundException($"Object {o} does not contain extension data with key `{key}`");
 		if (!modObjectData.TryGetValue(key, out var data))
 			throw new KeyNotFoundException($"Object {o} does not contain extension data with key `{key}`");
-		return ConvertExtensionData<T>(data);
+		
+		var result = ConvertExtensionData<T>(data, out var reserialized);
+		if (reserialized)
+			modObjectData[key] = data;
+		return result;
 	}
 
 	public bool TryGetModData<T>(IModManifest manifest, object o, string key, [MaybeNullWhen(false)] out T data)
@@ -74,7 +82,10 @@ internal sealed class ModDataManager
 			data = default;
 			return false;
 		}
-		data = ConvertExtensionData<T>(rawData);
+		
+		data = ConvertExtensionData<T>(rawData, out var reserialized);
+		if (reserialized)
+			modObjectData[key] = data;
 		return true;
 	}
 
