@@ -5,6 +5,7 @@
 ## Upcoming release
 
 ### For players:
+* Improved mod load times.
 * The pre-installed `Essentials` mod is now renamed to `Nickel.Essentials`. **Be sure to remove the old `Essentials` folder when updating Nickel.**
 * Added `Nickel.ModSettings`, creating a common interface for all mods to add their settings to.
 * Added various settings for all Nickel modules.

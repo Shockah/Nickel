@@ -42,7 +42,7 @@ internal sealed class CobaltCoreHandler
 		var gameAssembly = typeof(MG).Assembly;
 
 		if (gameAssembly.EntryPoint is not { } entryPoint)
-			return new Error<string>($"The Cobalt Core assembly does not contain an entry point.");
+			return new Error<string>("The Cobalt Core assembly does not contain an entry point.");
 		return new CobaltCoreHandlerResult
 		{
 			GameAssembly = gameAssembly,
@@ -53,8 +53,7 @@ internal sealed class CobaltCoreHandler
 
 	private void ResolveAssembly(string name, Stream assemblyStream, Stream? symbolsStream = null)
 	{
-		if (this.AssemblyEditor is { } assemblyEditor)
-			assemblyEditor.EditAssemblyStream(name, ref assemblyStream, ref symbolsStream);
+		this.AssemblyEditor?.EditAssemblyStream(name, ref assemblyStream, ref symbolsStream);
 		AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
 		{
 			if ($"{assemblyName.Name ?? assemblyName.FullName}.dll" == name)

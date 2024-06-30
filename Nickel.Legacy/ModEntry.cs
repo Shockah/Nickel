@@ -1,4 +1,5 @@
 using CobaltCoreModding.Definitions.ModContactPoints;
+using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
@@ -11,6 +12,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using ILegacyManifest = CobaltCoreModding.Definitions.ModManifests.IManifest;
+using ILegacyModManifest = CobaltCoreModding.Definitions.ModManifests.IModManifest;
 
 namespace Nickel.Legacy;
 
@@ -40,7 +42,8 @@ public sealed class ModEntry : Mod
 		this.Logger = logger;
 		this.Helper = helper;
 		this.Manifest = package.Manifest;
-		helper.Events.OnModLoadPhaseFinished += this.OnModLoadPhaseFinished;
+		helper.Events.OnModLoadPhaseFinished += this.OnModLoadPhaseFinishedFirstPriority;
+		helper.Events.OnModLoadPhaseFinished += this.OnModLoadPhaseFinishedLowPriority;
 		helper.Events.OnLoadStringsForLocale += this.OnLoadStringsForLocale;
 
 		this.Database.GlobalEventHub.MakeEvent(logger, LegacyEventHub.OnAfterGameAssemblyPhaseFinishedEvent, typeof(Func<ILegacyManifest, IPrelaunchContactPoint>));
@@ -90,16 +93,21 @@ public sealed class ModEntry : Mod
 					return new ValidatingPluginLoaderResult.Success { Warnings = warnings };
 				}
 			),
-			callback: mod =>
+			callback: anyMod =>
 			{
-				if (mod is not LegacyModWrapper legacy)
+				if (anyMod is not LegacyModWrapper mod)
 					return;
+				
+				foreach (var manifest in mod.LegacyManifests.OfType<ILegacyModManifest>())
+					CatchIntoManifestLogger(manifest, nameof(ILegacyModManifest.BootMod), m => m.BootMod(mod.Registry));
 
-				this.Database.LegacyManifests.AddRange(legacy.LegacyManifests);
-				foreach (var manifest in legacy.LegacyManifests)
-					this.Database.LegacyManifestToMod[manifest] = legacy;
-				foreach (var manifest in legacy.LegacyManifests)
-					(manifest as INickelManifest)?.OnNickelLoad(legacy.Package, legacy.Helper);
+				this.Database.LegacyMods.Add(mod);
+				this.Database.LegacyManifests.AddRange(mod.LegacyManifests);
+				foreach (var manifest in mod.LegacyManifests)
+					this.Database.LegacyManifestToMod[manifest] = mod;
+				
+				foreach (var manifest in mod.LegacyManifests.OfType<INickelManifest>())
+					CatchIntoManifestLogger(manifest, nameof(INickelManifest), m => m.OnNickelLoad(mod.Package, mod.Helper));
 			}
 		);
 
@@ -107,7 +115,7 @@ public sealed class ModEntry : Mod
 	}
 
 	[EventPriority(double.MaxValue)]
-	private void OnModLoadPhaseFinished(object? _, ModLoadPhase phase)
+	private void OnModLoadPhaseFinishedFirstPriority(object? _, ModLoadPhase phase)
 	{
 		if (phase == ModLoadPhase.AfterDbInit)
 		{
@@ -134,9 +142,55 @@ public sealed class ModEntry : Mod
 		}
 	}
 
+	[EventPriority(-100)]
+	private void OnModLoadPhaseFinishedLowPriority(object? _, ModLoadPhase phase)
+	{
+		if (phase != ModLoadPhase.AfterGameAssembly)
+			return;
+		
+		ForEachManifest<ISpriteManifest>(nameof(ISpriteManifest), (mod, manifest) => manifest.LoadManifest(mod.Registry));
+		ForEachManifest<IGlossaryManifest>(nameof(IGlossaryManifest), (mod, manifest) => manifest.LoadManifest(mod.Registry));
+		ForEachManifest<IDeckManifest>(nameof(IDeckManifest), (mod, manifest) => manifest.LoadManifest(mod.Registry));
+		ForEachManifest<IStatusManifest>(nameof(IStatusManifest), (mod, manifest) => manifest.LoadManifest(mod.Registry));
+		ForEachManifest<ICardManifest>(nameof(ICardManifest), (mod, manifest) => manifest.LoadManifest(mod.Registry));
+		ForEachManifest<IArtifactManifest>(nameof(IArtifactManifest), (mod, manifest) => manifest.LoadManifest(mod.Registry));
+		ForEachManifest<IAnimationManifest>(nameof(IAnimationManifest), (mod, manifest) => manifest.LoadManifest(mod.Registry));
+		ForEachManifest<ICharacterManifest>(nameof(ICharacterManifest), (mod, manifest) => manifest.LoadManifest(mod.Registry));
+		ForEachManifest<IPartTypeManifest>(nameof(IPartTypeManifest), (mod, manifest) => manifest.LoadManifest(mod.Registry));
+		ForEachManifest<IShipPartManifest>(nameof(IShipPartManifest), (mod, manifest) => manifest.LoadManifest(mod.Registry));
+		ForEachManifest<IShipManifest>(nameof(IShipManifest), (mod, manifest) => manifest.LoadManifest(mod.Registry));
+		ForEachManifest<IStartershipManifest>(nameof(IStartershipManifest), (mod, manifest) => manifest.LoadManifest(mod.Registry));
+		ForEachManifest<IStoryManifest>(nameof(IStoryManifest), (mod, manifest) => manifest.LoadManifest(mod.Registry));
+		ForEachManifest<ICustomEventManifest>(nameof(ICustomEventManifest), (mod, manifest) => manifest.LoadManifest(mod.EventHub));
+		ForEachManifest<IPrelaunchManifest>(nameof(IPrelaunchManifest), (mod, manifest) => manifest.FinalizePreperations(mod.Registry));
+
+		void ForEachManifest<TLegacyManifest>(string tag, Action<LegacyModWrapper, TLegacyManifest> action) where TLegacyManifest : ILegacyManifest
+		{
+			foreach (var mod in this.Database.LegacyMods)
+				foreach (var manifest in mod.LegacyManifests.OfType<TLegacyManifest>())
+					CatchIntoManifestLogger(manifest, tag, m => action(mod, m));
+		}
+	}
+
 	[EventPriority(double.MaxValue)]
 	private void OnLoadStringsForLocale(object? _, LoadStringsForLocaleEventArgs e)
 		=> this.Database.InjectLocalizations(e.Locale, e.Localizations);
+	
+	private static void CatchIntoManifestLogger<TLegacyManifest>(TLegacyManifest manifest, string tag, Action<TLegacyManifest> action)
+		where TLegacyManifest : ILegacyManifest
+	{
+		try
+		{
+			action(manifest);
+		}
+		catch (Exception ex)
+		{
+			if (manifest.Logger is { } logger)
+				logger.LogError("Mod failed in `{Tag}`: {Exception}", tag, ex);
+			else
+				throw;
+		}
+	}
 
 	private void GenerateManifestsForLegacyModsMissingOne(DirectoryInfo directory, bool isRoot = false)
 	{

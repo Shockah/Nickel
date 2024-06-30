@@ -53,7 +53,7 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 			const string steamInstallSubKey32 = @"SOFTWARE\Valve\Steam";
 			const string steamInstallSubKey64 = @"SOFTWARE\WOW6432Node\Valve\Steam";
 
-			foreach (var subkey in new[] { steamInstallSubKey32, steamInstallSubKey64 })
+			foreach (var subkey in new[] { steamInstallSubKey64, steamInstallSubKey32 })
 			{
 				using var key = Registry.LocalMachine.OpenSubKey(subkey);
 				var value = key?.GetValue(steamInstallKeyName, null);
@@ -62,9 +62,9 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 			}
 
 			potentialSteamLocations.AddRange([
-				"C:\\Program Files\\Steam",
-				"C:\\Program Files (x86)\\Steam",
-				"C:\\Steam\\steamapps\\common",
+				@"C:\Program Files\Steam",
+				@"C:\Program Files (x86)\Steam",
+				@"C:\Steam\steamapps\common",
 			]);
 		}
 
@@ -122,15 +122,15 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 			if (isOsx)
 				potentialPath = Path.Combine(potentialPath, "Contents", "MacOS");
 
-			DirectoryInfo directory = new(potentialPath);
+			var directory = new DirectoryInfo(potentialPath);
 			if (!directory.Exists)
 				continue;
 
-			FileInfo singleFileApplicationPath = new(Path.Combine(directory.FullName, "CobaltCore.exe"));
+			var singleFileApplicationPath = new FileInfo(Path.Combine(directory.FullName, "CobaltCore.exe"));
 			if (!singleFileApplicationPath.Exists)
 				continue;
 
-			FileInfo? pdbPath = new(Path.Combine(directory.FullName, "CobaltCore.pdb"));
+			var pdbPath = new FileInfo(Path.Combine(directory.FullName, "CobaltCore.pdb"));
 			if (pdbPath.Exists != true)
 				pdbPath = null;
 

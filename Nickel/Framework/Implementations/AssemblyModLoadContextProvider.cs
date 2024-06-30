@@ -14,7 +14,7 @@ internal sealed class AssemblyModLoadContextProvider(
 ) : IAssemblyPluginLoaderLoadContextProvider<IAssemblyModManifest>
 {
 	private readonly ConditionalWeakTable<IPluginPackage<IAssemblyModManifest>, WeakReference<AssemblyLoadContext>> ContextCache = [];
-	private readonly Dictionary<string, WeakReference<Assembly>> AssemblyNameToSharedAssembly = [];
+	private readonly Dictionary<string, Assembly> AssemblyNameToSharedAssembly = [];
 
 	public AssemblyLoadContext GetLoadContext(IPluginPackage<IAssemblyModManifest> package)
 	{
@@ -28,45 +28,60 @@ internal sealed class AssemblyModLoadContextProvider(
 
 	private sealed class CustomContext(
 		AssemblyLoadContext? fallbackContext,
-		Dictionary<string, WeakReference<Assembly>> assemblyNameToSharedAssembly,
+		Dictionary<string, Assembly> assemblyNameToSharedAssembly,
 		IPluginPackage<IAssemblyModManifest> package
 	) : AssemblyLoadContext
 	{
+		private readonly Dictionary<string, Assembly> AssemblyCache = [];
+		
 		protected override Assembly? Load(AssemblyName assemblyName)
 		{
-			if (this.Assemblies.FirstOrDefault(a => (a.GetName().Name ?? a.GetName().FullName) == (assemblyName.Name ?? assemblyName.FullName)) is { } existingPrivateAssembly)
-				return existingPrivateAssembly;
+			var assemblyNameString = assemblyName.Name ?? assemblyName.FullName;
+			
+			if (this.AssemblyCache.TryGetValue(assemblyName.Name ?? assemblyName.FullName, out var cachedAssembly))
+				return cachedAssembly;
 
-			if (fallbackContext?.Assemblies.FirstOrDefault(a => (a.GetName().Name ?? a.GetName().FullName) == (assemblyName.Name ?? assemblyName.FullName)) is { } existingFallbackAssembly)
+			var assembly = this.LoadUncachedAssembly(assemblyName, assemblyNameString);
+			if (assembly is not null)
+				this.AssemblyCache[assemblyNameString] = assembly;
+			return assembly;
+		}
+
+		private Assembly? LoadUncachedAssembly(AssemblyName assemblyName, string assemblyNameString)
+		{
+			if (assemblyNameToSharedAssembly.TryGetValue(assemblyNameString, out var sharedAssembly))
+				return sharedAssembly;
+			
+			if (fallbackContext?.Assemblies.FirstOrDefault(a => (a.GetName().Name ?? a.GetName().FullName) == assemblyNameString) is { } existingFallbackAssembly)
 				return existingFallbackAssembly;
 
-			if (assemblyNameToSharedAssembly.TryGetValue(assemblyName.Name ?? assemblyName.FullName, out var weakSharedAssembly) && weakSharedAssembly.TryGetTarget(out var sharedAssembly))
-				return sharedAssembly;
-
-			var file = package.PackageRoot.GetRelativeFile($"{assemblyName.Name ?? assemblyName.FullName}.dll");
+			var file = package.PackageRoot.GetRelativeFile($"{assemblyNameString}.dll");
 			if (file.Exists)
 			{
-				using var assemblyStream = package.PackageRoot.GetRelativeFile($"{assemblyName.Name ?? assemblyName.FullName}.dll").OpenRead();
+				using var assemblyStream = file.OpenRead();
 				var assembly = this.LoadFromStream(assemblyStream);
 
-				if (this.ShouldShare(assemblyName))
-					assemblyNameToSharedAssembly[assembly.GetName().Name ?? assembly.GetName().FullName] = new WeakReference<Assembly>(assembly);
+				if (this.ShouldShare(assemblyNameString))
+					assemblyNameToSharedAssembly[assembly.GetName().Name ?? assembly.GetName().FullName] = assembly;
 
 				return assembly;
 			}
 
-			return fallbackContext?.LoadFromAssemblyName(assemblyName);
+			if (fallbackContext?.LoadFromAssemblyName(assemblyName) is { } fallbackAssembly)
+				return fallbackAssembly;
+
+			return null;
 		}
 
-		private bool ShouldShare(AssemblyName assemblyName)
+		private bool ShouldShare(string assemblyName)
 		{
-			if (package.Manifest.AssemblyReferences.FirstOrDefault(r => r.Name == (assemblyName.Name ?? assemblyName.FullName)) is { } reference)
+			if (package.Manifest.AssemblyReferences.FirstOrDefault(r => r.Name == assemblyName) is { } reference)
 				return reference.IsShared;
-			if (typeof(Nickel).Assembly.GetReferencedAssemblies().Any(a => (a.Name ?? a.FullName) == (assemblyName.Name ?? assemblyName.FullName)))
+			if (typeof(Nickel).Assembly.GetReferencedAssemblies().Any(a => (a.Name ?? a.FullName) == assemblyName))
 				return true;
-			if (package.PackageRoot.GetRelativeFile($"{assemblyName.Name ?? assemblyName.FullName}.dll").Exists)
-				return package.Manifest.EntryPointAssembly == $"{assemblyName.Name ?? assemblyName.FullName}.dll";
-			if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{assemblyName.Name ?? assemblyName.FullName}.dll")))
+			if (package.PackageRoot.GetRelativeFile($"{assemblyName}.dll").Exists)
+				return package.Manifest.EntryPointAssembly == $"{assemblyName}.dll";
+			if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{assemblyName}.dll")))
 				return true;
 			return false;
 		}

@@ -8,38 +8,35 @@ using ILegacyManifest = CobaltCoreModding.Definitions.ModManifests.IManifest;
 
 namespace Nickel;
 
-internal sealed class LegacyDatabase(
-	Func<IModManifest, IModHelper> helperProvider
-)
+internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvider)
 {
-	private Func<IModManifest, IModHelper> HelperProvider { get; } = helperProvider;
-
+	internal List<LegacyModWrapper> LegacyMods { get; } = [];
 	internal Dictionary<ILegacyManifest, LegacyModWrapper> LegacyManifestToMod { get; } = [];
 	internal List<ILegacyManifest> LegacyManifests { get; } = [];
 	internal LegacyEventHub GlobalEventHub { get; } = new();
 
-	private Dictionary<string, ExternalSprite> GlobalNameToSprite { get; } = [];
-	private Dictionary<string, ExternalGlossary> GlobalNameToGlossary { get; } = [];
-	private Dictionary<string, ExternalDeck> GlobalNameToDeck { get; } = [];
-	private Dictionary<string, ExternalStatus> GlobalNameToStatus { get; } = [];
-	private Dictionary<string, ExternalCard> GlobalNameToCard { get; } = [];
-	private Dictionary<string, ExternalArtifact> GlobalNameToArtifact { get; } = [];
-	private Dictionary<string, ExternalAnimation> GlobalNameToAnimation { get; } = [];
-	private Dictionary<string, ExternalCharacter> GlobalNameToCharacter { get; } = [];
-	private Dictionary<string, ExternalPartType> GlobalNameToPartType { get; } = [];
-	private Dictionary<string, ExternalPart> GlobalNameToPart { get; } = [];
-	private Dictionary<string, ExternalShip> GlobalNameToShip { get; } = [];
-	private Dictionary<string, Ship> GlobalNameToVanillaShip { get; } = [];
-	private Dictionary<string, ExternalStarterShip> GlobalNameToStarterShip { get; } = [];
+	private readonly Dictionary<string, ExternalSprite> GlobalNameToSprite = [];
+	private readonly Dictionary<string, ExternalGlossary> GlobalNameToGlossary = [];
+	private readonly Dictionary<string, ExternalDeck> GlobalNameToDeck = [];
+	private readonly Dictionary<string, ExternalStatus> GlobalNameToStatus = [];
+	private readonly Dictionary<string, ExternalCard> GlobalNameToCard = [];
+	private readonly Dictionary<string, ExternalArtifact> GlobalNameToArtifact = [];
+	private readonly Dictionary<string, ExternalAnimation> GlobalNameToAnimation = [];
+	private readonly Dictionary<string, ExternalCharacter> GlobalNameToCharacter = [];
+	private readonly Dictionary<string, ExternalPartType> GlobalNameToPartType = [];
+	private readonly Dictionary<string, ExternalPart> GlobalNameToPart = [];
+	private readonly Dictionary<string, ExternalShip> GlobalNameToShip = [];
+	private readonly Dictionary<string, Ship> GlobalNameToVanillaShip = [];
+	private readonly Dictionary<string, ExternalStarterShip> GlobalNameToStarterShip = [];
 
-	private Dictionary<string, ICardEntry> GlobalNameToCardEntry { get; } = [];
-	private Dictionary<string, IPartEntry> GlobalNameToPartEntry { get; } = [];
-	private Dictionary<string, IShipEntry> GlobalNameToShipEntry { get; } = [];
+	private readonly Dictionary<string, ICardEntry> GlobalNameToCardEntry = [];
+	private readonly Dictionary<string, IPartEntry> GlobalNameToPartEntry = [];
+	private readonly Dictionary<string, IShipEntry> GlobalNameToShipEntry = [];
 
-	private Dictionary<string, ExternalGlossary> ItemNameToGlossary { get; } = [];
+	private readonly Dictionary<string, ExternalGlossary> ItemNameToGlossary = [];
 
-	private List<ExternalStory> ExternalStories { get; } = [];
-	private List<(string, MethodInfo, bool, bool)> ChoiceAndCommands { get; } = [];
+	private readonly List<ExternalStory> ExternalStories = [];
+	private readonly List<(string, MethodInfo, bool, bool)> ChoiceAndCommands = [];
 
 	public void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
@@ -214,7 +211,7 @@ internal sealed class LegacyDatabase(
 				continue;
 			// TODO: log instead of throwing, it's too late to throw now, this breaks other mods
 			if (!intendedOverride)
-				throw new ArgumentException($"Duplicate choice key", nameof(key));
+				throw new ArgumentException("Duplicate choice key", nameof(key));
 			dict[key] = methodInfo;
 		}
 	}
@@ -222,7 +219,7 @@ internal sealed class LegacyDatabase(
 	public void RegisterSprite(IModManifest mod, ExternalSprite value)
 	{
 
-		var entry = this.HelperProvider(mod).Content.Sprites.RegisterSprite(value.GlobalName, GetStreamProvider());
+		var entry = helperProvider(mod).Content.Sprites.RegisterSprite(value.GlobalName, GetStreamProvider());
 		value.Id = (int)entry.Sprite;
 		this.GlobalNameToSprite[value.GlobalName] = value;
 
@@ -258,7 +255,7 @@ internal sealed class LegacyDatabase(
 				return null;
 			}
 		};
-		var entry = this.HelperProvider(mod).Content.Decks.RegisterDeck(value.GlobalName, configuration);
+		var entry = helperProvider(mod).Content.Decks.RegisterDeck(value.GlobalName, configuration);
 		value.Id = (int)entry.Deck;
 		this.GlobalNameToDeck[value.GlobalName] = value;
 
@@ -288,7 +285,7 @@ internal sealed class LegacyDatabase(
 				return localized;
 			}
 		};
-		var entry = this.HelperProvider(mod).Content.Statuses.RegisterStatus(value.GlobalName, configuration);
+		var entry = helperProvider(mod).Content.Statuses.RegisterStatus(value.GlobalName, configuration);
 		value.Id = (int)entry.Status;
 		this.GlobalNameToStatus[value.GlobalName] = value;
 	}
@@ -311,7 +308,7 @@ internal sealed class LegacyDatabase(
 			}
 		};
 
-		var entry = this.HelperProvider(mod).Content.Cards.RegisterCard(value.GlobalName, configuration);
+		var entry = helperProvider(mod).Content.Cards.RegisterCard(value.GlobalName, configuration);
 		this.GlobalNameToCard[value.GlobalName] = value;
 		this.GlobalNameToCardEntry[value.GlobalName] = entry;
 	}
@@ -331,7 +328,7 @@ internal sealed class LegacyDatabase(
 			Description = locale => value.GetLocalisation(locale, out _, out var localized) ? localized : null,
 		};
 
-		this.HelperProvider(mod).Content.Artifacts.RegisterArtifact(value.GlobalName, configuration);
+		helperProvider(mod).Content.Artifacts.RegisterArtifact(value.GlobalName, configuration);
 		this.GlobalNameToArtifact[value.GlobalName] = value;
 	}
 
@@ -345,7 +342,7 @@ internal sealed class LegacyDatabase(
 		};
 
 #pragma warning disable CS0618 // Type or member is obsolete
-		this.HelperProvider(mod).Content.Characters.RegisterCharacterAnimation(value.GlobalName, configuration);
+		helperProvider(mod).Content.Characters.RegisterCharacterAnimation(value.GlobalName, configuration);
 #pragma warning restore CS0618 // Type or member is obsolete
 		this.GlobalNameToAnimation[value.GlobalName] = value;
 	}
@@ -363,7 +360,7 @@ internal sealed class LegacyDatabase(
 			}
 		};
 
-		this.HelperProvider(mod).Content.Characters.V2.RegisterPlayableCharacter(value.GlobalName, configuration);
+		helperProvider(mod).Content.Characters.V2.RegisterPlayableCharacter(value.GlobalName, configuration);
 		this.GlobalNameToCharacter[value.GlobalName] = value;
 	}
 
@@ -377,7 +374,7 @@ internal sealed class LegacyDatabase(
 				.ToHashSet()
 		};
 
-		this.HelperProvider(mod).Content.Ships.RegisterPartType(value.GlobalName, configuration);
+		helperProvider(mod).Content.Ships.RegisterPartType(value.GlobalName, configuration);
 		this.GlobalNameToPartType[value.GlobalName] = value;
 	}
 
@@ -389,7 +386,7 @@ internal sealed class LegacyDatabase(
 			DisabledSprite = value.PartOffSprite is { } partOff ? (Spr)partOff.Id!.Value : null
 		};
 
-		var entry = this.HelperProvider(mod).Content.Ships.RegisterPart(value.GlobalName, configuration);
+		var entry = helperProvider(mod).Content.Ships.RegisterPart(value.GlobalName, configuration);
 		this.GlobalNameToPart[value.GlobalName] = value;
 		this.GlobalNameToPartEntry[value.GlobalName] = entry;
 	}
@@ -402,7 +399,7 @@ internal sealed class LegacyDatabase(
 			DisabledSprite = disabledSpriteId is null ? null : (Spr)disabledSpriteId.Value
 		};
 
-		var entry = this.HelperProvider(mod).Content.Ships.RegisterPart(globalName, configuration);
+		var entry = helperProvider(mod).Content.Ships.RegisterPart(globalName, configuration);
 		// do not add to `GlobalNameToPart` dictionary - legacy modloader did not, you can't look up these
 		this.GlobalNameToPartEntry[globalName] = entry;
 	}
@@ -436,7 +433,7 @@ internal sealed class LegacyDatabase(
 			}
 		};
 
-		var entry = this.HelperProvider(mod).Content.Ships.RegisterShip(value.GlobalName, configuration);
+		var entry = helperProvider(mod).Content.Ships.RegisterShip(value.GlobalName, configuration);
 		this.GlobalNameToStarterShip[value.GlobalName] = value;
 		this.GlobalNameToShipEntry[value.GlobalName] = entry;
 	}
