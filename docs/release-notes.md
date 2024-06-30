@@ -27,6 +27,7 @@
 * Added an event mods can subscribe to to get informed about the game closing, either normally or via an exception being thrown.
 * Added a way for mods to get a list of all resolved mods (including ones which may not have been loaded, for various reasons).
 * Added additional APIs for obtaining new collision-free enum case values.
+* Added `AwaitApi` and `AwaitApiOrNull` methods, which wait until a mod is loaded before returning the API (unlike `GetApi`).
 * Actually implemented part-type-exclusive artifacts (these used to do nothing).
 * `[ModBuildConfig 1.0.0]` Legacy mods can now use .NET 8 and interact with Nickel directly via a new `INickelManifest` interface.
 

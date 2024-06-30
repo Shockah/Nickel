@@ -22,7 +22,7 @@ internal sealed class DeckManager
 		AccessTools.DeclaredField(typeof(StoryVars), nameof(StoryVars.memoryUnlockLevel)),
 	];
 
-	public DeckManager(Func<ModLoadPhase> currentModLoadPhaseProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest)
+	public DeckManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
 		this.EnumCasePool = enumCasePool;

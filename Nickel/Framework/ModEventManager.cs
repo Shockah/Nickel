@@ -15,7 +15,7 @@ internal sealed class ModEventManager
 	{
 		get
 		{
-			if (this.CurrentModLoadPhaseProvider() < ModLoadPhase.AfterGameAssembly)
+			if (this.CurrentModLoadPhaseProvider().Phase < ModLoadPhase.AfterGameAssembly)
 				throw new InvalidOperationException("Cannot access artifact hooks before the game assembly is loaded.");
 			if (this.PrefixArtifactStorage is Artifact artifact)
 				return artifact;
@@ -30,7 +30,7 @@ internal sealed class ModEventManager
 	{
 		get
 		{
-			if (this.CurrentModLoadPhaseProvider() < ModLoadPhase.AfterGameAssembly)
+			if (this.CurrentModLoadPhaseProvider().Phase < ModLoadPhase.AfterGameAssembly)
 				throw new InvalidOperationException("Cannot access artifact hooks before the game assembly is loaded.");
 			if (this.SuffixArtifactStorage is Artifact artifact)
 				return artifact;
@@ -44,9 +44,9 @@ internal sealed class ModEventManager
 	private object? PrefixArtifactStorage { get; set; }
 	private object? SuffixArtifactStorage { get; set; }
 
-	private Func<ModLoadPhase> CurrentModLoadPhaseProvider { get; }
+	private Func<ModLoadPhaseState> CurrentModLoadPhaseProvider { get; }
 
-	public ModEventManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest modLoaderModManifest)
+	public ModEventManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest modLoaderModManifest)
 	{
 		this.ModLoaderModManifest = modLoaderModManifest;
 		this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
@@ -129,7 +129,7 @@ internal sealed class ModEventManager
 			DB.artifactSprites[subclass.Type.Name] = Enum.GetValues<Spr>()[0];
 		}
 
-		if (this.CurrentModLoadPhaseProvider() == ModLoadPhase.AfterDbInit)
+		if (this.CurrentModLoadPhaseProvider().Phase == ModLoadPhase.AfterDbInit)
 		{
 			RegisterArtifact();
 		}

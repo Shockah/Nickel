@@ -25,7 +25,7 @@ internal sealed class CharacterManager
 	private readonly Dictionary<string, ICharacterEntryV2> CharacterTypeToCharacterEntry = [];
 
 	public CharacterManager(
-		Func<ModLoadPhase> currentModLoadPhaseProvider,
+		Func<ModLoadPhaseState> currentModLoadPhaseProvider,
 		Func<IModManifest, ILogger> loggerProvider,
 		SpriteManager sprites,
 		DeckManager decks,

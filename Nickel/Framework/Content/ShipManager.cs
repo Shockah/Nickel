@@ -10,7 +10,7 @@ internal sealed class ShipManager
 	private AfterDbInitManager<Entry> Manager { get; }
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 
-	public ShipManager(Func<ModLoadPhase> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
+	public ShipManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
 	{
 		this.VanillaModManifest = vanillaModManifest;
 		this.Manager = new(currentModLoadPhaseProvider, this.Inject);

@@ -6,11 +6,11 @@ namespace Nickel;
 
 internal sealed class AfterDbInitManager<TEntry>
 {
-	private Func<ModLoadPhase> CurrentModLoadPhaseProvider { get; }
+	private Func<ModLoadPhaseState> CurrentModLoadPhaseProvider { get; }
 	private Action<TEntry> InjectMethod { get; }
 	private List<TEntry> QueuedEntries { get; } = [];
 
-	public AfterDbInitManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Action<TEntry> injectMethod)
+	public AfterDbInitManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Action<TEntry> injectMethod)
 	{
 		this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
 		this.InjectMethod = injectMethod;
@@ -26,7 +26,7 @@ internal sealed class AfterDbInitManager<TEntry>
 
 	public void QueueOrInject(TEntry entry)
 	{
-		if (this.CurrentModLoadPhaseProvider() >= ModLoadPhase.AfterDbInit)
+		if (this.CurrentModLoadPhaseProvider().Phase >= ModLoadPhase.AfterDbInit)
 			this.InjectMethod(entry);
 		else if (!this.QueuedEntries.Contains(entry))
 			this.QueuedEntries.Add(entry);

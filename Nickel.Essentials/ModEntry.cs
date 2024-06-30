@@ -38,27 +38,25 @@ public sealed class ModEntry : SimpleMod
 			)
 		);
 		this.Settings = helper.Storage.LoadJson<Settings>(this.SettingsFile);
-
-		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
-		{
-			if (phase != ModLoadPhase.AfterDbInit)
-				return;
-
-			this.MoreDifficultiesApi = helper.ModRegistry.GetApi<IMoreDifficultiesApi>("TheJazMaster.MoreDifficulties", new(1, 4, 1));
-
-			if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
-				settingsApi.RegisterModSettings(
-					settingsApi.MakeList([
-						CrewSelection.MakeSettings(settingsApi),
-						StarterDeckPreview.MakeSettings(settingsApi),
-						ExeBlacklist.MakeSettings(settingsApi),
-						CardBrowseCurrentPile.MakeSettings(settingsApi),
-						ModDescriptions.MakeSettings(settingsApi),
-					]).SubscribeToOnMenuClose(
-						_ => helper.Storage.SaveJson(this.SettingsFile, this.Settings)
-					)
-				);
-		};
+		
+		helper.ModRegistry.AwaitApi<IMoreDifficultiesApi>(
+			"TheJazMaster.MoreDifficulties", new(1, 4, 1),
+			api => this.MoreDifficultiesApi = api
+		);
+		helper.ModRegistry.AwaitApi<IModSettingsApi>(
+			"Nickel.ModSettings",
+			api => api.RegisterModSettings(
+				api.MakeList([
+					CrewSelection.MakeSettings(api),
+					StarterDeckPreview.MakeSettings(api),
+					ExeBlacklist.MakeSettings(api),
+					CardBrowseCurrentPile.MakeSettings(api),
+					ModDescriptions.MakeSettings(api),
+				]).SubscribeToOnMenuClose(
+					_ => helper.Storage.SaveJson(this.SettingsFile, this.Settings)
+				)
+			)
+		);
 
 		var harmony = new Harmony(package.Manifest.UniqueName);
 		CardBrowseCurrentPile.ApplyPatches(harmony);

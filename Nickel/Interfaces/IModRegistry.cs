@@ -1,4 +1,5 @@
 using Nickel.Common;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -52,4 +53,48 @@ public interface IModRegistry
 	/// <param name="minimumVersion">An optional minimum version of the mod providing the API.</param>
 	/// <returns>The proxied API, or <c>null</c> if failed.</returns>
 	TApi? GetApi<TApi>(string uniqueName, SemanticVersion? minimumVersion = null) where TApi : class;
+	
+	/// <summary>
+	/// Awaits another mod's API.<br/>
+	/// The mod's API is proxied to the requested interface type.
+	/// </summary>
+	/// <typeparam name="TApi">The interface type to proxy the API to.</typeparam>
+	/// <param name="uniqueName">The <see cref="IModManifest.UniqueName"/> of the mod providing the API.</param>
+	/// <param name="callback">The callback that will be invoked if/when the required API becomes available. If the API is already available, it gets called right away.</param>
+	void AwaitApi<TApi>(string uniqueName, Action<TApi> callback) where TApi : class;
+
+	/// <summary>
+	/// Awaits another mod's API.<br/>
+	/// The mod's API is proxied to the requested interface type.
+	/// </summary>
+	/// <typeparam name="TApi">The interface type to proxy the API to.</typeparam>
+	/// <param name="uniqueName">The <see cref="IModManifest.UniqueName"/> of the mod providing the API.</param>
+	/// <param name="minimumVersion">An optional minimum version of the mod providing the API.</param>
+	/// <param name="callback">The callback that will be invoked if/when the required API becomes available. If the API is already available, it gets called right away.</param>
+	void AwaitApi<TApi>(string uniqueName, SemanticVersion? minimumVersion, Action<TApi> callback) where TApi : class;
+	
+	/// <summary>
+	/// Awaits another mod's API.<br/>
+	/// The mod's API is proxied to the requested interface type.
+	/// </summary>
+	/// <typeparam name="TApi">The interface type to proxy the API to.</typeparam>
+	/// <param name="uniqueName">The <see cref="IModManifest.UniqueName"/> of the mod providing the API.</param>
+	/// <param name="callback">
+	/// The callback that will be invoked when the required API becomes available, or when all mods are done loading and it did not become available.
+	/// If the API is already available, it gets called right away.
+	/// </param>
+	void AwaitApiOrNull<TApi>(string uniqueName, Action<TApi?> callback) where TApi : class;
+
+	/// <summary>
+	/// Awaits another mod's API.<br/>
+	/// The mod's API is proxied to the requested interface type.
+	/// </summary>
+	/// <typeparam name="TApi">The interface type to proxy the API to.</typeparam>
+	/// <param name="uniqueName">The <see cref="IModManifest.UniqueName"/> of the mod providing the API.</param>
+	/// <param name="minimumVersion">An optional minimum version of the mod providing the API.</param>
+	/// <param name="callback">
+	/// The callback that will be invoked when the required API becomes available, or when all mods are done loading and it did not become available.
+	/// If the API is already available, it gets called right away.
+	/// </param>
+	void AwaitApiOrNull<TApi>(string uniqueName, SemanticVersion? minimumVersion, Action<TApi?> callback) where TApi : class;
 }

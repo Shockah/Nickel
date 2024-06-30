@@ -39,8 +39,10 @@ internal sealed class ModRegistry : IModRegistry
 	private readonly IReadOnlyDictionary<string, IPluginPackage<IModManifest>> ModUniqueNameToPackage;
 	private readonly IReadOnlyList<IPluginPackage<IModManifest>> ResolvedModPackages;
 	private readonly IProxyManager<string> ProxyManager;
+	private readonly Func<ModLoadPhaseState> CurrentModLoadPhaseProvider;
 	private readonly Func<IModManifest?> VanillaModManifestProvider;
 	private readonly Func<IModManifest> ModLoaderModManifestProvider;
+	private readonly IModEvents ModEvents;
 	private readonly Dictionary<string, object?> ApiCache = [];
 
 	public ModRegistry(
@@ -51,7 +53,9 @@ internal sealed class ModRegistry : IModRegistry
 		IReadOnlyDictionary<string, Mod> modUniqueNameToInstance,
 		IReadOnlyDictionary<string, IPluginPackage<IModManifest>> modUniqueNameToPackage,
 		IReadOnlyList<IPluginPackage<IModManifest>> resolvedModPackages,
-		IProxyManager<string> proxyManager
+		IProxyManager<string> proxyManager,
+		Func<ModLoadPhaseState> currentModLoadPhaseProvider,
+		IModEvents modEvents
 	)
 	{
 		this.ModManifest = modManifest;
@@ -62,6 +66,8 @@ internal sealed class ModRegistry : IModRegistry
 		this.ModUniqueNameToPackage = modUniqueNameToPackage;
 		this.ResolvedModPackages = resolvedModPackages;
 		this.ProxyManager = proxyManager;
+		this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
+		this.ModEvents = modEvents;
 	}
 
 	public bool TryProxy<TProxy>(object @object, [MaybeNullWhen(false)] out TProxy proxy) where TProxy : class
@@ -90,5 +96,54 @@ internal sealed class ModRegistry : IModRegistry
 			throw new ArgumentException($"The mod {uniqueName} does not expose an API.");
 
 		return this.ProxyManager.ObtainProxy<string, TApi>(apiObject, uniqueName, this.ModManifest.UniqueName);
+	}
+
+	public void AwaitApi<TApi>(string uniqueName, Action<TApi> callback) where TApi : class
+		=> this.AwaitApi(uniqueName, null, callback);
+
+	public void AwaitApi<TApi>(string uniqueName, SemanticVersion? minimumVersion, Action<TApi> callback) where TApi : class
+	{
+		if (this.GetApi<TApi>(uniqueName, minimumVersion) is { } api)
+		{
+			callback(api);
+			return;
+		}
+
+		if (this.CurrentModLoadPhaseProvider() is { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
+			return;
+
+		this.ModEvents.OnModLoadPhaseFinished += OnModLoadPhaseFinished;
+
+		void OnModLoadPhaseFinished(object? sender, ModLoadPhase phase)
+		{
+			this.ModEvents.OnModLoadPhaseFinished -= OnModLoadPhaseFinished;
+			this.AwaitApi(uniqueName, minimumVersion, callback);
+		}
+	}
+
+	public void AwaitApiOrNull<TApi>(string uniqueName, Action<TApi?> callback) where TApi : class
+		=> this.AwaitApiOrNull(uniqueName, null, callback);
+
+	public void AwaitApiOrNull<TApi>(string uniqueName, SemanticVersion? minimumVersion, Action<TApi?> callback) where TApi : class
+	{
+		if (this.GetApi<TApi>(uniqueName, minimumVersion) is { } api)
+		{
+			callback(api);
+			return;
+		}
+
+		if (this.CurrentModLoadPhaseProvider() is { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
+		{
+			callback(null);
+			return;
+		}
+
+		this.ModEvents.OnModLoadPhaseFinished += OnModLoadPhaseFinished;
+
+		void OnModLoadPhaseFinished(object? sender, ModLoadPhase phase)
+		{
+			this.ModEvents.OnModLoadPhaseFinished -= OnModLoadPhaseFinished;
+			this.AwaitApiOrNull(uniqueName, minimumVersion, callback);
+		}
 	}
 }

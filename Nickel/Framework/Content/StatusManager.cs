@@ -16,7 +16,7 @@ internal sealed class StatusManager
 	private readonly Dictionary<string, Status> ReservedNameToStatus = [];
 	private readonly Dictionary<Status, string> ReservedStatusToName = [];
 
-	public StatusManager(Func<ModLoadPhase> currentModLoadPhaseProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest)
+	public StatusManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
 		this.EnumCasePool = enumCasePool;

@@ -12,7 +12,7 @@ internal sealed class CardManager
 	private Dictionary<Type, Entry> CardTypeToEntry { get; } = [];
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 
-	public CardManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
+	public CardManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
 		this.LoggerProvider = loggerProvider;

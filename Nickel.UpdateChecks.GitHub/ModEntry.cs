@@ -59,58 +59,58 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	private void SetupAfterDbInit()
 	{
 		var updateChecksApi = this.Helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!;
-			if (this.Helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
-				settingsApi.RegisterModSettings(
-					settingsApi.MakeList([
-						settingsApi.MakeCheckbox(
-							title: () => this.Localizations.Localize(["modSettings", "enabled", "name"]),
-							getter: () => this.Database.IsEnabled,
-							setter: value => this.Database.IsEnabled = value
-						),
-						settingsApi.MakeConditional(
-							setting: settingsApi.MakeList([
-								new TokenModSetting
-								{
-									Title = () => this.Localizations.Localize(["modSettings", "token", "name"]),
-									HasValue = () => !string.IsNullOrEmpty(this.Database.Token),
-									PasteAction = text => this.Database.Token = text,
-									SetupAction = () => MainMenu.TryOpenWebsiteLink("https://github.com/settings/tokens?type=beta"),
-									BaseTooltips = () => [
-										new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::Token")
-										{
-											TitleColor = Colors.textBold,
-											Title = this.Localizations.Localize(["modSettings", "token", "name"]),
-											Description = this.Localizations.Localize(["modSettings", "token", "description"])
-										}
-									]
-								},
-								settingsApi.MakeConditional(
-									setting: settingsApi.MakeCheckbox(
-										title: () => this.Localizations.Localize(["modSettings", "warnOnNoToken", "name"]),
-										getter: () => this.Database.WarnOnNoToken,
-										setter: value => this.Database.WarnOnNoToken = value
-									).SetTooltips(() => [
-										new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::WarnOnNoToken")
-										{
-											TitleColor = Colors.textBold,
-											Title = this.Localizations.Localize(["modSettings", "warnOnNoToken", "name"]),
-											Description = this.Localizations.Localize(["modSettings", "warnOnNoToken", "description"])
-										}
-									]),
-									isVisible: () => string.IsNullOrEmpty(this.Database.Token)
-								)
-							]),
-							isVisible: () => this.Database.IsEnabled
-						),
-					]).SubscribeToOnMenuClose(_ =>
-					{
-						this.Helper.Storage.SaveJson(this.DatabaseFile, this.Database);
-						this.Client = this.MakeHttpClient();
+		if (this.Helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
+			settingsApi.RegisterModSettings(
+				settingsApi.MakeList([
+					settingsApi.MakeCheckbox(
+						title: () => this.Localizations.Localize(["modSettings", "enabled", "name"]),
+						getter: () => this.Database.IsEnabled,
+						setter: value => this.Database.IsEnabled = value
+					),
+					settingsApi.MakeConditional(
+						setting: settingsApi.MakeList([
+							new TokenModSetting
+							{
+								Title = () => this.Localizations.Localize(["modSettings", "token", "name"]),
+								HasValue = () => !string.IsNullOrEmpty(this.Database.Token),
+								PasteAction = text => this.Database.Token = text,
+								SetupAction = () => MainMenu.TryOpenWebsiteLink("https://github.com/settings/tokens?type=beta"),
+								BaseTooltips = () => [
+									new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::Token")
+									{
+										TitleColor = Colors.textBold,
+										Title = this.Localizations.Localize(["modSettings", "token", "name"]),
+										Description = this.Localizations.Localize(["modSettings", "token", "description"])
+									}
+								]
+							},
+							settingsApi.MakeConditional(
+								setting: settingsApi.MakeCheckbox(
+									title: () => this.Localizations.Localize(["modSettings", "warnOnNoToken", "name"]),
+									getter: () => this.Database.WarnOnNoToken,
+									setter: value => this.Database.WarnOnNoToken = value
+								).SetTooltips(() => [
+									new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::WarnOnNoToken")
+									{
+										TitleColor = Colors.textBold,
+										Title = this.Localizations.Localize(["modSettings", "warnOnNoToken", "name"]),
+										Description = this.Localizations.Localize(["modSettings", "warnOnNoToken", "description"])
+									}
+								]),
+								isVisible: () => string.IsNullOrEmpty(this.Database.Token)
+							)
+						]),
+						isVisible: () => this.Database.IsEnabled
+					),
+				]).SubscribeToOnMenuClose(_ =>
+				{
+					this.Helper.Storage.SaveJson(this.DatabaseFile, this.Database);
+					this.Client = this.MakeHttpClient();
 
-						if (this.Database.IsEnabled)
-							updateChecksApi.RequestUpdateInfo(this);
-					})
-				);
+					if (this.Database.IsEnabled)
+						updateChecksApi.RequestUpdateInfo(this);
+				})
+			);
 	}
 
 	private HttpClient MakeHttpClient()

@@ -30,9 +30,9 @@ internal sealed class ModManager
 	private readonly EnumCasePool EnumCasePool;
 
 	internal readonly IPluginPackage<IModManifest> ModLoaderPackage;
-	private ModLoadPhase CurrentModLoadPhase { get; set; } = ModLoadPhase.BeforeGameAssembly;
+	private ModLoadPhaseState CurrentModLoadPhase = new(ModLoadPhase.BeforeGameAssembly, IsDone: false);
 	internal ContentManager? ContentManager { get; private set; }
-	private IModManifest? VanillaModManifest { get; set; }
+	private IModManifest? VanillaModManifest;
 
 	internal readonly List<IPluginPackage<IModManifest>> ResolvedMods = [];
 
@@ -337,7 +337,7 @@ internal sealed class ModManager
 	public void LoadMods(ModLoadPhase phase)
 	{
 		this.Logger.LogInformation("Loading {Phase} phase mods...", phase);
-		this.CurrentModLoadPhase = phase;
+		this.CurrentModLoadPhase = new(phase, IsDone: false);
 
 		List<IModManifest> successfulMods = [];
 		foreach (var package in this.ResolvedMods)
@@ -412,6 +412,7 @@ internal sealed class ModManager
 			}
 		}
 
+		this.CurrentModLoadPhase = new(this.CurrentModLoadPhase.Phase, IsDone: true);
 		this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
 		this.EventManager.OnModLoadPhaseFinishedEvent.Raise(null, phase);
 	}
@@ -528,6 +529,8 @@ internal sealed class ModManager
 	{
 		if (!this.UniqueNameToHelper.TryGetValue(package.Manifest.UniqueName, out var helper))
 		{
+			var modEvents = new ModEvents(package.Manifest, this.EventManager);
+			
 			helper = new ModHelper(
 				new ModRegistry(
 					package.Manifest,
@@ -537,9 +540,11 @@ internal sealed class ModManager
 					this.UniqueNameToInstance,
 					this.UniqueNameToPackage,
 					this.ResolvedMods,
-					this.ProxyManager
+					this.ProxyManager,
+					() => this.CurrentModLoadPhase,
+					modEvents
 				),
-				new ModEvents(package.Manifest, this.EventManager),
+				modEvents,
 				() => new ModContent(
 					new ModSprites(package, () => this.ContentManager!.Sprites),
 					new ModDecks(package.Manifest, () => this.ContentManager!.Decks),

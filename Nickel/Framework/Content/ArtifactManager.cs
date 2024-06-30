@@ -13,7 +13,7 @@ internal sealed class ArtifactManager
 	private Dictionary<Type, Entry> ArtifactTypeToEntry { get; } = [];
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 
-	public ArtifactManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
+	public ArtifactManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
 		this.LoggerProvider = loggerProvider;

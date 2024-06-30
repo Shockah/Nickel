@@ -43,7 +43,7 @@ internal sealed class ContentManager
 		this.Enemies = enemies;
 	}
 
-	public static ContentManager Create(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest, IModManifest modManagerModManifest, ModDataManager modDataManager)
+	public static ContentManager Create(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest, IModManifest modManagerModManifest, ModDataManager modDataManager)
 	{
 		var sprites = new SpriteManager(enumCasePool, vanillaModManifest);
 		var decks = new DeckManager(currentModLoadPhaseProvider, enumCasePool, vanillaModManifest);

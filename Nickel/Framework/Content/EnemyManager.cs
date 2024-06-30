@@ -15,7 +15,7 @@ internal sealed class EnemyManager
 	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
 	private bool IsCheckingVanillaEnemyPool;
 
-	public EnemyManager(Func<ModLoadPhase> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
+	public EnemyManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
 		this.LoggerProvider = loggerProvider;

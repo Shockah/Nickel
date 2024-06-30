@@ -13,7 +13,7 @@ internal sealed class PartManager
 	private readonly Dictionary<string, PartTypeEntry> UniqueNameToPartTypeEntry = [];
 	private readonly Dictionary<string, PartEntry> UniqueNameToPartInstanceEntry = [];
 
-	public PartManager(EnumCasePool enumCasePool, Func<ModLoadPhase> currentModLoadPhaseProvider)
+	public PartManager(EnumCasePool enumCasePool, Func<ModLoadPhaseState> currentModLoadPhaseProvider)
 	{
 		this.PartTypeManager = new(currentModLoadPhaseProvider, Inject);
 		this.PartInstanceManager = new(currentModLoadPhaseProvider, Inject);
