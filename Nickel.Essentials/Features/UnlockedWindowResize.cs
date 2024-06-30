@@ -17,12 +17,14 @@ internal static class UnlockedWindowResize
 	public static void ApplyPatches(Harmony harmony)
 	{
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(MG), nameof(MG.UpdateRenderPipelineIfNeeded)),
+			original: AccessTools.DeclaredMethod(typeof(MG), nameof(MG.UpdateRenderPipelineIfNeeded))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(MG)}.{nameof(MG.UpdateRenderPipelineIfNeeded)}`"),
 			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(MG_UpdateRenderPipelineIfNeeded_Prefix)),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(MG_UpdateRenderPipelineIfNeeded_Postfix))
 		);
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(G), nameof(G.LetterboxTransform)),
+			original: AccessTools.DeclaredMethod(typeof(G), nameof(G.LetterboxTransform))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(G)}.{nameof(G.LetterboxTransform)}`"),
 			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(G_LetterboxTransform_Prefix))
 		);
 	}
