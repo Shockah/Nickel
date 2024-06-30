@@ -1,17 +1,17 @@
 {
 	"UniqueName": "Nickel.UpdateChecks.GitHub",
-	"Version": "1.0.0-alpha2",
+	"Version": "1.0.0-alpha3",
 	"DisplayName": "Nickel: GitHub update checks",
 	"Description": "Provides a mechanism of GitHub update checks for installed mods.",
 	"Author": "Nickel",
-	"RequiredApiVersion": "1.0.0-alpha2",
+	"RequiredApiVersion": "1.0.0-alpha3",
 	"EntryPointAssembly": "Nickel.UpdateChecks.GitHub.dll",
 	"EntryPointType": "Nickel.UpdateChecks.GitHub.ModEntry",
 	"LoadPhase": "BeforeGameAssembly",
 	"Dependencies": [
 		{
 			"UniqueName": "Nickel.UpdateChecks",
-			"Version": "1.0.0-alpha2"
+			"Version": "1.0.0-alpha3"
 		}
 	]
 }

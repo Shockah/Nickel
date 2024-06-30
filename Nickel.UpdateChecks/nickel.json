@@ -1,10 +1,10 @@
 {
 	"UniqueName": "Nickel.UpdateChecks",
-	"Version": "1.0.0-alpha2",
+	"Version": "1.0.0-alpha3",
 	"DisplayName": "Nickel: Update checks",
 	"Description": "Provides a mechanism of update checks for installed mods.",
 	"Author": "Nickel",
-	"RequiredApiVersion": "1.0.0-alpha2",
+	"RequiredApiVersion": "1.0.0-alpha3",
 	"EntryPointAssembly": "Nickel.UpdateChecks.dll",
 	"EntryPointType": "Nickel.UpdateChecks.ModEntry",
 	"LoadPhase": "BeforeGameAssembly",
