@@ -72,6 +72,7 @@ public sealed class ModEntry : SimpleMod
 		ModDescriptions.ApplyPatches(harmony);
 		SaveImport.ApplyPatches(harmony);
 		StarterDeckPreview.ApplyPatches(harmony);
+		UnlockedWindowResize.ApplyPatches(harmony);
 
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.ShuffleDeck))
