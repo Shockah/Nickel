@@ -121,7 +121,7 @@ internal static class StarterDeckPreview
 		LastStarterCards.AddRange(
 			fakeState.deck
 				.Select(card => (Card: card, Meta: card.GetMeta()))
-				.OrderBy(e => shipTemplate.cards.Any(shipCard => shipCard.Key() == e.Card.Key()) || e.Card.GetMeta().dontOffer)
+				.OrderBy(e => shipTemplate.cards.Any(shipCard => shipCard.Key() == e.Card.Key()) || e.Meta is { dontOffer: true, deck: Deck.colorless })
 				.ThenBy(e => !NewRunOptions.allChars.Contains(e.Meta.deck))
 				.ThenBy(e => NewRunOptions.allChars.IndexOf(e.Meta.deck))
 				.ThenBy(e => ModEntry.Instance.Api.IsExeCardType(e.Card.GetType()))
