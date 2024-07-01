@@ -9,6 +9,7 @@ internal sealed class ModCards : IModCards
 	private readonly IModManifest ModManifest;
 	private readonly Func<CardManager> CardManagerProvider;
 	private readonly Func<CardTraitManager> CardTraitManagerProvider;
+	private readonly Dictionary<EventHandler<GetVolatileCardTraitOverridesEventArgs>, EventHandler<GetFinalDynamicCardTraitOverridesEventArgs>> ObsoleteVolatileToFinalEventHandlers = [];
 
 	public ModCards(IModManifest modManifest, Func<CardManager> cardManagerProvider, Func<CardTraitManager> cardTraitManagerProvider)
 	{
@@ -76,7 +77,43 @@ internal sealed class ModCards : IModCards
 
 	public event EventHandler<GetVolatileCardTraitOverridesEventArgs> OnGetVolatileCardTraitOverrides
 	{
-		add => this.CardTraitManagerProvider().OnOverrideInnateTraitsEvent.Add(value, this.ModManifest);
-		remove => this.CardTraitManagerProvider().OnOverrideInnateTraitsEvent.Remove(value, this.ModManifest);
+		add
+		{
+			EventHandler<GetFinalDynamicCardTraitOverridesEventArgs> mappedHandler = (sender, args) =>
+			{
+				var mappedArgs = new GetVolatileCardTraitOverridesEventArgs
+				{
+					State = args.State,
+					Card = args.Card,
+					TraitStates = args.TraitStates,
+					VolatileOverrides = []
+				};
+				
+				value(sender, mappedArgs);
+				
+				foreach (var (overrideTrait, overrideValue) in mappedArgs.VolatileOverrides)
+					args.SetOverride(overrideTrait, overrideValue);
+			};
+			this.ObsoleteVolatileToFinalEventHandlers[value] = mappedHandler;
+			this.OnGetFinalDynamicCardTraitOverrides += mappedHandler;
+		}
+		remove
+		{
+			if (!this.ObsoleteVolatileToFinalEventHandlers.TryGetValue(value, out var mappedHandler))
+				return;
+			this.OnGetFinalDynamicCardTraitOverrides -= mappedHandler;
+		}
+	}
+
+	public event EventHandler<GetDynamicInnateCardTraitOverridesEventArgs> OnGetDynamicInnateCardTraitOverrides
+	{
+		add => this.CardTraitManagerProvider().OnGetDynamicInnateCardTraitOverridesEvent.Add(value, this.ModManifest);
+		remove => this.CardTraitManagerProvider().OnGetDynamicInnateCardTraitOverridesEvent.Remove(value, this.ModManifest);
+	}
+
+	public event EventHandler<GetFinalDynamicCardTraitOverridesEventArgs> OnGetFinalDynamicCardTraitOverrides
+	{
+		add => this.CardTraitManagerProvider().OnGetFinalDynamicCardTraitOverridesEvent.Add(value, this.ModManifest);
+		remove => this.CardTraitManagerProvider().OnGetFinalDynamicCardTraitOverridesEvent.Remove(value, this.ModManifest);
 	}
 }

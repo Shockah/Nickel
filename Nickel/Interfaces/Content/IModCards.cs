@@ -122,6 +122,19 @@ public interface IModCards
 	/// <param name="permanent">Whether the override is permanent. Temporary overrides get cleared when combat ends.</param>
 	void SetCardTraitOverride(State state, Card card, ICardTraitEntry trait, bool? overrideValue, bool permanent);
 
-	/// <summary>An event fired whenever a card's card trait state is requested. It can be used to set "volatile" overrides on a card, which act almost as if the trait was innate, depending on other traits or other state.</summary>
+	/// <summary>An event fired whenever a card's card trait state is requested. It can be used to set dynamic overrides on a card, which can depend on other traits or other state.</summary>
+	[Obsolete($"Use `{nameof(OnGetDynamicInnateCardTraitOverrides)}` or `{nameof(OnGetFinalDynamicCardTraitOverrides)}` instead.")]
 	event EventHandler<GetVolatileCardTraitOverridesEventArgs> OnGetVolatileCardTraitOverrides;
+
+	/// <summary>
+	/// An event fired whenever a card's card trait state is requested.
+	/// It can be used to set dynamic overrides on a card, which can depend on other innate traits or other state, <b>but not</b> <see cref="CardTraitState.PermanentOverride"/> or <see cref="CardTraitState.TemporaryOverride"/>.
+	/// </summary>
+	event EventHandler<GetDynamicInnateCardTraitOverridesEventArgs> OnGetDynamicInnateCardTraitOverrides;
+
+	/// <summary>
+	/// An event fired whenever a card's card trait state is requested.
+	/// It can be used to set dynamic overrides on a card, which can depend on other traits or other state, <b>including</b> <see cref="CardTraitState.PermanentOverride"/> and <see cref="CardTraitState.TemporaryOverride"/>.
+	/// </summary>
+	event EventHandler<GetFinalDynamicCardTraitOverridesEventArgs> OnGetFinalDynamicCardTraitOverrides;
 }

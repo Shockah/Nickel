@@ -18,7 +18,7 @@ internal static class CardPatches
 	internal static readonly WeakEventSource<TooltipsEventArgs> OnGetTooltips = new();
 	internal static readonly WeakEventSource<TraitRenderEventArgs> OnRenderTraits = new();
 	internal static readonly WeakEventSource<GettingDataWithOverridesEventArgs> OnGettingDataWithOverrides = new();
-	internal static readonly WeakEventSource<GetDataWithOverridesEventArgs> OnGetDataWithOverrides = new();
+	internal static readonly WeakEventSource<MidGetDataWithOverridesEventArgs> OnMidGetDataWithOverrides = new();
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -41,7 +41,7 @@ internal static class CardPatches
 			original: AccessTools.DeclaredMethod(typeof(Card), nameof(Card.GetDataWithOverrides))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Card)}.{nameof(Card.GetDataWithOverrides)}`"),
 			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetDataWithOverrides_Prefix)),
-			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetDataWithOverrides_Postfix))
+			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetDataWithOverrides_Transpiler))
 		);
 	}
 
@@ -116,11 +116,39 @@ internal static class CardPatches
 		OnGettingDataWithOverrides.Raise(null, eventArgs);
 	}
 
-	private static void GetDataWithOverrides_Postfix(Card __instance, State state, ref CardData __result)
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+	private static IEnumerable<CodeInstruction> GetDataWithOverrides_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
-		var eventArgs = new GetDataWithOverridesEventArgs { Card = __instance, State = state, Data = __result };
-		OnGetDataWithOverrides.Raise(null, eventArgs);
-		__result = eventArgs.Data;
+		try
+		{
+			return new SequenceBlockMatcher<CodeInstruction>(instructions)
+				.Find(
+					ILMatches.Ldarg(0),
+					ILMatches.Ldarg(1),
+					ILMatches.Call("GetData"),
+					ILMatches.Stloc<CardData>(originalMethod).CreateLdlocaInstruction(out var ldlocaCardData)
+				)
+				.Insert(
+					SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion,
+					new CodeInstruction(OpCodes.Ldarg_0),
+					new CodeInstruction(OpCodes.Ldarg_1),
+					ldlocaCardData,
+					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetDataWithOverrides_Transpiler_ModifyData)))
+				)
+				.AllElements();
+		}
+		catch (Exception ex)
+		{
+			Nickel.Instance.ModManager.Logger.LogCritical("Could not patch method {Method} - {ModLoaderName} probably won't work.\nReason: {Exception}", originalMethod, NickelConstants.Name, ex);
+			return instructions;
+		}
+	}
+
+	private static void GetDataWithOverrides_Transpiler_ModifyData(Card card, State state, ref CardData data)
+	{
+		var eventArgs = new MidGetDataWithOverridesEventArgs { Card = card, State = state, InitialData = data, CurrentData = data };
+		OnMidGetDataWithOverrides.Raise(null, eventArgs);
+		data = eventArgs.CurrentData;
 	}
 
 	internal sealed class KeyEventArgs
@@ -151,10 +179,11 @@ internal static class CardPatches
 		public required State State { get; init; }
 	}
 
-	internal sealed class GetDataWithOverridesEventArgs
+	internal sealed class MidGetDataWithOverridesEventArgs
 	{
 		public required Card Card { get; init; }
 		public required State State { get; init; }
-		public required CardData Data;
+		public required CardData InitialData { get; init; }
+		public required CardData CurrentData;
 	}
 }
