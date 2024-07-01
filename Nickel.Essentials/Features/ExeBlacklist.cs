@@ -16,22 +16,10 @@ namespace Nickel.Essentials;
 internal sealed partial class ProfileSettings
 {
 	[JsonProperty]
+	public HashSet<Deck> BlacklistedExeStarters = [];
+	
+	[JsonProperty]
 	public HashSet<Deck> BlacklistedExeOfferings = [];
-}
-
-file static class RunConfigExt
-{
-	public static bool IsBlacklistedExe(this RunConfig self, Deck deck)
-		=> ModEntry.Instance.Helper.ModData.TryGetModData<HashSet<string>>(self, "BlacklistedExes", out var blacklist) && blacklist.Contains(deck.Key());
-
-	public static void SetBlacklistedExe(this RunConfig self, Deck deck, bool isBlacklisted)
-	{
-		var blacklist = ModEntry.Instance.Helper.ModData.ObtainModData<HashSet<string>>(self, "BlacklistedExes");
-		if (isBlacklisted)
-			blacklist.Add(deck.Key());
-		else
-			blacklist.Remove(deck.Key());
-	}
 }
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
@@ -82,17 +70,20 @@ internal static class ExeBlacklist
 			{
 				Title = () => ModEntry.Instance.Localizations.Localize(["exeBlacklist", "startingBlacklistSetting", "name"]),
 				AllCharacters = () => GetAllExeCharacters().ToList(),
-				IsSelected = deck => !MG.inst.g.state.runConfig.IsBlacklistedExe(deck),
+				IsSelected = deck => !ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeStarters.Contains(deck),
 				SetSelected = (route, deck, value) =>
 				{
-					var oldValue = !MG.inst.g.state.runConfig.IsBlacklistedExe(deck);
-					if (value != oldValue && !value && GetNonBlacklistedExeCharacters(MG.inst.g.state.runConfig).Count() <= 4)
+					var oldValue = !ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeStarters.Contains(deck);
+					if (value != oldValue && !value && GetNonBlacklistedExeCharacters().Count() <= 4)
 					{
 						route.ShowWarning(ModEntry.Instance.Localizations.Localize(["exeBlacklist", "cannotBlacklistWarning"]), 2);
 						return;
 					}
 
-					MG.inst.g.state.runConfig.SetBlacklistedExe(deck, !value);
+					if (value)
+						ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeStarters.Remove(deck);
+					else
+						ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeStarters.Add(deck);
 				}
 			},
 			new CharactersModSetting
@@ -113,8 +104,8 @@ internal static class ExeBlacklist
 	private static IEnumerable<Deck> GetAllExeCharacters()
 		=> NewRunOptions.allChars.Where(d => d != Deck.colorless && ModEntry.Instance.Api.GetExeCardTypeForDeck(d) is not null);
 
-	private static IEnumerable<Deck> GetNonBlacklistedExeCharacters(RunConfig runConfig)
-		=> GetAllExeCharacters().Where(d => !runConfig.selectedChars.Contains(d)).Where(d => !runConfig.IsBlacklistedExe(d));
+	private static IEnumerable<Deck> GetNonBlacklistedExeCharacters()
+		=> GetAllExeCharacters().Where(d => !ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeStarters.Contains(d));
 
 	private static void State_PopulateRun_Prefix(State __instance)
 		=> LastState = __instance;
@@ -160,7 +151,7 @@ internal static class ExeBlacklist
 
 		for (var i = cards.Count - 1; i >= 0; i--)
 			if (ModEntry.Instance.Api.GetDeckForExeCardType(cards[i].GetType()) is { } exeDeck)
-				if (state.runConfig.IsBlacklistedExe(exeDeck))
+				if (ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeStarters.Contains(exeDeck))
 					cards.RemoveAt(i);
 	}
 
@@ -179,7 +170,7 @@ internal static class ExeBlacklist
 			return true;
 		if (b.key != StableUK.newRun_continue)
 			return true;
-		if (GetNonBlacklistedExeCharacters(g.state.runConfig).Count() >= 2)
+		if (GetNonBlacklistedExeCharacters().Count(d => !g.state.runConfig.selectedChars.Contains(d)) >= 2)
 			return true;
 
 		CannotBlacklistWarning = 1.5;
@@ -195,7 +186,7 @@ internal static class ExeBlacklist
 			return;
 		if (!__result)
 			return;
-		if (GetNonBlacklistedExeCharacters(__instance).Count() < 2)
+		if (GetNonBlacklistedExeCharacters().Count(d => !__instance.selectedChars.Contains(d)) < 2)
 			__result = false;
 	}
 
