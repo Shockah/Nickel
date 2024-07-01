@@ -21,6 +21,7 @@
 * Fixed Nickel crashing when starting the game in a non-English language or when switching to one.
 * Fixed starter deck preview sometimes showing up an extra Basic Shot on Normal difficulty, even though Hard+ was selected.
 * Fixed card Codex deck filters sometimes not being properly scrollable, and weirdly jumping visually.
+* Fixed controller support for the Save Import menu.
 
 ### For developers:
 * Nickel now has full XML documentation for all public members.

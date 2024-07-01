@@ -1,6 +1,7 @@
 using FSPRO;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
+using Microsoft.Xna.Framework.Input;
 using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
 using System;
@@ -36,7 +37,9 @@ internal static class SaveImport
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(ProfileSelect), nameof(ProfileSelect.MkSlot)),
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(ProfileSelect_MkSlot_Prefix)),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(ProfileSelect_MkSlot_Postfix)),
+			finalizer: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(ProfileSelect_MkSlot_Finalizer)),
 			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(ProfileSelect_MkSlot_Transpiler))
 		);
 		harmony.Patch(
@@ -129,6 +132,21 @@ internal static class SaveImport
 
 	private static string ProfileSelect_Render_Transpiler_ModifyTitle(string text, ProfileSelect self)
 		=> self is SaveImportRoute ? ModEntry.Instance.Localizations.Localize(["saveImport", "title"]) : text;
+	
+	private static void ProfileSelect_MkSlot_Prefix(ProfileSelect __instance, G g, ref int __state)
+	{
+		if (__instance is not SaveImportRoute)
+			return;
+		__state = g.settings.saveSlot;
+		g.settings.saveSlot = -1;
+	}
+	
+	private static void ProfileSelect_MkSlot_Finalizer(ProfileSelect __instance, G g, ref int __state)
+	{
+		if (__instance is not SaveImportRoute)
+			return;
+		g.settings.saveSlot = __state;
+	}
 
 	private static void ProfileSelect_MkSlot_Postfix(ProfileSelect __instance, Vec localV, G g, State.SaveSlot st, int n)
 	{
@@ -196,7 +214,7 @@ internal static class SaveImport
 		return false;
 	}
 
-	private sealed class SaveImportRoute : ProfileSelect, OnMouseDown
+	private sealed class SaveImportRoute : ProfileSelect, OnMouseDown, OnInputPhase
 	{
 		public required int TargetSlot;
 
@@ -255,6 +273,14 @@ internal static class SaveImport
 			{
 				this.OnMouseDown(g, b);
 			}
+		}
+
+		void OnInputPhase.OnInputPhase(G g, Box b)
+		{
+			if (Input.GetGpDown(Btn.B) || Input.GetKeyDown(Keys.Escape))
+				g.CloseRoute(this);
+			else
+				this.OnMouseDown(g, b);
 		}
 	}
 }
