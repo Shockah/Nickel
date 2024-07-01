@@ -1,17 +1,17 @@
 {
 	"UniqueName": "Nickel.UpdateChecks.NexusMods",
-	"Version": "1.0.0-alpha3",
+	"Version": "1.0.0-alpha4",
 	"DisplayName": "Nickel: NexusMods update checks",
 	"Description": "Provides a mechanism of NexusMods update checks for installed mods.",
 	"Author": "Nickel",
-	"RequiredApiVersion": "1.0.0-alpha3",
+	"RequiredApiVersion": "1.0.0-alpha4",
 	"EntryPointAssembly": "Nickel.UpdateChecks.NexusMods.dll",
 	"EntryPointType": "Nickel.UpdateChecks.NexusMods.ModEntry",
 	"LoadPhase": "BeforeGameAssembly",
 	"Dependencies": [
 		{
 			"UniqueName": "Nickel.UpdateChecks",
-			"Version": "1.0.0-alpha3"
+			"Version": "1.0.0-alpha4"
 		}
 	]
 }
