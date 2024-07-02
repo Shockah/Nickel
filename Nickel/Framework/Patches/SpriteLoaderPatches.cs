@@ -1,6 +1,7 @@
 using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using WeakEvent;
@@ -12,6 +13,9 @@ internal static class SpriteLoaderPatches
 {
 	internal static WeakEventSource<GetTextureEventArgs> OnGetTexture { get; } = new();
 
+	private static readonly HashSet<Spr> DynamicTextureSprites = [];
+	private static readonly GetTextureEventArgs GetTextureEventArgsInstance = new();
+
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(SpriteLoader), nameof(SpriteLoader.Get))
@@ -21,23 +25,27 @@ internal static class SpriteLoaderPatches
 
 	private static bool Get_Prefix(Spr id, out Texture2D? __result)
 	{
-		if (SpriteLoader.textures.TryGetValue(id, out __result))
+		if (!DynamicTextureSprites.Contains(id) && SpriteLoader.textures.TryGetValue(id, out __result))
 			return false;
+		else
+			__result = null;
 
-		GetTextureEventArgs args = new(id);
+		var args = GetTextureEventArgsInstance;
+		args.Sprite = id;
+		args.Texture = __result;
 		OnGetTexture.Raise(null, args);
+		
 		__result = args.Texture;
-		return args.Texture is null;
+		if (args.IsDynamic)
+			DynamicTextureSprites.Add(id);
+		
+		return __result is null;
 	}
 
 	internal sealed class GetTextureEventArgs
 	{
-		public Spr Sprite { get; }
+		public Spr Sprite { get; internal set; }
 		public Texture2D? Texture { get; set; }
-
-		public GetTextureEventArgs(Spr sprite)
-		{
-			this.Sprite = sprite;
-		}
+		public bool IsDynamic { get; set; }
 	}
 }

@@ -46,8 +46,14 @@ internal sealed class ModSprites : IModSprites
 		=> this.SpriteManagerProvider().RegisterSprite(this.Package.Manifest, name, streamProvider);
 
 	public ISpriteEntry RegisterSprite(Func<Texture2D> textureProvider)
-		=> this.SpriteManagerProvider().RegisterSprite(this.Package.Manifest, Guid.NewGuid().ToString(), textureProvider);
+		=> this.SpriteManagerProvider().RegisterSprite(this.Package.Manifest, Guid.NewGuid().ToString(), textureProvider, isDynamic: false);
 
 	public ISpriteEntry RegisterSprite(string name, Func<Texture2D> textureProvider)
-		=> this.SpriteManagerProvider().RegisterSprite(this.Package.Manifest, name, textureProvider);
+		=> this.SpriteManagerProvider().RegisterSprite(this.Package.Manifest, name, textureProvider, isDynamic: false);
+
+	public ISpriteEntry RegisterDynamicSprite(Func<Texture2D> textureProvider)
+		=> this.SpriteManagerProvider().RegisterSprite(this.Package.Manifest, Guid.NewGuid().ToString(), textureProvider, isDynamic: true);
+
+	public ISpriteEntry RegisterDynamicSprite(string name, Func<Texture2D> textureProvider)
+		=> this.SpriteManagerProvider().RegisterSprite(this.Package.Manifest, name, textureProvider, isDynamic: true);
 }

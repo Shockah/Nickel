@@ -168,7 +168,7 @@ internal sealed class CharacterManager
 			var texture = new Texture2D(MG.inst.GraphicsDevice, questionMarkTexture.Width, questionMarkTexture.Height);
 			texture.SetData(data);
 			return texture;
-		}).Sprite;
+		}, isDynamic: false).Sprite;
 
 		return this.Statuses.RegisterStatus(owner, name, new()
 		{

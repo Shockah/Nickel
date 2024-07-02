@@ -79,4 +79,24 @@ public interface IModSprites
 	/// <param name="textureProvider">A texture provider.</param>
 	/// <returns>A new sprite entry.</returns>
 	ISpriteEntry RegisterSprite(string name, Func<Texture2D> textureProvider);
+
+	/// <summary>
+	/// Registers a dynamic <see cref="Texture2D"/>-based sprite.
+	/// Anytime the sprite needs to be rendered, a new texture can be provided.
+	/// </summary>
+	/// <remarks>
+	/// The sprite entry will have a random content name.
+	/// </remarks>
+	/// <param name="textureProvider">A texture provider.</param>
+	/// <returns>A new sprite entry.</returns>
+	ISpriteEntry RegisterDynamicSprite(Func<Texture2D> textureProvider);
+
+	/// <summary>
+	/// Registers a dynamic <see cref="Texture2D"/>-based sprite.
+	/// Anytime the sprite needs to be rendered, a new texture can be provided.
+	/// </summary>
+	/// <param name="name">The name for the content.</param>
+	/// <param name="textureProvider">A texture provider.</param>
+	/// <returns>A new sprite entry.</returns>
+	ISpriteEntry RegisterDynamicSprite(string name, Func<Texture2D> textureProvider);
 }

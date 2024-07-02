@@ -9,8 +9,8 @@ internal sealed class SpriteManager
 {
 	private readonly EnumCasePool EnumCasePool;
 	private readonly IModManifest VanillaModManifest;
-	private readonly Dictionary<Spr, Entry> SpriteToEntry = [];
-	private readonly Dictionary<string, Entry> UniqueNameToEntry = [];
+	private readonly Dictionary<Spr, ISpriteEntry> SpriteToEntry = [];
+	private readonly Dictionary<string, ISpriteEntry> UniqueNameToEntry = [];
 
 	public SpriteManager(EnumCasePool enumCasePool, IModManifest vanillaModManifest)
 	{
@@ -19,12 +19,16 @@ internal sealed class SpriteManager
 		SpriteLoaderPatches.OnGetTexture.Subscribe(this.OnGetTexture);
 	}
 
-	public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Texture2D> textureProvider)
+	public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Texture2D> textureProvider, bool isDynamic)
 	{
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A sprite with the unique name `{uniqueName}` is already registered", nameof(name));
-		return this.RegisterSprite(new(owner, uniqueName, name, this.EnumCasePool.ObtainEnumCase<Spr>(), textureProvider));
+
+		if (isDynamic)
+			return this.RegisterDynamicSprite(new(owner, uniqueName, name, this.EnumCasePool.ObtainEnumCase<Spr>(), textureProvider));
+		else
+			return this.RegisterSprite(new(owner, uniqueName, name, this.EnumCasePool.ObtainEnumCase<Spr>(), textureProvider));
 	}
 
 	public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Stream> streamProvider)
@@ -35,7 +39,18 @@ internal sealed class SpriteManager
 		return this.RegisterSprite(new(owner, uniqueName, name, this.EnumCasePool.ObtainEnumCase<Spr>(), streamProvider));
 	}
 
-	private Entry RegisterSprite(Entry entry)
+	private StaticEntry RegisterSprite(StaticEntry entry)
+	{
+		this.SpriteToEntry[entry.Sprite] = entry;
+		this.UniqueNameToEntry[entry.UniqueName] = entry;
+
+		var path = $"{NickelConstants.Name}-managed/{entry.UniqueName}";
+		SpriteMapping.mapping[entry.Sprite] = new SpritePath(path);
+		SpriteMapping.strToId[path] = entry.Sprite;
+		return entry;
+	}
+
+	private DynamicEntry RegisterDynamicSprite(DynamicEntry entry)
 	{
 		this.SpriteToEntry[entry.Sprite] = entry;
 		this.UniqueNameToEntry[entry.UniqueName] = entry;
@@ -53,7 +68,7 @@ internal sealed class SpriteManager
 		if (Enum.GetName(spr) is not { } vanillaName)
 			return null;
 
-		return new Entry(
+		return new StaticEntry(
 			modOwner: this.VanillaModManifest,
 			uniqueName: vanillaName,
 			localName: vanillaName,
@@ -72,9 +87,10 @@ internal sealed class SpriteManager
 		if (!this.SpriteToEntry.TryGetValue(e.Sprite, out var entry))
 			return;
 		e.Texture = entry.ObtainTexture();
+		e.IsDynamic = entry is DynamicEntry;
 	}
 
-	private sealed class Entry
+	private sealed class StaticEntry
 		: ISpriteEntry
 	{
 		public IModManifest ModOwner { get; }
@@ -86,7 +102,7 @@ internal sealed class SpriteManager
 		private Func<Texture2D>? TextureProvider { get; set; }
 		private Texture2D? TextureStorage { get; set; }
 
-		public Entry(IModManifest modOwner, string uniqueName, string localName, Spr sprite, Func<Stream> streamProvider)
+		public StaticEntry(IModManifest modOwner, string uniqueName, string localName, Spr sprite, Func<Stream> streamProvider)
 		{
 			this.ModOwner = modOwner;
 			this.UniqueName = uniqueName;
@@ -95,7 +111,7 @@ internal sealed class SpriteManager
 			this.StreamProvider = streamProvider;
 		}
 
-		public Entry(IModManifest modOwner, string uniqueName, string localName, Spr sprite, Func<Texture2D> textureProvider)
+		public StaticEntry(IModManifest modOwner, string uniqueName, string localName, Spr sprite, Func<Texture2D> textureProvider)
 		{
 			this.ModOwner = modOwner;
 			this.UniqueName = uniqueName;
@@ -129,5 +145,27 @@ internal sealed class SpriteManager
 			this.StreamProvider = null;
 			return texture;
 		}
+	}
+	
+	private sealed class DynamicEntry
+		: ISpriteEntry
+	{
+		public IModManifest ModOwner { get; }
+		public string UniqueName { get; }
+		public string LocalName { get; }
+		public Spr Sprite { get; }
+		private Func<Texture2D> TextureProvider { get; }
+
+		public DynamicEntry(IModManifest modOwner, string uniqueName, string localName, Spr sprite, Func<Texture2D> textureProvider)
+		{
+			this.ModOwner = modOwner;
+			this.UniqueName = uniqueName;
+			this.LocalName = localName;
+			this.Sprite = sprite;
+			this.TextureProvider = textureProvider;
+		}
+
+		public Texture2D ObtainTexture()
+			=> this.TextureProvider();
 	}
 }
