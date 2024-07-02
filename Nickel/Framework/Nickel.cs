@@ -56,13 +56,13 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			name: "--modsPath",
 			description: "The path containing the mods to load."
 		);
-		Option<DirectoryInfo?> modSettingsPathOption = new(
-			name: "--modSettingsPath",
-			description: "The path containing mod settings (ones that are fine to share)."
+		Option<DirectoryInfo?> modStoragePathOption = new(
+			name: "--modStoragePath",
+			description: "The path containing mod data, like settings (ones that are fine to share)."
 		);
-		Option<DirectoryInfo?> privateModSettingsPathOption = new(
-			name: "--privateModSettingsPath",
-			description: "The path containing private mod settings (ones that should never be shared)."
+		Option<DirectoryInfo?> privateModStoragePathOption = new(
+			name: "--privateModStoragePath",
+			description: "The path containing private mod data, like settings (ones that should never be shared)."
 		);
 		Option<DirectoryInfo?> savePathOption = new(
 			name: "--savePath",
@@ -88,8 +88,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		rootCommand.AddOption(initSteamOption);
 		rootCommand.AddOption(gamePathOption);
 		rootCommand.AddOption(modsPathOption);
-		rootCommand.AddOption(modSettingsPathOption);
-		rootCommand.AddOption(privateModSettingsPathOption);
+		rootCommand.AddOption(modStoragePathOption);
+		rootCommand.AddOption(privateModStoragePathOption);
 		rootCommand.AddOption(savePathOption);
 		rootCommand.AddOption(logPathOption);
 		rootCommand.AddOption(timestampedLogFiles);
@@ -105,8 +105,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 				InitSteam = context.ParseResult.GetValueForOption(initSteamOption),
 				GamePath = context.ParseResult.GetValueForOption(gamePathOption),
 				ModsPath = context.ParseResult.GetValueForOption(modsPathOption),
-				ModSettingsPath = context.ParseResult.GetValueForOption(modSettingsPathOption),
-				PrivateModSettingsPath = context.ParseResult.GetValueForOption(privateModSettingsPathOption),
+				ModStoragePath = context.ParseResult.GetValueForOption(modStoragePathOption),
+				PrivateModStoragePath = context.ParseResult.GetValueForOption(privateModStoragePathOption),
 				SavePath = context.ParseResult.GetValueForOption(savePathOption),
 				LogPath = context.ParseResult.GetValueForOption(logPathOption),
 				TimestampedLogFiles = context.ParseResult.GetValueForOption(timestampedLogFiles),
@@ -158,8 +158,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static int StartInstance(Nickel instance, LaunchArguments launchArguments, ILoggerFactory loggerFactory, ILogger logger)
 	{
-		var modSettingsDirectory = launchArguments.ModSettingsPath ?? new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModSettings"));
-		logger.LogInformation("ModSettingsPath: {Path}", PathUtilities.SanitizePath(modSettingsDirectory.FullName));
+		var modStorageDirectory = launchArguments.ModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "ModStorage"));
+		logger.LogInformation("ModStoragePath: {Path}", PathUtilities.SanitizePath(modStorageDirectory.FullName));
 		
 		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
 
@@ -179,13 +179,13 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			var modsDirectory = launchArguments.ModsPath ?? GetOrCreateDefaultModLibraryDirectory();
 			logger.LogInformation("ModsPath: {Path}", PathUtilities.SanitizePath(modsDirectory.FullName));
 
-			var privateModSettingsDirectory = launchArguments.PrivateModSettingsPath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name));
-			logger.LogInformation("PrivateModSettingsPath: {Path}", PathUtilities.SanitizePath(privateModSettingsDirectory.FullName));
+			var privateModStorageDirectory = launchArguments.PrivateModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "PrivateModStorage"));
+			logger.LogInformation("PrivateModStoragePath: {Path}", PathUtilities.SanitizePath(privateModStorageDirectory.FullName));
 
-			instance.ModManager = new(modsDirectory, modSettingsDirectory, privateModSettingsDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
+			instance.ModManager = new(modsDirectory, modStorageDirectory, privateModStorageDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
 
 			var helper = instance.ModManager.ObtainModHelper(instance.ModManager.ModLoaderPackage);
-			instance.Settings = helper.Storage.LoadJson<Settings>(helper.Storage.GetSingleSettingsFile("json"));
+			instance.Settings = helper.Storage.LoadJson<Settings>(helper.Storage.GetMainStorageFile("json"));
 			instance.OnSettingsUpdate();
 			
 			try
@@ -272,8 +272,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderPackage.Manifest);
 			instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderPackage.Manifest);
 
-			var savePath = launchArguments.SavePath?.FullName ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModSaves");
-			logger.LogInformation("SavePath: {Path}", PathUtilities.SanitizePath(savePath));
+			var savePath = launchArguments.SavePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "Saves"));
+			logger.LogInformation("SavePath: {Path}", PathUtilities.SanitizePath(savePath.FullName));
 
 			if (harmony is not null)
 				ApplyHarmonyPatches(harmony);
@@ -282,7 +282,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			ProgramPatches.OnTryInitSteam.Subscribe(instance, instance.OnTryInitSteam);
 			instance.ModManager.LoadMods(ModLoadPhase.AfterGameAssembly);
 
-			FeatureFlags.OverrideSaveLocation = savePath;
+			FeatureFlags.OverrideSaveLocation = savePath.FullName;
 		}
 		FeatureFlags.Modded = instance.DebugMode != DebugMode.Disabled || !launchArguments.Vanilla;
 
@@ -413,7 +413,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 				)
 			]).SubscribeToOnMenuClose(_ =>
 			{
-				helper.Storage.SaveJson(helper.Storage.GetSingleSettingsFile("json"), this.Settings);
+				helper.Storage.SaveJson(helper.Storage.GetMainStorageFile("json"), this.Settings);
 				this.OnSettingsUpdate();
 			}));
 	}

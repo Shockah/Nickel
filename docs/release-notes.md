@@ -6,6 +6,7 @@
 
 ### For players:
 * The pre-installed `Essentials` mod is now renamed to `Nickel.Essentials`. **Be sure to remove the old `Essentials` folder when updating Nickel.**
+* Changed the default path where mod saves are stored from the Nickel's folder to the user's application data folder (`%AppData%\CobaltCore\Nickel\Saves`). **You will have to re-import your save files, or move the files manually.**
 * Nickel now lets you resize its window.
 * Improved mod load times.
 * Added `Nickel.ModSettings`, creating a common interface for all mods to add their settings to.

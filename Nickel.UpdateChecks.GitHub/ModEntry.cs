@@ -23,7 +23,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
 	private IWritableFileInfo DatabaseFile
-		=> this.Helper.Storage.GetSinglePrivateSettingsFile("json");
+		=> this.Helper.Storage.GetMainPrivateStorageFile("json");
 
 	private HttpClient? Client;
 	private bool GotUnauthorized;

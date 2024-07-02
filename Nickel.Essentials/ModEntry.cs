@@ -23,7 +23,7 @@ public sealed class ModEntry : SimpleMod
 	private readonly Dictionary<Type, Deck> ExeTypeToDeck = [];
 
 	private IWritableFileInfo SettingsFile
-		=> this.Helper.Storage.GetSingleSettingsFile("json");
+		=> this.Helper.Storage.GetMainStorageFile("json");
 
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{

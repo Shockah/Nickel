@@ -20,8 +20,8 @@ namespace Nickel;
 internal sealed class ModManager
 {
 	private readonly DirectoryInfo ModsDirectory;
-	private readonly DirectoryInfo ModSettingsDirectory;
-	private readonly DirectoryInfo PrivateModSettingsDirectory;
+	private readonly DirectoryInfo ModStorageDirectory;
+	private readonly DirectoryInfo PrivateModStorageDirectory;
 	private readonly ILoggerFactory LoggerFactory;
 	internal readonly ILogger Logger;
 	internal readonly ModEventManager EventManager;
@@ -49,16 +49,16 @@ internal sealed class ModManager
 
 	public ModManager(
 		DirectoryInfo modsDirectory,
-		DirectoryInfo modSettingsDirectory,
-		DirectoryInfo privateModSettingsDirectory,
+		DirectoryInfo modStorageDirectory,
+		DirectoryInfo privateModStorageDirectory,
 		ILoggerFactory loggerFactory,
 		ILogger logger,
 		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor
 	)
 	{
 		this.ModsDirectory = modsDirectory;
-		this.ModSettingsDirectory = modSettingsDirectory;
-		this.PrivateModSettingsDirectory = privateModSettingsDirectory;
+		this.ModStorageDirectory = modStorageDirectory;
+		this.PrivateModStorageDirectory = privateModStorageDirectory;
 		this.LoggerFactory = loggerFactory;
 		this.Logger = logger;
 
@@ -559,8 +559,8 @@ internal sealed class ModManager
 				new ModStorage(
 					package.Manifest,
 					() => this.ObtainLogger(package.Manifest),
-					new DirectoryInfoImpl(this.ModSettingsDirectory),
-					new DirectoryInfoImpl(this.PrivateModSettingsDirectory),
+					new DirectoryInfoImpl(this.ModStorageDirectory),
+					new DirectoryInfoImpl(this.PrivateModStorageDirectory),
 					this.ModStorageManager
 				),
 				new ModUtilities(this.EnumCasePool),

@@ -11,30 +11,30 @@ internal sealed class ModStorage : IModStorage
 {
 	private readonly IModManifest ModManifest;
 	private readonly Func<ILogger> LoggerProvider;
-	private readonly IWritableDirectoryInfo CommonSettingsDirectory;
-	private readonly IWritableDirectoryInfo CommonPrivateSettingsDirectory;
+	private readonly IWritableDirectoryInfo CommonStorageDirectory;
+	private readonly IWritableDirectoryInfo CommonPrivateStorageDirectory;
 	private ModStorageManager ModStorageManager { get; }
 
-	public ModStorage(IModManifest modManifest, Func<ILogger> loggerProvider, IWritableDirectoryInfo commonSettingsDirectory, IWritableDirectoryInfo commonPrivateSettingsDirectory, ModStorageManager modStorageManager)
+	public ModStorage(IModManifest modManifest, Func<ILogger> loggerProvider, IWritableDirectoryInfo commonStorageDirectory, IWritableDirectoryInfo commonPrivateStorageDirectory, ModStorageManager modStorageManager)
 	{
 		this.ModManifest = modManifest;
 		this.LoggerProvider = loggerProvider;
-		this.CommonSettingsDirectory = commonSettingsDirectory;
-		this.CommonPrivateSettingsDirectory = commonPrivateSettingsDirectory;
+		this.CommonStorageDirectory = commonStorageDirectory;
+		this.CommonPrivateStorageDirectory = commonPrivateStorageDirectory;
 		this.ModStorageManager = modStorageManager;
 	}
 
-	public IWritableDirectoryInfo SettingsDirectory
-		=> this.CommonSettingsDirectory.GetRelativeDirectory(this.ModManifest.UniqueName);
+	public IWritableDirectoryInfo StorageDirectory
+		=> this.CommonStorageDirectory.GetRelativeDirectory(this.ModManifest.UniqueName);
 
-	public IWritableFileInfo GetSingleSettingsFile(string fileExtension)
-		=> this.CommonSettingsDirectory.GetRelativeFile($"{this.ModManifest.UniqueName}.{fileExtension}");
+	public IWritableFileInfo GetMainStorageFile(string fileExtension)
+		=> this.CommonStorageDirectory.GetRelativeFile($"{this.ModManifest.UniqueName}.{fileExtension}");
 
-	public IWritableDirectoryInfo PrivateSettingsDirectory
-		=> this.CommonPrivateSettingsDirectory.GetRelativeDirectory(this.ModManifest.UniqueName);
+	public IWritableDirectoryInfo PrivateStorageDirectory
+		=> this.CommonPrivateStorageDirectory.GetRelativeDirectory(this.ModManifest.UniqueName);
 
-	public IWritableFileInfo GetSinglePrivateSettingsFile(string fileExtension)
-		=> this.CommonPrivateSettingsDirectory.GetRelativeFile($"{this.ModManifest.UniqueName}.{fileExtension}");
+	public IWritableFileInfo GetMainPrivateStorageFile(string fileExtension)
+		=> this.CommonPrivateStorageDirectory.GetRelativeFile($"{this.ModManifest.UniqueName}.{fileExtension}");
 
 	public void ApplyGlobalJsonSerializerSettings(Action<JsonSerializerSettings> function, double priority = 0)
 		=> this.ModStorageManager.ApplyGlobalJsonSerializerSettings(function, priority);

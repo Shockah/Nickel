@@ -12,32 +12,32 @@ namespace Nickel;
 public interface IModStorage
 {
 	/// <summary>
-	/// Gets a path to a writable subdirectory specific for this mod, within the directory that should be used to store mod settings.
-	/// This directory is usually stored next to the save files.
+	/// Gets a path to a writable subdirectory specific for this mod, within the directory that should be used to store mod data, like settings.
+	/// This directory is usually stored in the user's application data folder, which is synced to the Steam Cloud.
 	/// </summary>
-	IWritableDirectoryInfo SettingsDirectory { get; }
+	IWritableDirectoryInfo StorageDirectory { get; }
 	
 	/// <summary>
-	/// Get a path to a writable file specific for this mod, within the directory that should be used to store mod settings.
-	/// This directory is usually stored next to the save files.
+	/// Get a path to a writable file specific for this mod, within the directory that should be used to store mod data, like settings.
+	/// This directory is usually stored in the user's application data folder, which is synced to the Steam Cloud.
 	/// </summary>
 	/// <param name="fileExtension">The extension of the settings file (usually <c>json</c>).</param>
 	/// <returns>The path to a writable file.</returns>
-	IWritableFileInfo GetSingleSettingsFile(string fileExtension);
+	IWritableFileInfo GetMainStorageFile(string fileExtension);
 	
 	/// <summary>
-	/// Gets a path to a writable subdirectory specific for this mod, within the directory that should be used to store private mod settings.
-	/// This directory is usually stored in the user's application data folder and is not meant to be shared.
+	/// Gets a path to a writable subdirectory specific for this mod, within the directory that should be used to store private mod data, like settings.
+	/// This directory is usually stored in the user's application data folder, which is synced to the Steam Cloud. It is not meant to be shared.
 	/// </summary>
-	IWritableDirectoryInfo PrivateSettingsDirectory { get; }
+	IWritableDirectoryInfo PrivateStorageDirectory { get; }
 	
 	/// <summary>
-	/// Get a path to a writable file specific for this mod, within the directory that should be used to store private mod settings.
-	/// This directory is usually stored in the user's application data folder and is not meant to be shared.
+	/// Get a path to a writable file specific for this mod, within the directory that should be used to store private mod data, like settings.
+	/// This directory is usually stored in the user's application data folder, which is synced to the Steam Cloud. It is not meant to be shared.
 	/// </summary>
 	/// <param name="fileExtension">The extension of the settings file (usually <c>json</c>).</param>
 	/// <returns>The path to a writable file.</returns>
-	IWritableFileInfo GetSinglePrivateSettingsFile(string fileExtension);
+	IWritableFileInfo GetMainPrivateStorageFile(string fileExtension);
 
 	/// <summary>
 	/// Allows globally modifying all mod setting serializers.
