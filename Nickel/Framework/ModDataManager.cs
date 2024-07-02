@@ -32,6 +32,14 @@ internal sealed class ModDataManager
 			return (T)(object)Convert.ToSingle(o);
 		if (typeof(T) == typeof(double))
 			return (T)(object)Convert.ToDouble(o);
+		if (typeof(T) == typeof(uint))
+			return (T)(object)Convert.ToUInt32(o);
+		if (typeof(T) == typeof(ulong))
+			return (T)(object)Convert.ToUInt64(o);
+		if (typeof(T) == typeof(ushort))
+			return (T)(object)Convert.ToUInt16(o);
+		if (typeof(T) == typeof(sbyte))
+			return (T)(object)Convert.ToSByte(o);
 		if (o is null && (!typeof(T).IsValueType || (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))))
 			return default!;
 
@@ -46,10 +54,27 @@ internal sealed class ModDataManager
 		throw new ArgumentException($"Cannot convert {o} to extension data type {typeof(T)}", nameof(T));
 	}
 
+	private static object? DeepCopy(object? o)
+	{
+		if (o is null)
+			return null;
+
+		var type = o.GetType();
+		if (type.IsValueType)
+			return o;
+		
+		var stringWriter = new StringWriter();
+		JSONSettings.serializer.Serialize(new JsonTextWriter(stringWriter), o);
+		if (JSONSettings.serializer.Deserialize(new JsonTextReader(new StringReader(stringWriter.ToString()))) is { } deserialized)
+			return deserialized;
+		
+		throw new ArgumentException($"Cannot deep copy {o}", nameof(o));
+	}
+
 	public T GetModData<T>(IModManifest manifest, object o, string key)
 	{
 		if (o.GetType().IsValueType)
-			throw new ArgumentException("Mod data can only be put on reference (class) types.", nameof(o));
+			throw new ArgumentException("Mod data can only be put on reference (class) types", nameof(o));
 		if (!this.ModDataStorage.TryGetValue(o, out var allObjectData))
 			throw new KeyNotFoundException($"Object {o} does not contain extension data with key `{key}`");
 		if (!allObjectData.TryGetValue(manifest.UniqueName, out var modObjectData))
@@ -66,7 +91,7 @@ internal sealed class ModDataManager
 	public bool TryGetModData<T>(IModManifest manifest, object o, string key, [MaybeNullWhen(false)] out T data)
 	{
 		if (o.GetType().IsValueType)
-			throw new ArgumentException("Mod data can only be put on reference (class) types.", nameof(o));
+			throw new ArgumentException("Mod data can only be put on reference (class) types", nameof(o));
 		if (!this.ModDataStorage.TryGetValue(o, out var allObjectData))
 		{
 			data = default;
@@ -111,7 +136,7 @@ internal sealed class ModDataManager
 	public bool ContainsModData(IModManifest manifest, object o, string key)
 	{
 		if (o.GetType().IsValueType)
-			throw new ArgumentException("Mod data can only be put on reference (class) types.", nameof(o));
+			throw new ArgumentException("Mod data can only be put on reference (class) types", nameof(o));
 		if (!this.ModDataStorage.TryGetValue(o, out var allObjectData))
 			return false;
 		if (!allObjectData.TryGetValue(manifest.UniqueName, out var modObjectData))
@@ -124,7 +149,7 @@ internal sealed class ModDataManager
 	public void SetModData<T>(IModManifest manifest, object o, string key, T data)
 	{
 		if (o.GetType().IsValueType)
-			throw new ArgumentException("Mod data can only be put on reference (class) types.", nameof(o));
+			throw new ArgumentException("Mod data can only be put on reference (class) types", nameof(o));
 		if (!this.ModDataStorage.TryGetValue(o, out var allObjectData))
 		{
 			allObjectData = new();
@@ -141,17 +166,74 @@ internal sealed class ModDataManager
 	public void RemoveModData(IModManifest manifest, object o, string key)
 	{
 		if (o.GetType().IsValueType)
-			throw new ArgumentException("Mod data can only be put on reference (class) types.", nameof(o));
-		if (this.ModDataStorage.TryGetValue(o, out var allObjectData))
+			throw new ArgumentException("Mod data can only be put on reference (class) types", nameof(o));
+
+		if (!this.ModDataStorage.TryGetValue(o, out var allObjectData))
+			return;
+		
+		if (allObjectData.TryGetValue(manifest.UniqueName, out var modObjectData))
 		{
-			if (allObjectData.TryGetValue(manifest.UniqueName, out var modObjectData))
+			modObjectData.Remove(key);
+			if (modObjectData.Count == 0)
+				allObjectData.Remove(manifest.UniqueName);
+		}
+		if (allObjectData.Count == 0)
+			this.ModDataStorage.Remove(o);
+	}
+
+	public void CopyOwnedModData(IModManifest manifest, object from, object to)
+	{
+		if (from.GetType().IsValueType)
+			throw new ArgumentException("Mod data can only be put on reference (class) types", nameof(from));
+		if (to.GetType().IsValueType)
+			throw new ArgumentException("Mod data can only be put on reference (class) types", nameof(to));
+		
+		if (!this.ModDataStorage.TryGetValue(from, out var allSourceObjectData))
+			return;
+		if (!allSourceObjectData.TryGetValue(manifest.UniqueName, out var sourceModObjectData))
+			return;
+
+		if (!this.ModDataStorage.TryGetValue(to, out var allTargetObjectData))
+		{
+			allTargetObjectData = [];
+			this.ModDataStorage.AddOrUpdate(to, allTargetObjectData);
+		}
+		if (!allTargetObjectData.TryGetValue(manifest.UniqueName, out var targetModObjectData))
+		{
+			targetModObjectData = [];
+			allTargetObjectData[manifest.UniqueName] = targetModObjectData;
+		}
+
+		foreach (var (key, value) in sourceModObjectData)
+			targetModObjectData[key] = DeepCopy(value);
+	}
+
+	public void CopyAllModData(object from, object to)
+	{
+		if (from.GetType().IsValueType)
+			throw new ArgumentException("Mod data can only be put on reference (class) types", nameof(from));
+		if (to.GetType().IsValueType)
+			throw new ArgumentException("Mod data can only be put on reference (class) types", nameof(to));
+		
+		if (!this.ModDataStorage.TryGetValue(from, out var allSourceObjectData))
+			return;
+		
+		if (!this.ModDataStorage.TryGetValue(to, out var allTargetObjectData))
+		{
+			allTargetObjectData = [];
+			this.ModDataStorage.AddOrUpdate(to, allTargetObjectData);
+		}
+
+		foreach (var (modUniqueName, sourceModObjectData) in allSourceObjectData)
+		{
+			if (!allTargetObjectData.TryGetValue(modUniqueName, out var targetModObjectData))
 			{
-				modObjectData.Remove(key);
-				if (modObjectData.Count == 0)
-					allObjectData.Remove(manifest.UniqueName);
+				targetModObjectData = [];
+				allTargetObjectData[modUniqueName] = targetModObjectData;
 			}
-			if (allObjectData.Count == 0)
-				this.ModDataStorage.Remove(o);
+			
+			foreach (var (key, value) in sourceModObjectData)
+				targetModObjectData[key] = DeepCopy(value);
 		}
 	}
 }

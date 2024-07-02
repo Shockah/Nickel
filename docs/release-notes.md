@@ -27,6 +27,7 @@
 ### For developers:
 * Nickel now has full XML documentation for all public members.
 * Added APIs for storing mod settings in a common place.
+* Added APIs for copying all mod data from one object to another.
 * Added APIs for registering non-playable characters (enemies or story characters).
 * Added an API to register dynamic sprites.
 * Added a way for mods to get a list of all resolved mods (including ones which may not have been loaded, for various reasons).

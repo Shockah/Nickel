@@ -40,4 +40,10 @@ internal sealed class ModData : IModData
 
 	public void RemoveModData(object o, string key)
 		=> this.ModDataManager.RemoveModData(this.ModManifest, o, key);
+
+	public void CopyOwnedModData(object from, object to)
+		=> this.ModDataManager.CopyOwnedModData(this.ModManifest, from, to);
+
+	public void CopyAllModData(object from, object to)
+		=> this.ModDataManager.CopyAllModData(from, to);
 }
