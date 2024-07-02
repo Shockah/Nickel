@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Nickel;
 
-/// <seealso cref="IModCards.OnGetDynamicCardTraitOverrides"/>
+/// <seealso cref="IModCards.OnGetDynamicInnateCardTraitOverrides"/>
 public readonly struct GetDynamicInnateCardTraitOverridesEventArgs
 {
 	/// <summary>The current state of the game.</summary>
