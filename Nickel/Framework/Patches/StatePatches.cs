@@ -20,6 +20,10 @@ internal static class StatePatches
 	internal static WeakEventSource<ModifyPotentialExeCardsEventArgs> OnModifyPotentialExeCards { get; } = new();
 	internal static WeakEventSource<LoadEventArgs> OnLoad { get; } = new();
 	internal static WeakEventSource<State> OnUpdate { get; } = new();
+	
+	private static readonly EnumerateAllArtifactsEventArgs EnumerateAllArtifactsEventArgsInstance = new();
+	private static readonly ModifyPotentialExeCardsEventArgs ModifyPotentialExeCardsEventArgsInstance = new();
+	private static readonly LoadEventArgs LoadEventArgsInstance = new();
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -53,9 +57,11 @@ internal static class StatePatches
 
 	private static void EnumerateAllArtifacts_Postfix(State __instance, ref List<Artifact> __result)
 	{
-		var eventArgs = new EnumerateAllArtifactsEventArgs { State = __instance, Artifacts = __result.ToList() };
-		OnEnumerateAllArtifacts.Raise(null, eventArgs);
-		__result = eventArgs.Artifacts;
+		var args = EnumerateAllArtifactsEventArgsInstance;
+		args.State = __instance;
+		args.Artifacts = __result;
+		OnEnumerateAllArtifacts.Raise(null, args);
+		__result = args.Artifacts;
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -70,7 +76,7 @@ internal static class StatePatches
 					ILMatches.LdcI4((int)Deck.shard),
 					ILMatches.Call("Contains"),
 					ILMatches.Brtrue,
-					ILMatches.Ldloc<List<Card>>(originalMethod).CreateLdlocInstruction(out var ldlocCards),
+					ILMatches.Ldloc<List<Card>>(originalMethod).CreateLdlocaInstruction(out var ldlocaCards),
 					ILMatches.Instruction(OpCodes.Newobj),
 					ILMatches.Call("Add")
 				)
@@ -80,7 +86,7 @@ internal static class StatePatches
 					SequenceMatcherPastBoundsDirection.Before, SequenceMatcherInsertionResultingBounds.IncludingInsertion,
 					new CodeInstruction(OpCodes.Ldarg_0).WithLabels(labels),
 					new CodeInstruction(OpCodes.Ldfld, AccessTools.DeclaredField(originalMethod.DeclaringType, "chars")),
-					ldlocCards,
+					ldlocaCards,
 					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(StatePatches), nameof(State_PopulateRun_Delegate_Transpiler_ModifyPotentialExeCards)))
 				)
 				.AllElements();
@@ -92,10 +98,13 @@ internal static class StatePatches
 		}
 	}
 
-	private static void State_PopulateRun_Delegate_Transpiler_ModifyPotentialExeCards(IEnumerable<Deck> chars, List<Card> cards)
+	private static void State_PopulateRun_Delegate_Transpiler_ModifyPotentialExeCards(IEnumerable<Deck> chars, ref List<Card> cards)
 	{
-		var eventArgs = new ModifyPotentialExeCardsEventArgs { Characters = chars.ToHashSet(), ExeCards = cards };
-		OnModifyPotentialExeCards.Raise(null, eventArgs);
+		var args = ModifyPotentialExeCardsEventArgsInstance;
+		args.Characters = chars.ToHashSet();
+		args.ExeCards = cards;
+		OnModifyPotentialExeCards.Raise(null, args);
+		cards = args.ExeCards;
 	}
 
 	private static bool SaveIfRelease_Prefix()
@@ -111,9 +120,11 @@ internal static class StatePatches
 
 	private static void Load_Postfix(int slot, ref State.SaveSlot __result)
 	{
-		var eventArgs = new LoadEventArgs { Slot = slot, Data = __result };
-		OnLoad.Raise(null, eventArgs);
-		__result = eventArgs.Data;
+		var args = LoadEventArgsInstance;
+		args.Slot = slot;
+		args.Data = __result;
+		OnLoad.Raise(null, args);
+		__result = args.Data;
 	}
 
 	private static void Update_Prefix(State __instance)
@@ -121,19 +132,19 @@ internal static class StatePatches
 
 	internal sealed class EnumerateAllArtifactsEventArgs
 	{
-		public required State State { get; init; }
-		public required List<Artifact> Artifacts { get; set; }
+		public State State { get; internal set; } = null!;
+		public List<Artifact> Artifacts { get; set; } = null!;
 	}
 
 	internal sealed class ModifyPotentialExeCardsEventArgs
 	{
-		public required HashSet<Deck> Characters { get; init; }
-		public required List<Card> ExeCards { get; init; }
+		public HashSet<Deck> Characters { get; internal set; } = null!;
+		public List<Card> ExeCards { get; set; } = null!;
 	}
 
 	internal sealed class LoadEventArgs
 	{
-		public required int Slot { get; init; }
-		public required State.SaveSlot Data { get; set; }
+		public int Slot { get; internal set; }
+		public State.SaveSlot Data { get; set; } = null!;
 	}
 }

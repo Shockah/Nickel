@@ -348,9 +348,9 @@ internal class CardTraitManager
 		e.CurrentData.infinite = this.IsCardTraitActive(e.State, e.Card, this.InfiniteCardTrait.Value);
 	}
 
-	private void OnReturnCardsToDeck(object? sender, CombatPatches.ReturnCardsToDeckEventArgs e)
+	private void OnReturnCardsToDeck(object? sender, State state)
 	{
-		foreach (var card in e.State.deck)
+		foreach (var card in state.deck)
 		{
 			if (!this.ModDataManager.TryGetModData<OverridesModData>(this.ModManagerModManifest, card, "CustomTraitOverrides", out var overrides))
 				continue;

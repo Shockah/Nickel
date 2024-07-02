@@ -11,6 +11,8 @@ namespace Nickel;
 internal static class WizardPatches
 {
 	internal static WeakEventSource<GetAssignableStatusesEventArgs> OnGetAssignableStatuses { get; } = new();
+		
+	private static readonly GetAssignableStatusesEventArgs GetAssignableStatusesEventArgsInstance = new();
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -21,14 +23,16 @@ internal static class WizardPatches
 
 	private static void GetAssignableStatuses_Postfix(State s, ref List<Status> __result)
 	{
-		var eventArgs = new GetAssignableStatusesEventArgs { State = s, Statuses = __result };
-		OnGetAssignableStatuses.Raise(null, eventArgs);
-		__result = eventArgs.Statuses;
+		var args = GetAssignableStatusesEventArgsInstance;
+		args.State = s;
+		args.Statuses = __result;
+		OnGetAssignableStatuses.Raise(null, args);
+		__result = args.Statuses;
 	}
 
 	internal sealed class GetAssignableStatusesEventArgs
 	{
-		public required State State { get; init; }
-		public required List<Status> Statuses { get; set; }
+		public State State { get; internal set; } = null!;
+		public List<Status> Statuses { get; set; } = null!;
 	}
 }

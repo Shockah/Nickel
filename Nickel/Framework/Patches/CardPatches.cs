@@ -19,6 +19,12 @@ internal static class CardPatches
 	internal static readonly WeakEventSource<TraitRenderEventArgs> OnRenderTraits = new();
 	internal static readonly WeakEventSource<GettingDataWithOverridesEventArgs> OnGettingDataWithOverrides = new();
 	internal static readonly WeakEventSource<MidGetDataWithOverridesEventArgs> OnMidGetDataWithOverrides = new();
+	
+	private static readonly KeyEventArgs KeyEventArgsInstance = new();
+	private static readonly TooltipsEventArgs TooltipsEventArgsInstance = new();
+	private static readonly TraitRenderEventArgs TraitRenderEventArgsInstance = new();
+	private static readonly GettingDataWithOverridesEventArgs GettingDataWithOverridesEventArgsInstance = new();
+	private static readonly MidGetDataWithOverridesEventArgs MidGetDataWithOverridesEventArgsInstance = new();
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -47,9 +53,11 @@ internal static class CardPatches
 
 	private static void Key_Postfix(Card __instance, ref string __result)
 	{
-		var eventArgs = new KeyEventArgs { Card = __instance, Key = __result };
-		OnKey.Raise(null, eventArgs);
-		__result = eventArgs.Key;
+		var args = KeyEventArgsInstance;
+		args.Card = __instance;
+		args.Key = __result;
+		OnKey.Raise(null, args);
+		__result = args.Key;
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -98,22 +106,32 @@ internal static class CardPatches
 
 	private static void Render_Transpiler_RenderTraits(Card card, State state, ref int cardTraitIndex, Vec vec)
 	{
-		var eventArgs = new TraitRenderEventArgs { Card = card, State = state, CardTraitIndex = cardTraitIndex, Position = vec };
-		OnRenderTraits.Raise(null, eventArgs);
-		cardTraitIndex = eventArgs.CardTraitIndex;
+		var args = TraitRenderEventArgsInstance;
+		args.Card = card;
+		args.State = state;
+		args.CardTraitIndex = cardTraitIndex;
+		args.Position = vec;
+		OnRenderTraits.Raise(null, args);
+		cardTraitIndex = args.CardTraitIndex;
 	}
 
 	private static void GetAllTooltips_Postfix(Card __instance, State s, bool showCardTraits, ref IEnumerable<Tooltip> __result)
 	{
-		var eventArgs = new TooltipsEventArgs { Card = __instance, State = s, ShowCardTraits = showCardTraits, TooltipsEnumerator = __result };
-		OnGetTooltips.Raise(null, eventArgs);
-		__result = eventArgs.TooltipsEnumerator;
+		var args = TooltipsEventArgsInstance;
+		args.Card = __instance;
+		args.State = s;
+		args.ShowCardTraits = showCardTraits;
+		args.TooltipsEnumerator = __result;
+		OnGetTooltips.Raise(null, args);
+		__result = args.TooltipsEnumerator;
 	}
 
 	private static void GetDataWithOverrides_Prefix(Card __instance, State state)
 	{
-		var eventArgs = new GettingDataWithOverridesEventArgs { Card = __instance, State = state };
-		OnGettingDataWithOverrides.Raise(null, eventArgs);
+		var args = GettingDataWithOverridesEventArgsInstance;
+		args.Card = __instance;
+		args.State = state;
+		OnGettingDataWithOverrides.Raise(null, args);
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -146,44 +164,48 @@ internal static class CardPatches
 
 	private static void GetDataWithOverrides_Transpiler_ModifyData(Card card, State state, ref CardData data)
 	{
-		var eventArgs = new MidGetDataWithOverridesEventArgs { Card = card, State = state, InitialData = data, CurrentData = data };
-		OnMidGetDataWithOverrides.Raise(null, eventArgs);
-		data = eventArgs.CurrentData;
+		var args = MidGetDataWithOverridesEventArgsInstance;
+		args.Card = card;
+		args.State = state;
+		args.InitialData = data;
+		args.CurrentData = data;
+		OnMidGetDataWithOverrides.Raise(null, args);
+		data = args.CurrentData;
 	}
 
 	internal sealed class KeyEventArgs
 	{
-		public required Card Card { get; init; }
-		public required string Key { get; set; }
+		public Card Card { get; internal set; } = null!;
+		public string Key { get; set; } = null!;
 	}
 
 	internal sealed class TooltipsEventArgs
 	{
-		public required Card Card { get; init; }
-		public required State State { get; init; }
-		public required bool ShowCardTraits { get; init; }
-		public required IEnumerable<Tooltip> TooltipsEnumerator { get; set; }
+		public Card Card { get; internal set; } = null!;
+		public State State { get; internal set; } = null!;
+		public bool ShowCardTraits { get; internal set; }
+		public IEnumerable<Tooltip> TooltipsEnumerator { get; set; } = null!;
 	}
 
 	internal sealed class TraitRenderEventArgs
 	{
-		public required Card Card { get; init; }
-		public required State State { get; init; }
-		public required int CardTraitIndex { get; set; }
-		public required Vec Position { get; set; }
+		public Card Card { get; internal set; } = null!;
+		public State State { get; internal set; } = null!;
+		public int CardTraitIndex { get; set; }
+		public Vec Position { get; set; }
 	}
 
 	internal sealed class GettingDataWithOverridesEventArgs
 	{
-		public required Card Card { get; init; }
-		public required State State { get; init; }
+		public Card Card { get; internal set; } = null!;
+		public State State { get; internal set; } = null!;
 	}
 
 	internal sealed class MidGetDataWithOverridesEventArgs
 	{
-		public required Card Card { get; init; }
-		public required State State { get; init; }
-		public required CardData InitialData { get; init; }
-		public required CardData CurrentData;
+		public Card Card { get; internal set; } = null!;
+		public State State { get; internal set; } = null!;
+		public CardData InitialData { get; internal set; }
+		public CardData CurrentData;
 	}
 }

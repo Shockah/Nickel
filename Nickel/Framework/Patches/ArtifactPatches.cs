@@ -10,6 +10,8 @@ namespace Nickel;
 internal static class ArtifactPatches
 {
 	internal static WeakEventSource<KeyEventArgs> OnKey { get; } = new();
+	
+	private static readonly KeyEventArgs KeyEventArgsInstance = new();
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -20,14 +22,16 @@ internal static class ArtifactPatches
 
 	private static void Key_Postfix(Artifact __instance, ref string __result)
 	{
-		var eventArgs = new KeyEventArgs { Artifact = __instance, Key = __result };
-		OnKey.Raise(null, eventArgs);
-		__result = eventArgs.Key;
+		var args = KeyEventArgsInstance;
+		args.Artifact = __instance;
+		args.Key = __result;
+		OnKey.Raise(null, args);
+		__result = args.Key;
 	}
 
 	internal sealed class KeyEventArgs
 	{
-		public required Artifact Artifact { get; init; }
-		public required string Key { get; set; }
+		public Artifact Artifact { get; internal set; } = null!;
+		public string Key { get; set; } = null!;
 	}
 }

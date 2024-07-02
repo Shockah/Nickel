@@ -10,6 +10,8 @@ namespace Nickel;
 internal static class MapBasePatches
 {
 	internal static WeakEventSource<GetEnemyPoolsEventArgs> OnGetEnemyPools { get; } = new();
+	
+	private static readonly GetEnemyPoolsEventArgs GetEnemyPoolsEventArgsInstance = new();
 
 	internal static void ApplyLate(Harmony harmony)
 		=> harmony.PatchVirtual(
@@ -20,12 +22,18 @@ internal static class MapBasePatches
 		);
 
 	private static void GetEnemyPools_Postfix(MapBase __instance, State __0, MapBase.MapEnemyPool __result)
-		=> OnGetEnemyPools.Raise(null, new GetEnemyPoolsEventArgs { State = __0, Map = __instance, Pool = __result });
+	{
+		var args = GetEnemyPoolsEventArgsInstance;
+		args.State = __0;
+		args.Map = __instance;
+		args.Pool = __result;
+		OnGetEnemyPools.Raise(null, args);
+	}
 
 	internal sealed class GetEnemyPoolsEventArgs
 	{
-		public required State State { get; init; }
-		public required MapBase Map { get; init; }
-		public required MapBase.MapEnemyPool Pool { get; init; }
+		public State State { get; internal set; } = null!;
+		public MapBase Map { get; internal set; } = null!;
+		public MapBase.MapEnemyPool Pool { get; internal set; } = null!;
 	}
 }

@@ -13,6 +13,7 @@ internal static class TTGlossaryPatches
 	internal static WeakEventSource<TryGetIconEventArgs> OnTryGetIcon { get; } = new();
 
 	private static readonly Stack<TTGlossary> GlossaryStack = new();
+	private static readonly TryGetIconEventArgs TryGetIconEventArgsInstance = new();
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -40,20 +41,16 @@ internal static class TTGlossaryPatches
 		if (!GlossaryStack.TryPeek(out var glossary))
 			return;
 
-		TryGetIconEventArgs args = new(glossary, __result);
+		var args = TryGetIconEventArgsInstance;
+		args.Glossary = glossary;
+		args.Sprite = __result;
 		OnTryGetIcon.Raise(null, args);
 		__result = args.Sprite;
 	}
 
 	internal sealed class TryGetIconEventArgs
 	{
-		public TTGlossary Glossary { get; }
+		public TTGlossary Glossary { get; internal set; } = null!;
 		public Spr? Sprite { get; set; }
-
-		public TryGetIconEventArgs(TTGlossary glossary, Spr? sprite)
-		{
-			this.Glossary = glossary;
-			this.Sprite = sprite;
-		}
 	}
 }
