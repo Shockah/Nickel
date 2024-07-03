@@ -11,6 +11,12 @@ The main purposes of Nickel are:
 5. **Capture logs useful for debugging issues.** Nickel will capture all kinds of logs in one common file. This includes any actions Nickel does, anything mods log by themselves, and anything the game logs. All of this information together can help figuring out issues specific to the modded game.
 6. **Automatically fix save files.** Nickel will try to recover a save file from being completely unusable. This can often happen when adding, removing or updating mods.
 
+## Downloads
+
+Get the latest version from:
+* [NexusMods](https://www.nexusmods.com/cobaltcore/mods/1)
+* [GitHub releases](https://github.com/Shockah/Nickel/releases/latest)
+
 ## Documentation
 
 ### For players

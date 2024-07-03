@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.0.0
+Released 3 July 2024.
 
 ### For players:
 * The pre-installed `Essentials` mod is now renamed to `Nickel.Essentials`. **Be sure to remove the old `Essentials` folder when updating Nickel.**

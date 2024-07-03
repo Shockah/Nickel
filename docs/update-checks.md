@@ -3,7 +3,9 @@
 
 # Update checks
 
-Nickel comes with pre-installed mods which do automatic update checks for your mods (including Nickel itself), but to make these work (correctly, or even at all, depending on the update source), they need to be configured.
+Nickel comes with pre-installed mods which do automatic update checks for your mods (including Nickel itself). These show up both in-game as an extra overlay/tooltip for the Menu icon, the console that shows up when using Nickel, and the log files created by Nickel. The console and the log file also include links to the updates directly.
+
+To make update checks work (correctly, or even at all, depending on the update source), they need to be configured.
 
 1. Start Nickel.
 2. Go into the Main Menu of the game, if you are not currently in it.
