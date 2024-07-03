@@ -1,4 +1,4 @@
-[← back to readme](README.md)
+[← back to readme](README.md)  
 [← back to player guide](player-guide.md)
 
 # Update checks
