@@ -15,7 +15,7 @@ public interface IUpdateChecksApi : IUpdateChecksTrimmedApi
 	/// <param name="hasValue">Whether the token is set (<see cref="ITokenModSetting.HasValue"/>).</param>
 	/// <param name="setupAction">The action callback that will be invoked when the Setup button is clicked (<see cref="ITokenModSetting.SetupAction"/>).</param>
 	/// <returns></returns>
-	ITokenModSetting MakeTokenSetting(Func<string> title, Func<bool> hasValue, Action setupAction);
+	ITokenModSetting MakeTokenSetting(Func<string> title, Func<bool> hasValue, Action<G, IModSettingsApi.IModSettingsRoute> setupAction);
 
 	/// <summary>
 	/// Represents a token mod setting UI element.<br/>
@@ -30,10 +30,10 @@ public interface IUpdateChecksApi : IUpdateChecksTrimmedApi
 		Func<bool> HasValue { get; set; }
 		
 		/// <summary>An optional action callback that will be invoked when the Paste/Clear button is clicked. If <c>null</c>, the button will not be displayed.</summary>
-		Action<string?>? PasteAction { get; set; }
+		Action<G, IModSettingsApi.IModSettingsRoute, string?>? PasteAction { get; set; }
 		
 		/// <summary>The action callback that will be invoked when the Setup button is clicked.</summary>
-		Action SetupAction { get; set; }
+		Action<G, IModSettingsApi.IModSettingsRoute> SetupAction { get; set; }
 		
 		/// <summary>The optional tooltips for the element.</summary>
 		Func<IEnumerable<Tooltip>>? BaseTooltips { get; set; }
@@ -57,12 +57,12 @@ public interface IUpdateChecksApi : IUpdateChecksTrimmedApi
 		/// <summary>Sets the <see cref="PasteAction"/>.</summary>
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
-		ITokenModSetting SetPasteAction(Action<string?>? value);
+		ITokenModSetting SetPasteAction(Action<G, IModSettingsApi.IModSettingsRoute, string?>? value);
 		
 		/// <summary>Sets the <see cref="SetupAction"/>.</summary>
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
-		ITokenModSetting SetSetupAction(Action value);
+		ITokenModSetting SetSetupAction(Action<G, IModSettingsApi.IModSettingsRoute> value);
 		
 		/// <summary>Sets the <see cref="BaseTooltips"/>.</summary>
 		/// <param name="value">The new value.</param>

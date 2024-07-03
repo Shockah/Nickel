@@ -348,6 +348,9 @@ public interface IModSettingsApi
 		
 		/// <summary>The horizontal alignment of the title.</summary>
 		HorizontalAlignment TitleHorizontalAlignment { get; set; }
+		
+		/// <summary>The spacing between the title and the value text.</summary>
+		int Spacing { get; set; }
 
 		/// <summary>Sets the <see cref="Title"/>.</summary>
 		/// <param name="value">The new value.</param>
@@ -373,6 +376,11 @@ public interface IModSettingsApi
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
 		IButtonModSetting SetTitleHorizontalAlignment(HorizontalAlignment value);
+
+		/// <summary>Sets the <see cref="Spacing"/> between the title and the value text.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		IButtonModSetting SetSpacing(int value);
 	}
 
 	/// <summary>

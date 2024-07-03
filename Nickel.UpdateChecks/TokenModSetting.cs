@@ -13,8 +13,8 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 
 	public required Func<string> Title { get; set; }
 	public required Func<bool> HasValue { get; set; }
-	public Action<string?>? PasteAction { get; set; }
-	public required Action SetupAction { get; set; }
+	public Action<G, IModSettingsApi.IModSettingsRoute, string?>? PasteAction { get; set; }
+	public required Action<G, IModSettingsApi.IModSettingsRoute> SetupAction { get; set; }
 	public Func<IEnumerable<Tooltip>>? BaseTooltips { get; set; }
 	public Func<IEnumerable<Tooltip>>? PasteTooltips { get; set; }
 	public Func<IEnumerable<Tooltip>>? SetupTooltips { get; set; }
@@ -22,10 +22,11 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 	private UIKey PasteKey;
 	private UIKey SetupKey;
 	private UIKey CheckboxKey;
+	private IModSettingsApi.IModSettingsRoute CurrentRoute = null!;
 
 	public TokenModSetting()
 	{
-		this.OnMenuOpen += (_, _) =>
+		this.OnMenuOpen += (_, route) =>
 		{
 			if (this.Key == 0)
 				this.Key = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
@@ -35,6 +36,7 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 				this.SetupKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 			if (this.CheckboxKey == 0)
 				this.CheckboxKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
+			this.CurrentRoute = route;
 		};
 	}
 
@@ -50,13 +52,13 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 		return this;
 	}
 
-	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetPasteAction(Action<string?>? value)
+	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetPasteAction(Action<G, IModSettingsApi.IModSettingsRoute, string?>? value)
 	{
 		this.PasteAction = value;
 		return this;
 	}
 
-	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetSetupAction(Action value)
+	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetSetupAction(Action<G, IModSettingsApi.IModSettingsRoute> value)
 	{
 		this.SetupAction = value;
 		return this;
@@ -107,7 +109,7 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 					onMouseDown: new MouseDownHandler(() =>
 					{
 						Audio.Play(Event.Click);
-						pasteAction(this.HasValue() ? null : (ClipboardService.GetText() ?? ""));
+						pasteAction(g, this.CurrentRoute, this.HasValue() ? null : (ClipboardService.GetText() ?? ""));
 					})
 				);
 
@@ -118,7 +120,7 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 				onMouseDown: new MouseDownHandler(() =>
 				{
 					Audio.Play(Event.Click);
-					this.SetupAction();
+					this.SetupAction(g, this.CurrentRoute);
 				})
 			);
 

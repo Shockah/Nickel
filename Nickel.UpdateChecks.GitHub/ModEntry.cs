@@ -73,8 +73,8 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 							{
 								Title = () => this.Localizations.Localize(["modSettings", "token", "name"]),
 								HasValue = () => !string.IsNullOrEmpty(this.Database.Token),
-								PasteAction = text => this.Database.Token = text,
-								SetupAction = () => MainMenu.TryOpenWebsiteLink("https://github.com/settings/tokens?type=beta"),
+								PasteAction = (_, _, text) => this.Database.Token = text,
+								SetupAction = (_, _) => MainMenu.TryOpenWebsiteLink("https://github.com/settings/tokens?type=beta"),
 								BaseTooltips = () => [
 									new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::Token")
 									{
@@ -102,6 +102,10 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 						]),
 						isVisible: () => this.Database.IsEnabled
 					),
+					settingsApi.MakeButton(
+						() => this.Localizations.Localize(["modSettings", "guide", "name"]),
+						(_, _) => MainMenu.TryOpenWebsiteLink("https://github.com/Shockah/Nickel/blob/master/docs/update-checks.md#github")
+					)
 				]).SubscribeToOnMenuClose(_ =>
 				{
 					this.Helper.Storage.SaveJson(this.DatabaseFile, this.Database);

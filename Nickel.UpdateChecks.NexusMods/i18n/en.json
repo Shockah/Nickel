@@ -6,6 +6,9 @@
 		"apiKey": {
 			"name": "API key",
 			"description": "Providing your own NexusMods API key is <c=redd>required</c> for Nickel to be able to perform update checks for mods hosted on NexusMods."
+		},
+		"guide": {
+			"name": "Open the guide"
 		}
 	},
 	"message": {

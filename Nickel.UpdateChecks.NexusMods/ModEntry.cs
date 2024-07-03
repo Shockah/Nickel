@@ -71,8 +71,8 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 						{
 							Title = () => this.Localizations.Localize(["modSettings", "apiKey", "name"]),
 							HasValue = () => !string.IsNullOrEmpty(this.Database.ApiKey),
-							PasteAction = text => this.Database.ApiKey = text,
-							SetupAction = () => MainMenu.TryOpenWebsiteLink("https://next.nexusmods.com/settings/api-keys"),
+							PasteAction = (_, _, text) => this.Database.ApiKey = text,
+							SetupAction = (_, _) => MainMenu.TryOpenWebsiteLink("https://next.nexusmods.com/settings/api-keys"),
 							BaseTooltips = () => [
 								new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::ApiKey")
 								{
@@ -84,6 +84,10 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 						},
 						isVisible: () => this.Database.IsEnabled
 					),
+					settingsApi.MakeButton(
+						() => this.Localizations.Localize(["modSettings", "guide", "name"]),
+						(_, _) => MainMenu.TryOpenWebsiteLink("https://github.com/Shockah/Nickel/blob/master/docs/update-checks.md#nexusmods")
+					)
 				]).SubscribeToOnMenuClose(_ =>
 				{
 					this.Helper.Storage.SaveJson(this.DatabaseFile, this.Database);

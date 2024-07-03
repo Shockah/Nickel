@@ -14,6 +14,7 @@ public sealed class ButtonModSetting : BaseModSetting, OnMouseDown, IModSettings
 	public required Action<G, IModSettingsApi.IModSettingsRoute> OnClick { get; set; }
 	public Func<IEnumerable<Tooltip>>? Tooltips { get; set; }
 	public IModSettingsApi.HorizontalAlignment TitleHorizontalAlignment { get; set; } = IModSettingsApi.HorizontalAlignment.Left;
+	public int Spacing { get; set; } = 10;
 
 	IModSettingsApi.IButtonModSetting IModSettingsApi.IButtonModSetting.SetTitle(Func<string> value)
 	{
@@ -45,6 +46,12 @@ public sealed class ButtonModSetting : BaseModSetting, OnMouseDown, IModSettings
 		return this;
 	}
 
+	IModSettingsApi.IButtonModSetting IModSettingsApi.IButtonModSetting.SetSpacing(int value)
+	{
+		this.Spacing = value;
+		return this;
+	}
+
 	public override Vec? Render(G g, Box box, bool dontDraw)
 	{
 		if (!dontDraw)
@@ -54,23 +61,24 @@ public sealed class ButtonModSetting : BaseModSetting, OnMouseDown, IModSettings
 			if (box.IsHover())
 				Draw.Rect(box.rect.x, box.rect.y, box.rect.w, box.rect.h, Colors.menuHighlightBox.gain(0.5), BlendMode.Screen);
 			box.onMouseDown = this;
-
-			var textColor = box.IsHover() ? Colors.textChoiceHoverActive : Colors.textMain;
-			var valueText = this.ValueText?.Invoke();
 			
-			_ = this.TitleHorizontalAlignment switch
-			{
-				IModSettingsApi.HorizontalAlignment.Left => Draw.Text(this.Title(), box.rect.x + 10, box.rect.y + 5 + (int)((box.rect.h - PreferredHeight) / 2), DB.thicket, textColor, align: TAlign.Left),
-				IModSettingsApi.HorizontalAlignment.Right => Draw.Text(this.Title(), box.rect.x2 - 10, box.rect.y + 5 + (int)((box.rect.h - PreferredHeight) / 2), DB.thicket, textColor, align: TAlign.Right),
-				_ => Draw.Text(this.Title(), box.rect.Center().x, box.rect.y + 5 + (int)((box.rect.h - PreferredHeight) / 2), DB.thicket, textColor, align: TAlign.Center),
-			};
-			Draw.Text(valueText ?? "", box.rect.x2 - 10, box.rect.y + 5 + (int)((box.rect.h - PreferredHeight) / 2), DB.thicket, textColor, align: TAlign.Right);
-
 			if (box.IsHover() && this.Tooltips is { } tooltips)
 				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
 		}
+		
+		var textColor = box.IsHover() ? Colors.textChoiceHoverActive : Colors.textMain;
+		var valueText = this.ValueText?.Invoke();
+			
+		var titleRect = this.TitleHorizontalAlignment switch
+		{
+			IModSettingsApi.HorizontalAlignment.Left => Draw.Text(this.Title(), box.rect.x + 10, box.rect.y + 5 + (int)((box.rect.h - PreferredHeight) / 2), DB.thicket, textColor, align: TAlign.Left, dontDraw: dontDraw),
+			IModSettingsApi.HorizontalAlignment.Right => Draw.Text(this.Title(), box.rect.x2 - 10, box.rect.y + 5 + (int)((box.rect.h - PreferredHeight) / 2), DB.thicket, textColor, align: TAlign.Right, dontDraw: dontDraw),
+			_ => Draw.Text(this.Title(), box.rect.Center().x, box.rect.y + 5 + (int)((box.rect.h - PreferredHeight) / 2), DB.thicket, textColor, align: TAlign.Center, dontDraw: dontDraw),
+		};
+		var valueRect = Draw.Text(valueText ?? "", box.rect.x2 - 10, box.rect.y + 5 + (int)((box.rect.h - PreferredHeight) / 2), DB.thicket, textColor, align: TAlign.Right, dontDraw: dontDraw);
 
-		return new(box.rect.w, dontDraw ? PreferredHeight : box.rect.h);
+		var requiredWidth = titleRect.w + (string.IsNullOrEmpty(valueText) ? 0 : valueRect.w + this.Spacing);
+		return new(Math.Min(box.rect.w, requiredWidth), dontDraw ? PreferredHeight : box.rect.h);
 	}
 
 	public void OnMouseDown(G g, Box b)

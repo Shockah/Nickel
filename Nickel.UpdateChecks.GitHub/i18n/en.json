@@ -10,6 +10,9 @@
 		"token": {
 			"name": "Token",
 			"description": "Providing your own GitHub token will ensure Nickel is always able to perform update checks for mods hosted on GitHub."
+		},
+		"guide": {
+			"name": "Open the guide"
 		}
 	},
 	"message": {
