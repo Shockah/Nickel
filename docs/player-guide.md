@@ -11,7 +11,7 @@ Note: Nickel requires Windows 10+.
 	* While the actual place you extract to does not matter for playing mods, it is recommended to extract to the game's Steam folder (`C:\Program Files\Steam\steamapps\common\Cobalt Core` by default). This will help when debugging any potential issues, and will also help when creating mods of your own. Additionally, this is the path where the [Vortex mod manager for NexusMods](https://www.nexusmods.com/about/vortex/) will look for Nickel to be installed. Alternatively, if you are not interested in using Vortex, the game's application data folder (`%appdata%\CobaltCore`) is also a good spot for installing Nickel.
 3. Open the extracted Nickel folder.
 4. Double-click `NickelLauncher.exe` to start Nickel to let it do its initial setup.
-	* While it is unlikely, if `NickelLauncher.exe` happens not to work, you can alternatively try running `Nickel.exe` instead, but doing so will reduce some of the Nickel's logging capabilities.
+	* While it is unlikely, if `NickelLauncher.exe` happens not to work, you can alternatively try running `Nickel.exe` instead, but doing so will reduce some of Nickel's logging capabilities.
 
 ## Steam Deck / Linux (Proton)
 
@@ -23,7 +23,7 @@ This guide assumes you are already familiar with the Desktop mode of a Steam Dec
 4. Click on the Steam icon in your taskbar and choose "Library".
 5. In the bottom-left corner, click "Add a Game", then choose "Add a Non-Steam Game...".
 6. Click the "Browse" button. Navigate to the folder where you extracted Nickel to. Choose `NickelLauncher.exe`, then click "Open".
-	* While it is unlikely, if `NickelLauncher.exe` happens not to work, you can alternatively try running `Nickel.exe` instead, but doing so will reduce some of the Nickel's logging capabilities.
+	* While it is unlikely, if `NickelLauncher.exe` happens not to work, you can alternatively try running `Nickel.exe` instead, but doing so will reduce some of Nickel's logging capabilities.
 7. Click "Add Selected Programs".
 8. Right-click the new `NickelLauncher.exe` entry, then choose "Properties".
 9. While you are on this screen, you can change the `NickelLauncher.exe` name in the top field to your liking.
@@ -52,21 +52,7 @@ The two great places to find Cobalt Core mods are:
 
 After setting up Nickel, you can start adding mods. By default, Nickel comes with a `ModLibrary` folder and several pre-installed mods.
 
-To install a mod, put it into the `ModLibrary` folder. Some (mostly "legacy") mods may require you to extract them into that folder, but newer mods should not have that limitation. If you do extract, make sure you do not have both the `.zip` file and the extracted mod in the `ModLibrary` folder.
-
-## Organizing the `ModLibrary`
-
-Nickel loads mods recursively from the `ModLibrary` folder. This means you can put mods in as many different subfolders as you wish within the root `ModLibrary` folder.
-
-If you want a folder or a `.zip` file to be ignored by Nickel, prepend its name with a `.` -- for example, a folder called `.disabled` will not be looked into by Nickel.
-
-## Legacy mods
-
-Before Nickel was created, there existed a [much simpler, wildly different mod loader](https://github.com/Ewanderer/CobaltCoreModLoader). In the Nickel world, mods for that mod loader are called "legacy" mods. Nickel comes with a pre-installed `Nickel.Legacy` mod which handles loading of legacy mods, as if they were proper Nickel mods. Nickel and legacy mods can co-exist and even communicate with each other.
-
-Currently, legacy mods **require** to be extracted into your `ModLibrary` folder and will not load otherwise. On the other hand, Nickel mods can be loaded directly from ZIP files, but in some cases the mods may not function properly when not extracted. **The current recommendation is to always extract your mods to avoid any problems.**
-
-If a legacy mod is old enough, it is likely that its author did not include a `nickel.json` file with the mod yet. `nickel.json` files are how Nickel can tell that a given folder or a `.zip` file contains a mod it should try loading, and how it can figure out the mod load order. If a mod does not come with that file, Nickel will not be able to load that mod. Fortunately, after all other mods are loaded, `Nickel.Legacy` will look at such mods missing their `nickel.json` files and will try to create these files. Unfortunately, mods which just had their `nickel.json` files created cannot be loaded in retroactively, so they will only be loaded on subsequent launches of Nickel.
+To install a mod, put it into the `ModLibrary` folder. It is recommended to extract the mod and remove the `.zip` file. While newer mods can work straight out of `.zip` files, some (mostly "legacy") mods may require you to extract them into the `ModLibrary` folder.
 
 # Updating mods
 
@@ -83,3 +69,17 @@ Nickel keeps two log files, by default stored in the `Logs` folder, which can be
 If you are having any issues with the modded game, **always** include your log file. The file contains detailed information about your mod setup and anything that is going on. **Copy-pasting the text from the console that appears when running the game is *not* the same as sharing the log file.** The log file contains much more information than the console does.
 
 If you need help with your log file, you can jump into the [#cc-mod-discussion channel](https://discord.com/channels/806989214133780521/1210710707717275658) on the [Rocket Rat Games' (developers') Discord server](https://discord.gg/cncV5znGwA).
+
+# Organizing the `ModLibrary`
+
+Nickel loads mods recursively from the `ModLibrary` folder. This means you can put mods in as many different subfolders as you wish within the root `ModLibrary` folder.
+
+If you want a folder or a `.zip` file to be ignored by Nickel, prepend its name with a `.` - for example, a folder called `.disabled` will not be looked into by Nickel.
+
+# Legacy mods
+
+Before Nickel was created, there existed a [much simpler, wildly different mod loader](https://github.com/Ewanderer/CobaltCoreModLoader). In the Nickel world, mods for that mod loader are called "legacy" mods. Nickel comes with a pre-installed `Nickel.Legacy` mod which handles loading of legacy mods, as if they were proper Nickel mods. Nickel and legacy mods can co-exist and even communicate with each other.
+
+Currently, legacy mods **require** to be extracted into your `ModLibrary` folder and will not load otherwise. On the other hand, Nickel mods can be loaded directly from ZIP files, but in some cases the mods may not function properly when not extracted. **The current recommendation is to always extract your mods to avoid any problems.**
+
+If a legacy mod is old enough, it is likely that its author did not include a `nickel.json` file with the mod yet. `nickel.json` files are how Nickel can tell that a given folder or a `.zip` file contains a mod it should try loading, and how it can figure out the mod load order. If a mod does not come with that file, Nickel will not be able to load that mod. Fortunately, after all other mods are loaded, `Nickel.Legacy` will look at such mods missing their `nickel.json` files and will try to create these files. Unfortunately, mods which just had their `nickel.json` files created cannot be loaded in retroactively, so they will only be loaded on subsequent launches of Nickel.
