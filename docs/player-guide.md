@@ -26,7 +26,9 @@ This guide assumes you are already familiar with the Desktop mode of a Steam Dec
 	* While it is unlikely, if `NickelLauncher.exe` happens not to work, you can alternatively try running `Nickel.exe` instead, but doing so will reduce some of Nickel's logging capabilities.
 7. Click "Add Selected Programs".
 8. Right-click the new `NickelLauncher.exe` entry, then choose "Properties".
-9. While you are on this screen, you can change the `NickelLauncher.exe` name in the top field to your liking.
+9. Paste the below line into the "Launch Options" field:  
+	`STEAM_COMPAT_DATA_PATH=~/.steam/steam/steamapps/compatdata/2179850/ %command%`
+	* While you are on this screen, you can also change the `NickelLauncher.exe` name in the top field to your liking.
 10. Click on the "Compatibility" tab on the left.
 11. Tick the "Force the use of a specific Steam Play compatibility tool" checkbox setting.
 12. From the list that appeared below the previous setting, choose the highest non-experimental version of Proton. At the moment of writing this guide, that was `Proton 9.0-2`, which was confirmed to work.

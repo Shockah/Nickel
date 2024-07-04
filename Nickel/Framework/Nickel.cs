@@ -158,6 +158,10 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static int StartInstance(Nickel instance, LaunchArguments launchArguments, ILoggerFactory loggerFactory, ILogger logger)
 	{
+		var steamCompatDataPath = Environment.GetEnvironmentVariable("STEAM_COMPAT_DATA_PATH");
+		if (!string.IsNullOrEmpty(steamCompatDataPath))
+			logger.LogInformation("SteamCompatDataPath: {Path}", steamCompatDataPath);
+		
 		var modStorageDirectory = launchArguments.ModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "ModStorage"));
 		logger.LogInformation("ModStoragePath: {Path}", PathUtilities.SanitizePath(modStorageDirectory.FullName));
 		
