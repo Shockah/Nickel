@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.0.1
+Released 4 July 2024.
 
 ### For players:
 * Fixed mod setting navigation issues on controllers.
