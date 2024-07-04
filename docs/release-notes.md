@@ -2,6 +2,12 @@
 
 # Release notes
 
+## Upcoming release
+
+### For players:
+* Fixed mod setting navigation issues on controllers.
+* Fixed a mod setting visual issue on the Profile setting submenu.
+
 ## 1.0.0
 Released 3 July 2024.
 

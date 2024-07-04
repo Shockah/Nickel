@@ -59,22 +59,19 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 
 		Draw.Fill(Colors.black);
 
-		var rect = new Rect((MG.inst.PIX_W - SettingsRoute.WIDTH) / 2, 10, SettingsRoute.WIDTH, 0);
-		var box = g.Push(null, rect);
-		var nullableSettingSize = this.Setting.Render(g, box, dontDraw: true);
+		var sizingBox = g.Push(null, new Rect((MG.inst.PIX_W - SettingsRoute.WIDTH) / 2, 10, SettingsRoute.WIDTH, 0));
+		var nullableSettingSize = this.Setting.Render(g, sizingBox, dontDraw: true);
 		g.Pop();
+
+		var preferredHeightOnScreen = MG.inst.PIX_H - 20;
+		var maxScroll = (int)Math.Max((nullableSettingSize?.y ?? 0) - preferredHeightOnScreen, 0);
+		ScrollUtils.ReadScrollInputAndUpdate(g.dt, maxScroll, ref this.Scroll, ref this.ScrollTarget);
 
 		if (nullableSettingSize is not { } settingSize)
 			return;
 
-		var preferredHeightOnScreen = MG.inst.PIX_H - 20;
-		var maxScroll = (int)Math.Max(settingSize.y - preferredHeightOnScreen, 0);
-		ScrollUtils.ReadScrollInputAndUpdate(g.dt, maxScroll, ref this.Scroll, ref this.ScrollTarget);
-
-		rect = new Rect((MG.inst.PIX_W - SettingsRoute.WIDTH) / 2, 10 + (int)this.Scroll, SettingsRoute.WIDTH, settingSize.y);
-		box = g.Push(this.Setting.Key, rect);
-		this.Setting.Render(g, box, dontDraw: false);
-
+		var contentBox = g.Push(this.Setting.Key, new Rect((MG.inst.PIX_W - SettingsRoute.WIDTH) / 2, 10 + (int)this.Scroll, SettingsRoute.WIDTH, settingSize.y));
+		this.Setting.Render(g, contentBox, dontDraw: false);
 		g.Pop();
 
 		if (Input.gamepadIsActiveInput)
@@ -100,7 +97,7 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 			SharedArt.WarningPopup(g, WarningPopupKey, warning.Text, new Vec(240, 65));
 
 			var warningTime = Math.Max(0, warning.Time - g.dt);
-			this.Warning = warningTime <= 0 ? null : (Text: warning.Text, Time: warningTime);
+			this.Warning = warningTime <= 0 ? null : warning with { Time = warningTime };
 		}
 
 		g.Pop();

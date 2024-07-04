@@ -50,22 +50,27 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 
 	public override Vec? Render(G g, Box box, bool dontDraw)
 	{
+		if (box.key is not null)
+		{
+			box.autoFocus = true;
+			box.onMouseDown = this;
+		}
+		
 		if (!dontDraw)
 		{
-			box.onMouseDown = this;
-			box.autoFocus = true;
-
-			var isHover = box.IsHover() || g.hoverKey == this.CheckboxKey;
+			var isHover = (box.key is not null && box.IsHover()) || g.hoverKey == this.CheckboxKey;
 			if (isHover)
+			{
 				Draw.Rect(box.rect.x, box.rect.y, box.rect.w, box.rect.h, Colors.menuHighlightBox.gain(0.5), BlendMode.Screen);
+				if (this.Tooltips is { } tooltips)
+					g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
+			}
+				
 
 			var textColor = isHover ? Colors.textChoiceHoverActive : Colors.textMain;
 
 			Draw.Text(this.Title(), box.rect.x + 10, box.rect.y + 5 + (int)((box.rect.h - PreferredHeight) / 2), DB.thicket, textColor);
 			SharedArt.CheckboxBig(g, new Vec(box.rect.w - 10 - 15, 1 + (int)((box.rect.h - PreferredHeight) / 2)), this.CheckboxKey, this.Getter(), boxColor: Colors.buttonBoxNormal, onMouseDown: this);
-
-			if (isHover && this.Tooltips is { } tooltips)
-				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
 		}
 
 		return new(box.rect.w, dontDraw ? PreferredHeight : box.rect.h);

@@ -54,19 +54,21 @@ public sealed class ButtonModSetting : BaseModSetting, OnMouseDown, IModSettings
 
 	public override Vec? Render(G g, Box box, bool dontDraw)
 	{
-		if (!dontDraw)
+		if (box.key is not null)
 		{
 			box.autoFocus = true;
-
-			if (box.IsHover())
-				Draw.Rect(box.rect.x, box.rect.y, box.rect.w, box.rect.h, Colors.menuHighlightBox.gain(0.5), BlendMode.Screen);
 			box.onMouseDown = this;
-			
-			if (box.IsHover() && this.Tooltips is { } tooltips)
+		}
+
+		var isHover = box.key is not null && box.IsHover();
+		if (!dontDraw && isHover)
+		{
+			Draw.Rect(box.rect.x, box.rect.y, box.rect.w, box.rect.h, Colors.menuHighlightBox.gain(0.5), BlendMode.Screen);
+			if (this.Tooltips is { } tooltips)
 				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
 		}
 		
-		var textColor = box.IsHover() ? Colors.textChoiceHoverActive : Colors.textMain;
+		var textColor = isHover ? Colors.textChoiceHoverActive : Colors.textMain;
 		var valueText = this.ValueText?.Invoke();
 			
 		var titleRect = this.TitleHorizontalAlignment switch

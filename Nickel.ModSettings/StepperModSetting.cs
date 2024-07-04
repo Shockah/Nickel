@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Nickel.ModSettings;
 
-public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSettingsApi.IStepperModSetting<T> where T : struct
+public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, OnInputPhase, IModSettingsApi.IStepperModSetting<T> where T : struct
 {
 	private const double PreferredHeight = 20;
 	
@@ -89,13 +89,24 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 
 	public override Vec? Render(G g, Box box, bool dontDraw)
 	{
-		if (!dontDraw)
+		if (box.key is not null)
 		{
 			box.autoFocus = true;
-
-			var isHover = box.IsHover() || g.hoverKey == this.StepperLeftKey || g.hoverKey == this.StepperRightKey;
+			box.onMouseDown = this;
+			box.onInputPhase = this;
+			box.leftHint = box.key;
+			box.rightHint = box.key;
+		}
+		
+		if (!dontDraw)
+		{
+			var isHover = (box.key is not null && box.IsHover()) || g.hoverKey == this.StepperLeftKey || g.hoverKey == this.StepperRightKey;
 			if (isHover)
+			{
 				Draw.Rect(box.rect.x, box.rect.y, box.rect.w, box.rect.h, Colors.menuHighlightBox.gain(0.5), BlendMode.Screen);
+				if (this.Tooltips is { } tooltips)
+					g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
+			}
 
 			var textColor = isHover ? Colors.textChoiceHoverActive : Colors.textMain;
 			var value = this.Getter();
@@ -106,12 +117,9 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 			Draw.Text(valueText, (int)(box.rect.x2 - 10 - 18 - valueWidth / 2), box.rect.y + 5 + (int)((box.rect.h - PreferredHeight) / 2), DB.thicket, textColor, align: TAlign.Center);
 
 			if (this.PreviousValue(value) is not null)
-				SharedArt.ButtonSprite(g, new Rect(box.rect.w - 10 - 18 * 2 - valueWidth, -1 + (int)((box.rect.h - PreferredHeight) / 2), 18, 21), this.StepperLeftKey, StableSpr.buttons_selectShip, StableSpr.buttons_selectShip_on, boxColor: Colors.buttonBoxNormal, flipX: true, onMouseDown: this, noHover: Input.gamepadIsActiveInput);
+				SharedArt.ButtonSprite(g, new Rect(box.rect.w - 10 - 18 * 2 - valueWidth, -1 + (int)((box.rect.h - PreferredHeight) / 2), 18, 21), this.StepperLeftKey, StableSpr.buttons_selectShip, StableSpr.buttons_selectShip_on, boxColor: Colors.buttonBoxNormal, flipX: true, onMouseDown: Input.gamepadIsActiveInput ? null : this, noHover: Input.gamepadIsActiveInput);
 			if (this.NextValue(value) is not null)
-				SharedArt.ButtonSprite(g, new Rect(box.rect.w - 10 - 18, -1 + (int)((box.rect.h - PreferredHeight) / 2), 18, 21), this.StepperRightKey, StableSpr.buttons_selectShip, StableSpr.buttons_selectShip_on, boxColor: Colors.buttonBoxNormal, flipX: false, onMouseDown: this, noHover: Input.gamepadIsActiveInput);
-
-			if (isHover && this.Tooltips is { } tooltips)
-				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
+				SharedArt.ButtonSprite(g, new Rect(box.rect.w - 10 - 18, -1 + (int)((box.rect.h - PreferredHeight) / 2), 18, 21), this.StepperRightKey, StableSpr.buttons_selectShip, StableSpr.buttons_selectShip_on, boxColor: Colors.buttonBoxNormal, flipX: false, onMouseDown: Input.gamepadIsActiveInput ? null : this, noHover: Input.gamepadIsActiveInput);
 		}
 
 		return new(box.rect.w, dontDraw ? PreferredHeight : box.rect.h);
@@ -137,6 +145,29 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, IModSett
 		else if (b.key == this.Key)
 		{
 			this.OnClick?.Invoke(g, this.CurrentRoute);
+		}
+	}
+
+	public void OnInputPhase(G g, Box b)
+	{
+		if (g.hoverKey != this.Key)
+			return;
+		
+		var value = this.Getter();
+		
+		if (Input.GetGpDown(Btn.DpLeft))
+		{
+			if (this.PreviousValue(value) is not { } newValue)
+				return;
+			Audio.Play(Event.Click);
+			this.Setter(newValue);
+		}
+		if (Input.GetGpDown(Btn.DpRight))
+		{
+			if (this.NextValue(value) is not { } newValue)
+				return;
+			Audio.Play(Event.Click);
+			this.Setter(newValue);
 		}
 	}
 }

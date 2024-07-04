@@ -122,7 +122,7 @@ public sealed class TwoColumnModSetting : BaseModSetting, IModSettingsApi.ITwoCo
 					_ => throw new ArgumentOutOfRangeException()
 				};
 			
-				var childBox = g.Push(this.Left.Key, new Rect(0, yOffset, leftSize.x, this.Alignment == IModSettingsApi.VerticalAlignmentOrFill.Fill ? maxHeight : leftSize.y));
+				var childBox = g.Push(this.Left.Key, new Rect(0, yOffset, leftWidth, this.Alignment == IModSettingsApi.VerticalAlignmentOrFill.Fill ? maxHeight : leftSize.y));
 				this.Left.Render(g, childBox, dontDraw: false);
 				g.Pop();
 			}
@@ -138,7 +138,7 @@ public sealed class TwoColumnModSetting : BaseModSetting, IModSettingsApi.ITwoCo
 					_ => throw new ArgumentOutOfRangeException()
 				};
 			
-				var childBox = g.Push(this.Right.Key, new Rect(leftWidth + spacing, yOffset, rightSize.x, this.Alignment == IModSettingsApi.VerticalAlignmentOrFill.Fill ? maxHeight : rightSize.y));
+				var childBox = g.Push(this.Right.Key, new Rect(leftWidth + spacing, yOffset, rightWidth, this.Alignment == IModSettingsApi.VerticalAlignmentOrFill.Fill ? maxHeight : rightSize.y));
 				this.Right.Render(g, childBox, dontDraw: false);
 				g.Pop();
 			}

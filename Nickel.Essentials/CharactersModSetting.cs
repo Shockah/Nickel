@@ -64,7 +64,7 @@ public sealed class CharactersModSetting : IModSettingsApi.IModSetting
 				}
 			}
 
-			if (box.IsHover() && this.Tooltips is { } tooltips)
+			if (this.Tooltips is { } tooltips && box.key is not null && box.IsHover())
 				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
 		}
 

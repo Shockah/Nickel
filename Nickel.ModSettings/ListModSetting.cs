@@ -51,8 +51,8 @@ public sealed class ListModSetting : BaseModSetting, IModSettingsApi.IListModSet
 
 		foreach (var setting in this.Settings)
 		{
-			g.Push(null, new Rect(box.rect.x, box.rect.y + totalHeight, box.rect.w, 0));
-			var nullableSettingSize = setting.Render(g, box, dontDraw: true);
+			var sizingBox = g.Push(null, new Rect(box.rect.x, box.rect.y + totalHeight, box.rect.w, 0));
+			var nullableSettingSize = setting.Render(g, sizingBox, dontDraw: true);
 			g.Pop();
 
 			if (nullableSettingSize is not { } settingSize)
@@ -73,8 +73,8 @@ public sealed class ListModSetting : BaseModSetting, IModSettingsApi.IListModSet
 
 		if (!renderingAnyElement && this.EmptySetting is { } emptySetting)
 		{
-			g.Push(null, new Rect(box.rect.x, box.rect.y + totalHeight, box.rect.w, 0));
-			var nullableSettingSize = emptySetting.Render(g, box, dontDraw: true);
+			var sizingBox = g.Push(null, new Rect(box.rect.x, box.rect.y + totalHeight, box.rect.w, 0));
+			var nullableSettingSize = emptySetting.Render(g, sizingBox, dontDraw: true);
 			g.Pop();
 
 			if (nullableSettingSize is not { } settingSize)

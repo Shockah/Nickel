@@ -32,8 +32,8 @@ public sealed class PaddingModSetting : BaseModSetting, IModSettingsApi.IPadding
 
 	public override Vec? Render(G g, Box box, bool dontDraw)
 	{
-		g.Push(null, new Rect(box.rect.x, box.rect.y, box.rect.w, 0));
-		var nullableSettingSize = this.Setting.Render(g, box, dontDraw: true);
+		var sizingBox = g.Push(null, new Rect(box.rect.x, box.rect.y, box.rect.w, 0));
+		var nullableSettingSize = this.Setting.Render(g, sizingBox, dontDraw: true);
 		g.Pop();
 
 		if (nullableSettingSize is not { } settingSize)
