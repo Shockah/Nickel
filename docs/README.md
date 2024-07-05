@@ -23,6 +23,10 @@ Get the latest version from:
 
 * [Player guide](https://github.com/Shockah/Nickel/blob/master/docs/player-guide.md)
 
+### For developers
+
+* [`ModBuildConfig` release notes](https://github.com/Shockah/Nickel/blob/master/docs/mod-build-config-player-guide.md)
+
 ### Other
 
 * [Release notes](https://github.com/Shockah/Nickel/blob/master/docs/release-notes.md)
