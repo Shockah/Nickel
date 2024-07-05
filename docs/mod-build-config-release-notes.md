@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.0.1
+Released 5 July 2024.
 
 * The package no longer looks for Nickel in `%AppData%`.
 * Potentially fixed random `MSB4018` "Could not load file or assembly" errors when using the package in Visual Studio.
