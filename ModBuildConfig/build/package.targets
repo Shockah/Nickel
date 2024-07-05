@@ -82,9 +82,6 @@
 	<PropertyGroup>
 		<ModLoaderPath Condition="!'$(HasUserModLoaderPath)' And !Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')">$(USERPROFILE)\$(_ModLoaderName)</ModLoaderPath>
 		<ModLoaderPath Condition="!'$(HasUserModLoaderPath)' And !Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')">$(HOME)\$(_ModLoaderName)</ModLoaderPath>
-		<ModLoaderPath Condition="!'$(HasUserModLoaderPath)' And !Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')">$(AppData)\$(_ModLoaderName)</ModLoaderPath>
-		<ModLoaderPath Condition="!'$(HasUserModLoaderPath)' And !Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')">$(AppData)\CobaltCore\$(_ModLoaderName)</ModLoaderPath>
-		<ModLoaderPath Condition="!'$(HasUserModLoaderPath)' And !Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')">$(AppData)\$(_ModLoaderName)</ModLoaderPath>
 		<ModLoaderPath Condition="!'$(HasUserModLoaderPath)' And !Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')">$(USERPROFILE)\Downloads\$(_ModLoaderName)</ModLoaderPath>
 		<ModLoaderPath Condition="!'$(HasUserModLoaderPath)' And !Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')">$(HOME)\Downloads\$(_ModLoaderName)</ModLoaderPath>
 	</PropertyGroup>

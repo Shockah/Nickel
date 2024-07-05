@@ -4,6 +4,7 @@
 
 ## Upcoming release
 
+* The package no longer looks for Nickel in `%AppData%`.
 * Potentially fixed random `MSB4018` "Could not load file or assembly" errors when using the package in Visual Studio.
 
 ## 1.0.0
