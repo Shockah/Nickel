@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* [#91] Split the Debug setting into two.
+
 ## 1.0.1
 Released 4 July 2024.
 

@@ -214,10 +214,9 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			logger.LogCritical("Could not resolve Cobalt Core: {Error}", error.Value);
 			return -1;
 		}
-
-		var exeBytes = File.ReadAllBytes(resolveResult.ExePath.FullName);
-		var hashBytes = MD5.HashData(exeBytes);
-		logger.LogDebug("Game EXE hash: {Hash}", Convert.ToHexString(hashBytes));
+		
+		using (var exeStream = resolveResult.ExePath.OpenRead())
+			logger.LogDebug("Game EXE hash: {Hash}", Convert.ToHexString(MD5.HashData(exeStream)));
 
 		var handler = new CobaltCoreHandler(logger, extendableAssemblyDefinitionEditor);
 		var handlerResultOrError = handler.SetupGame(resolveResult);
@@ -381,27 +380,28 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
 			settingsApi.RegisterModSettings(settingsApi.MakeList([
 				settingsApi.MakeConditional(
-					setting: settingsApi.MakeEnumStepper(
-							title: () => "Debug", // TODO: localize
-							getter: () => this.Settings.DebugMode,
-							setter: value =>
-							{
-								this.Settings.DebugMode = value;
-								this.OnSettingsUpdate();
-							}
-						).SetValueFormatter(
-							mode => mode switch
-							{
-								DebugMode.Disabled => "Off",
-								DebugMode.Enabled => "On",
-								DebugMode.EnabledWithSaving => "On w/ auto-save",
-								_ => mode.ToString()
-							}
-						)
-						.SetValueWidth(
-							_ => 120
-						),
-					isVisible: () => Instance.LaunchArguments.Debug is null
+					settingsApi.MakeCheckbox(
+						() => "Debug",
+						() => this.Settings.DebugMode != DebugMode.Disabled,
+						setter: (_, _, value) =>
+						{
+							this.Settings.DebugMode = value ? DebugMode.EnabledWithSaving : DebugMode.Disabled;
+							this.OnSettingsUpdate();
+						}
+					),
+					() => Instance.LaunchArguments.Debug is null
+				),
+				settingsApi.MakeConditional(
+					settingsApi.MakeCheckbox(
+						() => "Enabled debug auto-saving",
+						() => this.Settings.DebugMode == DebugMode.EnabledWithSaving,
+						setter: (_, _, value) =>
+						{
+							this.Settings.DebugMode = value ? DebugMode.EnabledWithSaving : DebugMode.Enabled;
+							this.OnSettingsUpdate();
+						}
+					),
+					() => Instance.LaunchArguments.Debug is null && this.Settings.DebugMode != DebugMode.Disabled
 				),
 				settingsApi.MakeConditional(
 					setting: settingsApi.MakeButton(
@@ -413,7 +413,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 								editor.isActive = !editor.isActive;
 						}
 					),
-					isVisible: () => FeatureFlags.Debug
+					isVisible: () => this.Settings.DebugMode != DebugMode.Disabled
 				)
 			]).SubscribeToOnMenuClose(_ =>
 			{
