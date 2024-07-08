@@ -4,7 +4,11 @@
 
 ## Upcoming release
 
-* [#91] Split the Debug setting into two.
+### For players:
+* [[#91](https://github.com/Shockah/Nickel/issues/91)] Split the Debug setting into two.
+
+### For developers:
+* [[#92](https://github.com/Shockah/Nickel/issues/92)] Fixed artifact hooks losing access to captured variables, seemingly accessing garbage memory.
 
 ## 1.0.1
 Released 4 July 2024.

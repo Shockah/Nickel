@@ -454,7 +454,7 @@ file sealed class HookSubclassGlue(
 		delegateTypeParameterTypes.Add(method.ReturnType);
 		var methodDelegateType = Expression.GetDelegateType(delegateTypeParameterTypes.ToArray());
 
-		DynamicMethod dynamicMethod = new(
+		var dynamicMethod = new DynamicMethod(
 			name: $"Map_{typeof(THookDelegate)}_To_{method}",
 			returnType: typeof(void),
 			parameterTypes: [typeof(HookSubclassGlue), typeof(MethodInfo), typeof(THookDelegate), typeof(double)]

@@ -22,6 +22,7 @@ internal sealed class ByParameterDelegateMapper
 		where TLongDelegate : Delegate
 	{
 		var shortDelegateInvokeMethod = @delegate.GetMethodInfo();
+		var shortDelegateInvokeMethodToCall = typeof(TShortDelegate).GetMethod("Invoke")!;
 		var longDelegateInvokeMethod = typeof(TLongDelegate).GetMethod("Invoke")!;
 
 		if (shortDelegateInvokeMethod.ReturnType != longDelegateInvokeMethod.ReturnType)
@@ -104,7 +105,7 @@ internal sealed class ByParameterDelegateMapper
 			il.Emit(OpCodes.Ldfld, delegateField);
 			foreach (var argumentIndex in parameterMapping)
 				il.Emit(OpCodes.Ldarg, argumentIndex + 1);
-			il.Emit(OpCodes.Call, shortDelegateInvokeMethod);
+			il.Emit(OpCodes.Call, shortDelegateInvokeMethodToCall);
 			il.Emit(OpCodes.Ret);
 		}
 
