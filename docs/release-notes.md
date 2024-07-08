@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.0.2
+Released 8 July 2024.
 
 ### For players:
 * [[#91](https://github.com/Shockah/Nickel/issues/91)] Split the Debug setting into two.
