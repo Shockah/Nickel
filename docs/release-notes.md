@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Potentially fixed Nickel not being able to find the game files with some Steam Deck / Linux / Proton setups.
+
 ## 1.0.2
 Released 8 July 2024.
 

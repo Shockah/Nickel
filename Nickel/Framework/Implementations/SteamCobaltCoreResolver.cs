@@ -67,6 +67,10 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 				@"C:\Steam\steamapps\common",
 			]);
 		}
+		
+		var steamCompatDataPath = Environment.GetEnvironmentVariable("STEAM_COMPAT_DATA_PATH");
+		if (!string.IsNullOrEmpty(steamCompatDataPath))
+			potentialSteamLocations.Add(Path.GetFullPath($@"Z:{steamCompatDataPath}\..\..\..")); // Steam Deck / Proton path
 
 		var potentialSteamAppsPaths = new HashSet<string>();
 		foreach (var potentialSteamPath in potentialSteamLocations)
