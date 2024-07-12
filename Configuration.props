@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<WarningsAsErrors>Nullable</WarningsAsErrors>
 		<CheckEolTargetFramework>false</CheckEolTargetFramework>
-		<NickelVersion>1.0.2</NickelVersion>
+		<NickelVersion>1.0.3</NickelVersion>
 	</PropertyGroup>
 	<ItemGroup>
 		<None Include="$(MSBuildProjectDirectory)\..\.editorconfig" Link=".editorconfig" />
