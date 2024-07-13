@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For developers:
+* Mods can now access the `IProxyManager` used by Nickel for proxying purposes via `IModUtilities.ProxyManager`.
+
 ## 1.0.3
 Released 12 July 2024.
 

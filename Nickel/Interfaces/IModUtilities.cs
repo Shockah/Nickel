@@ -1,3 +1,4 @@
+using Nanoray.Pintail;
 using System;
 
 namespace Nickel;
@@ -21,4 +22,8 @@ public interface IModUtilities
 	/// <typeparam name="T">The enum type.</typeparam>
 	/// <param name="case">The enum case value to free.</param>
 	void FreeEnumCase<T>(T @case) where T : struct, Enum;
+	
+	/// <summary>The manager used to proxy between types to allow cross-mod communication without hard assembly references.</summary>
+	/// <seealso cref="IModRegistry.GetApi{TApi}"/>
+	IProxyManager<string> ProxyManager { get; }
 }

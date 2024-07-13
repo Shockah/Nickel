@@ -1,9 +1,11 @@
+using Nanoray.Pintail;
 using System;
 
 namespace Nickel;
 
 internal sealed class ModUtilities(
-	EnumCasePool enumCasePool
+	EnumCasePool enumCasePool,
+	IProxyManager<string> proxyManager
 ) : IModUtilities
 {
 	public T ObtainEnumCase<T>() where T : struct, Enum
@@ -11,4 +13,6 @@ internal sealed class ModUtilities(
 
 	public void FreeEnumCase<T>(T @case) where T : struct, Enum
 		=> enumCasePool.FreeEnumCase(@case);
+
+	public IProxyManager<string> ProxyManager { get; } = proxyManager;
 }

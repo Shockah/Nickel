@@ -563,7 +563,7 @@ internal sealed class ModManager
 					new DirectoryInfoImpl(this.PrivateModStorageDirectory),
 					this.ModStorageManager
 				),
-				new ModUtilities(this.EnumCasePool),
+				new ModUtilities(this.EnumCasePool, this.ProxyManager),
 				() => this.CurrentModLoadPhase
 			);
 			this.UniqueNameToHelper[package.Manifest.UniqueName] = helper;
