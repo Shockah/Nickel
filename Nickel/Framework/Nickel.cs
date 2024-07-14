@@ -346,6 +346,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		LogPatches.Apply(harmony);
 		ProgramPatches.Apply(harmony);
 		RunSummaryPatches.Apply(harmony);
+		ShipPatches.Apply(harmony);
 		SpriteLoaderPatches.Apply(harmony);
 		StatePatches.Apply(harmony);
 		StoryVarsPatches.Apply(harmony);

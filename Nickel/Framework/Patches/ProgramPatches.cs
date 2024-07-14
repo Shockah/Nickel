@@ -29,10 +29,9 @@ internal static class ProgramPatches
 		{
 			return new SequenceBlockMatcher<CodeInstruction>(instructions)
 				.Find(ILMatches.Call("get_InitSteam"))
-				.Insert(
-					SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion,
+				.Insert(SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
 					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(ProgramPatches), nameof(TryInitSteam_Transpiler_ModifyInitSteam)))
-				)
+				])
 				.AllElements();
 		}
 		catch (Exception ex)

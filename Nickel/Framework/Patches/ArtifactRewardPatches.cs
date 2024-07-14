@@ -47,11 +47,11 @@ internal static class ArtifactRewardPatches
 		try
 		{
 			return new SequenceBlockMatcher<CodeInstruction>(instructions)
-				.Find(
+				.Find([
 					ILMatches.Ldsfld("artifactMetas"),
 					ILMatches.Ldarg(1),
 					ILMatches.Call("get_Name")
-				)
+				])
 				.PointerMatcher(SequenceMatcherRelativeElement.Last)
 				.Replace(new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetOffering_Delegate_Transpiler_GetKey))))
 				.AllElements();

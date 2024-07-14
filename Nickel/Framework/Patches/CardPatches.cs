@@ -66,17 +66,17 @@ internal static class CardPatches
 		try
 		{
 			return new SequenceBlockMatcher<CodeInstruction>(instructions)
-				.Find(
+				.Find([
 					ILMatches.Ldarg(0),
 					ILMatches.Ldloc<State>(originalMethod).CreateLdlocInstruction(out var ldlocState),
 					ILMatches.Call("GetDataWithOverrides")
-				)
-				.Find(
+				])
+				.Find([
 					ILMatches.Ldloc<CardData>(originalMethod).ExtractLabels(out var labels).Anchor(out var findAnchor),
 					ILMatches.Ldfld("buoyant"),
 					ILMatches.Brfalse
-				)
-				.Find(
+				])
+				.Find([
 					ILMatches.Ldloc<Vec>(originalMethod).CreateLdlocInstruction(out var ldlocVec),
 					ILMatches.Ldfld("y"),
 					ILMatches.LdcI4(8),
@@ -85,16 +85,15 @@ internal static class CardPatches
 					ILMatches.LdcI4(1),
 					ILMatches.Instruction(OpCodes.Add),
 					ILMatches.Stloc<int>(originalMethod)
-				)
+				])
 				.Anchors().PointerMatcher(findAnchor)
-				.Insert(
-					SequenceMatcherPastBoundsDirection.Before, SequenceMatcherInsertionResultingBounds.IncludingInsertion,
+				.Insert(SequenceMatcherPastBoundsDirection.Before, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
 					new CodeInstruction(OpCodes.Ldarg_0).WithLabels(labels),
 					ldlocState,
 					ldlocaCardTraitIndex,
 					ldlocVec,
 					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(CardPatches), nameof(Render_Transpiler_RenderTraits)))
-				)
+				])
 				.AllElements();
 		}
 		catch (Exception ex)
@@ -140,19 +139,18 @@ internal static class CardPatches
 		try
 		{
 			return new SequenceBlockMatcher<CodeInstruction>(instructions)
-				.Find(
+				.Find([
 					ILMatches.Ldarg(0),
 					ILMatches.Ldarg(1),
 					ILMatches.Call("GetData"),
 					ILMatches.Stloc<CardData>(originalMethod).CreateLdlocaInstruction(out var ldlocaCardData)
-				)
-				.Insert(
-					SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion,
+				])
+				.Insert(SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
 					new CodeInstruction(OpCodes.Ldarg_0),
 					new CodeInstruction(OpCodes.Ldarg_1),
 					ldlocaCardData,
 					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetDataWithOverrides_Transpiler_ModifyData)))
-				)
+				])
 				.AllElements();
 		}
 		catch (Exception ex)

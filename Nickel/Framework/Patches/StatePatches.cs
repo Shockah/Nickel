@@ -70,7 +70,7 @@ internal static class StatePatches
 		try
 		{
 			return new SequenceBlockMatcher<CodeInstruction>(instructions)
-				.Find(
+				.Find([
 					ILMatches.Ldarg(0),
 					ILMatches.Ldfld("chars"),
 					ILMatches.LdcI4((int)Deck.shard),
@@ -79,16 +79,15 @@ internal static class StatePatches
 					ILMatches.Ldloc<List<Card>>(originalMethod).CreateLdlocaInstruction(out var ldlocaCards),
 					ILMatches.Instruction(OpCodes.Newobj),
 					ILMatches.Call("Add")
-				)
+				])
 				.PointerMatcher(SequenceMatcherRelativeElement.AfterLast)
 				.ExtractLabels(out var labels)
-				.Insert(
-					SequenceMatcherPastBoundsDirection.Before, SequenceMatcherInsertionResultingBounds.IncludingInsertion,
+				.Insert(SequenceMatcherPastBoundsDirection.Before, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
 					new CodeInstruction(OpCodes.Ldarg_0).WithLabels(labels),
 					new CodeInstruction(OpCodes.Ldfld, AccessTools.DeclaredField(originalMethod.DeclaringType, "chars")),
 					ldlocaCards,
 					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(StatePatches), nameof(State_PopulateRun_Delegate_Transpiler_ModifyPotentialExeCards)))
-				)
+				])
 				.AllElements();
 		}
 		catch (Exception ex)

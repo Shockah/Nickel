@@ -1,3 +1,5 @@
+using System;
+
 namespace Nickel;
 
 /// <summary>
@@ -13,4 +15,7 @@ public readonly struct StatusConfiguration
 	
 	/// <summary>A localization provider for the description of the <see cref="Status"/>.</summary>
 	public SingleLocalizationProvider? Description { get; init; }
+
+	/// <summary>A function controlling whether this status should flash when rendered, like <see cref="Status.heat"/> or <see cref="Status.payback"/>.</summary>
+	public Func<State, Combat, Ship, Status, bool>? ShouldFlash { get; init; }
 }

@@ -9,6 +9,7 @@
 * Updated the Pintail library, fixing a problem with some mods not working if Debug was disabled (the default).
 
 ### For developers:
+* Added `StatusConfiguration.ShouldFlash`.
 * Mods can now access the `IProxyManager` used by Nickel for proxying purposes via `IModUtilities.ProxyManager`.
 * Updated the Pintail library. It now validates whether a type can be proxied before defining a proxy type, preventing an exception being thrown when `GetTypes()` was called on the assembly containing the proxy types.
 

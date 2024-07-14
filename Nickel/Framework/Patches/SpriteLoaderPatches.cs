@@ -27,8 +27,7 @@ internal static class SpriteLoaderPatches
 	{
 		if (!DynamicTextureSprites.Contains(id) && SpriteLoader.textures.TryGetValue(id, out __result))
 			return false;
-		else
-			__result = null;
+		__result = null;
 
 		var args = GetTextureEventArgsInstance;
 		args.Sprite = id;

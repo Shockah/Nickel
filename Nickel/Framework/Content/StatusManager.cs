@@ -21,12 +21,15 @@ internal sealed class StatusManager
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
 		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
+		
+		ShipPatches.OnShouldStatusFlash.Subscribe(this.OnShouldStatusFlash);
 		TTGlossaryPatches.OnTryGetIcon.Subscribe(this.OnTryGetIcon);
 	}
 
 	internal bool IsStateInvalid(State state)
 	{
 		var @checked = new HashSet<object>();
+		return ContainsInvalidEntries(state);
 
 		bool ContainsInvalidEntries(object? o)
 		{
@@ -43,8 +46,15 @@ internal sealed class StatusManager
 				.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 				.Any(field => ContainsInvalidEntries(field.GetValue(o)));
 		}
+	}
 
-		return ContainsInvalidEntries(state);
+	private void OnShouldStatusFlash(object? _, ShipPatches.ShouldStatusFlashEventArgs e)
+	{
+		if (this.LookupByStatus(e.Status) is not { } entry)
+			return;
+		if (entry.Configuration.ShouldFlash is not { } shouldFlash)
+			return;
+		e.ShouldFlash = shouldFlash(e.State, e.Combat, e.Ship, e.Status);
 	}
 
 	private void OnTryGetIcon(object? _, TTGlossaryPatches.TryGetIconEventArgs e)
