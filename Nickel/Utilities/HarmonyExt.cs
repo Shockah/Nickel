@@ -41,9 +41,6 @@ public static class HarmonyExt
 				if (!subtypeOriginal.HasMethodBody())
 					continue;
 
-				static bool ContainsNonSpecialArguments(HarmonyMethod patch)
-					=> patch.method.GetParameters().Any(p => !(p.Name ?? "").StartsWith("__"));
-
 				if (
 					(prefix is not null && ContainsNonSpecialArguments(prefix)) ||
 					(postfix is not null && ContainsNonSpecialArguments(postfix)) ||
@@ -57,6 +54,9 @@ public static class HarmonyExt
 				}
 
 				harmony.Patch(subtypeOriginal, prefix, subtypeOriginal.HasMethodBody() ? postfix : null, transpiler, finalizer);
+
+				static bool ContainsNonSpecialArguments(HarmonyMethod patch)
+					=> patch.method.GetParameters().Any(p => !(p.Name ?? "").StartsWith("__"));
 			}
 		}
 	}

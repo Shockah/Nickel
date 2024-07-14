@@ -85,11 +85,12 @@ internal sealed class ModManager
 
 		var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"{this.GetType().Namespace}.Proxies, Version={this.GetType().Assembly.GetName().Version}, Culture=neutral"), AssemblyBuilderAccess.Run);
 		var moduleBuilder = assemblyBuilder.DefineDynamicModule($"{this.GetType().Namespace}.Proxies");
-		this.ProxyManager = new ProxyManager<string>(moduleBuilder, new ProxyManagerConfiguration<string>(
-			proxyPrepareBehavior: ProxyManagerProxyPrepareBehavior.Eager,
-			proxyObjectInterfaceMarking: ProxyObjectInterfaceMarking.MarkerWithProperty,
-			accessLevelChecking: AccessLevelChecking.DisabledButOnlyAllowPublicMembers
-		));
+		this.ProxyManager = new ProxyManager<string>(moduleBuilder, new()
+		{
+			ProxyPrepareBehavior = ProxyManagerProxyPrepareBehavior.Eager,
+			ProxyObjectInterfaceMarking = ProxyObjectInterfaceMarking.MarkerWithProperty,
+			AccessLevelChecking = AccessLevelChecking.DisabledButOnlyAllowPublicMembers,
+		});
 
 		var loadContextProvider = new AssemblyModLoadContextProvider(
 			AssemblyLoadContext.GetLoadContext(this.GetType().Assembly) ?? AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default
