@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.0.2
+Released 14 July 2024.
 
 * Potentially fixed the "Could not load file or assembly 'Newtonsoft.Json (...)" error when developing mods in Visual Studio.
 
