@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.1.0
+Released 14 July 2024.
 
 ### For players:
 * `Nickel.UpdateChecks` now advertises itself as just "Nickel" whenever there is an update.
