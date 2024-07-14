@@ -5,6 +5,7 @@
 ## Upcoming release
 
 ### For players:
+* `Nickel.UpdateChecks` now advertises itself as just "Nickel" whenever there is an update.
 * Updated the Pintail library, fixing a problem with some mods not working if Debug was disabled (the default).
 
 ### For developers:

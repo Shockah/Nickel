@@ -9,6 +9,7 @@
 	"EntryPointType": "Nickel.UpdateChecks.ModEntry",
 	"LoadPhase": "BeforeGameAssembly",
 	"UpdateChecks": {
+		"ModNameForUpdatePurposes": "Nickel",
 		"NexusMods": {
 			"ID": 1
 		},

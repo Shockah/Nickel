@@ -171,39 +171,52 @@ public sealed class ModEntry : SimpleMod
 	public override object? GetApi(IModManifest requestingMod)
 		=> new ApiImplementation();
 
+	internal static string GetModNameForUpdatePurposes(IModManifest mod)
+	{
+		if (mod.ExtensionData.TryGetValue("UpdateChecks", out var rawUpdateChecks))
+		{
+			var settings = new JsonSerializerSettings { ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor };
+			var updateChecks = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(JsonConvert.SerializeObject(rawUpdateChecks, settings), settings);
+
+			if (updateChecks is not null && updateChecks.TryGetValue("ModNameForUpdatePurposes", out var rawModNameForUpdatePurposes) && rawModNameForUpdatePurposes.Value<string>() is { } modNameForUpdatePurposes)
+				return modNameForUpdatePurposes;
+		}
+
+		return mod.DisplayName ?? mod.UniqueName;
+	}
+
+	internal static string GetModNameWithVersionForUpdatePurposes(IModManifest mod)
+		=> $"{GetModNameForUpdatePurposes(mod)} {mod.Version}";
+
 	internal void ParseManifestsAndRequestUpdateInfo(IUpdateSource? sourceToUpdate = null)
 	{
 		Dictionary<IUpdateSource, List<(IModManifest Mod, object? ManifestEntry)>> updateSourceToMod = [];
+		var settings = new JsonSerializerSettings { ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor };
 
 		foreach (var mod in this.Helper.ModRegistry.ResolvedMods.Values)
 		{
-			Dictionary<string, JObject>? updateChecks;
+			Dictionary<string, JToken>? updateChecks;
 
 			if (mod.ExtensionData.TryGetValue("UpdateChecks", out var rawUpdateChecks))
 			{
-				var settings = new JsonSerializerSettings
-				{
-					ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
-				};
-
-				updateChecks = JsonConvert.DeserializeObject<Dictionary<string, JObject>>(JsonConvert.SerializeObject(rawUpdateChecks, settings), settings);
+				updateChecks = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(JsonConvert.SerializeObject(rawUpdateChecks, settings), settings);
 			}
 			else if (HardcodedUpdateCheckData.TryGetValue(mod.UniqueName, out var hardcodedUpdateCheckData))
 			{
-				this.Logger.LogDebug("Checking hardcoded update info for mod {ModName}: `UpdateChecks` structure not defined.", mod.GetDisplayName(@long: false));
-				updateChecks = hardcodedUpdateCheckData.ToDictionary(kvp => kvp.Key, kvp => JObject.Parse(kvp.Value));
+				this.Logger.LogDebug("Checking hardcoded update info for mod {ModName}: `UpdateChecks` structure not defined.", GetModNameWithVersionForUpdatePurposes(mod));
+				updateChecks = hardcodedUpdateCheckData.ToDictionary(kvp => kvp.Key, kvp => (JToken)JObject.Parse(kvp.Value));
 			}
 			else
 			{
 				this.UpdatesAvailable[mod] = null;
-				this.Logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure not defined.", mod.GetDisplayName(@long: false));
+				this.Logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure not defined.", GetModNameWithVersionForUpdatePurposes(mod));
 				continue;
 			}
 
 			if (updateChecks is null)
 			{
 				this.UpdatesAvailable[mod] = null;
-				this.Logger.LogError("Cannot check updates for mod {ModName}: invalid `UpdateChecks` structure.", mod.GetDisplayName(@long: false));
+				this.Logger.LogError("Cannot check updates for mod {ModName}: invalid `UpdateChecks` structure.", GetModNameWithVersionForUpdatePurposes(mod));
 				continue;
 			}
 			if (updateChecks.Count == 0)
@@ -213,8 +226,11 @@ public sealed class ModEntry : SimpleMod
 			}
 
 			var hasValidSources = false;
-			foreach (var (sourceName, rawSourceManifestEntry) in updateChecks)
+			foreach (var (sourceName, rawTokenSourceManifestEntry) in updateChecks)
 			{
+				if (rawTokenSourceManifestEntry is not JObject rawSourceManifestEntry)
+					continue;
+				
 				if (!this.UpdateSources.TryGetValue(sourceName, out var source))
 					continue;
 				if (!source.TryParseManifestEntry(mod, rawSourceManifestEntry, out var sourceManifestEntry))
@@ -233,7 +249,7 @@ public sealed class ModEntry : SimpleMod
 			if (!hasValidSources)
 			{
 				this.UpdatesAvailable[mod] = null;
-				this.Logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure is defined, but there are no installed compatible update sources.", mod.GetDisplayName(@long: false));
+				this.Logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure is defined, but there are no installed compatible update sources.", GetModNameWithVersionForUpdatePurposes(mod));
 			}
 		}
 
@@ -298,11 +314,11 @@ public sealed class ModEntry : SimpleMod
 
 			if (this.Settings.IgnoredUpdates.TryGetValue(mod.UniqueName, out var ignoredUpdate) && ignoredUpdate == result.Version)
 			{
-				this.Logger.LogDebug("Mod {ModName} has an update {Version} available, but it's being ignored:\n{Urls}", mod.GetDisplayName(@long: false), result.Version, string.Join("\n", result.Urls.Select(url => $"\t{url}")));
+				this.Logger.LogDebug("Mod {ModName} has an update {Version} available, but it's being ignored:\n{Urls}", GetModNameWithVersionForUpdatePurposes(mod), result.Version, string.Join("\n", result.Urls.Select(url => $"\t{url}")));
 			}
 			else
 			{
-				this.Logger.LogWarning("Mod {ModName} has an update {Version} available:\n{Urls}", mod.GetDisplayName(@long: false), result.Version, string.Join("\n", result.Urls.Select(url => $"\t{url}")));
+				this.Logger.LogWarning("Mod {ModName} has an update {Version} available:\n{Urls}", GetModNameWithVersionForUpdatePurposes(mod), result.Version, string.Join("\n", result.Urls.Select(url => $"\t{url}")));
 				hasOutdatedMods = true;
 			}
 		}
@@ -333,7 +349,7 @@ public sealed class ModEntry : SimpleMod
 						.Where(kvp => kvp.Value.Version > kvp.Key.Version)
 						.Select(
 							kvp => api.MakeCheckbox(
-								title: () => kvp.Key.DisplayName ?? kvp.Key.UniqueName,
+								title: () => GetModNameForUpdatePurposes(kvp.Key),
 								getter: () => this.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) && ignoredUpdate == kvp.Value.Version,
 								setter: (_, _, value) =>
 								{
@@ -488,7 +504,7 @@ public sealed class ModEntry : SimpleMod
 				Icon = Instance.Content.UpdateAvailableTooltipIcon.Sprite,
 				TitleColor = Colors.textBold,
 				Title = Instance.Localizations.Localize(["settingsTooltip", "updatesAvailableTooltip"]),
-				Description = string.Join("\n", updatesAvailable.Select(kvp => $"<c=textFaint>{kvp.Key.GetDisplayName(@long: false)}</c> -> <c=boldPink>{kvp.Value.Version}</c>"))
+				Description = string.Join("\n", updatesAvailable.Select(kvp => $"<c=textFaint>{GetModNameWithVersionForUpdatePurposes(kvp.Key)}</c> -> <c=boldPink>{kvp.Value.Version}</c>"))
 			});
 		}
 	}

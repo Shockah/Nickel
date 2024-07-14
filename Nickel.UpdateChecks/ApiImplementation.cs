@@ -4,6 +4,9 @@ namespace Nickel.UpdateChecks;
 
 public sealed class ApiImplementation : IUpdateChecksApi
 {
+	public string GetModNameForUpdatePurposes(IModManifest mod)
+		=> ModEntry.GetModNameForUpdatePurposes(mod);
+	
 	public bool TryGetUpdateInfo(IModManifest mod, out UpdateDescriptor? update)
 		=> ModEntry.Instance.UpdatesAvailable.TryGetValue(mod, out update);
 

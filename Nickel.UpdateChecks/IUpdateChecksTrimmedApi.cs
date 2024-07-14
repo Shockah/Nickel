@@ -8,6 +8,13 @@ namespace Nickel.UpdateChecks;
 public interface IUpdateChecksTrimmedApi
 {
 	/// <summary>
+	/// Returns the name of the given mod for update purposes.
+	/// </summary>
+	/// <param name="mod">The mod.</param>
+	/// <returns>The name of the given mod for update purposes.</returns>
+	string GetModNameForUpdatePurposes(IModManifest mod);
+	
+	/// <summary>
 	/// Attempts to get the retrieved update info for the given mod.
 	/// </summary>
 	/// <param name="mod">The mod to get the update info for.</param>
