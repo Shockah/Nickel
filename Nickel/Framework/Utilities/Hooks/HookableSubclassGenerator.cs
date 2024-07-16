@@ -12,10 +12,10 @@ internal delegate object? HookableSubclassMethodResultReducer(object?[] args, ob
 
 internal sealed class HookableSubclassGenerator
 {
-	private AssemblyBuilder AssemblyBuilder { get; }
-	private ModuleBuilder ModuleBuilder { get; }
-	private ByParameterDelegateMapper ByParameterDelegateMapper { get; } = new();
-	private ObjectifiedDelegateMapper ObjectifiedDelegateMapper { get; } = new();
+	private readonly AssemblyBuilder AssemblyBuilder;
+	private readonly ModuleBuilder ModuleBuilder;
+	private readonly ByParameterDelegateMapper ByParameterDelegateMapper = new();
+	private readonly ObjectifiedDelegateMapper ObjectifiedDelegateMapper = new();
 
 	private HashSet<Assembly> IgnoresAccessChecksToAssemblies { get; } = [];
 
@@ -426,7 +426,7 @@ file sealed class HookSubclassStaticGlue(
 {
 	public ByParameterDelegateMapper ByParameterDelegateMapper { get; } = byParameterDelegateMapper;
 	public ObjectifiedDelegateMapper ObjectifiedDelegateMapper { get; } = objectifiedDelegateMapper;
-	private List<(MethodInfo Method, HookableSubclassMethodResultReducer? ResultReducer, Func<object?[], object?>? InitialValue)> HookedMethods { get; } = [];
+	private readonly List<(MethodInfo Method, HookableSubclassMethodResultReducer? ResultReducer, Func<object?[], object?>? InitialValue)> HookedMethods = [];
 
 	public bool TryGetHookedMethod(int hookedMethodIndex, out (MethodInfo Method, HookableSubclassMethodResultReducer? ResultReducer, Func<object?[], object?>? InitialValue) result)
 	{
@@ -449,10 +449,9 @@ file sealed class HookSubclassGlue(
 	HookSubclassStaticGlue staticGlue
 )
 {
-	private HookSubclassStaticGlue StaticGlue { get; } = staticGlue;
 	// TODO: probably move some of it to the StaticGlue for reusage
-	private Dictionary<MethodInfo, OrderedList<Delegate, double>> CompiledDelegates { get; } = [];
-	private Dictionary<MethodInfo, Dictionary<Delegate, Delegate>> OriginalToCompiledDelegates { get; } = [];
+	private readonly Dictionary<MethodInfo, OrderedList<Delegate, double>> CompiledDelegates = [];
+	private readonly Dictionary<MethodInfo, Dictionary<Delegate, Delegate>> OriginalToCompiledDelegates = [];
 
 	private Action<HookSubclassGlue, MethodInfo, THookDelegate, double> CompileRegisterTypedMethodHook<THookDelegate>(MethodInfo method)
 		where THookDelegate : Delegate
@@ -481,8 +480,8 @@ file sealed class HookSubclassGlue(
 		where TMethodDelegate : Delegate
 		where THookDelegate : Delegate
 	{
-		var compiledDelegate = this.StaticGlue.ByParameterDelegateMapper.Map<THookDelegate, TMethodDelegate>(hookDelegate, method.GetParameters());
-		var objectifiedDelegate = this.StaticGlue.ObjectifiedDelegateMapper.Map(compiledDelegate);
+		var compiledDelegate = staticGlue.ByParameterDelegateMapper.Map<THookDelegate, TMethodDelegate>(hookDelegate, method.GetParameters());
+		var objectifiedDelegate = staticGlue.ObjectifiedDelegateMapper.Map(compiledDelegate);
 
 		if (!this.OriginalToCompiledDelegates.TryGetValue(method, out var originalToCompiledDelegates))
 		{
@@ -522,7 +521,7 @@ file sealed class HookSubclassGlue(
 
 	public void CallVoidHooks(int hookedMethodIndex, object?[] arguments)
 	{
-		if (!this.StaticGlue.TryGetHookedMethod(hookedMethodIndex, out var hookedMethod))
+		if (!staticGlue.TryGetHookedMethod(hookedMethodIndex, out var hookedMethod))
 			throw new ArgumentException("Invalid hooked method", nameof(hookedMethodIndex));
 
 		if (!this.CompiledDelegates.TryGetValue(hookedMethod.Method, out var compiledDelegates))
@@ -536,7 +535,7 @@ file sealed class HookSubclassGlue(
 
 	public T? CallResultHooks<T>(int hookedMethodIndex, object?[] arguments)
 	{
-		if (!this.StaticGlue.TryGetHookedMethod(hookedMethodIndex, out var hookedMethod))
+		if (!staticGlue.TryGetHookedMethod(hookedMethodIndex, out var hookedMethod))
 			throw new ArgumentException("Invalid hooked method", nameof(hookedMethodIndex));
 		if (hookedMethod.ResultReducer is not { } resultReducer)
 			throw new ArgumentException("Invalid hooked method", nameof(hookedMethodIndex));

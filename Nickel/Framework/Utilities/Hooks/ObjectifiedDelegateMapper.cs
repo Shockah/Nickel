@@ -8,9 +8,9 @@ namespace Nickel;
 
 internal sealed class ObjectifiedDelegateMapper
 {
-	private ModuleBuilder ModuleBuilder { get; }
-	private Dictionary<Type, Func<Delegate, Delegate>> Cache { get; } = [];
-	private int Counter { get; set; }
+	private readonly ModuleBuilder ModuleBuilder;
+	private readonly Dictionary<Type, Func<Delegate, Delegate>> Cache = [];
+	private int Counter;
 
 	public ObjectifiedDelegateMapper()
 	{

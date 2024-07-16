@@ -4,9 +4,9 @@ namespace Nickel;
 
 internal sealed class ModShips : IModShips
 {
-	private IModManifest ModManifest { get; }
-	private Func<ShipManager> ShipManagerProvider { get; }
-	private Func<PartManager> PartManagerProvider { get; }
+	private readonly IModManifest ModManifest;
+	private readonly Func<ShipManager> ShipManagerProvider;
+	private readonly Func<PartManager> PartManagerProvider;
 
 	public ModShips(
 		IModManifest modManifest,

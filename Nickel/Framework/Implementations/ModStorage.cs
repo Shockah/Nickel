@@ -13,7 +13,7 @@ internal sealed class ModStorage : IModStorage
 	private readonly Func<ILogger> LoggerProvider;
 	private readonly IWritableDirectoryInfo CommonStorageDirectory;
 	private readonly IWritableDirectoryInfo CommonPrivateStorageDirectory;
-	private ModStorageManager ModStorageManager { get; }
+	private readonly ModStorageManager ModStorageManager;
 
 	public ModStorage(IModManifest modManifest, Func<ILogger> loggerProvider, IWritableDirectoryInfo commonStorageDirectory, IWritableDirectoryInfo commonPrivateStorageDirectory, ModStorageManager modStorageManager)
 	{

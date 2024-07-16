@@ -9,8 +9,8 @@ namespace Nickel;
 
 internal sealed class CobaltCoreHandler
 {
-	private ILogger Logger { get; }
-	private IAssemblyEditor? AssemblyEditor { get; }
+	private readonly ILogger Logger;
+	private readonly IAssemblyEditor? AssemblyEditor;
 
 	public CobaltCoreHandler(ILogger logger, IAssemblyEditor? assemblyEditor)
 	{

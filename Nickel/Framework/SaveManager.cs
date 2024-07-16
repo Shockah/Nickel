@@ -10,8 +10,8 @@ namespace Nickel;
 internal sealed class SaveManager
 {
 	private readonly ILogger Logger;
-	private Func<DeckManager> DeckManagerProvider { get; }
-	private Func<StatusManager> StatusManagerProvider { get; }
+	private readonly Func<DeckManager> DeckManagerProvider;
+	private readonly Func<StatusManager> StatusManagerProvider;
 
 	public SaveManager(ILogger logger, Func<DeckManager> deckManagerProvider, Func<StatusManager> statusManagerProvider)
 	{

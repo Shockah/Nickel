@@ -6,10 +6,10 @@ namespace Nickel;
 
 internal sealed class ModificatingContractResolver : IContractResolver
 {
-	private Action<Type, JsonContract> ContractModificator { get; }
-	private IContractResolver Wrapped { get; }
+	private readonly Action<Type, JsonContract> ContractModificator;
+	private readonly IContractResolver Wrapped;
 
-	private Dictionary<Type, JsonContract> ContractCache { get; } = [];
+	private readonly Dictionary<Type, JsonContract> ContractCache = [];
 
 	public ModificatingContractResolver(Action<Type, JsonContract> contractModificator, IContractResolver? wrapped = null)
 	{

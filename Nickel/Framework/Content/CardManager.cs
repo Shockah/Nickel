@@ -6,11 +6,11 @@ namespace Nickel;
 
 internal sealed class CardManager
 {
-	private AfterDbInitManager<Entry> Manager { get; }
-	private Func<IModManifest, ILogger> LoggerProvider { get; }
-	private IModManifest VanillaModManifest { get; }
-	private Dictionary<Type, Entry> CardTypeToEntry { get; } = [];
-	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
+	private readonly AfterDbInitManager<Entry> Manager;
+	private readonly Func<IModManifest, ILogger> LoggerProvider;
+	private readonly IModManifest VanillaModManifest;
+	private readonly Dictionary<Type, Entry> CardTypeToEntry = [];
+	private readonly Dictionary<string, Entry> UniqueNameToEntry = [];
 
 	public CardManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
 	{

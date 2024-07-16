@@ -4,8 +4,8 @@ namespace Nickel;
 
 internal sealed class ModStatuses : IModStatuses
 {
-	private IModManifest ModManifest { get; }
-	private Func<StatusManager> StatusManagerProvider { get; }
+	private readonly IModManifest ModManifest;
+	private readonly Func<StatusManager> StatusManagerProvider;
 
 	public ModStatuses(IModManifest modManifest, Func<StatusManager> statusManagerProvider)
 	{

@@ -11,7 +11,7 @@ internal sealed class ModDataManager
 {
 	internal const string ModDataJsonKey = "ModData";
 
-	internal ConditionalWeakTable<object, Dictionary<string, Dictionary<string, object?>>> ModDataStorage { get; } = [];
+	internal readonly ConditionalWeakTable<object, Dictionary<string, Dictionary<string, object?>>> ModDataStorage = [];
 
 	private static T ConvertExtensionData<T>(object? o, out bool reserialized)
 	{

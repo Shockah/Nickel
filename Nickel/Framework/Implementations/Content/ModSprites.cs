@@ -7,8 +7,8 @@ namespace Nickel;
 
 internal sealed class ModSprites : IModSprites
 {
-	private IPluginPackage<IModManifest> Package { get; }
-	private Func<SpriteManager> SpriteManagerProvider { get; }
+	private readonly IPluginPackage<IModManifest> Package;
+	private readonly Func<SpriteManager> SpriteManagerProvider;
 
 	public ModSprites(IPluginPackage<IModManifest> package, Func<SpriteManager> spriteManagerProvider)
 	{

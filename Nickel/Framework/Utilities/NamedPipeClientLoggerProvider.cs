@@ -9,13 +9,12 @@ namespace Nickel;
 
 internal sealed class NamedPipeClientLoggerProvider : ILoggerProvider
 {
-	private string PipeName { get; }
+	private readonly string PipeName;
+	private readonly JsonSerializer Serializer = JsonSerializer.Create();
 
-	private JsonSerializer Serializer { get; } = JsonSerializer.Create();
-
-	private NamedPipeClientStream? Client { get; set; }
-	private JsonTextWriter? JsonWriter { get; set; }
-	private bool IsClientRunning { get; set; }
+	private NamedPipeClientStream? Client;
+	private JsonTextWriter? JsonWriter;
+	private bool IsClientRunning;
 
 	public NamedPipeClientLoggerProvider(string pipeName)
 	{
@@ -70,8 +69,8 @@ internal sealed class NamedPipeClientLoggerProvider : ILoggerProvider
 
 	private sealed class Logger : ILogger
 	{
-		private string CategoryName { get; }
-		private Action<LogEntry> LoggingFunction { get; }
+		private readonly string CategoryName;
+		private readonly Action<LogEntry> LoggingFunction;
 
 		public Logger(string categoryName, Action<LogEntry> loggingFunction)
 		{

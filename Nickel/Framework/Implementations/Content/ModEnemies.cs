@@ -4,8 +4,8 @@ namespace Nickel;
 
 internal sealed class ModEnemies : IModEnemies
 {
-	private IModManifest ModManifest { get; }
-	private Func<EnemyManager> EnemyManagerProvider { get; }
+	private readonly IModManifest ModManifest;
+	private readonly Func<EnemyManager> EnemyManagerProvider;
 
 	public ModEnemies(IModManifest modManifest, Func<EnemyManager> enemyManagerProvider)
 	{

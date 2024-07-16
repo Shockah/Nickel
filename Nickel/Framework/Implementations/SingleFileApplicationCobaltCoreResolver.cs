@@ -10,8 +10,8 @@ internal sealed class SingleFileApplicationCobaltCoreResolver : ICobaltCoreResol
 {
 	private const string CobaltCoreResource = "CobaltCore.dll";
 
-	private FileInfo ExePath { get; }
-	private FileInfo? PdbPath { get; }
+	private readonly FileInfo ExePath;
+	private readonly FileInfo? PdbPath;
 
 	public SingleFileApplicationCobaltCoreResolver(FileInfo exePath, FileInfo? pdbPath)
 	{

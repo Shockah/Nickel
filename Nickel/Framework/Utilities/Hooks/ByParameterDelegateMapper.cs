@@ -8,8 +8,8 @@ namespace Nickel;
 
 internal sealed class ByParameterDelegateMapper
 {
-	private ModuleBuilder ModuleBuilder { get; }
-	private int Counter { get; set; }
+	private readonly ModuleBuilder ModuleBuilder;
+	private int Counter;
 
 	public ByParameterDelegateMapper()
 	{

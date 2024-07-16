@@ -6,9 +6,9 @@ namespace Nickel;
 
 internal sealed class ShipManager
 {
-	private IModManifest VanillaModManifest { get; }
-	private AfterDbInitManager<Entry> Manager { get; }
-	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
+	private readonly IModManifest VanillaModManifest;
+	private readonly AfterDbInitManager<Entry> Manager;
+	private readonly Dictionary<string, Entry> UniqueNameToEntry = [];
 
 	public ShipManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
 	{

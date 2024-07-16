@@ -8,12 +8,12 @@ namespace Nickel;
 internal sealed class ModStringEnumConverter<T> : JsonConverter
 	where T : struct, Enum
 {
-	private Func<string, T> ModStringToEnumProvider { get; }
-	private Func<T, string> ModEnumToStringProvider { get; }
+	private readonly Func<string, T> ModStringToEnumProvider;
+	private readonly Func<T, string> ModEnumToStringProvider;
 
-	private Dictionary<string, T> StringToEnum { get; } = [];
-	private Dictionary<T, string> EnumToString { get; } = [];
-	private bool IsPrepared { get; set; } = false;
+	private readonly Dictionary<string, T> StringToEnum = [];
+	private readonly Dictionary<T, string> EnumToString = [];
+	private bool IsPrepared = false;
 
 	public ModStringEnumConverter(
 		Func<string, T> modStringToEnumProvider,

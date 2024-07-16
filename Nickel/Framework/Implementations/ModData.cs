@@ -5,8 +5,8 @@ namespace Nickel;
 
 internal sealed class ModData : IModData
 {
-	private IModManifest ModManifest { get; }
-	private ModDataManager ModDataManager { get; }
+	private readonly IModManifest ModManifest;
+	private readonly ModDataManager ModDataManager;
 
 	public ModData(IModManifest modManifest, ModDataManager modDataManager)
 	{

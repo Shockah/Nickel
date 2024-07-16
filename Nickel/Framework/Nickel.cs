@@ -20,7 +20,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 	internal static Nickel Instance { get; private set; } = null!;
 	internal Harmony? Harmony { get; private set; }
 	internal ModManager ModManager { get; private set; } = null!;
-	private LaunchArguments LaunchArguments { get; } = launchArguments;
+	private readonly LaunchArguments LaunchArguments = launchArguments;
 	internal DebugMode DebugMode { get; private set; } = DebugMode.Disabled;
 	private Settings Settings = new();
 	

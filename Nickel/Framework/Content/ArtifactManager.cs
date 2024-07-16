@@ -7,11 +7,11 @@ namespace Nickel;
 
 internal sealed class ArtifactManager
 {
-	private AfterDbInitManager<Entry> Manager { get; }
-	private Func<IModManifest, ILogger> LoggerProvider { get; }
-	private IModManifest VanillaModManifest { get; }
-	private Dictionary<Type, Entry> ArtifactTypeToEntry { get; } = [];
-	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
+	private readonly AfterDbInitManager<Entry> Manager;
+	private readonly Func<IModManifest, ILogger> LoggerProvider;
+	private readonly IModManifest VanillaModManifest;
+	private readonly Dictionary<Type, Entry> ArtifactTypeToEntry = [];
+	private readonly Dictionary<string, Entry> UniqueNameToEntry = [];
 
 	public ArtifactManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
 	{

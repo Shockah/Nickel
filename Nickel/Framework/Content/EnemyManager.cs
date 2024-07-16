@@ -8,11 +8,11 @@ namespace Nickel;
 
 internal sealed class EnemyManager
 {
-	private AfterDbInitManager<Entry> Manager { get; }
-	private Func<IModManifest, ILogger> LoggerProvider { get; }
-	private IModManifest VanillaModManifest { get; }
-	private Dictionary<Type, Entry> EnemyTypeToEntry { get; } = [];
-	private Dictionary<string, Entry> UniqueNameToEntry { get; } = [];
+	private readonly AfterDbInitManager<Entry> Manager;
+	private readonly Func<IModManifest, ILogger> LoggerProvider;
+	private readonly IModManifest VanillaModManifest;
+	private readonly Dictionary<Type, Entry> EnemyTypeToEntry = [];
+	private readonly Dictionary<string, Entry> UniqueNameToEntry = [];
 	private bool IsCheckingVanillaEnemyPool;
 
 	public EnemyManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)

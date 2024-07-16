@@ -15,7 +15,8 @@ public static class NickelConstants
 	);
 
 	/// <summary>The name of the mod loader.</summary>
-	public static string Name { get; } = "Nickel";
+	public static string Name
+		=> "Nickel";
 
 	/// <summary>The current version of the mod loader.</summary>
 	public static SemanticVersion Version => LazyVersion.Value;
@@ -33,5 +34,6 @@ public static class NickelConstants
 	public static string DeprecatedModType { get; } = $"{Name}.Assembly";
 
 	/// <summary>The manifest file name the mod loader scans for.</summary>
-	public static string ManifestFileName { get; } = "nickel.json";
+	public static string ManifestFileName
+		=> "nickel.json";
 }

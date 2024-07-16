@@ -9,7 +9,7 @@ namespace Nickel;
 internal sealed class CustomDictionaryConverter<TKey> : JsonConverter
 	where TKey : notnull
 {
-	private Dictionary<Type, JsonConverter> Cache { get; } = [];
+	private readonly Dictionary<Type, JsonConverter> Cache = [];
 
 	public override bool CanConvert(Type objectType)
 	{

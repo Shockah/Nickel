@@ -25,9 +25,6 @@ public sealed class MissingPlaceholderLocalizationProvider<TKey>(
 	Func<TKey, string> missingPlaceholderFunction
 ) : ILocaleBoundNonNullLocalizationProvider<TKey>
 {
-	private ILocaleBoundLocalizationProvider<TKey> Provider { get; } = provider;
-	private Func<TKey, string> MissingPlaceholderFunction { get; } = missingPlaceholderFunction;
-
 	/// <summary>
 	/// Creates a localization provider which returns the <c>Missing string</c> placeholder for any localizations it could not handle.
 	/// </summary>
@@ -38,5 +35,5 @@ public sealed class MissingPlaceholderLocalizationProvider<TKey>(
 
 	/// <inheritdoc cref="ILocaleBoundNonNullLocalizationProvider{TKey}.Localize"/>
 	public string Localize(TKey key, object? tokens = null)
-		=> this.Provider.Localize(key, tokens) ?? this.MissingPlaceholderFunction(key);
+		=> provider.Localize(key, tokens) ?? missingPlaceholderFunction(key);
 }
