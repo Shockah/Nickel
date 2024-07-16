@@ -7,14 +7,13 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
-using WeakEvent;
 
 namespace Nickel;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class ShipPatches
 {
-	internal static WeakEventSource<ShouldStatusFlashEventArgs> OnShouldStatusFlash { get; } = new();
+	internal static EventHandler<ShouldStatusFlashEventArgs>? OnShouldStatusFlash;
 	
 	private static readonly ShouldStatusFlashEventArgs ShouldStatusFlashEventArgsInstance = new();
 
@@ -71,7 +70,7 @@ internal static class ShipPatches
 		args.Ship = ship;
 		args.Status = status;
 		args.ShouldFlash = shouldFlash;
-		OnShouldStatusFlash.Raise(null, args);
+		OnShouldStatusFlash?.Invoke(null, args);
 		shouldFlash = args.ShouldFlash;
 	}
 

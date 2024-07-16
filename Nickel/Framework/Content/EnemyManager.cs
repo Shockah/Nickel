@@ -21,8 +21,8 @@ internal sealed class EnemyManager
 		this.LoggerProvider = loggerProvider;
 		this.VanillaModManifest = vanillaModManifest;
 
-		AIPatches.OnKey.Subscribe(this.OnKey);
-		MapBasePatches.OnGetEnemyPools.Subscribe(this.OnGetEnemyPools);
+		AIPatches.OnKey += this.OnKey;
+		MapBasePatches.OnGetEnemyPools += this.OnGetEnemyPools;
 	}
 
 	internal void InjectQueuedEntries()

@@ -18,7 +18,7 @@ internal sealed class PartManager
 		this.PartTypeManager = new(currentModLoadPhaseProvider, Inject);
 		this.PartInstanceManager = new(currentModLoadPhaseProvider, Inject);
 		this.EnumCasePool = enumCasePool;
-		ArtifactRewardPatches.OnGetBlockedArtifacts.Subscribe(this.OnGetBlockedArtifacts);
+		ArtifactRewardPatches.OnGetBlockedArtifacts += this.OnGetBlockedArtifacts;
 	}
 
 	private void OnGetBlockedArtifacts(object? _, ArtifactRewardPatches.GetBlockedArtifactsEventArgs e)

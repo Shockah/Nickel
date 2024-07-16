@@ -3,14 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using WeakEvent;
 
 namespace Nickel;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class EventsPatches
 {
-	internal static WeakEventSource<List<Choice>> OnCrystallizedFriendEvent { get; } = new();
+	internal static EventHandler<List<Choice>>? OnCrystallizedFriendEvent;
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -20,5 +19,5 @@ internal static class EventsPatches
 		);
 
 	private static void CrystallizedFriendEvent_Postfix(ref List<Choice> __result)
-		=> OnCrystallizedFriendEvent.Raise(null, __result);
+		=> OnCrystallizedFriendEvent?.Invoke(null, __result);
 }

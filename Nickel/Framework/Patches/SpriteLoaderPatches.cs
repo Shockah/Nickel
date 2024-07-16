@@ -4,14 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using WeakEvent;
 
 namespace Nickel;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class SpriteLoaderPatches
 {
-	internal static WeakEventSource<GetTextureEventArgs> OnGetTexture { get; } = new();
+	internal static EventHandler<GetTextureEventArgs>? OnGetTexture;
 
 	private static readonly HashSet<Spr> DynamicTextureSprites = [];
 	private static readonly GetTextureEventArgs GetTextureEventArgsInstance = new();
@@ -32,7 +31,7 @@ internal static class SpriteLoaderPatches
 		var args = GetTextureEventArgsInstance;
 		args.Sprite = id;
 		args.Texture = __result;
-		OnGetTexture.Raise(null, args);
+		OnGetTexture?.Invoke(null, args);
 		
 		__result = args.Texture;
 		if (args.IsDynamic)

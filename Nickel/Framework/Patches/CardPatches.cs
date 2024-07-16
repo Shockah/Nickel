@@ -7,18 +7,17 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
-using WeakEvent;
 
 namespace Nickel;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class CardPatches
 {
-	internal static readonly WeakEventSource<KeyEventArgs> OnKey = new();
-	internal static readonly WeakEventSource<TooltipsEventArgs> OnGetTooltips = new();
-	internal static readonly WeakEventSource<TraitRenderEventArgs> OnRenderTraits = new();
-	internal static readonly WeakEventSource<GettingDataWithOverridesEventArgs> OnGettingDataWithOverrides = new();
-	internal static readonly WeakEventSource<MidGetDataWithOverridesEventArgs> OnMidGetDataWithOverrides = new();
+	internal static EventHandler<KeyEventArgs>? OnKey;
+	internal static EventHandler<TooltipsEventArgs>? OnGetTooltips;
+	internal static EventHandler<TraitRenderEventArgs>? OnRenderTraits;
+	internal static EventHandler<GettingDataWithOverridesEventArgs>? OnGettingDataWithOverrides;
+	internal static EventHandler<MidGetDataWithOverridesEventArgs>? OnMidGetDataWithOverrides;
 	
 	private static readonly KeyEventArgs KeyEventArgsInstance = new();
 	private static readonly TooltipsEventArgs TooltipsEventArgsInstance = new();
@@ -56,7 +55,7 @@ internal static class CardPatches
 		var args = KeyEventArgsInstance;
 		args.Card = __instance;
 		args.Key = __result;
-		OnKey.Raise(null, args);
+		OnKey?.Invoke(null, args);
 		__result = args.Key;
 	}
 
@@ -110,7 +109,7 @@ internal static class CardPatches
 		args.State = state;
 		args.CardTraitIndex = cardTraitIndex;
 		args.Position = vec;
-		OnRenderTraits.Raise(null, args);
+		OnRenderTraits?.Invoke(null, args);
 		cardTraitIndex = args.CardTraitIndex;
 	}
 
@@ -121,7 +120,7 @@ internal static class CardPatches
 		args.State = s;
 		args.ShowCardTraits = showCardTraits;
 		args.TooltipsEnumerator = __result;
-		OnGetTooltips.Raise(null, args);
+		OnGetTooltips?.Invoke(null, args);
 		__result = args.TooltipsEnumerator;
 	}
 
@@ -130,7 +129,7 @@ internal static class CardPatches
 		var args = GettingDataWithOverridesEventArgsInstance;
 		args.Card = __instance;
 		args.State = state;
-		OnGettingDataWithOverrides.Raise(null, args);
+		OnGettingDataWithOverrides?.Invoke(null, args);
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -167,7 +166,7 @@ internal static class CardPatches
 		args.State = state;
 		args.InitialData = data;
 		args.CurrentData = data;
-		OnMidGetDataWithOverrides.Raise(null, args);
+		OnMidGetDataWithOverrides?.Invoke(null, args);
 		data = args.CurrentData;
 	}
 

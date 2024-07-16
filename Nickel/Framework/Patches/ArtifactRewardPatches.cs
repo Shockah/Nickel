@@ -8,14 +8,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using WeakEvent;
 
 namespace Nickel;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class ArtifactRewardPatches
 {
-	internal static WeakEventSource<GetBlockedArtifactsEventArgs> OnGetBlockedArtifacts { get; } = new();
+	internal static EventHandler<GetBlockedArtifactsEventArgs>? OnGetBlockedArtifacts;
 	
 	private static readonly GetBlockedArtifactsEventArgs GetBlockedArtifactsEventArgsInstance = new();
 
@@ -38,7 +37,7 @@ internal static class ArtifactRewardPatches
 		var args = GetBlockedArtifactsEventArgsInstance;
 		args.State = s;
 		args.BlockedArtifacts = __result;
-		OnGetBlockedArtifacts.Raise(null, args);
+		OnGetBlockedArtifacts?.Invoke(null, args);
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]

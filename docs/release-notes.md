@@ -4,6 +4,9 @@
 
 ## Upcoming release
 
+### For players:
+* General optimizations.
+
 ### For developers:
 * `Artifact.ReplaceSpawnedThing` is now hookable.
 

@@ -2,14 +2,13 @@ using HarmonyLib;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using WeakEvent;
 
 namespace Nickel;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class AIPatches
 {
-	internal static WeakEventSource<KeyEventArgs> OnKey { get; } = new();
+	internal static EventHandler<KeyEventArgs>? OnKey;
 	
 	private static readonly KeyEventArgs KeyEventArgsInstance = new();
 
@@ -25,7 +24,7 @@ internal static class AIPatches
 		var args = KeyEventArgsInstance;
 		args.AI = __instance;
 		args.Key = __result;
-		OnKey.Raise(null, args);
+		OnKey?.Invoke(null, args);
 		__result = args.Key;
 	}
 

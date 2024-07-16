@@ -2,14 +2,13 @@ using HarmonyLib;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using WeakEvent;
 
 namespace Nickel;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class MapBasePatches
 {
-	internal static WeakEventSource<GetEnemyPoolsEventArgs> OnGetEnemyPools { get; } = new();
+	internal static EventHandler<GetEnemyPoolsEventArgs>? OnGetEnemyPools;
 	
 	private static readonly GetEnemyPoolsEventArgs GetEnemyPoolsEventArgsInstance = new();
 
@@ -27,7 +26,7 @@ internal static class MapBasePatches
 		args.State = __0;
 		args.Map = __instance;
 		args.Pool = __result;
-		OnGetEnemyPools.Raise(null, args);
+		OnGetEnemyPools?.Invoke(null, args);
 	}
 
 	internal sealed class GetEnemyPoolsEventArgs

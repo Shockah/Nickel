@@ -7,13 +7,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
-using WeakEvent;
 
 namespace Nickel;
 
 internal static class ProgramPatches
 {
-	internal static WeakEventSource<StructRef<bool>> OnTryInitSteam { get; } = new();
+	internal static EventHandler<StructRef<bool>>? OnTryInitSteam;
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -44,7 +43,7 @@ internal static class ProgramPatches
 	private static bool TryInitSteam_Transpiler_ModifyInitSteam(bool initSteam)
 	{
 		var args = new StructRef<bool>(initSteam);
-		OnTryInitSteam.Raise(null, args);
+		OnTryInitSteam?.Invoke(null, args);
 		return args.Value;
 	}
 }

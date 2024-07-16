@@ -3,14 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using WeakEvent;
 
 namespace Nickel;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class DBPatches
 {
-	internal static WeakEventSource<LoadStringsForLocaleEventArgs> OnLoadStringsForLocale { get; } = new();
+	internal static EventHandler<LoadStringsForLocaleEventArgs>? OnLoadStringsForLocale;
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -22,6 +21,6 @@ internal static class DBPatches
 	private static void LoadStringsForLocale_Postfix(string locale, ref Dictionary<string, string>? __result)
 	{
 		__result ??= [];
-		OnLoadStringsForLocale.Raise(null, new LoadStringsForLocaleEventArgs { Locale = locale, Localizations = __result });
+		OnLoadStringsForLocale?.Invoke(null, new LoadStringsForLocaleEventArgs { Locale = locale, Localizations = __result });
 	}
 }

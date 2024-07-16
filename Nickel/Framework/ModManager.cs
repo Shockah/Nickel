@@ -174,7 +174,7 @@ internal sealed class ModManager
 
 		this.ExtendablePluginLoader.RegisterPluginLoader(assemblyPluginLoader);
 
-		DBPatches.OnLoadStringsForLocale.Subscribe(this.OnLoadStringsForLocale);
+		DBPatches.OnLoadStringsForLocale += this.OnLoadStringsForLocale;
 	}
 
 	private void OnLoadStringsForLocale(object? sender, LoadStringsForLocaleEventArgs e)

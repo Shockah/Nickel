@@ -22,8 +22,8 @@ internal sealed class StatusManager
 		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
 		
-		ShipPatches.OnShouldStatusFlash.Subscribe(this.OnShouldStatusFlash);
-		TTGlossaryPatches.OnTryGetIcon.Subscribe(this.OnTryGetIcon);
+		ShipPatches.OnShouldStatusFlash += this.OnShouldStatusFlash;
+		TTGlossaryPatches.OnTryGetIcon += this.OnTryGetIcon;
 	}
 
 	internal bool IsStateInvalid(State state)

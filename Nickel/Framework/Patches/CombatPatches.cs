@@ -1,13 +1,12 @@
 using HarmonyLib;
 using System;
 using System.Reflection;
-using WeakEvent;
 
 namespace Nickel;
 
 internal static class CombatPatches
 {
-	internal static readonly WeakEventSource<State> OnReturnCardsToDeck = new();
+	internal static EventHandler<State>? OnReturnCardsToDeck;
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -17,5 +16,5 @@ internal static class CombatPatches
 		);
 
 	private static void ReturnCardsToDeck_Postfix(State state)
-		=> OnReturnCardsToDeck.Raise(null, state);
+		=> OnReturnCardsToDeck?.Invoke(null, state);
 }

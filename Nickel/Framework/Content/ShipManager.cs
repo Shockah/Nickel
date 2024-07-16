@@ -14,8 +14,8 @@ internal sealed class ShipManager
 	{
 		this.VanillaModManifest = vanillaModManifest;
 		this.Manager = new(currentModLoadPhaseProvider, this.Inject);
-		StoryVarsPatches.OnGetUnlockedShips.Subscribe(this.OnGetUnlockedShips);
-		ArtifactRewardPatches.OnGetBlockedArtifacts.Subscribe(this.OnGetBlockedArtifacts);
+		StoryVarsPatches.OnGetUnlockedShips += this.OnGetUnlockedShips;
+		ArtifactRewardPatches.OnGetBlockedArtifacts += this.OnGetBlockedArtifacts;
 	}
 
 	private void OnGetUnlockedShips(object? _, HashSet<string> unlockedShips)

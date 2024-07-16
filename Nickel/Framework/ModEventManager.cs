@@ -79,8 +79,8 @@ internal sealed class ModEventManager
 
 	private void SubscribeAfterGameAssembly()
 	{
-		StatePatches.OnEnumerateAllArtifacts.Subscribe(this, this.OnEnumerateAllArtifacts);
-		ArtifactPatches.OnKey.Subscribe(this.OnArtifactKey);
+		StatePatches.OnEnumerateAllArtifacts += this.OnEnumerateAllArtifacts;
+		ArtifactPatches.OnKey += this.OnArtifactKey;
 	}
 
 	private void OnEnumerateAllArtifacts(object? _, StatePatches.EnumerateAllArtifactsEventArgs e)

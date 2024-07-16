@@ -311,12 +311,12 @@ internal class CardTraitManager
 			this.InfiniteCardTrait.Value,
 		}.ToDictionary(t => t.UniqueName));
 
-		CardPatches.OnGetTooltips.Subscribe(this, this.OnGetCardTooltips);
-		CardPatches.OnRenderTraits.Subscribe(this, this.OnRenderTraits);
-		CardPatches.OnGettingDataWithOverrides.Subscribe(this, this.OnGettingDataWithOverrides);
-		CardPatches.OnMidGetDataWithOverrides.Subscribe(this, this.OnMidGetDataWithOverrides);
-		CombatPatches.OnReturnCardsToDeck.Subscribe(this, this.OnReturnCardsToDeck);
-		StatePatches.OnUpdate.Subscribe(this, this.OnStateUpdate);
+		CardPatches.OnGetTooltips += this.OnGetCardTooltips;
+		CardPatches.OnRenderTraits += this.OnRenderTraits;
+		CardPatches.OnGettingDataWithOverrides += this.OnGettingDataWithOverrides;
+		CardPatches.OnMidGetDataWithOverrides += this.OnMidGetDataWithOverrides;
+		CombatPatches.OnReturnCardsToDeck += this.OnReturnCardsToDeck;
+		StatePatches.OnUpdate += this.OnStateUpdate;
 	}
 
 	private void OnRenderTraits(object? sender, CardPatches.TraitRenderEventArgs e)
@@ -334,7 +334,13 @@ internal class CardTraitManager
 		);
 
 	private void OnGettingDataWithOverrides(object? sender, CardPatches.GettingDataWithOverridesEventArgs e)
-		=> this.FixModData(e.Card);
+	{
+		if (e.State == DB.fakeState)
+			return;
+		if (MG.inst.g.metaRoute is not null && MG.inst.g.metaRoute is { subRoute: Codex })
+			return;
+		this.FixModData(e.Card);
+	}
 
 	private void OnMidGetDataWithOverrides(object? sender, CardPatches.MidGetDataWithOverridesEventArgs e)
 	{

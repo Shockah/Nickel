@@ -19,7 +19,7 @@ internal sealed class ArtifactManager
 		this.LoggerProvider = loggerProvider;
 		this.VanillaModManifest = vanillaModManifest;
 
-		ArtifactPatches.OnKey.Subscribe(this.OnKey);
+		ArtifactPatches.OnKey += this.OnKey;
 	}
 
 	internal void InjectQueuedEntries()

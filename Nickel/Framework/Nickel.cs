@@ -281,8 +281,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			if (harmony is not null)
 				ApplyHarmonyPatches(harmony);
 
-			LogPatches.OnLine.Subscribe(instance, (_, obj) => gameLogger.LogDebug("{GameLogLine}", obj.ToString()));
-			ProgramPatches.OnTryInitSteam.Subscribe(instance, instance.OnTryInitSteam);
+			LogPatches.OnLine += (_, obj) => gameLogger.LogDebug("{GameLogLine}", obj.ToString());
+			ProgramPatches.OnTryInitSteam += instance.OnTryInitSteam;
 			instance.ModManager.LoadMods(ModLoadPhase.AfterGameAssembly);
 
 			FeatureFlags.OverrideSaveLocation = savePath.FullName;

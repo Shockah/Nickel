@@ -1,13 +1,12 @@
 using HarmonyLib;
 using System;
 using System.Reflection;
-using WeakEvent;
 
 namespace Nickel;
 
 internal static class LogPatches
 {
-	internal static WeakEventSource<object> OnLine { get; } = new();
+	internal static EventHandler<object>? OnLine;
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -17,5 +16,5 @@ internal static class LogPatches
 		);
 
 	private static void Line_Postfix(object obj)
-		=> OnLine.Raise(null, obj);
+		=> OnLine?.Invoke(null, obj);
 }

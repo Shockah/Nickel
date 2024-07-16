@@ -3,14 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using WeakEvent;
 
 namespace Nickel;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class TTGlossaryPatches
 {
-	internal static WeakEventSource<TryGetIconEventArgs> OnTryGetIcon { get; } = new();
+	internal static EventHandler<TryGetIconEventArgs>? OnTryGetIcon;
 
 	private static readonly Stack<TTGlossary> GlossaryStack = new();
 	private static readonly TryGetIconEventArgs TryGetIconEventArgsInstance = new();
@@ -44,7 +43,7 @@ internal static class TTGlossaryPatches
 		var args = TryGetIconEventArgsInstance;
 		args.Glossary = glossary;
 		args.Sprite = __result;
-		OnTryGetIcon.Raise(null, args);
+		OnTryGetIcon?.Invoke(null, args);
 		__result = args.Sprite;
 	}
 

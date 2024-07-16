@@ -18,7 +18,7 @@ internal sealed class CardManager
 		this.LoggerProvider = loggerProvider;
 		this.VanillaModManifest = vanillaModManifest;
 
-		CardPatches.OnKey.Subscribe(this.OnKey);
+		CardPatches.OnKey += this.OnKey;
 	}
 
 	internal void InjectQueuedEntries()

@@ -16,7 +16,7 @@ internal sealed class SpriteManager
 	{
 		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
-		SpriteLoaderPatches.OnGetTexture.Subscribe(this.OnGetTexture);
+		SpriteLoaderPatches.OnGetTexture += this.OnGetTexture;
 	}
 
 	public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Texture2D> textureProvider, bool isDynamic)

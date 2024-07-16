@@ -8,7 +8,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using WeakEvent;
 
 namespace Nickel;
 
@@ -16,10 +15,10 @@ namespace Nickel;
 internal static class StatePatches
 {
 	internal static bool StopSavingOverride = false;
-	internal static WeakEventSource<EnumerateAllArtifactsEventArgs> OnEnumerateAllArtifacts { get; } = new();
-	internal static WeakEventSource<ModifyPotentialExeCardsEventArgs> OnModifyPotentialExeCards { get; } = new();
-	internal static WeakEventSource<LoadEventArgs> OnLoad { get; } = new();
-	internal static WeakEventSource<State> OnUpdate { get; } = new();
+	internal static EventHandler<EnumerateAllArtifactsEventArgs>? OnEnumerateAllArtifacts;
+	internal static EventHandler<ModifyPotentialExeCardsEventArgs>? OnModifyPotentialExeCards;
+	internal static EventHandler<LoadEventArgs>? OnLoad;
+	internal static EventHandler<State>? OnUpdate;
 	
 	private static readonly EnumerateAllArtifactsEventArgs EnumerateAllArtifactsEventArgsInstance = new();
 	private static readonly ModifyPotentialExeCardsEventArgs ModifyPotentialExeCardsEventArgsInstance = new();
@@ -60,7 +59,7 @@ internal static class StatePatches
 		var args = EnumerateAllArtifactsEventArgsInstance;
 		args.State = __instance;
 		args.Artifacts = __result;
-		OnEnumerateAllArtifacts.Raise(null, args);
+		OnEnumerateAllArtifacts?.Invoke(null, args);
 		__result = args.Artifacts;
 	}
 
@@ -102,7 +101,7 @@ internal static class StatePatches
 		var args = ModifyPotentialExeCardsEventArgsInstance;
 		args.Characters = chars.ToHashSet();
 		args.ExeCards = cards;
-		OnModifyPotentialExeCards.Raise(null, args);
+		OnModifyPotentialExeCards?.Invoke(null, args);
 		cards = args.ExeCards;
 	}
 
@@ -122,12 +121,12 @@ internal static class StatePatches
 		var args = LoadEventArgsInstance;
 		args.Slot = slot;
 		args.Data = __result;
-		OnLoad.Raise(null, args);
+		OnLoad?.Invoke(null, args);
 		__result = args.Data;
 	}
 
 	private static void Update_Prefix(State __instance)
-		=> OnUpdate.Raise(null, __instance);
+		=> OnUpdate?.Invoke(null, __instance);
 
 	internal sealed class EnumerateAllArtifactsEventArgs
 	{

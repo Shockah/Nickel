@@ -42,10 +42,10 @@ internal sealed class CharacterManager
 		this.PlayableCharacterManager = new(currentModLoadPhaseProvider, this.Inject);
 		this.NonPlayableCharacterManager = new(currentModLoadPhaseProvider, this.Inject);
 
-		EventsPatches.OnCrystallizedFriendEvent.Subscribe(this.OnCrystallizedFriendEvent);
-		StatePatches.OnModifyPotentialExeCards.Subscribe(this.OnModifyPotentialExeCards);
-		StoryVarsPatches.OnGetUnlockedChars.Subscribe(this.OnGetUnlockedChars);
-		WizardPatches.OnGetAssignableStatuses.Subscribe(this.OnGetAssignableStatuses);
+		EventsPatches.OnCrystallizedFriendEvent += this.OnCrystallizedFriendEvent;
+		StatePatches.OnModifyPotentialExeCards += this.OnModifyPotentialExeCards;
+		StoryVarsPatches.OnGetUnlockedChars += this.OnGetUnlockedChars;
+		WizardPatches.OnGetAssignableStatuses += this.OnGetAssignableStatuses;
 	}
 
 	internal void InjectQueuedEntries()

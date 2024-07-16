@@ -19,7 +19,7 @@ internal sealed class SaveManager
 		this.DeckManagerProvider = deckManagerProvider;
 		this.StatusManagerProvider = statusManagerProvider;
 
-		StatePatches.OnLoad.Subscribe(this, this.OnLoad);
+		StatePatches.OnLoad += this.OnLoad;
 	}
 
 	private void OnLoad(object? _, StatePatches.LoadEventArgs e)

@@ -3,14 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using WeakEvent;
 
 namespace Nickel;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class WizardPatches
 {
-	internal static WeakEventSource<GetAssignableStatusesEventArgs> OnGetAssignableStatuses { get; } = new();
+	internal static EventHandler<GetAssignableStatusesEventArgs>? OnGetAssignableStatuses;
 		
 	private static readonly GetAssignableStatusesEventArgs GetAssignableStatusesEventArgsInstance = new();
 
@@ -26,7 +25,7 @@ internal static class WizardPatches
 		var args = GetAssignableStatusesEventArgsInstance;
 		args.State = s;
 		args.Statuses = __result;
-		OnGetAssignableStatuses.Raise(null, args);
+		OnGetAssignableStatuses?.Invoke(null, args);
 		__result = args.Statuses;
 	}
 
