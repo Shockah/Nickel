@@ -101,33 +101,33 @@ internal sealed class ModEventManager
 	{
 		var subclass = new HookableSubclassGenerator().GenerateHookableSubclass<Artifact>(method =>
 		{
+			if (method.Name == nameof(Artifact.ReplaceSpawnedThing))
+				return (
+					(_, _, newValue) => newValue,
+					args => args[method.GetParameters().ToList().FindIndex(p => p.Name == "thing")]
+				);
 			if (method.ReturnType == typeof(bool))
-				return rs => rs.OfType<bool>().Contains(true);
+				return (
+					(_, currentValue, newValue) => Equals(currentValue, true) || Equals(newValue, true),
+					_ => false
+				);
 			if (method.ReturnType == typeof(int))
-				return rs => rs.OfType<int>().Sum();
+				return (
+					(_, currentValue, newValue) => (int)currentValue! + (int)newValue!,
+					_ => 0
+				);
 			if (method.ReturnType == typeof(bool?))
-				return rs =>
-				{
-					if (rs.Contains(true))
-						return true;
-					if (rs.Contains(false))
-						return false;
-					return null;
-				};
+				return (
+					(_, currentValue, newValue) => newValue switch
+					{
+						true => true,
+						false when !Equals(currentValue, true) => false,
+						_ => null
+					},
+					_ => null
+				);
 			return null;
 		});
-
-		void RegisterArtifact()
-		{
-			DB.artifacts[subclass.Type.Name] = subclass.Type;
-			DB.artifactMetas[subclass.Type.Name] = new()
-			{
-				owner = Deck.colorless,
-				unremovable = true,
-				pools = [ArtifactPool.Unreleased]
-			};
-			DB.artifactSprites[subclass.Type.Name] = Enum.GetValues<Spr>()[0];
-		}
 
 		if (this.CurrentModLoadPhaseProvider().Phase == ModLoadPhase.AfterDbInit)
 		{
@@ -142,5 +142,17 @@ internal sealed class ModEventManager
 			}, this.ModLoaderModManifest);
 		}
 		return subclass;
+
+		void RegisterArtifact()
+		{
+			DB.artifacts[subclass.Type.Name] = subclass.Type;
+			DB.artifactMetas[subclass.Type.Name] = new()
+			{
+				owner = Deck.colorless,
+				unremovable = true,
+				pools = [ArtifactPool.Unreleased]
+			};
+			DB.artifactSprites[subclass.Type.Name] = Enum.GetValues<Spr>()[0];
+		}
 	}
 }

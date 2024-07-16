@@ -8,6 +8,8 @@ using System.Runtime.CompilerServices;
 
 namespace Nickel;
 
+internal delegate object? HookableSubclassMethodResultReducer(object?[] args, object? currentResult, object? hookResult);
+
 internal sealed class HookableSubclassGenerator
 {
 	private AssemblyBuilder AssemblyBuilder { get; }
@@ -38,11 +40,38 @@ internal sealed class HookableSubclassGenerator
 		);
 	}
 
-	public GeneratedHookableSubclass<T> GenerateHookableSubclass<T>(Func<MethodInfo, Func<List<object?>, object?>?> resultReducerProvider)
+	public GeneratedHookableSubclass<T> GenerateHookableSubclass<T>(Func<MethodInfo, (HookableSubclassMethodResultReducer ResultReducer, Func<object?[], object?> InitialValue)?> resultReducerProvider)
 		where T : class
 	{
 		if (!typeof(T).IsInterface && typeof(T).IsSealed)
 			throw new ArgumentException($"Type {typeof(T)} has to be an interface or a non-sealed class", nameof(T));
+
+		var methodsToProxy = typeof(T).IsInterface
+			? typeof(T).FindInterfaceMethods(includePrivate: false).Distinct().ToList()
+			: typeof(T).FindClassMethods(includePrivate: false).Distinct().ToList();
+		
+		// validate hookable methods
+		List<(MethodInfo Method, HookableSubclassMethodResultReducer? ResultReducer, Func<object?[], object?>? InitialValue)> hookableMethods = [];
+		foreach (var method in methodsToProxy)
+		{
+			if (!method.DeclaringType?.IsSubclassOf(typeof(T)) != true)
+				continue;
+
+			if (method.ReturnType == typeof(void))
+			{
+				hookableMethods.Add((Method: method, ResultReducer: null, InitialValue: null));
+				continue;
+			}
+
+			if (resultReducerProvider(method) is { } resultReducer)
+			{
+				hookableMethods.Add((Method: method, ResultReducer: resultReducer.ResultReducer, InitialValue: resultReducer.InitialValue));
+				continue;
+			}
+
+			if (method.IsAbstract)
+				throw new ArgumentException($"`{nameof(resultReducerProvider)}` provided no `{nameof(resultReducer)}`, but it's required for method {method}");
+		}
 
 		this.AddAccessCheckIgnoreAttribute(typeof(T).Assembly);
 
@@ -169,30 +198,10 @@ internal sealed class HookableSubclassGenerator
 			il.Emit(OpCodes.Ret);
 		}
 
-		var includePrivate = false;
-		var methodsToProxy = typeof(T).IsInterface
-			? typeof(T).FindInterfaceMethods(includePrivate).Distinct().ToList()
-			: typeof(T).FindClassMethods(includePrivate).Distinct().ToList();
-
 		// generate hookable methods
-		foreach (var method in methodsToProxy)
+		foreach (var (method, resultReducer, initialValue) in hookableMethods)
 		{
-			if (method.DeclaringType == typeof(IHookable))
-				continue;
-
-			Func<List<object?>, object?>? resultReducer = null;
-			if (method.ReturnType != typeof(void))
-			{
-				resultReducer = resultReducerProvider(method);
-				if (resultReducer is null)
-				{
-					if (typeof(T).IsInterface)
-						throw new ArgumentException($"`{nameof(resultReducerProvider)}` provided no `{nameof(resultReducer)}`, but it's required for method {method}");
-					else
-						continue;
-				}
-			}
-			var hookedMethodIndex = staticGlue.RegisterHookedMethod(method, resultReducer);
+			var hookedMethodIndex = staticGlue.RegisterHookedMethod(method, resultReducer, initialValue);
 
 			var methodBuilder = typeBuilder.DefineMethod(
 				name: method.Name,
@@ -288,10 +297,9 @@ internal sealed class HookableSubclassGenerator
 						throw new ArgumentException($"Unsupported method parameter type {methodParameters[i]} in method {method}");
 					}
 				}
-				else
+				else if (methodParameters[i].ParameterType.IsValueType)
 				{
-					if (methodParameters[i].ParameterType.IsValueType)
-						il.Emit(OpCodes.Box, methodParameters[i].ParameterType);
+					il.Emit(OpCodes.Box, methodParameters[i].ParameterType);
 				}
 
 				il.Emit(OpCodes.Stelem_Ref);
@@ -418,9 +426,9 @@ file sealed class HookSubclassStaticGlue(
 {
 	public ByParameterDelegateMapper ByParameterDelegateMapper { get; } = byParameterDelegateMapper;
 	public ObjectifiedDelegateMapper ObjectifiedDelegateMapper { get; } = objectifiedDelegateMapper;
-	private List<(MethodInfo Method, Func<List<object?>, object?>? ResultReducer)> HookedMethods { get; } = [];
+	private List<(MethodInfo Method, HookableSubclassMethodResultReducer? ResultReducer, Func<object?[], object?>? InitialValue)> HookedMethods { get; } = [];
 
-	public bool TryGetHookedMethod(int hookedMethodIndex, out (MethodInfo Method, Func<List<object?>, object?>? ResultReducer) result)
+	public bool TryGetHookedMethod(int hookedMethodIndex, out (MethodInfo Method, HookableSubclassMethodResultReducer? ResultReducer, Func<object?[], object?>? InitialValue) result)
 	{
 		result = default;
 		if (hookedMethodIndex < 0 || hookedMethodIndex >= this.HookedMethods.Count)
@@ -430,9 +438,9 @@ file sealed class HookSubclassStaticGlue(
 		return true;
 	}
 
-	public int RegisterHookedMethod(MethodInfo method, Func<List<object?>, object?>? resultReducer)
+	public int RegisterHookedMethod(MethodInfo method, HookableSubclassMethodResultReducer? resultReducer, Func<object?[], object?>? initialValue)
 	{
-		this.HookedMethods.Add((Method: method, ResultReducer: resultReducer));
+		this.HookedMethods.Add((Method: method, ResultReducer: resultReducer, InitialValue: initialValue));
 		return this.HookedMethods.Count - 1;
 	}
 }
@@ -532,17 +540,20 @@ file sealed class HookSubclassGlue(
 			throw new ArgumentException("Invalid hooked method", nameof(hookedMethodIndex));
 		if (hookedMethod.ResultReducer is not { } resultReducer)
 			throw new ArgumentException("Invalid hooked method", nameof(hookedMethodIndex));
+		if (hookedMethod.InitialValue is not { } initialValue)
+			throw new ArgumentException("Invalid initial value", nameof(hookedMethodIndex));
 
+		var currentResult = initialValue(arguments);
 		if (!this.CompiledDelegates.TryGetValue(hookedMethod.Method, out var compiledDelegates))
-			return default;
+			return (T?)currentResult;
 
-		List<object?> delegateResults = new(capacity: compiledDelegates.Count);
 		foreach (var compiledDelegate in compiledDelegates)
 		{
 			var typedDelegate = (Func<object?[], object?>)compiledDelegate;
-			delegateResults.Add(typedDelegate(arguments));
+			var delegateResult = typedDelegate(arguments);
+			currentResult = resultReducer(arguments, currentResult, delegateResult);
 		}
-		return (T?)resultReducer(delegateResults);
+		return (T?)currentResult;
 	}
 }
 

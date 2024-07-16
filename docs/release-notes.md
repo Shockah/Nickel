@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For developers:
+* `Artifact.ReplaceSpawnedThing` is now hookable.
+
 ## 1.1.0
 Released 14 July 2024.
 
