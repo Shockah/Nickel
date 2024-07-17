@@ -22,7 +22,7 @@ internal static class StarterDeckPreview
 	private static readonly List<Card> LastStarterCards = [];
 	private static readonly List<Artifact> LastStarterArtifacts = [];
 
-	public static void ApplyPatches(Harmony harmony)
+	public static void ApplyPatches(IHarmony harmony)
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(G), nameof(G.BubbleEvents))

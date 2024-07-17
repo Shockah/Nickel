@@ -14,7 +14,7 @@ internal static class UnlockedWindowResize
 	private static bool UserResized = true;
 	private static bool RepositionOnce;
 
-	public static void ApplyPatches(Harmony harmony)
+	public static void ApplyPatches(IHarmony harmony)
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(MG), nameof(MG.UpdateRenderPipelineIfNeeded))

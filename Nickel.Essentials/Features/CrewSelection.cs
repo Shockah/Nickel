@@ -47,7 +47,7 @@ internal static class CrewSelection
 		}
 	}
 
-	public static void ApplyPatches(Harmony harmony)
+	public static void ApplyPatches(IHarmony harmony)
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(NewRunOptions), nameof(NewRunOptions.OnEnter)),

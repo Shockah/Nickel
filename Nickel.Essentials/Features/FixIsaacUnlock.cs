@@ -8,7 +8,7 @@ namespace Nickel.Essentials;
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class FixIsaacUnlock
 {
-	public static void ApplyPatches(Harmony harmony)
+	public static void ApplyPatches(IHarmony harmony)
 		=> harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(StoryVars), nameof(StoryVars.RecordRunWin))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(StoryVars)}.{nameof(StoryVars.RecordRunWin)}`"),

@@ -29,7 +29,7 @@ public enum ModDescriptionsKey
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class ModDescriptions
 {
-	public static void ApplyPatches(Harmony harmony)
+	public static void ApplyPatches(IHarmony harmony)
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Artifact), nameof(Artifact.GetTooltips)),

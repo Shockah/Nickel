@@ -27,7 +27,7 @@ internal static class MemorySelection
 		}
 	}
 
-	public static void ApplyPatches(Harmony harmony)
+	public static void ApplyPatches(IHarmony harmony)
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Route), nameof(Route.OnEnter)),

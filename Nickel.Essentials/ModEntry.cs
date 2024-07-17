@@ -62,7 +62,7 @@ public sealed class ModEntry : SimpleMod
 			)
 		);
 
-		var harmony = new Harmony(package.Manifest.UniqueName);
+		var harmony = helper.Utilities.DelayedHarmony;
 		CardBrowseCurrentPile.ApplyPatches(harmony);
 		CardCodexFiltering.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);

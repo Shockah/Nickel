@@ -27,7 +27,7 @@ internal static class CardBrowseCurrentPile
 
 	private static bool IsRenderingCardBrowse;
 
-	public static void ApplyPatches(Harmony harmony)
+	public static void ApplyPatches(IHarmony harmony)
 	{
 		InDrawPileIcon = ModEntry.Instance.Helper.Content.Sprites.RegisterSprite(ModEntry.Instance.Package.PackageRoot.GetRelativeFile("assets/InDrawPile.png"));
 		InDiscardPileIcon = ModEntry.Instance.Helper.Content.Sprites.RegisterSprite(ModEntry.Instance.Package.PackageRoot.GetRelativeFile("assets/InDiscardPile.png"));

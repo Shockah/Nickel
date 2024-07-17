@@ -20,7 +20,7 @@ internal static partial class CardCodexFiltering
 	private static double FilterScroll;
 	private static double FilterScrollTarget;
 
-	public static void ApplyPatches(Harmony harmony)
+	public static void ApplyPatches(IHarmony harmony)
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(CardBrowse), nameof(CardBrowse.GetCardList)),

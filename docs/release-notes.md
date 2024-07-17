@@ -5,6 +5,7 @@
 ## Upcoming release
 
 ### For players:
+* Updated for Cobalt Core 1.1.2.
 * General optimizations.
 
 ### For developers:

@@ -20,7 +20,7 @@ internal static class SaveImport
 	private static readonly UK ImportProfileKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 	private static readonly UK ImportProfileBackKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 
-	public static void ApplyPatches(Harmony harmony)
+	public static void ApplyPatches(IHarmony harmony)
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(ProfileSelect), nameof(ProfileSelect.ReloadSlotsCache)),
@@ -38,9 +38,15 @@ internal static class SaveImport
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(ProfileSelect), nameof(ProfileSelect.MkSlot)),
 			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(ProfileSelect_MkSlot_Prefix)),
-			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(ProfileSelect_MkSlot_Postfix)),
-			finalizer: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(ProfileSelect_MkSlot_Finalizer)),
-			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(ProfileSelect_MkSlot_Transpiler))
+			finalizer: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(ProfileSelect_MkSlot_Finalizer))
+		);
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(ProfileSelect), nameof(ProfileSelect.GetAvailableActionsForSlot)),
+			finalizer: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(ProfileSelect_GetAvailableActionsForSlot_Postfix))
+		);
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(ProfileSelect), nameof(ProfileSelect.RenderActionButton)),
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType, nameof(ProfileSelect_RenderActionButton_Postfix))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Route), nameof(Route.TryCloseSubRoute)),
@@ -69,14 +75,28 @@ internal static class SaveImport
 
 	private static bool ProfileSelect_ReloadSlotsCache_Prefix(ProfileSelect __instance)
 	{
+		// TODO: remove this complete copy-paste of the original method
+		// for whatever reason, without this bit the `ProfileSelect_GetAvailableActionsForSlot_Postfix` patch was not called
 		if (__instance is not SaveImportRoute route)
-			return true;
+		{
+			__instance._slotsCache = State.GetSaveSlots();
+			__instance._slotsBackupCache = [];
+			__instance._availableSlotActionsCache = [];
+			for (var i = 0; i < __instance._slotsCache.Count; i++)
+			{
+				__instance._slotsBackupCache.Add(__instance._slotsCache[i].isCorrupted ? State.LoadFromPath(i, State.GetSaveBackupPath(i)) : null);
+				__instance._availableSlotActionsCache.Add(__instance.GetAvailableActionsForSlot(i).ToList());
+			}
+			return false;
+		}
 
 		DoWithVanillaSavePath(() =>
 		{
 			route._slotsCache = Enumerable.Range(0, 3)
 				.Select(State.Load)
 				.ToList();
+			route._slotsBackupCache = route._slotsCache.Select(_ => (State.SaveSlot?)null).ToList();
+			route._availableSlotActionsCache = route._slotsCache.Select((_, i) => route.GetAvailableActionsForSlot(i).ToList()).ToList();
 		});
 		return false;
 	}
@@ -101,6 +121,7 @@ internal static class SaveImport
 		if (ModEntry.Instance.Helper.ModData.GetOptionalModData<Route>(__instance, "Subroute") is not { } subroute)
 			return true;
 
+		
 		subroute.Render(g);
 		return false;
 	}
@@ -148,54 +169,30 @@ internal static class SaveImport
 		g.settings.saveSlot = __state;
 	}
 
-	private static void ProfileSelect_MkSlot_Postfix(ProfileSelect __instance, Vec localV, G g, State.SaveSlot st, int n)
+	private static void ProfileSelect_GetAvailableActionsForSlot_Postfix(ProfileSelect __instance, int n, ref IEnumerable<UIKey> __result)
 	{
 		if (__instance is SaveImportRoute)
+		{
+			__result = [];
 			return;
-		if (st.isCorrupted || !string.IsNullOrEmpty(st.state?.GetSlotSummary()))
+		}
+
+		var slot = __instance._slotsCache![n];
+		if (slot.isCorrupted || !string.IsNullOrEmpty(slot.state?.GetSlotSummary()))
 			return;
 
-		SharedArt.ButtonText(
-			g,
-			localV + new Vec(210),
-			new UIKey(ImportProfileKey, n),
-			ModEntry.Instance.Localizations.Localize(["saveImport", "button"]),
-			onMouseDown: new MouseDownHandler(() =>
-			{
-				Audio.Play(Event.Click);
-				ModEntry.Instance.Helper.ModData.SetOptionalModData(__instance, "Subroute", new SaveImportRoute { TargetSlot = n });
-			})
-		);
+		__result = __result.Append(new UIKey(ImportProfileKey, n));
 	}
 
-	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-	private static IEnumerable<CodeInstruction> ProfileSelect_MkSlot_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
+	private static void ProfileSelect_RenderActionButton_Postfix(ProfileSelect __instance, G g, UIKey actionKey, Vec pos)
 	{
-		try
+		if (actionKey.k == ImportProfileKey)
 		{
-			return new SequenceBlockMatcher<CodeInstruction>(instructions)
-				.Find(
-					ILMatches.Ldarg(3),
-					ILMatches.Ldfld(nameof(State.SaveSlot.state)),
-					ILMatches.Brtrue,
-					ILMatches.Ldarg(3),
-					ILMatches.Ldfld(nameof(State.SaveSlot.isCorrupted)),
-					ILMatches.Brfalse.GetBranchTarget(out var branchTarget)
-				)
-				.PointerMatcher(SequenceMatcherRelativeElement.AfterLast)
-				.ExtractLabels(out var labels)
-				.Insert(
-					SequenceMatcherPastBoundsDirection.Before, SequenceMatcherInsertionResultingBounds.IncludingInsertion,
-					new CodeInstruction(OpCodes.Ldarg_0).WithLabels(labels),
-					new CodeInstruction(OpCodes.Isinst, typeof(SaveImportRoute)),
-					new CodeInstruction(OpCodes.Brtrue, branchTarget.Value)
-				)
-				.AllElements();
-		}
-		catch (Exception ex)
-		{
-			ModEntry.Instance.Logger.LogError("Could not patch method {Method} - {Mod} probably won't work.\nReason: {Exception}", originalMethod, ModEntry.Instance.Package.Manifest.UniqueName, ex);
-			return instructions;
+			SharedArt.ButtonText(g, pos, actionKey, ModEntry.Instance.Localizations.Localize(["saveImport", "button"]), onMouseDown: new MouseDownHandler(() =>
+			{
+				Audio.Play(Event.Click);
+				ModEntry.Instance.Helper.ModData.SetOptionalModData(__instance, "Subroute", new SaveImportRoute { TargetSlot = actionKey.v });
+			}));
 		}
 	}
 
