@@ -14,7 +14,7 @@ namespace Nickel;
 internal static class HarmonyPatches
 {
 	private static PatchInfo? CurrentPatchInfo;
-	internal static readonly Stack<DelayedHarmonyManager> DelayedManagerStack = [];
+	internal static readonly Stack<(DelayedHarmony Harmony, string MemberName, string SourceFilePath, int SourceLineNumber)> DelayedManagerStack = [];
 
 	private static readonly Lazy<Type> PatchJobsMethodInfoJobType = new(() => AccessTools.Inner(typeof(Harmony).Assembly.GetType("HarmonyLib.PatchJobs")!.MakeGenericType([typeof(MethodInfo)]), "Job"));
 	private static readonly Lazy<Func<object, MethodBase>> GetOriginal = new(() => CreateFieldGetter<MethodBase>(PatchJobsMethodInfoJobType.Value, "original"));
@@ -22,7 +22,6 @@ internal static class HarmonyPatches
 	private static readonly Lazy<Func<object, List<HarmonyMethod>>> GetPostfixes = new(() => CreateFieldGetter<List<HarmonyMethod>>(PatchJobsMethodInfoJobType.Value, "postfixes"));
 	private static readonly Lazy<Func<object, List<HarmonyMethod>>> GetTranspilers = new(() => CreateFieldGetter<List<HarmonyMethod>>(PatchJobsMethodInfoJobType.Value, "transpilers"));
 	private static readonly Lazy<Func<object, List<HarmonyMethod>>> GetFinalizers = new(() => CreateFieldGetter<List<HarmonyMethod>>(PatchJobsMethodInfoJobType.Value, "finalizers"));
-	private static readonly Lazy<Func<object, Harmony>> GetHarmonyInstance = new(() => CreateFieldGetter<Harmony>(typeof(PatchClassProcessor), "instance"));
 
 	private static Func<object, T> CreateFieldGetter<T>(Type type, string fieldName)
 	{
@@ -129,7 +128,6 @@ internal static class HarmonyPatches
 					ILMatches.Brfalse,
 				])
 				.Insert(SequenceMatcherPastBoundsDirection.Before, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
-					new CodeInstruction(OpCodes.Ldarg_0),
 					new CodeInstruction(OpCodes.Ldarg_1),
 					new CodeInstruction(OpCodes.Ldloca, individualPrepareResultLocalIndex.Value),
 					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(PatchClassProcessor_ProcessPatchJob_Transpiler_ModifyIndividualPrepareResult)))
@@ -143,22 +141,21 @@ internal static class HarmonyPatches
 		}
 	}
 
-	private static void PatchClassProcessor_ProcessPatchJob_Transpiler_ModifyIndividualPrepareResult(object processor, object job, ref bool individualPrepareResult)
+	private static void PatchClassProcessor_ProcessPatchJob_Transpiler_ModifyIndividualPrepareResult(object job, ref bool individualPrepareResult)
 	{
-		if (!DelayedManagerStack.TryPeek(out var manager))
+		if (!DelayedManagerStack.TryPeek(out var entry))
 			return;
 
-		var harmony = GetHarmonyInstance.Value(processor);
 		var original = GetOriginal.Value(job);
 		
 		foreach (var prefix in GetPrefixes.Value(job))
-			manager.Patch(harmony.Id, original, prefix: prefix);
+			entry.Harmony.Patch(original, prefix: prefix, memberName: entry.MemberName, sourceFilePath: entry.SourceFilePath, sourceLineNumber: entry.SourceLineNumber);
 		foreach (var postfix in GetPostfixes.Value(job))
-			manager.Patch(harmony.Id, original, postfix: postfix);
+			entry.Harmony.Patch(original, postfix: postfix, memberName: entry.MemberName, sourceFilePath: entry.SourceFilePath, sourceLineNumber: entry.SourceLineNumber);
 		foreach (var transpiler in GetTranspilers.Value(job))
-			manager.Patch(harmony.Id, original, transpiler: transpiler);
+			entry.Harmony.Patch(original, transpiler: transpiler, memberName: entry.MemberName, sourceFilePath: entry.SourceFilePath, sourceLineNumber: entry.SourceLineNumber);
 		foreach (var finalizer in GetFinalizers.Value(job))
-			manager.Patch(harmony.Id, original, finalizer: finalizer);
+			entry.Harmony.Patch(original, finalizer: finalizer, memberName: entry.MemberName, sourceFilePath: entry.SourceFilePath, sourceLineNumber: entry.SourceLineNumber);
 		individualPrepareResult = false;
 	}
 }

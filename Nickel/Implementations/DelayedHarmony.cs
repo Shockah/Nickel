@@ -54,7 +54,7 @@ public sealed class DelayedHarmony : IHarmony
 	{
 		try
 		{
-			HarmonyPatches.DelayedManagerStack.Push(this.Manager);
+			HarmonyPatches.DelayedManagerStack.Push((Harmony: this, MemberName: memberName, SourceFilePath: sourceFilePath, SourceLineNumber: sourceLineNumber));
 			foreach (var type in AccessTools.GetTypesFromAssembly(assembly))
 				new PatchClassProcessor(this.Harmony, type).Patch();
 		}
