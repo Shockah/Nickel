@@ -33,6 +33,9 @@ internal class CardTraitManager
 		public string UniqueName { get; } = uniqueName;
 		public CardTraitConfiguration Configuration { get; } = configuration;
 
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
+
 		public override string ToString()
 			=> this.UniqueName;
 
@@ -69,6 +72,9 @@ internal class CardTraitManager
 		};
 
 		private readonly Lazy<Func<CardData, bool>> GetDataValue = new(() => AccessTools.DeclaredField(typeof(CardData), dataFieldName).EmitInstanceGetter<CardData, bool>());
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 
 		public override string ToString()
 			=> this.UniqueName;
@@ -107,6 +113,9 @@ internal class CardTraitManager
 		private readonly Lazy<Func<Card, bool>> GetOverridePermanent = new(() => AccessTools.DeclaredField(typeof(Card), cardOverridePermanentFieldName).EmitInstanceGetter<Card, bool>());
 		private readonly Lazy<Action<Card, bool>> SetOverridePermanent = new(() => AccessTools.DeclaredField(typeof(Card), cardOverridePermanentFieldName).EmitInstanceSetter<Card, bool>());
 
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
+
 		public override void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
 		{
 			base.SetPermanentOverride(card, overrides, overrideValue);
@@ -144,6 +153,9 @@ internal class CardTraitManager
 		private readonly Func<Card, bool?> GetOverrideValue = c => c.temporaryOverride;
 		private readonly Action<Card, bool?> SetOverrideValue = (c, v) => c.temporaryOverride = v;
 
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
+
 		public override void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
 		{
 			base.SetPermanentOverride(card, overrides, overrideValue);
@@ -172,6 +184,9 @@ internal class CardTraitManager
 	{
 		private readonly Lazy<Func<Card, bool?>>? GetOverrideValue = cardOverrideValueFieldName is null ? null : new (() => AccessTools.DeclaredField(typeof(Card), cardOverrideValueFieldName).EmitInstanceGetter<Card, bool?>());
 		private readonly Lazy<Action<Card, bool?>>? SetOverrideValue = cardOverrideValueFieldName is null ? null : new (() => AccessTools.DeclaredField(typeof(Card), cardOverrideValueFieldName).EmitInstanceSetter<Card, bool?>());
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 
 		public override void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
 		{
@@ -214,21 +229,21 @@ internal class CardTraitManager
 	private readonly Dictionary<string, ModdedEntry> UniqueNameToEntry = [];
 	private readonly Dictionary<Card, IReadOnlyDictionary<ICardTraitEntry, CardTraitState>> CardTraitStateCache = [];
 	private readonly HashSet<Card> CurrentlyCreatingCardTraitStates = [];
-	private readonly Lazy<IReadOnlyDictionary<string, ICardTraitEntry>> SynthesizedVanillaEntries;
+	private readonly Dictionary<string, ICardTraitEntry> SynthesizedVanillaEntries;
 	private readonly IModManifest ModManagerModManifest;
 	private readonly ModDataManager ModDataManager;
 
 	internal ManagedEvent<GetDynamicInnateCardTraitOverridesEventArgs> OnGetDynamicInnateCardTraitOverridesEvent { get; }
 	internal ManagedEvent<GetFinalDynamicCardTraitOverridesEventArgs> OnGetFinalDynamicCardTraitOverridesEvent { get; }
 
-	internal readonly Lazy<ICardTraitEntry> ExhaustCardTrait;
-	internal readonly Lazy<ICardTraitEntry> RetainCardTrait;
-	internal readonly Lazy<ICardTraitEntry> RecycleCardTrait;
-	internal readonly Lazy<ICardTraitEntry> UnplayableCardTrait;
-	internal readonly Lazy<ICardTraitEntry> TemporaryCardTrait;
-	internal readonly Lazy<ICardTraitEntry> BuoyantCardTrait;
-	internal readonly Lazy<ICardTraitEntry> SingleUseCardTrait;
-	internal readonly Lazy<ICardTraitEntry> InfiniteCardTrait;
+	internal readonly ICardTraitEntry ExhaustCardTrait;
+	internal readonly ICardTraitEntry RetainCardTrait;
+	internal readonly ICardTraitEntry RecycleCardTrait;
+	internal readonly ICardTraitEntry UnplayableCardTrait;
+	internal readonly ICardTraitEntry TemporaryCardTrait;
+	internal readonly ICardTraitEntry BuoyantCardTrait;
+	internal readonly ICardTraitEntry SingleUseCardTrait;
+	internal readonly ICardTraitEntry InfiniteCardTrait;
 
 	public CardTraitManager(Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest, IModManifest modManagerModManifest, ModDataManager modDataManager)
 	{
@@ -290,26 +305,26 @@ internal class CardTraitManager
 			}
 		};
 
-		this.ExhaustCardTrait = new(() => new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.exhaust), nameof(Card.exhaustOverride), nameof(Card.exhaustOverrideIsPermanent)));
-		this.RetainCardTrait = new(() => new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.retain), nameof(Card.retainOverride), nameof(Card.retainOverrideIsPermanent)));
-		this.RecycleCardTrait = new(() => new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.recycle), nameof(Card.recycleOverride), nameof(Card.recycleOverrideIsPermanent)));
-		this.UnplayableCardTrait = new(() => new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.unplayable), nameof(Card.unplayableOverride), nameof(Card.unplayableOverrideIsPermanent)));
-		this.BuoyantCardTrait = new(() => new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.buoyant), nameof(Card.buoyantOverride), nameof(Card.buoyantOverrideIsPermanent)));
-		this.TemporaryCardTrait = new(() => new TemporaryVanillaEntry(vanillaModManifest));
-		this.SingleUseCardTrait = new(() => new ModDataBasedPermanenceVanillaEntry(vanillaModManifest, nameof(CardData.singleUse), nameof(Card.singleUseOverride), isPermanentByDefault: true));
-		this.InfiniteCardTrait = new(() => new ModDataBasedPermanenceVanillaEntry(vanillaModManifest, nameof(CardData.infinite)));
+		this.ExhaustCardTrait = new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.exhaust), nameof(Card.exhaustOverride), nameof(Card.exhaustOverrideIsPermanent));
+		this.RetainCardTrait = new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.retain), nameof(Card.retainOverride), nameof(Card.retainOverrideIsPermanent));
+		this.RecycleCardTrait = new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.recycle), nameof(Card.recycleOverride), nameof(Card.recycleOverrideIsPermanent));
+		this.UnplayableCardTrait = new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.unplayable), nameof(Card.unplayableOverride), nameof(Card.unplayableOverrideIsPermanent));
+		this.BuoyantCardTrait = new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.buoyant), nameof(Card.buoyantOverride), nameof(Card.buoyantOverrideIsPermanent));
+		this.TemporaryCardTrait = new TemporaryVanillaEntry(vanillaModManifest);
+		this.SingleUseCardTrait = new ModDataBasedPermanenceVanillaEntry(vanillaModManifest, nameof(CardData.singleUse), nameof(Card.singleUseOverride), isPermanentByDefault: true);
+		this.InfiniteCardTrait = new ModDataBasedPermanenceVanillaEntry(vanillaModManifest, nameof(CardData.infinite));
 
-		this.SynthesizedVanillaEntries = new(() => new List<ICardTraitEntry>
+		this.SynthesizedVanillaEntries = new List<ICardTraitEntry>
 		{
-			this.ExhaustCardTrait.Value,
-			this.RetainCardTrait.Value,
-			this.RecycleCardTrait.Value,
-			this.UnplayableCardTrait.Value,
-			this.BuoyantCardTrait.Value,
-			this.TemporaryCardTrait.Value,
-			this.SingleUseCardTrait.Value,
-			this.InfiniteCardTrait.Value,
-		}.ToDictionary(t => t.UniqueName));
+			this.ExhaustCardTrait,
+			this.RetainCardTrait,
+			this.RecycleCardTrait,
+			this.UnplayableCardTrait,
+			this.BuoyantCardTrait,
+			this.TemporaryCardTrait,
+			this.SingleUseCardTrait,
+			this.InfiniteCardTrait,
+		}.ToDictionary(t => t.UniqueName);
 
 		CardPatches.OnGetTooltips += this.OnGetCardTooltips;
 		CardPatches.OnRenderTraits += this.OnRenderTraits;
@@ -344,14 +359,15 @@ internal class CardTraitManager
 
 	private void OnMidGetDataWithOverrides(object? sender, CardPatches.MidGetDataWithOverridesEventArgs e)
 	{
-		e.CurrentData.exhaust = this.IsCardTraitActive(e.State, e.Card, this.ExhaustCardTrait.Value);
-		e.CurrentData.retain = this.IsCardTraitActive(e.State, e.Card, this.RetainCardTrait.Value);
-		e.CurrentData.recycle = this.IsCardTraitActive(e.State, e.Card, this.RecycleCardTrait.Value);
-		e.CurrentData.unplayable = this.IsCardTraitActive(e.State, e.Card, this.UnplayableCardTrait.Value);
-		e.CurrentData.temporary = this.IsCardTraitActive(e.State, e.Card, this.TemporaryCardTrait.Value);
-		e.CurrentData.buoyant = this.IsCardTraitActive(e.State, e.Card, this.BuoyantCardTrait.Value);
-		e.CurrentData.singleUse = this.IsCardTraitActive(e.State, e.Card, this.SingleUseCardTrait.Value);
-		e.CurrentData.infinite = this.IsCardTraitActive(e.State, e.Card, this.InfiniteCardTrait.Value);
+		var traitState = (Dictionary<ICardTraitEntry, CardTraitState>)this.GetAllCardTraits(e.State, e.Card);
+		e.CurrentData.exhaust = traitState[this.ExhaustCardTrait].IsActive;
+		e.CurrentData.retain = traitState[this.RetainCardTrait].IsActive;
+		e.CurrentData.recycle = traitState[this.RecycleCardTrait].IsActive;
+		e.CurrentData.unplayable = traitState[this.UnplayableCardTrait].IsActive;
+		e.CurrentData.temporary = traitState[this.TemporaryCardTrait].IsActive;
+		e.CurrentData.buoyant = traitState[this.BuoyantCardTrait].IsActive;
+		e.CurrentData.singleUse = traitState[this.SingleUseCardTrait].IsActive;
+		e.CurrentData.infinite = traitState[this.InfiniteCardTrait].IsActive;
 	}
 
 	private void OnReturnCardsToDeck(object? sender, State state)
@@ -376,7 +392,7 @@ internal class CardTraitManager
 
 	public ICardTraitEntry? LookupByUniqueName(string uniqueName)
 	{
-		if (this.SynthesizedVanillaEntries.Value.TryGetValue(uniqueName, out var vanillaEntry))
+		if (this.SynthesizedVanillaEntries.TryGetValue(uniqueName, out var vanillaEntry))
 			return vanillaEntry;
 		return this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
 	}
@@ -422,7 +438,7 @@ internal class CardTraitManager
 	private void FixModData(Card card, OverridesModData? overrides = null)
 	{
 		var nonNullOverrides = overrides ?? this.ModDataManager.ObtainModData<OverridesModData>(this.ModManagerModManifest, card, "CustomTraitOverrides");
-		foreach (var trait in this.SynthesizedVanillaEntries.Value.Values)
+		foreach (var trait in this.SynthesizedVanillaEntries.Values)
 			this.FixModData(card, trait, nonNullOverrides);
 	}
 
@@ -458,7 +474,7 @@ internal class CardTraitManager
 		var data = wasCurrentlyCreatingCardTraitStates ? new() : card.GetData(state);
 		var innateCustomTraits = wasCurrentlyCreatingCardTraitStates ? [] : ((card as IHasCustomCardTraits)?.GetInnateTraits(state).ToHashSet() ?? []);
 		
-		foreach (var trait in this.SynthesizedVanillaEntries.Value.Values)
+		foreach (var trait in this.SynthesizedVanillaEntries.Values)
 			HandleTrait(trait);
 		foreach (var trait in this.UniqueNameToEntry.Values)
 			HandleTrait(trait);

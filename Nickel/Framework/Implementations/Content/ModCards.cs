@@ -31,28 +31,28 @@ internal sealed class ModCards : IModCards
 		=> this.CardManagerProvider().RegisterCard(this.ModManifest, name, configuration);
 
 	public ICardTraitEntry ExhaustCardTrait
-		=> this.CardTraitManagerProvider().ExhaustCardTrait.Value;
+		=> this.CardTraitManagerProvider().ExhaustCardTrait;
 
 	public ICardTraitEntry RetainCardTrait
-		=> this.CardTraitManagerProvider().RetainCardTrait.Value;
+		=> this.CardTraitManagerProvider().RetainCardTrait;
 
 	public ICardTraitEntry RecycleCardTrait
-		=> this.CardTraitManagerProvider().RecycleCardTrait.Value;
+		=> this.CardTraitManagerProvider().RecycleCardTrait;
 
 	public ICardTraitEntry InfiniteCardTrait
-		=> this.CardTraitManagerProvider().InfiniteCardTrait.Value;
+		=> this.CardTraitManagerProvider().InfiniteCardTrait;
 
 	public ICardTraitEntry UnplayableCardTrait
-		=> this.CardTraitManagerProvider().UnplayableCardTrait.Value;
+		=> this.CardTraitManagerProvider().UnplayableCardTrait;
 
 	public ICardTraitEntry TemporaryCardTrait
-		=> this.CardTraitManagerProvider().TemporaryCardTrait.Value;
+		=> this.CardTraitManagerProvider().TemporaryCardTrait;
 
 	public ICardTraitEntry BuoyantCardTrait
-		=> this.CardTraitManagerProvider().BuoyantCardTrait.Value;
+		=> this.CardTraitManagerProvider().BuoyantCardTrait;
 
 	public ICardTraitEntry SingleUseCardTrait
-		=> this.CardTraitManagerProvider().SingleUseCardTrait.Value;
+		=> this.CardTraitManagerProvider().SingleUseCardTrait;
 
 	public ICardTraitEntry? LookupTraitByUniqueName(string uniqueName)
 		=> this.CardTraitManagerProvider().LookupByUniqueName(uniqueName);

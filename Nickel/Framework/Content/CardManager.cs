@@ -105,9 +105,10 @@ internal sealed class CardManager
 
 	private void OnKey(object? _, CardPatches.KeyEventArgs e)
 	{
-		if (e.Card.GetType().Assembly == typeof(Card).Assembly)
+		var cardType = e.Card.GetType();
+		if (cardType.Assembly == typeof(Card).Assembly)
 			return;
-		if (this.LookupByCardType(e.Card.GetType()) is not { } entry)
+		if (this.LookupByCardType(cardType) is not { } entry)
 			return;
 		e.Key = entry.UniqueName;
 	}
