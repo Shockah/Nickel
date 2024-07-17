@@ -87,7 +87,8 @@ internal sealed class ModEventManager
 	{
 		if (e.State.IsOutsideRun() || RunSummaryPatches.IsDuringRunSummarySaveFromState)
 			return;
-		e.Artifacts = e.Artifacts.Prepend(this.PrefixArtifact).Append(this.SuffixArtifact).ToList();
+		e.Artifacts.Add(this.SuffixArtifact);
+		e.Artifacts.Insert(0, this.PrefixArtifact);
 	}
 
 	[EventPriority(-1)]
