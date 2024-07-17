@@ -37,7 +37,7 @@ internal sealed class CobaltCorePublisher : IAssemblyDefinitionEditor
 
 		foreach (var property in type.Properties)
 		{
-			if (property.GetMethod.IsPublic || property.SetMethod.IsPublic)
+			if (property.GetMethod?.IsPublic == true || property.SetMethod?.IsPublic == true)
 				continue;
 			property.CustomAttributes.Add(new CustomAttribute(jsonIgnoreCtor));
 		}
