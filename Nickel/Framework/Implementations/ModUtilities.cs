@@ -1,3 +1,4 @@
+using HarmonyLib;
 using Nanoray.Pintail;
 using System;
 
@@ -7,7 +8,7 @@ internal sealed class ModUtilities(
 	EnumCasePool enumCasePool,
 	IProxyManager<string> proxyManager,
 	DelayedHarmonyManager delayedHarmonyManager,
-	IHarmony harmony
+	Harmony harmony
 ) : IModUtilities
 {
 	public T ObtainEnumCase<T>() where T : struct, Enum
@@ -18,9 +19,9 @@ internal sealed class ModUtilities(
 
 	public IProxyManager<string> ProxyManager { get; } = proxyManager;
 
-	public IHarmony Harmony { get; } = harmony;
+	public IHarmony Harmony { get; } = new HarmonyWrapper(harmony);
 
-	public IHarmony DelayedHarmony { get; } = new DelayedHarmony(harmony.Id, delayedHarmonyManager);
+	public IHarmony DelayedHarmony { get; } = new DelayedHarmony(harmony, delayedHarmonyManager);
 
 	public void ApplyDelayedHarmonyPatches()
 		=> delayedHarmonyManager.ApplyDelayedPatches();

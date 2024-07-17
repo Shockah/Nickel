@@ -17,4 +17,12 @@ public sealed class HarmonyWrapper(Harmony wrapped) : IHarmony
 	/// <inheritdoc/>
 	public void Patch(MethodBase original, HarmonyMethod? prefix = null, HarmonyMethod? postfix = null, HarmonyMethod? transpiler = null, HarmonyMethod? finalizer = null, [CallerMemberName] string memberName = "", [CallerFilePath] string sourceFilePath = "", [CallerLineNumber] int sourceLineNumber = 0)
 		=> wrapped.Patch(original, prefix, postfix, transpiler, finalizer);
+
+	/// <inheritdoc/>
+	public void PatchAll([CallerMemberName] string memberName = "", [CallerFilePath] string sourceFilePath = "", [CallerLineNumber] int sourceLineNumber = 0)
+		=> wrapped.PatchAll();
+
+	/// <inheritdoc/>
+	public void PatchAll(Assembly assembly, [CallerMemberName] string memberName = "", [CallerFilePath] string sourceFilePath = "", [CallerLineNumber] int sourceLineNumber = 0)
+		=> wrapped.PatchAll();
 }

@@ -1,5 +1,6 @@
 using HarmonyLib;
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -11,13 +12,15 @@ namespace Nickel;
 public sealed class DelayedHarmony : IHarmony
 {
 	/// <inheritdoc/>
-	public string Id { get; }
-	
+	public string Id
+		=> this.Harmony.Id;
+
+	private readonly Harmony Harmony;
 	private readonly DelayedHarmonyManager Manager;
 
-	internal DelayedHarmony(string id, DelayedHarmonyManager manager)
+	internal DelayedHarmony(Harmony harmony, DelayedHarmonyManager manager)
 	{
-		this.Id = id;
+		this.Harmony = harmony;
 		this.Manager = manager;
 	}
 
@@ -36,5 +39,28 @@ public sealed class DelayedHarmony : IHarmony
 		}
 		
 		this.Manager.Patch(this.Id, original, prefix, postfix, transpiler, finalizer);
+	}
+
+	/// <inheritdoc/>
+	public void PatchAll([CallerMemberName] string memberName = "", [CallerFilePath] string sourceFilePath = "", [CallerLineNumber] int sourceLineNumber = 0)
+	{
+		var method = new StackTrace().GetFrame(1)!.GetMethod()!;
+		var assembly = method.ReflectedType!.Assembly;
+		this.PatchAll(assembly, memberName, sourceFilePath, sourceLineNumber);
+	}
+
+	/// <inheritdoc/>
+	public void PatchAll(Assembly assembly, [CallerMemberName] string memberName = "", [CallerFilePath] string sourceFilePath = "", [CallerLineNumber] int sourceLineNumber = 0)
+	{
+		try
+		{
+			HarmonyPatches.DelayedManagerStack.Push(this.Manager);
+			foreach (var type in AccessTools.GetTypesFromAssembly(assembly))
+				new PatchClassProcessor(this.Harmony, type).Patch();
+		}
+		finally
+		{
+			HarmonyPatches.DelayedManagerStack.Pop();
+		}
 	}
 }

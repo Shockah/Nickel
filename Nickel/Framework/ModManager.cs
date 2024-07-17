@@ -576,7 +576,7 @@ internal sealed class ModManager
 					this.EnumCasePool,
 					this.ProxyManager,
 					this.DelayedHarmonyManager,
-					new HarmonyWrapper(new Harmony(package.Manifest.UniqueName))
+					new Harmony(package.Manifest.UniqueName)
 				),
 				() => this.CurrentModLoadPhase
 			);
