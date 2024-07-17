@@ -5,7 +5,9 @@ namespace Nickel;
 
 internal sealed class ModUtilities(
 	EnumCasePool enumCasePool,
-	IProxyManager<string> proxyManager
+	IProxyManager<string> proxyManager,
+	DelayedHarmonyManager delayedHarmonyManager,
+	IHarmony harmony
 ) : IModUtilities
 {
 	public T ObtainEnumCase<T>() where T : struct, Enum
@@ -15,4 +17,11 @@ internal sealed class ModUtilities(
 		=> enumCasePool.FreeEnumCase(@case);
 
 	public IProxyManager<string> ProxyManager { get; } = proxyManager;
+
+	public IHarmony Harmony { get; } = harmony;
+
+	public IHarmony DelayedHarmony { get; } = new DelayedHarmony(harmony.Id, delayedHarmonyManager);
+
+	public void ApplyDelayedHarmonyPatches()
+		=> delayedHarmonyManager.ApplyDelayedPatches();
 }

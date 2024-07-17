@@ -9,6 +9,7 @@
 
 ### For developers:
 * `Artifact.ReplaceSpawnedThing` is now hookable.
+* Added `ModUtilities.Harmony`, `ModUtilities.DelayedHarmony` and `ModUtilities.ApplyDelayedHarmonyPatches()`. Using `DelayedHarmony` should be preferred if possible - it improves patching performance the more mods use it.
 
 ## 1.1.0
 Released 14 July 2024.

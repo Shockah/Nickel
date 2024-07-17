@@ -28,6 +28,7 @@ internal sealed class ModManager
 	private readonly ModDataManager ModDataManager;
 	private readonly ModStorageManager ModStorageManager;
 	private readonly EnumCasePool EnumCasePool;
+	internal readonly DelayedHarmonyManager DelayedHarmonyManager;
 
 	internal readonly IPluginPackage<IModManifest> ModLoaderPackage;
 	private ModLoadPhaseState CurrentModLoadPhase = new(ModLoadPhase.BeforeGameAssembly, IsDone: false);
@@ -82,6 +83,7 @@ internal sealed class ModManager
 		this.ModDataManager = new();
 		this.ModStorageManager = new();
 		this.EnumCasePool = new();
+		this.DelayedHarmonyManager = new();
 
 		var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"{this.GetType().Namespace}.Proxies, Version={this.GetType().Assembly.GetName().Version}, Culture=neutral"), AssemblyBuilderAccess.Run);
 		var moduleBuilder = assemblyBuilder.DefineDynamicModule($"{this.GetType().Namespace}.Proxies");
@@ -416,6 +418,12 @@ internal sealed class ModManager
 		this.CurrentModLoadPhase = new(this.CurrentModLoadPhase.Phase, IsDone: true);
 		this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
 		this.EventManager.OnModLoadPhaseFinishedEvent.Raise(null, phase);
+
+		if (phase == ModLoadPhase.AfterDbInit)
+		{
+			this.DelayedHarmonyManager.ApplyDelayedPatches();
+			this.LogHarmonyPatchesOnce();
+		}
 	}
 
 	public void LogHarmonyPatchesOnce()
@@ -564,7 +572,12 @@ internal sealed class ModManager
 					new DirectoryInfoImpl(this.PrivateModStorageDirectory),
 					this.ModStorageManager
 				),
-				new ModUtilities(this.EnumCasePool, this.ProxyManager),
+				new ModUtilities(
+					this.EnumCasePool,
+					this.ProxyManager,
+					this.DelayedHarmonyManager,
+					new HarmonyWrapper(new Harmony(package.Manifest.UniqueName))
+				),
 				() => this.CurrentModLoadPhase
 			);
 			this.UniqueNameToHelper[package.Manifest.UniqueName] = helper;

@@ -10,6 +10,10 @@ namespace Nickel;
 /// </summary>
 public static class HarmonyExt
 {
+	/// <inheritdoc cref="PatchVirtual(IHarmony,System.Reflection.MethodBase?,HarmonyLib.HarmonyMethod?,HarmonyLib.HarmonyMethod?,HarmonyLib.HarmonyMethod?,HarmonyLib.HarmonyMethod?,bool)"/>
+	public static void PatchVirtual(this Harmony harmony, MethodBase? original, HarmonyMethod? prefix = null, HarmonyMethod? postfix = null, HarmonyMethod? transpiler = null, HarmonyMethod? finalizer = null, bool includeBaseMethod = true)
+		=> new HarmonyWrapper(harmony).PatchVirtual(original, prefix, postfix, transpiler, finalizer, includeBaseMethod);
+	
 	/// <summary>
 	/// Patches all overrides of the given method with the same set of patches.
 	/// </summary>
@@ -20,7 +24,7 @@ public static class HarmonyExt
 	/// <param name="transpiler">The transpiler patch.</param>
 	/// <param name="finalizer">The finalizer patch.</param>
 	/// <param name="includeBaseMethod">Whether to also patch the given original method, or only its overrides.</param>
-	public static void PatchVirtual(this Harmony harmony, MethodBase? original, HarmonyMethod? prefix = null, HarmonyMethod? postfix = null, HarmonyMethod? transpiler = null, HarmonyMethod? finalizer = null, bool includeBaseMethod = true)
+	public static void PatchVirtual(this IHarmony harmony, MethodBase? original, HarmonyMethod? prefix = null, HarmonyMethod? postfix = null, HarmonyMethod? transpiler = null, HarmonyMethod? finalizer = null, bool includeBaseMethod = true)
 	{
 		if (original is null)
 			throw new ArgumentException($"{nameof(original)} is null.");

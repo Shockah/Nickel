@@ -369,7 +369,6 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 		if (this.Harmony is not null)
 			ApplyLateHarmonyPatches(this.Harmony);
-		this.ModManager.LogHarmonyPatchesOnce();
 		this.ModManager.ContentManager?.InjectQueuedEntries();
 
 		this.SetupModSettings();

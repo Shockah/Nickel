@@ -26,4 +26,20 @@ public interface IModUtilities
 	/// <summary>The manager used to proxy between types to allow cross-mod communication without hard assembly references.</summary>
 	/// <seealso cref="IModRegistry.GetApi{TApi}"/>
 	IProxyManager<string> ProxyManager { get; }
+	
+	/// <summary>
+	/// The <see cref="Harmony"/> instance for this mod, used for patching methods.
+	/// </summary>
+	IHarmony Harmony { get; }
+	
+	/// <summary>
+	/// The delayed <see cref="Harmony"/> instance for this mod, used for patching methods.<br/>
+	/// All patches will be delayed until the <see cref="ModLoadPhase.AfterDbInit"/> phase finishes loading, or until a mod calls <see cref="ApplyDelayedHarmonyPatches"/>.
+	/// </summary>
+	IHarmony DelayedHarmony { get; }
+
+	/// <summary>
+	/// Apply any delayed <see cref="Harmony"/> patches done via the <see cref="DelayedHarmony"/> instance.
+	/// </summary>
+	void ApplyDelayedHarmonyPatches();
 }
