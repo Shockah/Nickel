@@ -34,7 +34,7 @@ public sealed class ModEntry : SimpleMod
 		);
 		this.Api = new(package.Manifest);
 
-		var harmony = new Harmony(package.Manifest.UniqueName);
+		var harmony = helper.Utilities.DelayedHarmony;
 
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(MainMenu), nameof(MainMenu.Render))

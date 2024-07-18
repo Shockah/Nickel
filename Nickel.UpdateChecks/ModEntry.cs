@@ -129,7 +129,8 @@ public sealed class ModEntry : SimpleMod
 			UpdateAvailableTooltipIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/UpdateAvailableTooltipIcon.png"))
 		};
 
-		var harmony = new Harmony(this.Package.Manifest.UniqueName);
+		var harmony = this.Helper.Utilities.DelayedHarmony;
+		
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(G), nameof(G.Render))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(G)}.{nameof(G.Render)}`"),

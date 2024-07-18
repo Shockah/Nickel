@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.2.0
+Released 17 July 2024.
 
 ### For players:
 * Updated for Cobalt Core 1.1.2.
