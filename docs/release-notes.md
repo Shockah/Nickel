@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For players:
+* Toned down on one optimization, fixing a crash when playing any card with specific mods installed together.
+
 ## 1.2.0
 Released 17 July 2024.
 

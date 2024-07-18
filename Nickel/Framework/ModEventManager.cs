@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Nickel;
@@ -87,8 +88,12 @@ internal sealed class ModEventManager
 	{
 		if (e.State.IsOutsideRun() || RunSummaryPatches.IsDuringRunSummarySaveFromState)
 			return;
-		e.Artifacts.Add(this.SuffixArtifact);
-		e.Artifacts.Insert(0, this.PrefixArtifact);
+		
+		var artifacts = new List<Artifact>(e.Artifacts.Count + 2);
+		artifacts.Add(this.PrefixArtifact);
+		artifacts.AddRange(e.Artifacts);
+		artifacts.Add(this.SuffixArtifact);
+		e.Artifacts = artifacts;
 	}
 
 	[EventPriority(-1)]
