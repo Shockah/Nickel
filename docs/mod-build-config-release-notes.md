@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.1.0
+Released 22 July 2024.
 
 * The package now analyzes your code for any direct enum usage (mostly `Spr` and `UK`) which could cause issues at runtime.
 * The package now analyzes your code for any direct `Card` card trait field assignents which could break Nickel's card trait handling.
