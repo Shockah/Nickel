@@ -40,6 +40,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nickel.UpdateChecks.GitHub"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nickel.ModSettings", "Nickel.ModSettings\Nickel.ModSettings.csproj", "{FF7A657E-4BB6-4C93-B43A-EA184D355520}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModBuildConfig.Analyzer", "ModBuildConfig.Analyzer\ModBuildConfig.Analyzer.csproj", "{4E5D2106-A30C-4D09-82DD-564DFC204B45}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -102,6 +104,10 @@ Global
 		{FF7A657E-4BB6-4C93-B43A-EA184D355520}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF7A657E-4BB6-4C93-B43A-EA184D355520}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF7A657E-4BB6-4C93-B43A-EA184D355520}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E5D2106-A30C-4D09-82DD-564DFC204B45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E5D2106-A30C-4D09-82DD-564DFC204B45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E5D2106-A30C-4D09-82DD-564DFC204B45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E5D2106-A30C-4D09-82DD-564DFC204B45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

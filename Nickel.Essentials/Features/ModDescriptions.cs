@@ -185,7 +185,7 @@ internal static class ModDescriptions
 		if (__instance.deckType is not null)
 			return;
 
-		var key = overrideKey ?? new UIKey(mini ? UK.char_mini : UK.character, 0, __instance.type);
+		var key = overrideKey ?? new UIKey(mini ? StableUK.char_mini : StableUK.character, 0, __instance.type);
 		if (g.boxes.FirstOrDefault(b => b.key == key) is not { } box || !box.IsHover())
 			return;
 		
