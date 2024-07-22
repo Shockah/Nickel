@@ -10,7 +10,7 @@ using System.Linq;
 namespace Nickel.ModBuildConfig.Analyzer;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public class DirectGameEnumUsageAnalyzer : DiagnosticAnalyzer
+public sealed class DirectGameEnumUsageAnalyzer : DiagnosticAnalyzer
 {
 	public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
 
