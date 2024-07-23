@@ -28,4 +28,10 @@ public interface IEssentialsApi
 	/// <param name="type">The type.</param>
 	/// <returns>whether the given type represents an EXE card type.</returns>
 	bool IsExeCardType(Type type);
+
+	/// <summary>The <see cref="UK"/> part of a <see cref="UIKey"/> used by the button that toggles between showing a list of ships on the <see cref="NewRunOptions"/> screen.</summary>
+	UK ShipSelectionToggleUiKey { get; }
+
+	/// <summary>The <see cref="UK"/> part of a <see cref="UIKey"/> used by each button on the list of ships on the <see cref="NewRunOptions"/> screen. The <see cref="UIKey.str"/> will be set to the ship's key.</summary>
+	UK ShipSelectionUiKey { get; }
 }

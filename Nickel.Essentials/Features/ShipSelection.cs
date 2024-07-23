@@ -12,8 +12,8 @@ namespace Nickel.Essentials;
 internal static class ShipSelection
 {
 	private const int MaxShipsOnScreen = 8;
-	private static readonly UK ShipSelectionToggleUiKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
-	private static readonly UK ShipSelectionUiKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
+	internal static readonly UK ShipSelectionToggleUiKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
+	internal static readonly UK ShipSelectionUiKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 
 	private static ISpriteEntry ShipButtonSprite = null!;
 	private static ISpriteEntry ShipButtonOnSprite = null!;

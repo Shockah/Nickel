@@ -12,4 +12,10 @@ public sealed class ApiImplementation : IEssentialsApi
 
 	public bool IsExeCardType(Type type)
 		=> this.GetDeckForExeCardType(type) is not null;
+
+	public UK ShipSelectionToggleUiKey
+		=> ShipSelection.ShipSelectionToggleUiKey;
+	
+	public UK ShipSelectionUiKey
+		=> ShipSelection.ShipSelectionUiKey;
 }
