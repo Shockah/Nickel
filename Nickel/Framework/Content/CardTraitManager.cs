@@ -553,7 +553,12 @@ internal class CardTraitManager
 		
 		var overrides = this.ModDataManager.ObtainModData<OverridesModData>(this.ModManagerModManifest, card, "CustomTraitOverrides");
 		foreach (var (trait, cardTraitState) in states)
-			((IReadWriteCardTraitEntry)trait).UpdateFieldsFromCardTraitState(card, overrides, cardTraitState, realOverrides: false);
+		{
+			if (trait is not IReadWriteCardTraitEntry rwTrait)
+				throw new NotImplementedException($"Internal error: trait {trait.UniqueName} is supposed to implement the private interface {nameof(IReadWriteCardTraitEntry)}");
+			rwTrait.UpdateOverridesModDataFromFieldsIfNeeded(card, overrides);
+			rwTrait.UpdateFieldsFromCardTraitState(card, overrides, cardTraitState, realOverrides: false);
+		}
 		
 		return states;
 	}
