@@ -18,6 +18,7 @@ internal static class CardPatches
 	internal static EventHandler<TraitRenderEventArgs>? OnRenderTraits;
 	internal static EventHandler<GettingDataWithOverridesEventArgs>? OnGettingDataWithOverrides;
 	internal static EventHandler<MidGetDataWithOverridesEventArgs>? OnMidGetDataWithOverrides;
+	internal static EventHandler<Card>? OnCopyingWithNewId;
 	
 	private static readonly KeyEventArgs KeyEventArgsInstance = new();
 	private static readonly TooltipsEventArgs TooltipsEventArgsInstance = new();
@@ -47,6 +48,11 @@ internal static class CardPatches
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Card)}.{nameof(Card.GetDataWithOverrides)}`"),
 			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetDataWithOverrides_Prefix)),
 			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetDataWithOverrides_Transpiler))
+		);
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(Card), nameof(Card.CopyWithNewId))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Card)}.{nameof(Card.CopyWithNewId)}`"),
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(CopyWithNewId_Prefix))
 		);
 	}
 
@@ -169,6 +175,9 @@ internal static class CardPatches
 		OnMidGetDataWithOverrides?.Invoke(null, args);
 		data = args.CurrentData;
 	}
+
+	private static void CopyWithNewId_Prefix(Card __instance)
+		=> OnCopyingWithNewId?.Invoke(null, __instance);
 
 	internal sealed class KeyEventArgs
 	{

@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For players:
+* Fixed complex card trait situations resulting in wrong states (fixes Natasha's Dark Web Data artifact).
+
 ## 1.2.1
 Released 18 July 2024.
 

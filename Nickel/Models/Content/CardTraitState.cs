@@ -26,4 +26,8 @@ public readonly record struct CardTraitState(
 	/// <summary>Whether this card trait is currently active.</summary>
 	public bool IsActive
 		=> this.FinalDynamicOverride ?? this.TemporaryOverride ?? this.PermanentOverride ?? this.DynamicInnateOverride ?? this.Innate;
+
+	/// <summary>The current card trait override value, if any.</summary>
+	public bool? CurrentOverride
+		=> this.FinalDynamicOverride ?? this.TemporaryOverride ?? this.PermanentOverride ?? this.DynamicInnateOverride;
 }
