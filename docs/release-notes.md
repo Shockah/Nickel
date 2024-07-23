@@ -7,6 +7,7 @@
 ### For players:
 * Added a new ship selector to the new run screen.
 * Fixed complex card trait situations resulting in wrong states (fixes Natasha's Dark Web Data artifact).
+* The game will no longer crash when trying to display a run summary containing cards or artifacts that are not currently loaded.
 
 ## 1.2.1
 Released 18 July 2024.
