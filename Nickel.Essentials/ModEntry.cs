@@ -71,6 +71,7 @@ public sealed class ModEntry : SimpleMod
 		MemorySelection.ApplyPatches(harmony);
 		ModDescriptions.ApplyPatches(harmony);
 		SaveImport.ApplyPatches(harmony);
+		ShipSelection.ApplyPatches(harmony);
 		StarterDeckPreview.ApplyPatches(harmony);
 		UnlockedWindowResize.ApplyPatches(harmony);
 

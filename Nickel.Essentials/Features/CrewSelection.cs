@@ -20,6 +20,7 @@ internal sealed partial class ProfileSettings
 	public bool DetailedCrewInfo = true;
 }
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class CrewSelection
 {
 	private const int CharactersPerRow = 2;
@@ -51,16 +52,16 @@ internal static class CrewSelection
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(NewRunOptions), nameof(NewRunOptions.OnEnter)),
-			postfix: new HarmonyMethod(typeof(CrewSelection), nameof(NewRunOptions_OnEnter_Postfix))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(NewRunOptions_OnEnter_Postfix))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(NewRunOptions), nameof(NewRunOptions.Render)),
-			prefix: new HarmonyMethod(typeof(CrewSelection), nameof(NewRunOptions_Render_Prefix))
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(NewRunOptions_Render_Prefix))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(NewRunOptions), nameof(NewRunOptions.CharSelect)),
-			postfix: new HarmonyMethod(typeof(CrewSelection), nameof(NewRunOptions_CharSelect_Postfix)),
-			transpiler: new HarmonyMethod(typeof(CrewSelection), nameof(NewRunOptions_CharSelect_Transpiler))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(NewRunOptions_CharSelect_Postfix)),
+			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(NewRunOptions_CharSelect_Transpiler))
 		);
 	}
 
@@ -84,14 +85,20 @@ internal static class CrewSelection
 
 	private static void NewRunOptions_Render_Prefix()
 	{
+		if (ShipSelection.ShowingShips)
+			return;
+		
 		// handling mouse scroll wheel to page the character list
 		var mouseScroll = (int)Math.Round(-Input.scrollY / 120);
 		if (mouseScroll != 0)
 			ScrollPosition = Math.Clamp(ScrollPosition + CharactersPerRow * mouseScroll, 0, MaxScroll);
 	}
 
-	private static void NewRunOptions_CharSelect_Postfix(G g)
+	private static void NewRunOptions_CharSelect_Postfix(G g, bool __runOriginal)
 	{
+		if (!__runOriginal)
+			return;
+		
 		// rendering character list scrolling arrow buttons
 		if (ScrollPosition > 0)
 		{

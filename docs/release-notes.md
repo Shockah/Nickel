@@ -5,6 +5,7 @@
 ## Upcoming release
 
 ### For players:
+* Added a new ship selector to the new run screen.
 * Fixed complex card trait situations resulting in wrong states (fixes Natasha's Dark Web Data artifact).
 
 ## 1.2.1
