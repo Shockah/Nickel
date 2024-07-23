@@ -111,11 +111,20 @@ public sealed class ModEntry : SimpleMod
 
 			foreach (var deck in NewRunOptions.allChars)
 			{
-				if (this.Helper.Content.Characters.V2.LookupByDeck(deck) is { Configuration.ExeCardType: { } entryExeType })
+				if (this.Helper.Content.Characters.V2.LookupByDeck(deck) is { } deckEntry)
 				{
-					this.ExeCache[deck] = entryExeType;
-					this.ExeTypeToDeck[entryExeType] = deck;
-					continue;
+					if (deckEntry.Configuration.ExeCardType is { } entryExeType)
+					{
+						this.ExeCache[deck] = entryExeType;
+						this.ExeTypeToDeck[entryExeType] = deck;
+						continue;
+					}
+
+					if (deckEntry.ModOwner.ModType != "Nickel.Legacy")
+					{
+						this.ExeCache[deck] = null;
+						continue;
+					}
 				}
 
 				try
