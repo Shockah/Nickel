@@ -15,9 +15,9 @@ public sealed class CardTraitFieldAssignmentAnalyzer : DiagnosticAnalyzer
 	private readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
 		id: "CardTraitFieldAssignment",
 		title: "Avoid direct game enum usage",
-		messageFormat: "Setting `Card.{0}` directly will break Nickel's card trait handling; consider using `IModCards.SetCardTraitOverride` instead",
+		messageFormat: "Setting `Card.{0}` directly may cause issues with Nickel's card trait handling; consider using `IModCards.SetCardTraitOverride` instead",
 		category: "Nickel.CommonErrors",
-		defaultSeverity: DiagnosticSeverity.Error,
+		defaultSeverity: DiagnosticSeverity.Info,
 		isEnabledByDefault: true
 		// helpLinkUri: "https://smapi.io/package/avoid-net-field"
 	);

@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* `Card` card trait field assignments analyzer now only produces informational diagnostics, instead of errors.
+
 ## 1.1.0
 Released 22 July 2024.
 
