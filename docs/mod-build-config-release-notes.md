@@ -4,6 +4,8 @@
 
 ## Upcoming release
 
+* The package can now rewrite `ModName` and `ModVersion` tokens in your `nickel.json` files.
+* The package now requires the `nickel.json` file for legacy mods.
 * `Card` card trait field assignments analyzer now only produces informational diagnostics, instead of errors.
 
 ## 1.1.0

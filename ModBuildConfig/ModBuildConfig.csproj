@@ -1,15 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\Configuration.ModBuildConfig.props" />
 	<PropertyGroup>
 		<RootNamespace>Nickel.ModBuildConfig</RootNamespace>
 		<ProductName>Nickel.ModBuildConfig</ProductName>
 		<AssemblyName>Nickel.ModBuildConfig</AssemblyName>
-		<Version>1.1.0</Version>
-		<TargetFramework>netstandard2.0</TargetFramework>
-		<LangVersion>12.0</LangVersion>
-		<ImplicitUsings>disable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<WarningsAsErrors>Nullable</WarningsAsErrors>
-		<CheckEolTargetFramework>false</CheckEolTargetFramework>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<NoWarn>NU5128</NoWarn>
 	</PropertyGroup>
