@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.3.0
+Released 24 July 2024.
 
 ### For players:
 * Added a new ship selector to the new run screen.

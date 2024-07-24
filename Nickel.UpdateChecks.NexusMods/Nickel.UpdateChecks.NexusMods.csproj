@@ -6,7 +6,7 @@
 		<Version>$(NickelVersion)</Version>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Nickel.ModBuildConfig" Version="1.0.2" />
+		<PackageReference Include="Nickel.ModBuildConfig" Version="1.2.0" />
 		<PackageReference Include="EnumByNameSourceGenerator" Version="1.1.1" PrivateAssets="All" ExcludeAssets="runtime" />
 		<ProjectReference Include="..\Nickel.UpdateChecks\Nickel.UpdateChecks.csproj" Private="False" />
 	</ItemGroup>
