@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.2.0
+Released 24 July 2024.
 
 * The package can now rewrite `ModName` and `ModVersion` tokens in your `nickel.json` files.
 * The package now requires the `nickel.json` file for legacy mods.
