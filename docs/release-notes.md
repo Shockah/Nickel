@@ -6,6 +6,7 @@
 
 ### For players:
 * Added a new ship selector to the new run screen.
+* Long tooltips are now scrollable with a mouse scroll wheel or the controller right thumbstick.
 * Fixed complex card trait situations resulting in wrong states (fixes Natasha's Dark Web Data artifact).
 * The game will no longer crash when trying to display a run summary containing cards or artifacts that are not currently loaded.
 
