@@ -22,7 +22,7 @@ internal static class ShipSelection
 
 	private static int ScrollPosition;
 	internal static bool ShowingShips { get; private set; }
-	private static StarterShip? PreviewingShip;
+	internal static StarterShip? PreviewingShip { get; private set; }
 
 	private static int MaxScroll
 		=> Math.Max(0, StarterShip.ships.Count - MaxShipsOnScreen);

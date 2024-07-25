@@ -34,4 +34,10 @@ public interface IEssentialsApi
 
 	/// <summary>The <see cref="UK"/> part of a <see cref="UIKey"/> used by each button on the list of ships on the <see cref="NewRunOptions"/> screen. The <see cref="UIKey.str"/> will be set to the ship's key.</summary>
 	UK ShipSelectionUiKey { get; }
+	
+	/// <summary>Whether the <see cref="NewRunOptions"/> screen is currently showing the list of ships instead of a grid of characters.</summary>
+	bool IsShowingShips { get; }
+	
+	/// <summary>The ship that is currently being previewed by hovering over its button while <see cref="IsShowingShips"/> is <c>true</c>.</summary>
+	StarterShip? PreviewingShip { get; }
 }

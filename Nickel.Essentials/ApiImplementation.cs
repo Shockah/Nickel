@@ -18,4 +18,10 @@ public sealed class ApiImplementation : IEssentialsApi
 	
 	public UK ShipSelectionUiKey
 		=> ShipSelection.ShipSelectionUiKey;
+
+	public bool IsShowingShips
+		=> ShipSelection.ShowingShips;
+
+	public StarterShip? PreviewingShip
+		=> ShipSelection.PreviewingShip;
 }

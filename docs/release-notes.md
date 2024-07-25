@@ -5,6 +5,7 @@
 ## Upcoming release
 
 ### For developers:
+* Added `IsShowingShips` and `PreviewingShip` APIs to `Nickel.Essentials`.
 * Added `EnglishFallbackLocalizationProvider` and `MissingPlaceholderNonBoundLocalizationProvider` implementations.
 * Fixed `JsonLocalizationProvider` returning comments as strings.
 
