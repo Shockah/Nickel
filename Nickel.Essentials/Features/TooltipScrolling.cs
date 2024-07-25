@@ -22,6 +22,8 @@ internal static class TooltipScrolling
 	private static double Scroll;
 	private static double ScrollTarget;
 	private static double HijackedScrollY;
+	private static double LastActivityTime;
+	private static string LastHijackedTooltipId = "";
 
 	public static void ApplyPatches(IHarmony harmony)
 	{
@@ -105,18 +107,34 @@ internal static class TooltipScrolling
 		
 		if (FeatureFlags.Debug && ImGui.GetIO().WantCaptureMouse)
 			return;
-		if (MG.inst.g.tooltips.tooltips.Count == 0)
+
+		if (MG.inst.g.tooltips.tooltips.Count == 0 || MG.inst.g.tooltips.tooltipTimer < Tooltips.TOOLTIP_DELAY)
+		{
+			LastTooltipId = "";
+			LastHijackedTooltipId = "";
+			LastActivityTime = MG.inst.g.time;
 			return;
+		}
 
 		if (Input.gamepadIsActiveInput)
 		{
 			var state = GamePad.GetState(PlayerIndex.One);
 			HijackedScrollY = state.ThumbSticks.Right.Y * 10;
+			return;
 		}
-		else
+
+		var shouldHijack = MG.inst.g.time - LastActivityTime >= 0.3;
+		if (LastActivityTime == 0 || Input.mouseLeftDown || Input.mouseRightDown || LastHijackedTooltipId != LastTooltipId || (!shouldHijack && Input.scrollY != 0))
 		{
-			HijackedScrollY = Input.scrollY;
-			Input.scrollY = 0;
+			LastActivityTime = MG.inst.g.time;
+			LastHijackedTooltipId = LastTooltipId;
 		}
+		shouldHijack = MG.inst.g.time - LastActivityTime >= 0.3;
+		
+		if (!shouldHijack)
+			return;
+
+		HijackedScrollY = Input.scrollY;
+		Input.scrollY = 0;
 	}
 }

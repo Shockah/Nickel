@@ -4,6 +4,9 @@
 
 ## Upcoming release
 
+### For players:
+* The tooltip scrolling feature will now try now to lock up other UI scrolling, unless you hold the tooltip up for a while without interaction.
+
 ### For developers:
 * Added `IsShowingShips` and `PreviewingShip` APIs to `Nickel.Essentials`.
 * Added `EnglishFallbackLocalizationProvider` and `MissingPlaceholderNonBoundLocalizationProvider` implementations.
