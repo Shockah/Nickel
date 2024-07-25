@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.3.1
+Released 25 July 2024.
 
 ### For players:
 * The tooltip scrolling feature will now try now to lock up other UI scrolling, unless you hold the tooltip up for a while without interaction.
