@@ -63,10 +63,9 @@ public sealed partial class JsonLocalizationProvider(
 		{
 			if (localization is JValue value && value.Value<string>() is { } localizationString)
 				return this.Localize(localizationString, tokens);
-			else if (localization is JArray array)
+			if (localization is JArray array)
 				return this.Localize(string.Join("\n", array.Select(v => v.Value<string>()).OfType<string>()), tokens);
-			else
-				return null;
+			return null;
 		}
 		else
 		{
@@ -82,7 +81,7 @@ public sealed partial class JsonLocalizationProvider(
 		=> localization.GetValue(key[keyIndex]) is { } token ? this.Localize(token, key, keyIndex + 1, tokens) : null;
 
 	private string? Localize(JArray localization, IReadOnlyList<string> key, int keyIndex, object? tokens)
-		=> int.TryParse(key[keyIndex], out var arrayIndex) && localization.Count >= arrayIndex ? this.Localize(localization[arrayIndex], key, keyIndex + 1, tokens) : null;
+		=> int.TryParse(key[keyIndex], out var arrayIndex) && localization.Count >= arrayIndex ? this.Localize(localization.Where(t => t.Type != JTokenType.Comment).Skip(arrayIndex).First(), key, keyIndex + 1, tokens) : null;
 
 	private string Localize(string localizationString, object? tokens)
 	{
@@ -94,6 +93,6 @@ public sealed partial class JsonLocalizationProvider(
 		});
 	}
 
-	[GeneratedRegex(@"{{([ \w\.\-]+)}}")]
+	[GeneratedRegex(@"{{([ \w\.\-_]+)}}")]
 	private static partial Regex TokenRegex();
 }

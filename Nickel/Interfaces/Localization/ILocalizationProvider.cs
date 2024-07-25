@@ -7,7 +7,7 @@ namespace Nickel;
 public interface ILocalizationProvider<in TKey>
 {
 	/// <summary>
-	/// Localize the phrase for the given key in the pre-specified locale.
+	/// Localize the phrase for the given key in the given locale.
 	/// </summary>
 	/// <param name="locale">The locale.</param>
 	/// <param name="key">The key for the phrase to localize.</param>

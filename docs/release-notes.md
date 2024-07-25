@@ -2,6 +2,12 @@
 
 # Release notes
 
+## Upcoming release
+
+### For developers:
+* Added `EnglishFallbackLocalizationProvider` and `MissingPlaceholderNonBoundLocalizationProvider` implementations.
+* Fixed `JsonLocalizationProvider` returning comments as strings.
+
 ## 1.3.0
 Released 24 July 2024.
 
