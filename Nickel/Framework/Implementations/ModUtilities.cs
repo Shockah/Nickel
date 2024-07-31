@@ -21,7 +21,9 @@ internal sealed class ModUtilities(
 
 	public IHarmony Harmony { get; } = new HarmonyWrapper(harmony);
 
+#pragma warning disable CS0618 // Type or member is obsolete
 	public IHarmony DelayedHarmony { get; } = new DelayedHarmony(harmony, delayedHarmonyManager);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 	public void ApplyDelayedHarmonyPatches()
 		=> delayedHarmonyManager.ApplyDelayedPatches();

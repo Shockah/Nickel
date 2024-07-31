@@ -9,6 +9,7 @@ namespace Nickel;
 /// <summary>
 /// An <see cref="IHarmony"/> implementation that delays all patching until the <see cref="ModLoadPhase.AfterDbInit"/> phase finishes loading, or until a mod calls <see cref="IModUtilities.ApplyDelayedHarmonyPatches"/>.
 /// </summary>
+[Obsolete($"`{nameof(DelayedHarmony)}` is no longer supported due to issues with inlining methods. Use a different `{nameof(IHarmony)}` implementation or `{nameof(Harmony)}` directly.")]
 public sealed class DelayedHarmony : IHarmony
 {
 	/// <inheritdoc/>

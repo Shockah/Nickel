@@ -14,7 +14,9 @@ namespace Nickel;
 internal static class HarmonyPatches
 {
 	private static PatchInfo? CurrentPatchInfo;
+#pragma warning disable CS0618 // Type or member is obsolete
 	internal static readonly Stack<(DelayedHarmony Harmony, string MemberName, string SourceFilePath, int SourceLineNumber)> DelayedManagerStack = [];
+#pragma warning restore CS0618 // Type or member is obsolete
 
 	private static readonly Lazy<Type> PatchJobsMethodInfoJobType = new(() => AccessTools.Inner(typeof(Harmony).Assembly.GetType("HarmonyLib.PatchJobs")!.MakeGenericType([typeof(MethodInfo)]), "Job"));
 	private static readonly Lazy<Func<object, MethodBase>> GetOriginal = new(() => CreateFieldGetter<MethodBase>(PatchJobsMethodInfoJobType.Value, "original"));
