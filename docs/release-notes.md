@@ -5,9 +5,10 @@
 ## Upcoming release
 
 ### For players:
-* Nickel's now loads its pre-installed mods from the `InternalModLibrary` folder. These mods take priority over any duplicates found in the `ModLibrary` folder.
+* Nickel now loads its pre-installed mods from the `InternalModLibrary` folder. These mods take priority over any duplicates found in the `ModLibrary` folder.
 * Replaced character/ship scroll buttons with properly shaded ones.
 * Fixed hovering over ship buttons sometimes not previewing the ship.
+* The game will no longer crash when trying to display a run summary containing a ship or characters that are not currently loaded.
 
 ### For developers:
 * Obsoleted `DelayedHarmony` due to issues with method inlining.

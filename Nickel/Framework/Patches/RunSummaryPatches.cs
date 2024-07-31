@@ -1,6 +1,7 @@
 using HarmonyLib;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 
 namespace Nickel;
@@ -36,7 +37,10 @@ internal static class RunSummaryPatches
 		if (__result is null)
 			return;
 		
-		// TODO: maybe replace with blank cards/artifacts instead which still display
+		// TODO: maybe instead replace with blank entries which still display
+		if (!StarterShip.ships.ContainsKey(__result.ship))
+			__result.ship = StarterShip.ships.Keys.First();
+		__result.decks = __result.decks.Where(deck => NewRunOptions.allChars.Contains(deck)).ToList();
 		__result.cards.RemoveAll(card => !DB.cards.ContainsKey(card.type));
 		__result.artifacts.RemoveAll(key => !DB.artifacts.ContainsKey(key));
 	}
