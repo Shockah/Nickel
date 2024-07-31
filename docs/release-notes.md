@@ -5,6 +5,7 @@
 ## Upcoming release
 
 ### For players:
+* Replaced character/ship scroll buttons with properly shaded ones.
 * Fixed hovering over ship buttons sometimes not previewing the ship.
 
 ### For developers:

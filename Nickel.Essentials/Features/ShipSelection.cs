@@ -140,15 +140,15 @@ internal static class ShipSelection
 		// rendering ship list scrolling arrow buttons
 		if (ScrollPosition > 0)
 		{
-			Rect rect = new(NewRunOptions.charSelectPos.x + 18, NewRunOptions.charSelectPos.y - 52, 33, 24);
+			Rect rect = new(NewRunOptions.charSelectPos.x + 19, NewRunOptions.charSelectPos.y - 53, 31, 26);
 			OnMouseDown onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Max(0, ScrollPosition - MaxShipsOnScreen));
-			RotatedButtonSprite(g, rect, StableUK.btn_move_left, StableSpr.buttons_move, StableSpr.buttons_move_on, flipX: true, onMouseDown: onMouseDown);
+			SharedArt.ButtonSprite(g, rect, StableUK.btn_move_left, ModEntry.Instance.ScrollUpSprite.Sprite, ModEntry.Instance.ScrollUpOnSprite.Sprite, onMouseDown: onMouseDown);
 		}
 		if (ScrollPosition < MaxScroll)
 		{
-			Rect rect = new(NewRunOptions.charSelectPos.x + 18, NewRunOptions.charSelectPos.y + 140, 33, 24);
+			Rect rect = new(NewRunOptions.charSelectPos.x + 19, NewRunOptions.charSelectPos.y + 140, 31, 26);
 			OnMouseDown onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Clamp(ScrollPosition + MaxShipsOnScreen, 0, MaxPageByPageScroll));
-			RotatedButtonSprite(g, rect, StableUK.btn_move_right, StableSpr.buttons_move, StableSpr.buttons_move_on, flipX: false, onMouseDown: onMouseDown);
+			SharedArt.ButtonSprite(g, rect, StableUK.btn_move_right, ModEntry.Instance.ScrollDownSprite.Sprite, ModEntry.Instance.ScrollDownOnSprite.Sprite, onMouseDown: onMouseDown);
 		}
 
 		return false;
@@ -166,25 +166,6 @@ internal static class ShipSelection
 			showAsPressed: ShowingShips,
 			sprite: ShipsButtonSprite.Sprite, spriteDown: ShipsButtonOnSprite.Sprite, spriteHover: ShipsButtonOnSprite.Sprite
 		);
-
-	// mostly copy-paste of SharedArt.ButtonResult, without too many improvements
-	private static SharedArt.ButtonResult RotatedButtonSprite(G g, Rect rect, UIKey key, Spr sprite, Spr spriteHover, Spr? spriteDown = null, Color? boxColor = null, bool inactive = false, bool flipX = false, bool flipY = false, OnMouseDown? onMouseDown = null, bool autoFocus = false, bool noHover = false, bool showAsPressed = false, bool gamepadUntargetable = false, UIKey? leftHint = null, UIKey? rightHint = null)
-	{
-		var box = g.Push(key, rect, null, autoFocus, inactive, gamepadUntargetable, ReticleMode.Quad, onMouseDown, null, null, null, 0, rightHint, leftHint);
-		var xy = box.rect.xy;
-		var isPressed = !noHover && (box.IsHover() || showAsPressed) && !inactive;
-		if (spriteDown.HasValue && box.IsHover() && Input.mouseLeft)
-			showAsPressed = true;
-		var rotation = Math.PI / 2;
-		Draw.Sprite((!showAsPressed) ? (isPressed ? spriteHover : sprite) : (spriteDown ?? spriteHover), xy.x + Math.Sin(rotation) * rect.w, xy.y - Math.Cos(rotation) * rect.h, flipX, flipY, rotation, null, null, null, null, boxColor);
-		SharedArt.ButtonResult buttonResult = default;
-		buttonResult.isHover = isPressed;
-		buttonResult.FIXME_isHoverForTooltip = !noHover && box.IsHover();
-		buttonResult.v = xy;
-		buttonResult.innerOffset = new Vec(0.0, showAsPressed ? 2 : (isPressed ? 1 : 0));
-		g.Pop();
-		return buttonResult;
-	}
 
 	private static void RunConfig_GetSelectionState_Postfix(ref (List<KeyValuePair<string, StarterShip>>, StarterShip, int) __result)
 	{

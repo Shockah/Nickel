@@ -19,6 +19,11 @@ public sealed class ModEntry : SimpleMod
 
 	internal static bool StopStateTransitions;
 
+	internal ISpriteEntry ScrollUpSprite { get; private set; }
+	internal ISpriteEntry ScrollUpOnSprite { get; private set; }
+	internal ISpriteEntry ScrollDownSprite { get; private set; }
+	internal ISpriteEntry ScrollDownOnSprite { get; private set; }
+
 	private readonly Dictionary<Deck, Type?> ExeCache = [];
 	private readonly Dictionary<Type, Deck> ExeTypeToDeck = [];
 
@@ -38,6 +43,11 @@ public sealed class ModEntry : SimpleMod
 			)
 		);
 		this.Settings = helper.Storage.LoadJson<Settings>(this.SettingsFile);
+		
+		this.ScrollUpSprite = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/ScrollUp.png"));
+		this.ScrollUpOnSprite = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/ScrollUpOn.png"));
+		this.ScrollDownSprite = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/ScrollDown.png"));
+		this.ScrollDownOnSprite = helper.Content.Sprites.RegisterSprite(package.PackageRoot.GetRelativeFile("assets/ScrollDownOn.png"));
 		
 		helper.ModRegistry.AwaitApi<IMoreDifficultiesApi>(
 			"TheJazMaster.MoreDifficulties", new(1, 4, 1),
@@ -62,7 +72,7 @@ public sealed class ModEntry : SimpleMod
 			)
 		);
 
-		var harmony = helper.Utilities.DelayedHarmony;
+		var harmony = helper.Utilities.Harmony;
 		CardBrowseCurrentPile.ApplyPatches(harmony);
 		CardCodexFiltering.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);
