@@ -446,8 +446,10 @@ internal sealed class ModManager
 					patchInfo.Owners.OrderBy(owner => owner).Select(owner =>
 					{
 						var patchTypeStrings = new List<string>();
-						if (patchInfo.Prefixes.Any(p => p.owner == owner))
-							patchTypeStrings.Add("prefix");
+						if (patchInfo.Prefixes.Any(p => p.owner == owner && p.PatchMethod.ReturnType == typeof(bool)))
+							patchTypeStrings.Add("skipping prefix");
+						if (patchInfo.Prefixes.Any(p => p.owner == owner && p.PatchMethod.ReturnType != typeof(bool)))
+							patchTypeStrings.Add("passthrough prefix");
 						if (patchInfo.Postfixes.Any(p => p.owner == owner))
 							patchTypeStrings.Add("postfix");
 						if (patchInfo.Finalizers.Any(p => p.owner == owner))

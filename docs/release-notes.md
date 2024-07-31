@@ -2,6 +2,12 @@
 
 # Release notes
 
+## Upcoming release
+
+### For developers:
+* Obsoleted `DelayedHarmony` due to issues with method inlining.
+* Nickel now logs passthrough prefixes separately from (potentially) skipping prefixes.
+
 ## 1.3.1
 Released 25 July 2024.
 
