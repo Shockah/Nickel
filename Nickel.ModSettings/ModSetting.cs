@@ -17,6 +17,12 @@ public abstract class BaseModSetting : IModSettingsApi.IModSetting
 		};
 	}
 
+	~BaseModSetting()
+	{
+		if (this.Key != 0)
+			ModEntry.Instance.Helper.Utilities.FreeEnumCase(this.Key.k);
+	}
+
 	public void RaiseOnMenuOpen(G g, IModSettingsApi.IModSettingsRoute route)
 		=> this.OnMenuOpen?.Invoke(g, route);
 

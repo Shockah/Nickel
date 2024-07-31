@@ -32,6 +32,14 @@ public sealed class CharactersModSetting : IModSettingsApi.IModSetting
 		};
 	}
 
+	~CharactersModSetting()
+	{
+		if (this.Key != 0)
+			ModEntry.Instance.Helper.Utilities.FreeEnumCase(this.Key.k);
+		if (this.BaseCharacterKey != 0)
+			ModEntry.Instance.Helper.Utilities.FreeEnumCase(this.BaseCharacterKey.k);
+	}
+
 	public void RaiseOnMenuOpen(G g, IModSettingsApi.IModSettingsRoute route)
 		=> this.OnMenuOpen?.Invoke(g, route);
 

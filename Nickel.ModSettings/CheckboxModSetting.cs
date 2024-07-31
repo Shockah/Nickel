@@ -24,6 +24,12 @@ public sealed class CheckboxModSetting : BaseModSetting, OnMouseDown, IModSettin
 		};
 	}
 
+	~CheckboxModSetting()
+	{
+		if (this.CheckboxKey != 0)
+			ModEntry.Instance.Helper.Utilities.FreeEnumCase(this.CheckboxKey.k);
+	}
+
 	IModSettingsApi.ICheckboxModSetting IModSettingsApi.ICheckboxModSetting.SetTitle(Func<string> value)
 	{
 		this.Title = value;

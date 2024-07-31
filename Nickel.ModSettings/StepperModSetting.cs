@@ -33,6 +33,14 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, OnInputP
 		};
 	}
 
+	~StepperModSetting()
+	{
+		if (this.StepperLeftKey != 0)
+			ModEntry.Instance.Helper.Utilities.FreeEnumCase(this.StepperLeftKey.k);
+		if (this.StepperRightKey != 0)
+			ModEntry.Instance.Helper.Utilities.FreeEnumCase(this.StepperRightKey.k);
+	}
+
 	IModSettingsApi.IStepperModSetting<T> IModSettingsApi.IStepperModSetting<T>.SetTitle(Func<string> value)
 	{
 		this.Title = value;

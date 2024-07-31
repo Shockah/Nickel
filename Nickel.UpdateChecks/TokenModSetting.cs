@@ -40,6 +40,18 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 		};
 	}
 
+	~TokenModSetting()
+	{
+		if (this.Key != 0)
+			ModEntry.Instance.Helper.Utilities.FreeEnumCase(this.Key.k);
+		if (this.PasteKey != 0)
+			ModEntry.Instance.Helper.Utilities.FreeEnumCase(this.PasteKey.k);
+		if (this.SetupKey != 0)
+			ModEntry.Instance.Helper.Utilities.FreeEnumCase(this.SetupKey.k);
+		if (this.CheckboxKey != 0)
+			ModEntry.Instance.Helper.Utilities.FreeEnumCase(this.CheckboxKey.k);
+	}
+
 	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetTitle(Func<string> value)
 	{
 		this.Title = value;
