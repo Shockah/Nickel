@@ -129,7 +129,7 @@ public sealed class ModEntry : SimpleMod
 			UpdateAvailableTooltipIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/UpdateAvailableTooltipIcon.png"))
 		};
 
-		var harmony = this.Helper.Utilities.DelayedHarmony;
+		var harmony = this.Helper.Utilities.Harmony;
 		
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(G), nameof(G.Render))
