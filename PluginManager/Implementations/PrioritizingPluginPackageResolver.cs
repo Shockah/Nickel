@@ -15,8 +15,8 @@ public sealed class PrioritizingPluginPackageResolver<TPluginManifest, TPriority
 	where TKey : IEquatable<TKey>
 	where TPriority : struct, INumber<TPriority>
 {
-	private IPluginPackageResolver<PluginManifestWithPriority<TPluginManifest, TPriority>> Resolver { get; }
-	private Func<IPluginPackage<PluginManifestWithPriority<TPluginManifest, TPriority>>, TKey> KeyFunction { get; }
+	private readonly IPluginPackageResolver<PluginManifestWithPriority<TPluginManifest, TPriority>> Resolver;
+	private readonly Func<IPluginPackage<PluginManifestWithPriority<TPluginManifest, TPriority>>, TKey> KeyFunction;
 
 	/// <summary>
 	/// Creates a new <see cref="PrioritizingPluginPackageResolver{TPluginManifest,TPriority,TKey}"/>.

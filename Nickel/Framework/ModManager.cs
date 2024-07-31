@@ -19,6 +19,7 @@ namespace Nickel;
 
 internal sealed class ModManager
 {
+	private readonly DirectoryInfo InternalModsDirectory;
 	private readonly DirectoryInfo ModsDirectory;
 	private readonly DirectoryInfo ModStorageDirectory;
 	private readonly DirectoryInfo PrivateModStorageDirectory;
@@ -49,6 +50,7 @@ internal sealed class ModManager
 	private readonly Dictionary<string, IPluginPackage<IModManifest>> UniqueNameToPackage = [];
 
 	public ModManager(
+		DirectoryInfo internalModsDirectory,
 		DirectoryInfo modsDirectory,
 		DirectoryInfo modStorageDirectory,
 		DirectoryInfo privateModStorageDirectory,
@@ -57,6 +59,7 @@ internal sealed class ModManager
 		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor
 	)
 	{
+		this.InternalModsDirectory = internalModsDirectory;
 		this.ModsDirectory = modsDirectory;
 		this.ModStorageDirectory = modStorageDirectory;
 		this.PrivateModStorageDirectory = privateModStorageDirectory;
@@ -191,7 +194,16 @@ internal sealed class ModManager
 		var pluginPackageResolver = new ValidatingPluginPackageResolver<IModManifest>(
 			resolver: new DistinctPluginPackageResolver<IModManifest, string>(
 				resolver: new SubpluginPluginPackageResolver<IModManifest>(
-					baseResolver: CreatePluginPackageResolver(new DirectoryInfoImpl(this.ModsDirectory), allowModsInRoot: false),
+					baseResolver: new PrioritizingPluginPackageResolver<IModManifest, double, string>(
+						resolver: new CompoundPluginPackageResolver<PluginManifestWithPriority<IModManifest, double>>([
+							new PriorityModifierPluginPackageResolver<IModManifest, double>(
+								CreateDirectoryPluginPackageResolver(new DirectoryInfoImpl(this.InternalModsDirectory), false, 1.0, 0.75),
+								(_, priority) => priority * 2
+							),
+							CreateDirectoryPluginPackageResolver(new DirectoryInfoImpl(this.ModsDirectory), false, 1.0, 0.75)
+						]),
+						keyFunction: p => p.Manifest.Manifest.UniqueName
+					),
 					subpluginResolverFactory: p =>
 					{
 						foreach (var optionalSubmod in p.Manifest.Submods.Where(submod => submod.IsOptional))
@@ -313,27 +325,27 @@ internal sealed class ModManager
 						?? throw new InvalidOperationException()
 				)
 		);
-
-		IPluginPackageResolver<IModManifest> CreatePluginPackageResolver(IDirectoryInfo directory, bool allowModsInRoot)
-			=> new PrioritizingPluginPackageResolver<IModManifest, double, string>(
-				resolver: new RecursiveDirectoryPluginPackageResolver<PluginManifestWithPriority<IModManifest, double>>(
-					directory: directory,
-					manifestFileName: NickelConstants.ManifestFileName,
-					ignoreDotNames: true,
-					allowPluginsInRoot: allowModsInRoot,
-					directoryResolverFactory: d => new PriorityPluginPackageResolver<IModManifest, double>(
-						resolver: new SanitizingPluginPackageResolver<IModManifest>(
-							new DirectoryPluginPackageResolver<IModManifest>(d, NickelConstants.ManifestFileName, pluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Empty)
-						),
-						priority: 1
+		
+		IPluginPackageResolver<PluginManifestWithPriority<IModManifest, double>> CreateDirectoryPluginPackageResolver(IDirectoryInfo directory, bool allowModsInRoot, double extractedPriority, double compressedPriority)
+			=> new RecursiveDirectoryPluginPackageResolver<PluginManifestWithPriority<IModManifest, double>>(
+				directory: directory,
+				manifestFileName: NickelConstants.ManifestFileName,
+				ignoreDotNames: true,
+				allowPluginsInRoot: allowModsInRoot,
+				directoryResolverFactory: d => new PriorityPluginPackageResolver<IModManifest, double>(
+					resolver: new SanitizingPluginPackageResolver<IModManifest>(
+						new DirectoryPluginPackageResolver<IModManifest>(d, NickelConstants.ManifestFileName, pluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Empty)
 					),
-					fileResolverFactory: f => f.Name.EndsWith(".zip")
-						? new PriorityPluginPackageResolver<IModManifest, double>(
-							resolver: new ZipPluginPackageResolver<IModManifest>(f, d => CreatePluginPackageResolver(d, allowModsInRoot: true)),
-							priority: 0.5
-						) : null
+					priority: extractedPriority
 				),
-				keyFunction: p => p.Manifest.Manifest.UniqueName
+				fileResolverFactory: f => f.Name.EndsWith(".zip")
+					? new PriorityModifierPluginPackageResolver<IModManifest, double>(
+						new ZipPluginPackageResolver<PluginManifestWithPriority<IModManifest, double>>(
+							f,
+							d => CreateDirectoryPluginPackageResolver(d, true, extractedPriority, compressedPriority)
+						),
+						(_, priority) => priority * compressedPriority
+					) : null
 			);
 	}
 
@@ -354,7 +366,7 @@ internal sealed class ModManager
 				continue;
 
 			var displayName = manifest.GetDisplayName(@long: false);
-			this.Logger.LogDebug("Loading mod {DisplayName}...", displayName);
+			this.Logger.LogDebug("Loading mod {DisplayName} from {Package}...", displayName, package.PackageRoot);
 
 			var failedRequiredDependencies = manifest.Dependencies
 				.Where(d => d.IsRequired && this.FailedMods.Any(m => m.UniqueName == d.UniqueName))

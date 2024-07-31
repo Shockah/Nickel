@@ -56,6 +56,10 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			name: "--modsPath",
 			description: "The path containing the mods to load."
 		);
+		Option<DirectoryInfo?> internalModsPathOption = new(
+			name: "--internalModsPath",
+			description: "The path containing the internal mods to load."
+		);
 		Option<DirectoryInfo?> modStoragePathOption = new(
 			name: "--modStoragePath",
 			description: "The path containing mod data, like settings (ones that are fine to share)."
@@ -87,6 +91,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		rootCommand.AddOption(saveInDebugOption);
 		rootCommand.AddOption(initSteamOption);
 		rootCommand.AddOption(gamePathOption);
+		rootCommand.AddOption(internalModsPathOption);
 		rootCommand.AddOption(modsPathOption);
 		rootCommand.AddOption(modStoragePathOption);
 		rootCommand.AddOption(privateModStoragePathOption);
@@ -104,6 +109,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 				SaveInDebug = context.ParseResult.GetValueForOption(saveInDebugOption),
 				InitSteam = context.ParseResult.GetValueForOption(initSteamOption),
 				GamePath = context.ParseResult.GetValueForOption(gamePathOption),
+				InternalModsPath = context.ParseResult.GetValueForOption(internalModsPathOption),
 				ModsPath = context.ParseResult.GetValueForOption(modsPathOption),
 				ModStoragePath = context.ParseResult.GetValueForOption(modStoragePathOption),
 				PrivateModStoragePath = context.ParseResult.GetValueForOption(privateModStoragePathOption),
@@ -180,13 +186,24 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			instance.Harmony = harmony;
 			HarmonyPatches.Apply(harmony, logger);
 
+			var internalModsDirectory = launchArguments.ModsPath ?? GetOrCreateDefaultInternalModLibraryDirectory();
+			logger.LogInformation("InternalModsPath: {Path}", PathUtilities.SanitizePath(internalModsDirectory.FullName));
+
 			var modsDirectory = launchArguments.ModsPath ?? GetOrCreateDefaultModLibraryDirectory();
 			logger.LogInformation("ModsPath: {Path}", PathUtilities.SanitizePath(modsDirectory.FullName));
 
 			var privateModStorageDirectory = launchArguments.PrivateModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "PrivateModStorage"));
 			logger.LogInformation("PrivateModStoragePath: {Path}", PathUtilities.SanitizePath(privateModStorageDirectory.FullName));
 
-			instance.ModManager = new(modsDirectory, modStorageDirectory, privateModStorageDirectory, loggerFactory, logger, extendableAssemblyDefinitionEditor);
+			instance.ModManager = new(
+				internalModsDirectory,
+				modsDirectory,
+				modStorageDirectory,
+				privateModStorageDirectory,
+				loggerFactory,
+				logger,
+				extendableAssemblyDefinitionEditor
+			);
 
 			var helper = instance.ModManager.ObtainModHelper(instance.ModManager.ModLoaderPackage);
 			instance.Settings = helper.Storage.LoadJson<Settings>(helper.Storage.GetMainStorageFile("json"));
@@ -428,6 +445,14 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private void OnTryInitSteam(object? _, StructRef<bool> initSteam)
 		=> initSteam.Value = this.LaunchArguments.InitSteam ?? true;
+
+	private static DirectoryInfo GetOrCreateDefaultInternalModLibraryDirectory()
+	{
+		var directoryInfo = new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "InternalModLibrary"));
+		if (!directoryInfo.Exists)
+			directoryInfo.Create();
+		return directoryInfo;
+	}
 
 	private static DirectoryInfo GetOrCreateDefaultModLibraryDirectory()
 	{

@@ -5,6 +5,7 @@
 ## Upcoming release
 
 ### For players:
+* Nickel's now loads its pre-installed mods from the `InternalModLibrary` folder. These mods take priority over any duplicates found in the `ModLibrary` folder.
 * Replaced character/ship scroll buttons with properly shaded ones.
 * Fixed hovering over ship buttons sometimes not previewing the ship.
 

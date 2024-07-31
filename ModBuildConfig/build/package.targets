@@ -23,14 +23,14 @@
 		<_ModLoaderName>Nickel</_ModLoaderName>
 
 		<!-- Remember user-provided settings -->
-		<HasUserModLoaderPath>false</HasUserModLoaderPath>
-		<HasUserModLoaderPath Condition="'$(ModLoaderPath)' != ''">true</HasUserModLoaderPath>
 		<HasUserGameDllPath>false</HasUserGameDllPath>
 		<HasUserGameDllPath Condition="'$(GameDllPath)' != ''">true</HasUserGameDllPath>
 		<HasUserGameExePath>false</HasUserGameExePath>
 		<HasUserGameExePath Condition="'$(GameExePath)' != ''">true</HasUserGameExePath>
 		<HasUserEnableDllExtract>false</HasUserEnableDllExtract>
 		<HasUserEnableDllExtract Condition="'$(EnableDllExtract)' != ''">true</HasUserEnableDllExtract>
+		<HasUserModDeployModsPath>false</HasUserModDeployModsPath>
+		<HasUserModDeployModsPath Condition="'$(ModDeployModsPath)' != ''">true</HasUserModDeployModsPath>
 
 		<!-- Default settings that don't care about paths -->
 		<ModName Condition="'$(ModName)' == ''">$(MSBuildProjectName)</ModName>
@@ -45,45 +45,12 @@
 		<EnableGameDebugging Condition="'$(EnableGameDebugging)' == ''">true</EnableGameDebugging>
 	</PropertyGroup>
 
-	<!-- Trying to find the game path - needed if ModLoaderPath, GameDllPath or GameExePath is not set -->
-	<PropertyGroup Condition="$(OS) == 'Unix' OR $(OS) == 'OSX'">
-		<!-- Linux -->
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.steam/steam/steamapps/common/$(_GameName)</_GamePath>
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.local/share/Steam/steamapps/common/$(_GameName)</_GamePath>
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/common/$(_GameName)</_GamePath>
+	<Import Project="FindModLoaderPath.targets" />
 
-		<!-- macOS (may be 'Unix' or 'OSX') -->
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(HOME)/Library/Application Support/Steam/steamapps/common/$(_GameName)/Contents/MacOS</_GamePath>
-	</PropertyGroup>
-	<PropertyGroup Condition="$(OS) == 'Windows_NT'">
-		<!-- Registry path -->
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App $(_GameSteamID)', 'InstallLocation', null, RegistryView.Registry64, RegistryView.Registry32))</_GamePath>
-
-		<!-- Derive from Steam library path -->
-		<_SteamLibraryPath>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\SOFTWARE\Valve\Steam', 'SteamPath', null, RegistryView.Registry32))</_SteamLibraryPath>
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">$(_SteamLibraryPath)\steamapps\common\$(_GameName)</_GamePath>
-
-		<!-- Steam paths -->
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">C:\Program Files\Steam\steamapps\common\$(_GameName)</_GamePath>
-		<_GamePath Condition="'$(_GamePath)' == '' Or !Exists('$(_GamePath)')">C:\Program Files (x86)\Steam\steamapps\common\$(_GameName)</_GamePath>
-	</PropertyGroup>
-
-	<!-- Trying to set ModLoaderPath, GameDllPath and GameExePath based on the found game path -->
+	<!-- Trying to set GameDllPath and GameExePath based on the found game path -->
 	<PropertyGroup Condition="Exists('$(_GamePath)')">
 		<GameExePath Condition="!'$(HasUserGameExePath)' And !Exists('$(GameExePath)')">$(_GamePath)\CobaltCore.exe</GameExePath>
-
-		<ModLoaderPath Condition="!'$(HasUserModLoaderPath)' And !Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')">$(_GamePath)\$(_ModLoaderName)</ModLoaderPath>
-		<ModLoaderPath Condition="!'$(HasUserModLoaderPath)' And !Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')">$(_GamePath)</ModLoaderPath>
-
 		<GameDllPath Condition="!'$(HasUserGameDllPath)' And !Exists('$(GameDllPath)')">$(_GamePath)\CobaltCore.dll</GameDllPath>
-	</PropertyGroup>
-
-	<!-- Trying to set ModLoaderPath if it's still missing -->
-	<PropertyGroup>
-		<ModLoaderPath Condition="!'$(HasUserModLoaderPath)' And !Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')">$(USERPROFILE)\$(_ModLoaderName)</ModLoaderPath>
-		<ModLoaderPath Condition="!'$(HasUserModLoaderPath)' And !Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')">$(HOME)\$(_ModLoaderName)</ModLoaderPath>
-		<ModLoaderPath Condition="!'$(HasUserModLoaderPath)' And !Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')">$(USERPROFILE)\Downloads\$(_ModLoaderName)</ModLoaderPath>
-		<ModLoaderPath Condition="!'$(HasUserModLoaderPath)' And !Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')">$(HOME)\Downloads\$(_ModLoaderName)</ModLoaderPath>
 	</PropertyGroup>
 
 	<!-- trying to set GameDllPath if it's still missing and we have ModLoaderPath -->
@@ -102,20 +69,20 @@
 	</PropertyGroup>
 
 	<Target Name="ValidateProperties" BeforeTargets="CoreCompile">
-		<!-- validation -->
-		<Error Condition="'$(OS)' != 'OSX' AND '$(OS)' != 'Unix' AND '$(OS)' != 'Windows_NT'" Text="The mod build package doesn't recognize OS type '$(OS)'." />
-		<Error Condition="!Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')" Text="The mod build package can't find the mod loader. You can specify where to find it with the `ModLoaderPath` build property." ContinueOnError="false" />
-		<Error Condition="'$(EnableDllExtract)' And !Exists('$(GameExePath)') " Text="The mod build package can't find the game EXE. You can specify where to find it with the `GameExePath` build property." ContinueOnError="false" />
-		<Error Condition="!'$(EnableDllExtract)' And !Exists('$(GameDllPath)')" Text="The mod build package can't find the extracted game DLL. You can specify where to find it with the `GameDllPath` build property." ContinueOnError="false" />
-		<Error Condition="'$(EnableModDeploy)' And !Exists('$(ModDeployModsPath)')" Text="The mod build package can't find the mods folder for deploying purposes. You can specify where to find it with the `ModDeployModsPath` build property." ContinueOnError="false" />
-		<Warning Condition="'$(Platform)' != 'AnyCPU'" Text="The target platform should be set to 'Any CPU' for compatibility with both 32-bit and 64-bit versions of the game (currently set to '$(Platform)')." />
-
 		<!-- confirmation messages -->
 		<Message Importance="high" Text="ModBuildConfig: EnableDllExtract = $(EnableDllExtract)" />
 		<Message Importance="high" Text="ModBuildConfig: EnableModDeploy = $(EnableModDeploy)" />
 		<Message Importance="high" Condition="'$(EnableDllExtract)'" Text="ModBuildConfig: GameExePath = '$(GameExePath)'" />
 		<Message Importance="high" Text="ModBuildConfig: GameDllPath = '$(GameDllPath)'" />
 		<Message Importance="high" Condition="'$(EnableModDeploy)'" Text="ModBuildConfig: ModDeployModsPath = '$(ModDeployModsPath)'" />
+		
+		<!-- validation -->
+		<Error Condition="'$(OS)' != 'OSX' AND '$(OS)' != 'Unix' AND '$(OS)' != 'Windows_NT'" Text="The mod build package doesn't recognize OS type '$(OS)'." />
+		<Error Condition="!Exists('$(ModLoaderPath)\$(_ModLoaderName).dll')" Text="The mod build package can't find the mod loader. You can specify where to find it with the `ModLoaderPath` build property." ContinueOnError="false" />
+		<Error Condition="'$(EnableDllExtract)' And !Exists('$(GameExePath)') " Text="The mod build package can't find the game EXE. You can specify where to find it with the `GameExePath` build property." ContinueOnError="false" />
+		<Error Condition="!'$(EnableDllExtract)' And !Exists('$(GameDllPath)')" Text="The mod build package can't find the extracted game DLL. You can specify where to find it with the `GameDllPath` build property." ContinueOnError="false" />
+		<Error Condition="'$(EnableModDeploy)' And !'$(HasUserModDeployModsPath)' And !Exists('$(ModDeployModsPath)')" Text="The mod build package can't find the mods folder for deploying purposes. You can specify where to find it with the `ModDeployModsPath` build property." ContinueOnError="false" />
+		<Warning Condition="'$(Platform)' != 'AnyCPU'" Text="The target platform should be set to 'Any CPU' for compatibility with both 32-bit and 64-bit versions of the game (currently set to '$(Platform)')." />
 	</Target>
 
 	<Target Name="ExtractGameDllTarget" BeforeTargets="PublicizeGameDll" Condition="$(EnableDllExtract)">

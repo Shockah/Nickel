@@ -11,6 +11,7 @@ internal readonly struct LaunchArguments
 	public bool? InitSteam { get; init; }
 	public FileInfo? GamePath { get; init; }
 	public DirectoryInfo? ModsPath { get; init; }
+	public DirectoryInfo? InternalModsPath { get; init; }
 	public DirectoryInfo? ModStoragePath { get; init; }
 	public DirectoryInfo? PrivateModStoragePath { get; init; }
 	public DirectoryInfo? SavePath { get; init; }
