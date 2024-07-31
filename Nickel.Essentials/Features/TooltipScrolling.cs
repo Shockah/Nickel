@@ -107,6 +107,8 @@ internal static class TooltipScrolling
 		
 		if (FeatureFlags.Debug && ImGui.GetIO().WantCaptureMouse)
 			return;
+		if (LastTooltipRect.h <= Tooltips.SCREEN_LIMITS.h)
+			return;
 
 		if (MG.inst.g.tooltips.tooltips.Count == 0 || MG.inst.g.tooltips.tooltipTimer < Tooltips.TOOLTIP_DELAY)
 		{
