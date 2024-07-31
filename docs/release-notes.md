@@ -4,6 +4,9 @@
 
 ## Upcoming release
 
+### For players:
+* Fixed hovering over ship buttons sometimes not previewing the ship.
+
 ### For developers:
 * Obsoleted `DelayedHarmony` due to issues with method inlining.
 * Nickel now logs passthrough prefixes separately from (potentially) skipping prefixes.

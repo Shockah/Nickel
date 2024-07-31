@@ -132,8 +132,8 @@ internal static class ShipSelection
 			var artifactSprite = DB.artifactSprites.TryGetValue(firstArtifact.Key(), out var tryArtifactSprite) ? tryArtifactSprite : StableSpr.artifacts_ShieldPrep;
 			Draw.Sprite(artifactSprite, leftX + 4, buttonBaseY + 2 + (shipButtonResult.isHover ? 1 : 0));
 			Draw.Text(Loc.T($"ship.{shipKey}.name"), leftX + 20, buttonBaseY + 6 + (shipButtonResult.isHover ? 1 : 0), color: shipButtonResult.isHover ? Colors.textChoiceHoverActive : Colors.textMain);
-			
-			if (shipButtonResult.isHover)
+
+			if (shipButtonResult.isHover && g.state.runConfig.selectedShip != shipKey)
 				PreviewingShip = StarterShip.ships[shipKey];
 		}
 		
