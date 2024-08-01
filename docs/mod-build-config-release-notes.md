@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.2.1
+Released 1 August 2024.
 
 * The package now allows overriding `ModDeployModsPath`.
 
