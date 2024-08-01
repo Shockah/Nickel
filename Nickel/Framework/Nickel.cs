@@ -186,7 +186,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			instance.Harmony = harmony;
 			HarmonyPatches.Apply(harmony, logger);
 
-			var internalModsDirectory = launchArguments.ModsPath ?? GetOrCreateDefaultInternalModLibraryDirectory();
+			var internalModsDirectory = launchArguments.InternalModsPath ?? GetOrCreateDefaultInternalModLibraryDirectory();
 			logger.LogInformation("InternalModsPath: {Path}", PathUtilities.SanitizePath(internalModsDirectory.FullName));
 
 			var modsDirectory = launchArguments.ModsPath ?? GetOrCreateDefaultModLibraryDirectory();
