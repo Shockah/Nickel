@@ -18,6 +18,7 @@ internal static class StatePatches
 	internal static EventHandler<EnumerateAllArtifactsEventArgs>? OnEnumerateAllArtifacts;
 	internal static EventHandler<ModifyPotentialExeCardsEventArgs>? OnModifyPotentialExeCards;
 	internal static EventHandler<LoadEventArgs>? OnLoad;
+	internal static EventHandler<State>? OnUpdating;
 	internal static EventHandler<State>? OnUpdate;
 	
 	private static readonly EnumerateAllArtifactsEventArgs EnumerateAllArtifactsEventArgsInstance = new();
@@ -50,7 +51,8 @@ internal static class StatePatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.Update))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.Update)}`"),
-			prefix: new HarmonyMethod(AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Update_Prefix)), priority: Priority.First)
+			prefix: new HarmonyMethod(AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Update_Prefix)), priority: Priority.First),
+			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Update_Postfix)), priority: Priority.Last)
 		);
 	}
 
@@ -126,6 +128,9 @@ internal static class StatePatches
 	}
 
 	private static void Update_Prefix(State __instance)
+		=> OnUpdating?.Invoke(null, __instance);
+
+	private static void Update_Postfix(State __instance)
 		=> OnUpdate?.Invoke(null, __instance);
 
 	internal sealed class EnumerateAllArtifactsEventArgs

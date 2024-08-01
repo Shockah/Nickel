@@ -23,8 +23,8 @@ internal class CardTraitManager
 		void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue);
 		void SetTemporaryOverride(Card card, OverridesModData overrides, bool? overrideValue);
 
-		void UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides);
-		void UpdateFieldsFromCardTraitState(Card card, OverridesModData overrides, CardTraitState cardTraitState, bool realOverrides);
+		bool UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides);
+		bool UpdateFieldsFromCardTraitStateIfNeeded(Card card, OverridesModData overrides, CardTraitState cardTraitState, bool realOverrides);
 	}
 
 	private sealed class ModdedEntry(IModManifest modOwner, string uniqueName, CardTraitConfiguration configuration)
@@ -59,9 +59,11 @@ internal class CardTraitManager
 				overrides.Temporary.Remove(this.UniqueName);
 		}
 
-		public void UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides) { }
+		public bool UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides)
+			=> false;
 
-		public void UpdateFieldsFromCardTraitState(Card card, OverridesModData overrides, CardTraitState cardTraitState, bool realOverrides) { }
+		public bool UpdateFieldsFromCardTraitStateIfNeeded(Card card, OverridesModData overrides, CardTraitState cardTraitState, bool realOverrides)
+			=> false;
 	}
 
 	private abstract class VanillaEntry(IModManifest modOwner, string dataFieldName)
@@ -103,9 +105,9 @@ internal class CardTraitManager
 				overrides.Temporary.Remove(this.UniqueName);
 		}
 
-		public abstract void UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides);
+		public abstract bool UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides);
 
-		public abstract void UpdateFieldsFromCardTraitState(Card card, OverridesModData overrides, CardTraitState cardTraitState, bool realOverrides);
+		public abstract bool UpdateFieldsFromCardTraitStateIfNeeded(Card card, OverridesModData overrides, CardTraitState cardTraitState, bool realOverrides);
 	}
 
 	private class VariablePermanenceVanillaEntry(
@@ -143,13 +145,13 @@ internal class CardTraitManager
 				overrides.Temporary[this.UniqueName] = overrideValue.Value;
 		}
 
-		public override void UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides)
+		public override bool UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides)
 		{
 			var overrideValue = this.GetOverrideValue.Value(card);
 			var overridePermanent = this.GetOverridePermanent.Value(card);
 
 			if (overrides.LastOverrideValue.GetValueOrDefault(cardOverrideValueFieldName) == overrideValue && overrides.LastOverridePermanent.GetValueOrDefault(cardOverridePermanentFieldName) == overridePermanent)
-				return;
+				return false;
 
 			if (overridePermanent)
 			{
@@ -170,17 +172,22 @@ internal class CardTraitManager
 
 			overrides.LastOverrideValue[cardOverrideValueFieldName] = overrideValue;
 			overrides.LastOverridePermanent[cardOverridePermanentFieldName] = overridePermanent;
+			return true;
 		}
 
-		public override void UpdateFieldsFromCardTraitState(Card card, OverridesModData overrides, CardTraitState cardTraitState, bool realOverrides)
+		public override bool UpdateFieldsFromCardTraitStateIfNeeded(Card card, OverridesModData overrides, CardTraitState cardTraitState, bool realOverrides)
 		{
 			var overrideValue = realOverrides ? cardTraitState.TemporaryOverride ?? cardTraitState.PermanentOverride : cardTraitState.CurrentOverride;
 			var overridePermanent = cardTraitState.TemporaryOverride is null && cardTraitState.PermanentOverride is not null;
+
+			if (overrides.LastOverrideValue.GetValueOrDefault(cardOverrideValueFieldName) == overrideValue && overrides.LastOverridePermanent.GetValueOrDefault(cardOverridePermanentFieldName) == overridePermanent)
+				return false;
 			
 			this.SetOverrideValue.Value(card, overrideValue);
 			this.SetOverridePermanent.Value(card, overridePermanent);
 			overrides.LastOverrideValue[cardOverrideValueFieldName] = overrideValue;
 			overrides.LastOverrideValue[cardOverridePermanentFieldName] = overridePermanent;
+			return true;
 		}
 	}
 
@@ -207,12 +214,12 @@ internal class CardTraitManager
 		public override void SetTemporaryOverride(Card card, OverridesModData overrides, bool? overrideValue)
 			=> this.SetPermanentOverride(card, overrides, overrideValue);
 
-		public override void UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides)
+		public override bool UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides)
 		{
 			var overrideValue = this.GetOverrideValue(card);
 
 			if (overrides.LastOverrideValue.GetValueOrDefault(nameof(Card.temporaryOverride)) == overrideValue)
-				return;
+				return false;
 			
 			if (overrideValue is null)
 				overrides.Permanent.Remove(this.UniqueName);
@@ -220,14 +227,19 @@ internal class CardTraitManager
 				overrides.Permanent[this.UniqueName] = overrideValue.Value;
 
 			overrides.LastOverrideValue[nameof(Card.temporaryOverride)] = overrideValue;
+			return true;
 		}
 
-		public override void UpdateFieldsFromCardTraitState(Card card, OverridesModData overrides, CardTraitState cardTraitState, bool realOverrides)
+		public override bool UpdateFieldsFromCardTraitStateIfNeeded(Card card, OverridesModData overrides, CardTraitState cardTraitState, bool realOverrides)
 		{
 			var overrideValue = realOverrides ? cardTraitState.TemporaryOverride ?? cardTraitState.PermanentOverride : cardTraitState.CurrentOverride;
+
+			if (overrides.LastOverrideValue.GetValueOrDefault(nameof(Card.temporaryOverride)) == overrideValue)
+				return false;
 			
 			this.SetOverrideValue(card, overrideValue);
 			overrides.LastOverrideValue[nameof(Card.temporaryOverride)] = overrideValue;
+			return true;
 		}
 	}
 
@@ -264,15 +276,15 @@ internal class CardTraitManager
 				overrides.Temporary[this.UniqueName] = overrideValue.Value;
 		}
 
-		public override void UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides)
+		public override bool UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides)
 		{
 			if (this.GetOverrideValue is null || cardOverrideValueFieldName is null)
-				return;
+				return false;
 			
 			var overrideValue = this.GetOverrideValue.Value(card);
 
 			if (overrides.LastOverrideValue.GetValueOrDefault(cardOverrideValueFieldName) == overrideValue)
-				return;
+				return false;
 
 			if (isPermanentByDefault)
 			{
@@ -292,17 +304,22 @@ internal class CardTraitManager
 			}
 
 			overrides.LastOverrideValue[cardOverrideValueFieldName] = overrideValue;
+			return true;
 		}
 
-		public override void UpdateFieldsFromCardTraitState(Card card, OverridesModData overrides, CardTraitState cardTraitState, bool realOverrides)
+		public override bool UpdateFieldsFromCardTraitStateIfNeeded(Card card, OverridesModData overrides, CardTraitState cardTraitState, bool realOverrides)
 		{
-			if (this.SetOverrideValue is null)
-				return;
+			if (this.SetOverrideValue is null || cardOverrideValueFieldName is null)
+				return false;
 			
 			var overrideValue = realOverrides ? cardTraitState.TemporaryOverride ?? cardTraitState.PermanentOverride : cardTraitState.CurrentOverride;
+
+			if (overrides.LastOverrideValue.GetValueOrDefault(cardOverrideValueFieldName) == overrideValue)
+				return false;
 			
 			this.SetOverrideValue.Value(card, overrideValue);
 			overrides.LastOverrideValue[nameof(Card.temporaryOverride)] = overrideValue;
+			return true;
 		}
 	}
 
@@ -420,6 +437,7 @@ internal class CardTraitManager
 		CardPatches.OnMidGetDataWithOverrides += this.OnMidGetDataWithOverrides;
 		CardPatches.OnCopyingWithNewId += this.OnCopyingWithNewId;
 		CombatPatches.OnReturnCardsToDeck += this.OnReturnCardsToDeck;
+		StatePatches.OnUpdating += this.OnStateUpdating;
 		StatePatches.OnUpdate += this.OnStateUpdate;
 	}
 
@@ -479,8 +497,23 @@ internal class CardTraitManager
 		}
 	}
 
-	private void OnStateUpdate(object? sender, State state)
+	private void OnStateUpdating(object? sender, State state)
 		=> this.CardTraitStateCache.Clear();
+
+	private void OnStateUpdate(object? sender, State state)
+	{
+		foreach (var (card, cardTraitStates) in this.CardTraitStateCache)
+		{
+			var overrides = this.ModDataManager.ObtainModData<OverridesModData>(this.ModManagerModManifest, card, "CustomTraitOverrides");
+			foreach (var (trait, cardTraitState) in cardTraitStates)
+			{
+				if (trait is not IReadWriteCardTraitEntry rwTrait)
+					throw new NotImplementedException($"Internal error: trait {trait.UniqueName} is supposed to implement the private interface {nameof(IReadWriteCardTraitEntry)}");
+				rwTrait.UpdateOverridesModDataFromFieldsIfNeeded(card, overrides);
+				rwTrait.UpdateFieldsFromCardTraitStateIfNeeded(card, overrides, cardTraitState, realOverrides: false);
+			}
+		}
+	}
 
 	public ICardTraitEntry? LookupByUniqueName(string uniqueName)
 	{
@@ -550,16 +583,6 @@ internal class CardTraitManager
 			states = this.CreateCardTraitStates(state, card);
 			this.CardTraitStateCache[card] = states;
 		}
-		
-		var overrides = this.ModDataManager.ObtainModData<OverridesModData>(this.ModManagerModManifest, card, "CustomTraitOverrides");
-		foreach (var (trait, cardTraitState) in states)
-		{
-			if (trait is not IReadWriteCardTraitEntry rwTrait)
-				throw new NotImplementedException($"Internal error: trait {trait.UniqueName} is supposed to implement the private interface {nameof(IReadWriteCardTraitEntry)}");
-			rwTrait.UpdateOverridesModDataFromFieldsIfNeeded(card, overrides);
-			rwTrait.UpdateFieldsFromCardTraitState(card, overrides, cardTraitState, realOverrides: false);
-		}
-		
 		return states;
 	}
 
@@ -609,6 +632,8 @@ internal class CardTraitManager
 		if (!wasCurrentlyCreatingCardTraitStates)
 			this.CurrentlyCreatingCardTraitStates.Remove(card);
 
+		foreach (var (trait, traitState) in finalDynamicOverridesEventArgs.TraitStates)
+			((IReadWriteCardTraitEntry)trait).UpdateFieldsFromCardTraitStateIfNeeded(card, overrides, traitState, realOverrides: false);
 		return finalDynamicOverridesEventArgs.TraitStates;
 
 		void HandleTrait(ICardTraitEntry trait)
