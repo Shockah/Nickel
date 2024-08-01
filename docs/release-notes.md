@@ -6,6 +6,7 @@
 
 ### For players:
 * Nickel now loads its pre-installed mods from the `InternalModLibrary` folder. These mods take priority over any duplicates found in the `ModLibrary` folder.
+* The Logbook got replaced with a less pretty, but at least usable alternative.
 * The tooltip scrolling feature will now only lock up other UI scrolling if the tooltip does not fit at once on screen.
 * Replaced character/ship scroll buttons with properly shaded ones.
 * The game will no longer crash when trying to display a run summary containing a ship or characters that are not currently loaded.
