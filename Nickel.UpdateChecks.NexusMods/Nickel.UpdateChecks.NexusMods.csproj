@@ -1,15 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\Configuration.props" />
-	<Import Project="..\FindModLoaderPath.targets" />
+	<Import Project="..\Configuration.InternalMod.props" />
 	<PropertyGroup>
 		<RootNamespace>Nickel.UpdateChecks.NexusMods</RootNamespace>
 		<IncludedModProjectPaths>i18n</IncludedModProjectPaths>
-		<Version>$(NickelVersion)</Version>
-		<ModDeployModsPath>$(ModLoaderPath)\InternalModLibrary</ModDeployModsPath>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Nickel.ModBuildConfig" Version="1.2.1-alpha3" />
-		<PackageReference Include="EnumByNameSourceGenerator" Version="1.1.1" PrivateAssets="All" ExcludeAssets="runtime" />
 		<ProjectReference Include="..\Nickel.UpdateChecks\Nickel.UpdateChecks.csproj" Private="False" />
 	</ItemGroup>
 </Project>

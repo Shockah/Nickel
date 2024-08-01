@@ -1,0 +1,12 @@
+<Project>
+	<Import Project="Configuration.props" />
+	<Import Project="FindModLoaderPath.targets" />
+	<PropertyGroup>
+		<Version>$(NickelVersion)</Version>
+		<ModDeployModsPath>$(ModLoaderPath)\InternalModLibrary</ModDeployModsPath>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Nickel.ModBuildConfig" Version="1.2.1" />
+		<PackageReference Include="EnumByNameSourceGenerator" Version="1.1.1" PrivateAssets="All" ExcludeAssets="runtime" />
+	</ItemGroup>
+</Project>

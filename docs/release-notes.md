@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.4.0
+Released 1 August 2024.
 
 ### For players:
 * Nickel now loads its pre-installed mods from the `InternalModLibrary` folder. These mods take priority over any duplicates found in the `ModLibrary` folder.
