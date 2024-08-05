@@ -2,6 +2,14 @@
 
 # Release notes
 
+## Upcoming release
+
+### For players:
+* General optimizations.
+
+### For developers:
+* Updated the Pintail library, which changes how enums are proxied, improving performance and allowing flag enums to be used.
+
 ## 1.4.0
 Released 1 August 2024.
 
