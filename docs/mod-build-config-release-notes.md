@@ -5,6 +5,7 @@
 ## Upcoming release
 
 * Fixed `Nickel.Legacy` reference for legacy mods.
+* Downgraded the `Microsoft.CodeAnalysis.CSharp.Workspaces` package reference in hopes of being more compatible on various machines and setups.
 
 ## 1.2.1
 Released 1 August 2024.

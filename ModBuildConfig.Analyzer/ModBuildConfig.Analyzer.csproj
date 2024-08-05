@@ -10,7 +10,7 @@
 	</PropertyGroup>
 	<Import Project="Configuration.props.user" Condition="Exists('Configuration.props.user')" />
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.10.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.9.2" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="$(OutputPath)\$(AssemblyName).dll" PackagePath="analyzers\dotnet\cs" Pack="True" Visible="False" />
