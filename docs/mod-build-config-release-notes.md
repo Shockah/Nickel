@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed `Nickel.Legacy` reference for legacy mods.
+
 ## 1.2.1
 Released 1 August 2024.
 

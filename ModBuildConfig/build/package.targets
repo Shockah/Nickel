@@ -65,7 +65,7 @@
 		<EnableDllExtract Condition="'$(EnableDllExtract)' == '' And Exists('$(GameExePath)')">true</EnableDllExtract>
 		<EnableDllExtract Condition="'$(EnableDllExtract)' == '' And !Exists('$(GameDllPath)')">true</EnableDllExtract>
 		<EnableDllExtract Condition="'$(EnableDllExtract)' == ''">false</EnableDllExtract>
-		<LegacyModPath Condition="'$(LegacyModPath)' == ''">$(ModDeployModsPath)\Nickel.Legacy</LegacyModPath>
+		<LegacyModPath Condition="'$(LegacyModPath)' == ''">$(ModLoaderPath)\InternalModLibrary\Nickel.Legacy</LegacyModPath>
 	</PropertyGroup>
 
 	<Target Name="ValidateProperties" BeforeTargets="CoreCompile">
