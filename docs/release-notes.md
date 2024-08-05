@@ -8,6 +8,8 @@
 * General optimizations.
 
 ### For developers:
+* `IAssemblyDefinitionEditor.EditAssemblyDefinition` now needs to return a `bool` reflecting whether the editor actually edited the assembly.
+* Incorporated a new [Mitosis](https://github.com/Nanoray-pl/Mitosis) library and replaced `Mutil.DeepCopy`'s implementation with one utilizing Mitosis, significantly improving copying performance.
 * Updated the Pintail library, which changes how enums are proxied, improving performance and allowing flag enums to be used.
 
 ## 1.4.0

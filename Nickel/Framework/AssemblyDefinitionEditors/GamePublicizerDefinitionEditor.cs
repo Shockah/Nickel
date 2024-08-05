@@ -4,22 +4,29 @@ using Newtonsoft.Json;
 
 namespace Nickel;
 
-internal sealed class CobaltCorePublisher : IAssemblyDefinitionEditor
+internal sealed class GamePublicizerDefinitionEditor : IAssemblyDefinitionEditor
 {
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName == "CobaltCore.dll";
 
-	public void EditAssemblyDefinition(AssemblyDefinition definition)
+	public bool EditAssemblyDefinition(AssemblyDefinition definition)
 	{
 		var jsonIgnoreCtor = definition.MainModule.ImportReference(typeof(JsonIgnoreAttribute).GetConstructor([]));
+		var didAnything = false;
 		foreach (var type in definition.MainModule.Types)
 		{
-			type.IsPublic = true;
-			PublishContents(type, jsonIgnoreCtor);
+			if (!type.IsPublic)
+			{
+				didAnything = true;
+				type.IsPublic = true;
+			}
+			
+			didAnything |= PublishContents(type, jsonIgnoreCtor);
 		}
+		return didAnything;
 	}
 
-	private static void PublishContents(TypeDefinition type, MethodReference jsonIgnoreCtor)
+	private static bool PublishContents(TypeDefinition type, MethodReference jsonIgnoreCtor)
 	{
 		/* Blindly setting everything to true would result in the JSON-serialization process
 		 * (used for save games and stat saving) saving a _bunch_ of data that it isn't supposed to.
@@ -27,10 +34,14 @@ internal sealed class CobaltCorePublisher : IAssemblyDefinitionEditor
 		 * To counteract this, we add `[JsonIgnore]` as appropriate.
 		 */
 
+		var didAnything = false;
+
 		foreach (var field in type.Fields)
 		{
 			if (field.IsPublic)
 				continue;
+
+			didAnything = true;
 			field.CustomAttributes.Add(new CustomAttribute(jsonIgnoreCtor));
 			field.IsPublic = true;
 		}
@@ -43,12 +54,25 @@ internal sealed class CobaltCorePublisher : IAssemblyDefinitionEditor
 		}
 
 		foreach (var method in type.Methods)
-			method.IsPublic = true;
+		{
+			if (!method.IsPublic)
+			{
+				didAnything = true;
+				method.IsPublic = true;
+			}
+		}
 
 		foreach (var nestedType in type.NestedTypes)
 		{
-			nestedType.IsNestedPublic = true;
-			PublishContents(nestedType, jsonIgnoreCtor);
+			if (!nestedType.IsNestedPublic)
+			{
+				didAnything = true;
+				nestedType.IsNestedPublic = true;
+			}
+			
+			didAnything |= PublishContents(nestedType, jsonIgnoreCtor);
 		}
+
+		return didAnything;
 	}
 }

@@ -177,7 +177,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			new PackageAssemblyResolver(launchArguments.Vanilla ? [] : instance.ModManager.ResolvedMods)
 		);
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor());
-		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new CobaltCorePublisher());
+		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GamePublicizerDefinitionEditor());
+		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new DeepCopyViaMitosisDefinitionEditor());
 
 		Harmony? harmony = null;
 		if (!launchArguments.Vanilla)

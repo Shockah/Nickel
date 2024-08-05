@@ -10,7 +10,7 @@ internal sealed class NoInliningDefinitionEditor : IAssemblyDefinitionEditor
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName == "CobaltCore.dll";
 
-	public void EditAssemblyDefinition(AssemblyDefinition definition)
+	public bool EditAssemblyDefinition(AssemblyDefinition definition)
 	{
 		var methodImplAttributeCtor = definition.MainModule.ImportReference(typeof(MethodImplAttribute).GetConstructor([typeof(MethodImplOptions)]));
 		var methodImplOptionsTypeReference = definition.MainModule.ImportReference(typeof(MethodImplOptions));
@@ -23,6 +23,8 @@ internal sealed class NoInliningDefinitionEditor : IAssemblyDefinitionEditor
 		AddAttribute(definition.MainModule.GetType("CardAction").Methods.Single(m => m.Name == "Key"));
 		AddAttribute(definition.MainModule.GetType("FightModifier").Methods.Single(m => m.Name == "Key"));
 		AddAttribute(definition.MainModule.GetType("MapBase").Methods.Single(m => m.Name == "Key"));
+
+		return true;
 
 		void AddAttribute(MethodDefinition methodDefinition)
 		{

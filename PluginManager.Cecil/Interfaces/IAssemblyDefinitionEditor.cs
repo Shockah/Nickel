@@ -19,5 +19,6 @@ public interface IAssemblyDefinitionEditor
 	/// Edit the assembly definition.
 	/// </summary>
 	/// <param name="definition">The assembly definition.</param>
-	void EditAssemblyDefinition(AssemblyDefinition definition);
+	/// <returns>Whether the assembly was actually edited.</returns>
+	bool EditAssemblyDefinition(AssemblyDefinition definition);
 }

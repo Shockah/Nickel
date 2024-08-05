@@ -26,7 +26,7 @@ internal sealed class ModManager
 	private readonly ILoggerFactory LoggerFactory;
 	internal readonly ILogger Logger;
 	internal readonly ModEventManager EventManager;
-	private readonly ModDataManager ModDataManager;
+	internal readonly ModDataManager ModDataManager;
 	private readonly ModStorageManager ModStorageManager;
 	private readonly EnumCasePool EnumCasePool;
 	internal readonly DelayedHarmonyManager DelayedHarmonyManager;

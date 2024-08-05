@@ -29,8 +29,13 @@ public sealed class ExtendableAssemblyDefinitionEditor(Func<IAssemblyResolver> c
 			ReadSymbols = symbolsStream is not null,
 			SymbolStream = symbolsStream
 		});
+
+		var didAnything = false;
 		foreach (var definitionEditor in interestedEditors)
-			definitionEditor.EditAssemblyDefinition(definition);
+			didAnything |= definitionEditor.EditAssemblyDefinition(definition);
+
+		if (!didAnything)
+			return;
 
 		var newAssemblyStream = new MemoryStream();
 		var newSymbolsStream = symbolsStream is null ? null : new MemoryStream();

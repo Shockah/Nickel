@@ -1,3 +1,4 @@
+using Nanoray.Mitosis;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 namespace Nickel;
 
-internal sealed class ModDataManager
+internal sealed class ModDataManager : IReferenceCloneListener
 {
 	internal const string ModDataJsonKey = "ModData";
 
@@ -236,4 +237,7 @@ internal sealed class ModDataManager
 				targetModObjectData[key] = DeepCopy(value);
 		}
 	}
+
+	public void OnClone<T>(ICloneEngine engine, T source, T destination) where T : class
+		=> this.CopyAllModData(source, destination);
 }
