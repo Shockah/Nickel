@@ -120,7 +120,7 @@ internal sealed class DeckManager
 	{
 		if (this.DeckToEntry.TryGetValue(deck, out var entry))
 			return entry;
-		if (!Enum.GetValues<Deck>().Contains(deck))
+		if (!Enum.IsDefined(deck))
 			return null;
 
 		return new Entry(

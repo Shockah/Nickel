@@ -135,7 +135,7 @@ internal sealed class StatusManager
 	{
 		if (this.StatusToEntry.TryGetValue(status, out var entry))
 			return entry;
-		if (!Enum.GetValues<Status>().Contains(status))
+		if (!Enum.IsDefined(status))
 			return null;
 
 		return new Entry(
