@@ -30,6 +30,9 @@ internal static class LogbookReplacement
 
 	private static bool LogBook_Render_Prefix(LogBook __instance, G g)
 	{
+		if (NewRunOptions.allChars.All(deck => ModEntry.Instance.Helper.Content.Decks.LookupByDeck(deck)?.ModOwner == ModEntry.Instance.Helper.ModRegistry.VanillaModManifest))
+			return true;
+		
 		var selectedCharacters = ModEntry.Instance.Helper.ModData.ObtainModData<List<Deck>>(__instance, "SelectedCharacters");
 		var runCounts = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<Deck, int>>(__instance, "RunCounts");
 		var winCounts = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<Deck, int>>(__instance, "WinCounts");
@@ -316,6 +319,8 @@ internal static class LogbookReplacement
 		if (__result)
 			return;
 		if (__instance is not LogBook)
+			return;
+		if (NewRunOptions.allChars.All(deck => ModEntry.Instance.Helper.Content.Decks.LookupByDeck(deck)?.ModOwner == ModEntry.Instance.Helper.ModRegistry.VanillaModManifest))
 			return;
 		
 		var subroute = ModEntry.Instance.Helper.ModData.GetOptionalModData<Route>(__instance, "Subroute");

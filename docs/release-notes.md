@@ -5,6 +5,7 @@
 ## Upcoming release
 
 ### For players:
+* The Logbook replacement now only activates if there are any modded characters installed.
 * Fixed the Logbook replacement not showing a lot of the combo data.
 * General optimizations.
 
