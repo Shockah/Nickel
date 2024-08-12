@@ -118,8 +118,14 @@ internal static class LogbookReplacement
 		{
 			if (!highestWins.TryGetValue((first, second, third), out var value))
 			{
-				var comboKeyPrefix = $"{BigStats.MakeComboKeyJustChars([first.Key(), second.Key(), third.Key()])}|";
-				value = g.state.bigStats.combos.FirstOrNull(kvp => kvp.Key.StartsWith(comboKeyPrefix))?.Value.maxDifficultyWin;
+				value = g.state.bigStats.combos
+					.Where(kvp => kvp.Value.maxDifficultyWin is not null)
+					.FirstOrNull(kvp =>
+					{
+						if (BigStats.ParseComboKey(kvp.Key) is not { } parsedKey)
+							return false;
+						return parsedKey.decks.Contains(first) && parsedKey.decks.Contains(second) && parsedKey.decks.Contains(third);
+					})?.Value.maxDifficultyWin;
 				highestWins[(first, second, third)] = value;
 			}
 			return value;

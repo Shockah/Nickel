@@ -5,6 +5,7 @@
 ## Upcoming release
 
 ### For players:
+* Fixed the Logbook replacement not showing a lot of the combo data.
 * General optimizations.
 
 ### For developers:
