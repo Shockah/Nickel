@@ -68,10 +68,14 @@
 		"button": "IMPORT"
 	},
 	"starterDeckPreview": {
-		"setting": {
-			"name": "Preview starter deck"
+		"deck": {
+			"settingName": "Preview starter deck",
+			"header": "Starting Deck:",
+			"exeCard": "A random CAT EXE card, like this one:"
 		},
-		"startingDeck": "Starting Deck:",
-		"exeCard": "A random CAT EXE card, like this one:"
+		"characterCards": {
+			"settingName": "Starter cards in tooltip",
+			"header": "Starting cards:"
+		}
 	}
 }

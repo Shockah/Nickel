@@ -5,6 +5,7 @@
 ## Upcoming release
 
 ### For players:
+* Added starting cards to character tooltips on the new run screen.
 * The Logbook replacement now only activates if there are any modded characters installed.
 * Fixed the Logbook replacement not showing a lot of the combo data.
 * General optimizations.

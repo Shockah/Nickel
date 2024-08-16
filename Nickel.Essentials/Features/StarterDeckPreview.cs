@@ -12,6 +12,9 @@ internal sealed partial class ProfileSettings
 {
 	[JsonProperty]
 	public bool StarterDeckPreview = true;
+	
+	[JsonProperty]
+	public bool StarterCardsTooltip = true;
 }
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
@@ -42,7 +45,8 @@ internal static class StarterDeckPreview
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Character), nameof(Character.Render))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Character)}.{nameof(Character.Render)}`"),
-			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Character_Render_Prefix))
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Character_Render_Prefix)),
+			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Character_Render_Postfix)), priority: Priority.Last)
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Artifact), nameof(Artifact.RenderArtifactList))
@@ -52,11 +56,18 @@ internal static class StarterDeckPreview
 	}
 
 	public static IModSettingsApi.IModSetting MakeSettings(IModSettingsApi api)
-		=> api.MakeCheckbox(
-			title: () => ModEntry.Instance.Localizations.Localize(["starterDeckPreview", "setting", "name"]),
-			getter: () => ModEntry.Instance.Settings.ProfileBased.Current.StarterDeckPreview,
-			setter: (_, _, value) => ModEntry.Instance.Settings.ProfileBased.Current.StarterDeckPreview = value
-		);
+		=> api.MakeList([
+			api.MakeCheckbox(
+				title: () => ModEntry.Instance.Localizations.Localize(["starterDeckPreview", "deck", "settingName"]),
+				getter: () => ModEntry.Instance.Settings.ProfileBased.Current.StarterDeckPreview,
+				setter: (_, _, value) => ModEntry.Instance.Settings.ProfileBased.Current.StarterDeckPreview = value
+			),
+			api.MakeCheckbox(
+				title: () => ModEntry.Instance.Localizations.Localize(["starterDeckPreview", "characterCards", "settingName"]),
+				getter: () => ModEntry.Instance.Settings.ProfileBased.Current.StarterCardsTooltip,
+				setter: (_, _, value) => ModEntry.Instance.Settings.ProfileBased.Current.StarterCardsTooltip = value
+			)
+		]);
 
 	private static void UpdateStateBasedData(G g)
 	{
@@ -161,7 +172,7 @@ internal static class StarterDeckPreview
 		if (!g.state.runConfig.IsValid(g))
 			return;
 
-		var textRect = Draw.Text(ModEntry.Instance.Localizations.Localize(["starterDeckPreview", "startingDeck"]), 96, 258, color: Colors.textBold);
+		var textRect = Draw.Text(ModEntry.Instance.Localizations.Localize(["starterDeckPreview", "deck", "header"]), 96, 258, color: Colors.textBold);
 
 		for (var i = 0; i < LastStarterCards.Count; i++)
 		{
@@ -186,7 +197,7 @@ internal static class StarterDeckPreview
 			{
 				var tooltipPosition = box.rect.xy + new Vec(10, 10);
 				if (isNonCatExe)
-					g.tooltips.Add(tooltipPosition, ModEntry.Instance.Localizations.Localize(["starterDeckPreview", "exeCard"]));
+					g.tooltips.Add(tooltipPosition, ModEntry.Instance.Localizations.Localize(["starterDeckPreview", "deck", "exeCard"]));
 				g.tooltips.Add(tooltipPosition, new TTCard { card = card });
 			}
 
@@ -208,6 +219,34 @@ internal static class StarterDeckPreview
 		LastRenderedCharacter = __instance;
 
 		__instance.artifacts.AddRange(LastStarterArtifacts.Where(a => a.GetMeta().owner == deck));
+	}
+	
+	private static void Character_Render_Postfix(Character __instance, G g, bool mini, bool renderLocked, bool canFocus, bool showTooltips)
+	{
+		if (!ModEntry.Instance.Settings.ProfileBased.Current.StarterCardsTooltip)
+			return;
+		if (!showTooltips || !canFocus || renderLocked || __instance.deckType is not { } deck)
+			return;
+		if (g.metaRoute is not null || !g.state.IsOutsideRun())
+			return;
+
+		var key = new UIKey(mini ? StableUK.char_mini : StableUK.character, (int)deck, __instance.type);
+		if (g.boxes.FirstOrDefault(b => b.key == key) is not { } box)
+			return;
+		if (!box.IsHover())
+			return;
+
+		var starters = ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(g.state, deck) == true
+			? (ModEntry.Instance.MoreDifficultiesApi!.GetAltStarters(deck) ?? new())
+			: (StarterDeck.starterSets.TryGetValue(deck, out var vanillaStarterDeck) ? vanillaStarterDeck : new());
+
+		if (starters.cards.Count == 0)
+			return;
+
+		g.tooltips.Add(g.tooltips.pos, new TTDivider());
+		g.tooltips.AddText(g.tooltips.pos, $"<c=textBold>{ModEntry.Instance.Localizations.Localize(["starterDeckPreview", "characterCards", "header"])}</c>");
+		foreach (var card in starters.cards)
+			g.tooltips.Add(g.tooltips.pos, new TTCard { card = card, showCardTraitTooltips = false });
 	}
 
 	private static void Artifact_RenderArtifactList_Prefix(G g, ref Vec offset)
