@@ -19,7 +19,6 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 	private IAssemblyPluginLoaderLoadContextProvider<TPluginManifest> LoadContextProvider { get; }
 	private IAssemblyPluginLoaderPartAssembler<TPluginManifest, TPluginPart, TPlugin> PartAssembler { get; }
 	private IAssemblyPluginLoaderParameterInjector<TPluginManifest>? ParameterInjector { get; }
-	private IAssemblyEditor? AssemblyEditor { get; }
 
 	/// <summary>
 	/// Creates a new <see cref="AssemblyPluginLoader{TPluginManifest,TPluginPart,TPlugin}"/>.
@@ -28,20 +27,17 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 	/// <param name="loadContextProvider">A load context provider.</param>
 	/// <param name="partAssembler">A part assembler.</param>
 	/// <param name="parameterInjector">An optional parameter injector.</param>
-	/// <param name="assemblyEditor">An optional assembly editor.</param>
 	public AssemblyPluginLoader(
 		Func<IPluginPackage<TPluginManifest>, OneOf<AssemblyPluginLoaderRequiredPluginData, Error<string>>> requiredPluginDataProvider,
 		IAssemblyPluginLoaderLoadContextProvider<TPluginManifest> loadContextProvider,
 		IAssemblyPluginLoaderPartAssembler<TPluginManifest, TPluginPart, TPlugin> partAssembler,
-		IAssemblyPluginLoaderParameterInjector<TPluginManifest>? parameterInjector,
-		IAssemblyEditor? assemblyEditor
+		IAssemblyPluginLoaderParameterInjector<TPluginManifest>? parameterInjector
 	)
 	{
 		this.RequiredPluginDataProvider = requiredPluginDataProvider;
 		this.LoadContextProvider = loadContextProvider;
 		this.PartAssembler = partAssembler;
 		this.ParameterInjector = parameterInjector;
-		this.AssemblyEditor = assemblyEditor;
 	}
 
 	/// <inheritdoc/>
@@ -60,13 +56,6 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 		Assembly assembly;
 		try
 		{
-			var assemblyFile = package.PackageRoot.GetRelativeFile(requiredPluginData.EntryPointAssembly);
-			using var originalStream = assemblyFile.OpenRead();
-			var refStream = originalStream;
-
-			this.AssemblyEditor?.EditAssemblyStream(assemblyFile.Name, ref refStream);
-			using var stream = refStream;
-
 			var assemblyName = requiredPluginData.EntryPointAssembly;
 			if (assemblyName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
 				assemblyName = assemblyName[..^4];
@@ -131,7 +120,7 @@ public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> 
 			var constructor = potentialConstructors.First(c => c.IsValid);
 
 			var parameters = constructor.Parameters.Select(p => p?.Value!).ToArray();
-			var rawPluginPart = constructor.Constructor.Invoke(parameters: parameters);
+			var rawPluginPart = constructor.Constructor.Invoke(BindingFlags.DoNotWrapExceptions, null, parameters, null);
 			if (rawPluginPart is not TPluginPart pluginPart)
 				return new Error<string>($"Could not construct a {typeof(TPluginPart)} subclass from the type {pluginPartType} in assembly {assembly} in package {package}.");
 			pluginParts.Add(pluginPart);

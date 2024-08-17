@@ -6,11 +6,10 @@ using System.IO;
 
 namespace Nickel;
 
-internal class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest>> packages) : IAssemblyResolver
+internal sealed class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest>> packages) : IAssemblyResolver
 {
 	private readonly Dictionary<string, AssemblyDefinition> Cache = [];
 	private readonly List<Stream> OpenStreams = [];
-	private readonly DefaultAssemblyResolver FallbackResolver = new();
 
 	public void Dispose()
 	{
@@ -18,7 +17,6 @@ internal class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest
 			assembly.Dispose();
 		foreach (var stream in this.OpenStreams)
 			stream.Dispose();
-		this.FallbackResolver.Dispose();
 	}
 
 	public AssemblyDefinition Resolve(AssemblyNameReference name)
@@ -31,9 +29,8 @@ internal class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest
 	public AssemblyDefinition Resolve(AssemblyNameReference name, ReaderParameters parameters)
 	{
 		parameters.AssemblyResolver ??= this;
-		var stream = this.GetStreamForAssembly(name);
-		if (stream is null)
-			return this.FallbackResolver.Resolve(name, parameters);
+		if (this.GetStreamForAssembly(name) is not { } stream)
+			throw new AssemblyResolutionException(name);
 
 		try
 		{

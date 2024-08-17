@@ -10,7 +10,8 @@ using System.Runtime.Loader;
 namespace Nickel;
 
 internal sealed class AssemblyModLoadContextProvider(
-	AssemblyLoadContext? fallbackContext
+	AssemblyLoadContext? fallbackContext,
+	IAssemblyEditor? assemblyEditor
 ) : IAssemblyPluginLoaderLoadContextProvider<IAssemblyModManifest>
 {
 	private readonly ConditionalWeakTable<IPluginPackage<IAssemblyModManifest>, WeakReference<AssemblyLoadContext>> ContextCache = [];
@@ -21,13 +22,14 @@ internal sealed class AssemblyModLoadContextProvider(
 		if (this.ContextCache.TryGetValue(package, out var weakContext) && weakContext.TryGetTarget(out var context))
 			return context;
 
-		context = new CustomContext(fallbackContext, this.AssemblyNameToSharedAssembly, package);
+		context = new CustomContext(fallbackContext, assemblyEditor, this.AssemblyNameToSharedAssembly, package);
 		this.ContextCache.AddOrUpdate(package, new WeakReference<AssemblyLoadContext>(context));
 		return context;
 	}
 
 	private sealed class CustomContext(
 		AssemblyLoadContext? fallbackContext,
+		IAssemblyEditor? assemblyEditor,
 		Dictionary<string, Assembly> assemblyNameToSharedAssembly,
 		IPluginPackage<IAssemblyModManifest> package
 	) : AssemblyLoadContext
@@ -58,8 +60,11 @@ internal sealed class AssemblyModLoadContextProvider(
 			var file = package.PackageRoot.GetRelativeFile($"{assemblyNameString}.dll");
 			if (file.Exists)
 			{
-				using var assemblyStream = file.OpenRead();
-				var assembly = this.LoadFromStream(assemblyStream);
+				using var originalAssemblyStream = file.OpenRead();
+				var refAssemblyStream = originalAssemblyStream;
+				assemblyEditor?.EditAssemblyStream(assemblyName.Name ?? assemblyName.FullName, ref refAssemblyStream);
+				using var modifiedAssemblyStream = refAssemblyStream;
+				var assembly = this.LoadFromStream(modifiedAssemblyStream);
 
 				if (this.ShouldShare(assemblyNameString))
 					assemblyNameToSharedAssembly[assembly.GetName().Name ?? assembly.GetName().FullName] = assembly;

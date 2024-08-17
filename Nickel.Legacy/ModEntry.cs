@@ -34,8 +34,7 @@ public sealed class ModEntry : Mod
 		Func<IModManifest, IModHelper> byManifestHelperProvider,
 		Func<IModManifest, ILogger> loggerProvider,
 		IAssemblyPluginLoaderLoadContextProvider<IAssemblyModManifest> loadContextProvider,
-		IAssemblyPluginLoaderParameterInjector<IModManifest> assemblyPluginLoaderParameterInjector,
-		IAssemblyEditor assemblyEditor
+		IAssemblyPluginLoaderParameterInjector<IModManifest> assemblyPluginLoaderParameterInjector
 	)
 	{
 		this.Database = new(byManifestHelperProvider);
@@ -67,8 +66,7 @@ public sealed class ModEntry : Mod
 								loggerProvider: loggerProvider,
 								this.Database
 							),
-							parameterInjector: assemblyPluginLoaderParameterInjector,
-							assemblyEditor: assemblyEditor
+							parameterInjector: assemblyPluginLoaderParameterInjector
 						),
 						converter: m => m.AsAssemblyModManifest()
 					),

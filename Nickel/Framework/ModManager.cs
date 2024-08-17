@@ -98,7 +98,8 @@ internal sealed class ModManager
 		});
 
 		var loadContextProvider = new AssemblyModLoadContextProvider(
-			AssemblyLoadContext.GetLoadContext(this.GetType().Assembly) ?? AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default
+			AssemblyLoadContext.GetLoadContext(this.GetType().Assembly) ?? AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default,
+			extendableAssemblyDefinitionEditor
 		);
 
 		var assemblyPluginLoaderParameterInjector = new ExtendableAssemblyPluginLoaderParameterInjector<IModManifest>();
@@ -156,8 +157,7 @@ internal sealed class ModManager
 						},
 						loadContextProvider: loadContextProvider,
 						partAssembler: new SingleAssemblyPluginPartAssembler<IAssemblyModManifest, Mod>(),
-						parameterInjector: assemblyPluginLoaderParameterInjector,
-						assemblyEditor: extendableAssemblyDefinitionEditor
+						parameterInjector: assemblyPluginLoaderParameterInjector
 					),
 					converter: m => m.AsAssemblyModManifest()
 				),

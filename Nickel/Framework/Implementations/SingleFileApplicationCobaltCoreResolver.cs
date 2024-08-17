@@ -1,6 +1,7 @@
 using OneOf;
 using OneOf.Types;
 using SingleFileExtractor.Core;
+using System;
 using System.IO;
 using System.Linq;
 
@@ -24,7 +25,7 @@ internal sealed class SingleFileApplicationCobaltCoreResolver : ICobaltCoreResol
 		if (!this.ExePath.Exists)
 			return new Error<string>($"The file `{this.ExePath.FullName}` does not exist.");
 
-		ExecutableReader reader = new(this.ExePath.FullName);
+		var reader = new ExecutableReader(this.ExePath.FullName);
 		if (!reader.IsSingleFile)
 			return new Error<string>($"The file at `{this.ExePath.FullName}` is not a single file executable.");
 		if (!reader.IsSupported)
@@ -35,18 +36,25 @@ internal sealed class SingleFileApplicationCobaltCoreResolver : ICobaltCoreResol
 			return new Error<string>($"The single-file application at `{this.ExePath.FullName}` does not contain a `{CobaltCoreResource}` resource.");
 
 		var otherDlls = reader.Bundle.Files.Where(e => e.RelativePath.EndsWith(".dll") && e.RelativePath != CobaltCoreResource).ToHashSet();
-		var gameAssemblyDataStream = cobaltCoreEntry.AsStream().ToMemoryStream();
-		var gamePdbDataStream = this.PdbPath?.Exists == true ? this.PdbPath.OpenRead().ToMemoryStream() : null;
-		var otherDllDataStreams = otherDlls.ToDictionary(e => e.RelativePath, e => (Stream)e.AsStream().ToMemoryStream());
+		var gameAssemblyData = cobaltCoreEntry.AsStream().ToMemoryStream().GetBuffer();
+		var gameSymbolsData = this.PdbPath?.Exists == true ? this.PdbPath.OpenRead().ToMemoryStream().GetBuffer() : null;
+		var otherDllDataStreamProviders = otherDlls.ToDictionary(
+			e => e.RelativePath,
+			Func<Stream> (e) =>
+			{
+				var data = e.AsStream().ToMemoryStream().GetBuffer();
+				return () => new MemoryStream(data);
+			}
+		);
 		foreach (var file in this.ExePath.Directory!.GetFiles("*.dll", SearchOption.TopDirectoryOnly).Where(f => f.Name != CobaltCoreResource))
-			otherDllDataStreams[file.Name] = file.OpenRead().ToMemoryStream();
+			otherDllDataStreamProviders[file.Name] = () => file.OpenRead();
 
 		return new CobaltCoreResolveResult
 		{
 			ExePath = this.ExePath,
-			GameAssemblyDataStream = gameAssemblyDataStream,
-			GamePdbDataStream = gamePdbDataStream,
-			OtherDllDataStreams = otherDllDataStreams,
+			GameAssemblyDataStreamProvider = () => new MemoryStream(gameAssemblyData),
+			GameSymbolsDataStreamProvider = gameSymbolsData is null ? null : () => new MemoryStream(gameSymbolsData),
+			OtherDllDataStreamProviders = otherDllDataStreamProviders,
 			WorkingDirectory = this.ExePath.Directory!
 		};
 	}

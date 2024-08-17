@@ -23,15 +23,15 @@ internal sealed class CobaltCoreHandler
 		this.Logger.LogInformation("Loading game assembly...");
 		this.ResolveAssembly(
 			name: "CobaltCore.dll",
-			assemblyStream: resolveResult.GameAssemblyDataStream,
-			symbolsStream: resolveResult.GamePdbDataStream
+			assemblyStream: resolveResult.GameAssemblyDataStreamProvider(),
+			symbolsStream: resolveResult.GameSymbolsDataStreamProvider?.Invoke()
 		);
 
 		this.Logger.LogInformation("Loading other assemblies...");
-		foreach (var (name, stream) in resolveResult.OtherDllDataStreams)
+		foreach (var (name, streamProvider) in resolveResult.OtherDllDataStreamProviders)
 		{
 			this.Logger.LogDebug("Trying to load (potential) assembly {AssemblyName}...", name);
-			this.ResolveAssembly(name, stream);
+			this.ResolveAssembly(name, streamProvider());
 		}
 
 		return ContinueGameSetupAfterResolvingAssemblies(resolveResult);
@@ -56,8 +56,15 @@ internal sealed class CobaltCoreHandler
 		this.AssemblyEditor?.EditAssemblyStream(name, ref assemblyStream, ref symbolsStream);
 		AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
 		{
-			if ($"{assemblyName.Name ?? assemblyName.FullName}.dll" == name)
-				return context.LoadFromStream(assemblyStream, symbolsStream);
+			try
+			{
+				if ($"{assemblyName.Name ?? assemblyName.FullName}.dll" == name)
+					return context.LoadFromStream(assemblyStream, symbolsStream);
+			}
+			catch
+			{
+				// ignored
+			}
 			return null;
 		};
 	}
