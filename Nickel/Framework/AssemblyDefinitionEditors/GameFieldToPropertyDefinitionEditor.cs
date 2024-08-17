@@ -29,21 +29,21 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 		
 		var didAnything = false;
 		foreach (var type in module.Types)
-			didAnything |= this.HandleType(type, module.AssemblyResolver);
+			didAnything |= this.HandleType(type);
 		return didAnything;
 	}
 
-	private bool HandleType(TypeDefinition type, IAssemblyResolver assemblyResolver)
+	private bool HandleType(TypeDefinition type)
 	{
 		var didAnything = false;
 		foreach (var nestedType in type.NestedTypes)
-			didAnything |= this.HandleType(nestedType, assemblyResolver);
+			didAnything |= this.HandleType(nestedType);
 		foreach (var method in type.Methods)
-			didAnything |= this.HandleMethod(method, assemblyResolver);
+			didAnything |= this.HandleMethod(method);
 		return didAnything;
 	}
 
-	private bool HandleMethod(MethodDefinition method, IAssemblyResolver assemblyResolver)
+	private bool HandleMethod(MethodDefinition method)
 	{
 		if (!method.HasBody)
 			return false;
@@ -53,9 +53,9 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 		{
 			var instruction = method.Body.Instructions[i];
 			if (instruction.OpCode == OpCodes.Ldfld || instruction.OpCode == OpCodes.Ldflda || instruction.OpCode == OpCodes.Ldsfld || instruction.OpCode == OpCodes.Ldsflda)
-				didAnything |= this.HandleFieldLoadInstruction(ref instruction, assemblyResolver);
+				didAnything |= this.HandleFieldLoadInstruction(ref instruction);
 			else if (instruction.OpCode == OpCodes.Stfld || instruction.OpCode == OpCodes.Stsfld)
-				didAnything |= this.HandleFieldStoreInstruction(ref instruction, assemblyResolver);
+				didAnything |= this.HandleFieldStoreInstruction(ref instruction);
 			
 			method.Body.Instructions[i] = instruction;
 		}
@@ -81,7 +81,7 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 		return this.FieldToPropertyCache[cacheKey] = property;
 	}
 
-	private bool HandleFieldLoadInstruction(ref Mono.Cecil.Cil.Instruction instruction, IAssemblyResolver assemblyResolver)
+	private bool HandleFieldLoadInstruction(ref Mono.Cecil.Cil.Instruction instruction)
 	{
 		if (instruction.Operand is not FieldReference fieldReference)
 			return false;
@@ -96,7 +96,7 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 		return true;
 	}
 
-	private bool HandleFieldStoreInstruction(ref Mono.Cecil.Cil.Instruction instruction, IAssemblyResolver assemblyResolver)
+	private bool HandleFieldStoreInstruction(ref Mono.Cecil.Cil.Instruction instruction)
 	{
 		if (instruction.Operand is not FieldReference fieldReference)
 			return false;
