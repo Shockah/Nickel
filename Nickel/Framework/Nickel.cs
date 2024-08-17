@@ -174,9 +174,26 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		
 		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
 
-		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor = new(() =>
-			new NickelAssemblyResolver(new PackageAssemblyStreamResolver(launchArguments.Vanilla ? [] : instance.ModManager.ResolvedMods), new DefaultAssemblyResolver())
-		);
+		ICobaltCoreResolver cobaltCoreResolver = launchArguments.GamePath is { } gamePath
+			? new SingleFileApplicationCobaltCoreResolver(gamePath, new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb")))
+			: new SteamCobaltCoreResolver((exe, pdb) => new SingleFileApplicationCobaltCoreResolver(exe, pdb));
+
+		var resolveResultOrError = cobaltCoreResolver.ResolveCobaltCore();
+		var hasResolvedSuccessfully = resolveResultOrError.TryPickT0(out var resolveResult, out var error);
+		if (!hasResolvedSuccessfully)
+		{
+			logger.LogCritical("Could not resolve Cobalt Core: {Error}", error.Value);
+		}
+
+		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor = new(() => {
+			IAssemblyStreamResolver streamResolver = new PackageAssemblyStreamResolver(launchArguments.Vanilla ? [] : instance.ModManager.ResolvedMods);
+			if(instance.ModManager.CurrentModLoadPhase.Phase == ModLoadPhase.BeforeGameAssembly && hasResolvedSuccessfully)
+			{
+				streamResolver = new PreloadAssemblyStreamResolver(resolveResult, streamResolver);
+			}
+			return new NickelAssemblyResolver(streamResolver, new DefaultAssemblyResolver());
+		});
+		
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GamePublicizerDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new DeepCopyViaMitosisDefinitionEditor());
@@ -224,12 +241,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			instance.ModManager.LoadMods(ModLoadPhase.BeforeGameAssembly);
 		}
 
-		ICobaltCoreResolver cobaltCoreResolver = launchArguments.GamePath is { } gamePath
-			? new SingleFileApplicationCobaltCoreResolver(gamePath, new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb")))
-			: new SteamCobaltCoreResolver((exe, pdb) => new SingleFileApplicationCobaltCoreResolver(exe, pdb));
-
-		var resolveResultOrError = cobaltCoreResolver.ResolveCobaltCore();
-		if (resolveResultOrError.TryPickT1(out var error, out var resolveResult))
+		if (!hasResolvedSuccessfully)
 		{
 			logger.LogCritical("Could not resolve Cobalt Core: {Error}", error.Value);
 			return -1;
