@@ -9,8 +9,7 @@ namespace Nickel;
 
 internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionEditor
 {
-	private readonly Dictionary<FieldReference, MethodReference?> FieldToGetterReferenceCache = [];
-	private readonly Dictionary<FieldReference, MethodReference?> FieldToSetterReferenceCache = [];
+	private readonly Dictionary<string, PropertyDefinition?> FieldToPropertyCache = [];
 	
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName != "CobaltCore.dll";
@@ -63,6 +62,25 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 		return didAnything;
 	}
 
+	private PropertyDefinition? GetPropertyForField(FieldReference fieldReference)
+	{
+		var cacheKey = fieldReference.FullName;
+		if (this.FieldToPropertyCache.TryGetValue(cacheKey, out var propertyReference))
+			return propertyReference;
+		if (fieldReference.Resolve() != null)
+		{
+			/* field exists */
+			return this.FieldToPropertyCache[cacheKey] = null;
+		}
+		if (fieldReference.DeclaringType.Resolve() is not { } targetType)
+		{
+			/* declaring type does not exist */
+			return this.FieldToPropertyCache[cacheKey] = null;
+		}
+		var property = targetType.Properties.FirstOrDefault(x => x.Name == fieldReference.Name);
+		return this.FieldToPropertyCache[cacheKey] = property;
+	}
+
 	private bool HandleFieldLoadInstruction(ref Mono.Cecil.Cil.Instruction instruction, IAssemblyResolver assemblyResolver)
 	{
 		if (instruction.Operand is not FieldReference fieldReference)
@@ -70,35 +88,11 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 		if (!fieldReference.DeclaringType.Scope.Name.StartsWith("CobaltCore"))
 			return false;
 
-		if (!this.FieldToGetterReferenceCache.TryGetValue(fieldReference, out var getterReference))
-		{
-			if (fieldReference.DeclaringType.Scope is not AssemblyNameReference scopeAssemblyName)
-			{
-				this.FieldToGetterReferenceCache[fieldReference] = null;
-				return false;
-			}
-			if (assemblyResolver.Resolve(scopeAssemblyName) is not { } scopeAssembly)
-			{
-				this.FieldToGetterReferenceCache[fieldReference] = null;
-				return false;
-			}
-			if (scopeAssembly.MainModule.ImportReference(fieldReference.DeclaringType) is not TypeDefinition containingType)
-			{
-				this.FieldToGetterReferenceCache[fieldReference] = null;
-				return false;
-			}
-			if (containingType.GetMethods().FirstOrDefault(m => m.Name == $"get_{fieldReference.Name}") is not { } getterDefinition)
-			{
-				this.FieldToGetterReferenceCache[fieldReference] = null;
-				return false;
-			}
-			
-			getterReference = getterDefinition.Module.ImportReference(getterDefinition);
-			this.FieldToGetterReferenceCache[fieldReference] = getterReference;
-		}
+		var property = this.GetPropertyForField(fieldReference);
+		if (property == null) return false;
 
 		instruction.OpCode = OpCodes.Call;
-		instruction.Operand = getterReference;
+		instruction.Operand = fieldReference.DeclaringType.Module.ImportReference(property.GetMethod);
 		return true;
 	}
 
@@ -109,35 +103,11 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 		if (!fieldReference.DeclaringType.Scope.Name.StartsWith("CobaltCore"))
 			return false;
 
-		if (!this.FieldToSetterReferenceCache.TryGetValue(fieldReference, out var setterReference))
-		{
-			if (fieldReference.DeclaringType.Scope is not AssemblyNameReference scopeAssemblyName)
-			{
-				this.FieldToSetterReferenceCache[fieldReference] = null;
-				return false;
-			}
-			if (assemblyResolver.Resolve(scopeAssemblyName) is not { } scopeAssembly)
-			{
-				this.FieldToSetterReferenceCache[fieldReference] = null;
-				return false;
-			}
-			if (scopeAssembly.MainModule.ImportReference(fieldReference.DeclaringType) is not TypeDefinition containingType)
-			{
-				this.FieldToSetterReferenceCache[fieldReference] = null;
-				return false;
-			}
-			if (containingType.GetMethods().FirstOrDefault(m => m.Name == $"set_{fieldReference.Name}") is not { } setterDefinition)
-			{
-				this.FieldToSetterReferenceCache[fieldReference] = null;
-				return false;
-			}
-			
-			setterReference = setterDefinition.Module.ImportReference(setterDefinition);
-			this.FieldToSetterReferenceCache[fieldReference] = setterReference;
-		}
+		var property = this.GetPropertyForField(fieldReference);
+		if (property == null) return false;
 
 		instruction.OpCode = OpCodes.Call;
-		instruction.Operand = setterReference;
+		instruction.Operand = fieldReference.DeclaringType.Module.ImportReference(property.SetMethod);
 		return true;
 	}
 }
