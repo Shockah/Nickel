@@ -56,8 +56,15 @@ internal sealed class CobaltCoreHandler
 		this.AssemblyEditor?.EditAssemblyStream(name, ref assemblyStream, ref symbolsStream);
 		AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
 		{
-			if ($"{assemblyName.Name ?? assemblyName.FullName}.dll" == name)
-				return context.LoadFromStream(assemblyStream, symbolsStream);
+			try
+			{
+				if ($"{assemblyName.Name ?? assemblyName.FullName}.dll" == name)
+					return context.LoadFromStream(assemblyStream, symbolsStream);
+			}
+			catch
+			{
+				// ignored
+			}
 			return null;
 		};
 	}

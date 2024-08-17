@@ -23,19 +23,55 @@ public sealed class ExtendableAssemblyDefinitionEditor(Func<IAssemblyResolver> c
 			return;
 
 		using var assemblyResolver = cecilAssemblyResolverProducer();
-		using var definition = AssemblyDefinition.ReadAssembly(assemblyStream, new ReaderParameters
-		{
-			AssemblyResolver = assemblyResolver,
-			ReadSymbols = symbolsStream is not null,
-			SymbolStream = symbolsStream
-		});
+		AssemblyDefinition readDefinition;
+		
+		var assemblyMemoryStream = new MemoryStream();
+		assemblyStream.CopyTo(assemblyMemoryStream);
+		assemblyMemoryStream.Position = 0;
+		assemblyStream.Dispose();
+		assemblyStream = assemblyMemoryStream;
 
+		MemoryStream? symbolsMemoryStream = null;
+		if (symbolsStream is not null)
+		{
+			symbolsMemoryStream = new();
+			symbolsStream.CopyTo(symbolsMemoryStream);
+			symbolsMemoryStream.Position = 0;
+			symbolsStream.Dispose();
+			symbolsStream = symbolsMemoryStream;
+		}
+
+		try
+		{
+			readDefinition = AssemblyDefinition.ReadAssembly(assemblyMemoryStream, new ReaderParameters
+			{
+				AssemblyResolver = assemblyResolver,
+				ReadSymbols = symbolsMemoryStream is not null,
+				SymbolStream = symbolsMemoryStream
+			});
+		}
+		catch (BadImageFormatException)
+		{
+			// most likely not a managed DLL
+			assemblyMemoryStream.Position = 0;
+			if (symbolsMemoryStream is not null)
+				symbolsMemoryStream.Position = 0;
+			return;
+		}
+
+		using var definition = readDefinition;
+		
 		var didAnything = false;
 		foreach (var definitionEditor in interestedEditors)
 			didAnything |= definitionEditor.EditAssemblyDefinition(definition);
 
 		if (!didAnything)
+		{
+			assemblyMemoryStream.Position = 0;
+			if (symbolsMemoryStream is not null)
+				symbolsMemoryStream.Position = 0;
 			return;
+		}
 
 		var newAssemblyStream = new MemoryStream();
 		var newSymbolsStream = symbolsStream is null ? null : new MemoryStream();

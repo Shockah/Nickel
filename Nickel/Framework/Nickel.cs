@@ -179,6 +179,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GamePublicizerDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new DeepCopyViaMitosisDefinitionEditor());
+		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GameFieldToPropertyDefinitionEditor());
 
 		Harmony? harmony = null;
 		if (!launchArguments.Vanilla)

@@ -113,7 +113,9 @@ internal sealed class SaveManager
 			recoveredStoryVars.ResetAfterRun();
 
 			var recoveredState = State.NewGame(slot: null);
-			recoveredState.storyVars = recoveredStoryVars;
+			recoveredState.persistentStoryVars = recoveredStoryVars;
+			recoveredState.temporaryStoryVars = null;
+			recoveredState.isDuringDailyRun = false;
 			recoveredState.route = new NewRunOptions();
 			recoveredState.slot = e.Slot;
 
