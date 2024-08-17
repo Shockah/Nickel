@@ -1,6 +1,7 @@
 using FSPRO;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
+using Mono.Cecil;
 using Nanoray.PluginManager.Cecil;
 using Nanoray.Shrike;
 using Nickel.Common;
@@ -174,7 +175,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
 
 		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor = new(() =>
-			new PackageAssemblyResolver(launchArguments.Vanilla ? [] : instance.ModManager.ResolvedMods)
+			new PackageAssemblyResolver(launchArguments.Vanilla ? [] : instance.ModManager.ResolvedMods, new DefaultAssemblyResolver())
 		);
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GamePublicizerDefinitionEditor());
