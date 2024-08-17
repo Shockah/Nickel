@@ -80,7 +80,7 @@ public sealed class ExtendableAssemblyDefinitionEditor(Func<IAssemblyResolver> c
 		{
 			WriteSymbols = symbolsStream is not null,
 			SymbolStream = newSymbolsStream,
-			SymbolWriterProvider = new PortablePdbWriterProvider()
+			SymbolWriterProvider = symbolsStream is null ? null : new PortablePdbWriterProvider()
 		});
 
 		newAssemblyStream.Position = 0;
