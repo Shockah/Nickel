@@ -1,12 +1,16 @@
 using Mono.Cecil;
-using Nanoray.PluginManager;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
 namespace Nickel;
 
-internal class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest>> packages, IAssemblyResolver fallbackResolver) : IAssemblyResolver
+internal interface IAssemblyStreamResolver : IDisposable
+{
+	public Stream? Resolve(AssemblyNameReference name);
+}
+
+internal class NickelAssemblyResolver(IAssemblyStreamResolver streamResolver, IAssemblyResolver fallbackResolver) : IAssemblyResolver
 {
 	private readonly Dictionary<string, AssemblyDefinition> Cache = [];
 	private readonly List<Stream> OpenStreams = [];
@@ -30,15 +34,15 @@ internal class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest
 	public AssemblyDefinition Resolve(AssemblyNameReference name, ReaderParameters parameters)
 	{
 		parameters.AssemblyResolver ??= this;
-		var stream = this.GetStreamForAssembly(name);
-		if (stream is null)
+		var stream = streamResolver.Resolve(name);
+
+		if(stream is null)
 			return fallbackResolver.Resolve(name, parameters);
 
 		try
 		{
 			this.OpenStreams.Add(stream);
-		}
-		catch (Exception)
+		} catch (Exception)
 		{
 			stream.Dispose();
 			throw;
@@ -49,25 +53,5 @@ internal class PackageAssemblyResolver(IReadOnlyList<IPluginPackage<IModManifest
 		 * Don't ask me why, ask the Cecil authors.
 		 */
 		return ModuleDefinition.ReadModule(stream, parameters).Assembly;
-	}
-
-	private Stream? GetStreamForAssembly(AssemblyNameReference name)
-	{
-		foreach (var package in packages)
-		{
-			try
-			{
-				return package.PackageRoot.GetRelativeFile(name.Name + ".dll").OpenRead();
-			}
-			catch (FileNotFoundException) { }
-
-			try
-			{
-				return package.PackageRoot.GetRelativeFile(name.Name + ".exe").OpenRead();
-			}
-			catch (FileNotFoundException) { }
-		}
-
-		return null;
 	}
 }

@@ -175,7 +175,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
 
 		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor = new(() =>
-			new PackageAssemblyResolver(launchArguments.Vanilla ? [] : instance.ModManager.ResolvedMods, new DefaultAssemblyResolver())
+			new NickelAssemblyResolver(new PackageAssemblyStreamResolver(launchArguments.Vanilla ? [] : instance.ModManager.ResolvedMods), new DefaultAssemblyResolver())
 		);
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GamePublicizerDefinitionEditor());
