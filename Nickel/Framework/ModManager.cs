@@ -32,7 +32,7 @@ internal sealed class ModManager
 	internal readonly DelayedHarmonyManager DelayedHarmonyManager;
 
 	internal readonly IPluginPackage<IModManifest> ModLoaderPackage;
-	private ModLoadPhaseState CurrentModLoadPhase = new(ModLoadPhase.BeforeGameAssembly, IsDone: false);
+	internal ModLoadPhaseState CurrentModLoadPhase = new(ModLoadPhase.BeforeGameAssembly, IsDone: false);
 	internal ContentManager? ContentManager { get; private set; }
 	private IModManifest? VanillaModManifest;
 
