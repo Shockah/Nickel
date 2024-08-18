@@ -99,7 +99,8 @@ internal sealed class ModManager
 
 		var loadContextProvider = new AssemblyModLoadContextProvider(
 			AssemblyLoadContext.GetLoadContext(this.GetType().Assembly) ?? AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default,
-			extendableAssemblyDefinitionEditor
+			extendableAssemblyDefinitionEditor,
+			logger
 		);
 
 		var assemblyPluginLoaderParameterInjector = new ExtendableAssemblyPluginLoaderParameterInjector<IModManifest>();

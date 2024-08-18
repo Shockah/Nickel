@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,8 @@ namespace Nickel;
 
 internal sealed class AssemblyModLoadContextProvider(
 	AssemblyLoadContext? fallbackContext,
-	IAssemblyEditor? assemblyEditor
+	IAssemblyEditor? assemblyEditor,
+	ILogger logger
 ) : IAssemblyPluginLoaderLoadContextProvider<IAssemblyModManifest>
 {
 	private readonly ConditionalWeakTable<IPluginPackage<IAssemblyModManifest>, WeakReference<AssemblyLoadContext>> ContextCache = [];
@@ -22,7 +24,7 @@ internal sealed class AssemblyModLoadContextProvider(
 		if (this.ContextCache.TryGetValue(package, out var weakContext) && weakContext.TryGetTarget(out var context))
 			return context;
 
-		context = new CustomContext(fallbackContext, assemblyEditor, this.AssemblyNameToSharedAssembly, package);
+		context = new CustomContext(fallbackContext, assemblyEditor, logger, this.AssemblyNameToSharedAssembly, package);
 		this.ContextCache.AddOrUpdate(package, new WeakReference<AssemblyLoadContext>(context));
 		return context;
 	}
@@ -30,6 +32,7 @@ internal sealed class AssemblyModLoadContextProvider(
 	private sealed class CustomContext(
 		AssemblyLoadContext? fallbackContext,
 		IAssemblyEditor? assemblyEditor,
+		ILogger logger,
 		Dictionary<string, Assembly> assemblyNameToSharedAssembly,
 		IPluginPackage<IAssemblyModManifest> package
 	) : AssemblyLoadContext
@@ -62,7 +65,18 @@ internal sealed class AssemblyModLoadContextProvider(
 			{
 				using var originalAssemblyStream = file.OpenRead();
 				var refAssemblyStream = originalAssemblyStream;
-				assemblyEditor?.EditAssemblyStream(assemblyName.Name ?? assemblyName.FullName, ref refAssemblyStream);
+				
+				if (assemblyEditor?.EditAssemblyStream(assemblyName.Name ?? assemblyName.FullName, ref refAssemblyStream) is { } editorResult)
+					foreach (var message in editorResult.Messages)
+						logger.Log(message.Level switch
+						{
+							AssemblyEditorResult.MessageLevel.Error => LogLevel.Error,
+							AssemblyEditorResult.MessageLevel.Warning => LogLevel.Warning,
+							AssemblyEditorResult.MessageLevel.Info => LogLevel.Information,
+							AssemblyEditorResult.MessageLevel.Debug => LogLevel.Debug,
+							_ => LogLevel.Error
+						}, message.Content);
+				
 				using var modifiedAssemblyStream = refAssemblyStream;
 				var assembly = this.LoadFromStream(modifiedAssemblyStream);
 

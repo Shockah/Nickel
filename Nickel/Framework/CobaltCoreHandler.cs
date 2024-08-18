@@ -53,7 +53,17 @@ internal sealed class CobaltCoreHandler
 
 	private void ResolveAssembly(string name, Stream assemblyStream, Stream? symbolsStream = null)
 	{
-		this.AssemblyEditor?.EditAssemblyStream(name, ref assemblyStream, ref symbolsStream);
+		if (this.AssemblyEditor?.EditAssemblyStream(name, ref assemblyStream, ref symbolsStream) is { } editorResult)
+			foreach (var message in editorResult.Messages)
+				this.Logger.Log(message.Level switch
+				{
+					AssemblyEditorResult.MessageLevel.Error => LogLevel.Error,
+					AssemblyEditorResult.MessageLevel.Warning => LogLevel.Warning,
+					AssemblyEditorResult.MessageLevel.Info => LogLevel.Information,
+					AssemblyEditorResult.MessageLevel.Debug => LogLevel.Debug,
+					_ => LogLevel.Error
+				}, message.Content);
+		
 		AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
 		{
 			try

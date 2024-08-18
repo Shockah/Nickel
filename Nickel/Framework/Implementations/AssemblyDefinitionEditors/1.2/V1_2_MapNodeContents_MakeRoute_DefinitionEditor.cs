@@ -1,6 +1,7 @@
 // ReSharper disable InconsistentNaming
 #pragma warning disable CS0618 // Type or member is obsolete
 using Mono.Cecil;
+using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using System;
 using System.Linq;
@@ -42,15 +43,15 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName != "CobaltCore.dll";
 	
-	public bool EditAssemblyDefinition(AssemblyDefinition definition)
+	public bool EditAssemblyDefinition(AssemblyDefinition definition, Action<AssemblyEditorResult.Message> logger)
 	{
 		var didAnything = false;
 		foreach (var module in definition.Modules)
-			didAnything |= this.HandleModule(module);
+			didAnything |= this.HandleModule(module, logger);
 		return didAnything;
 	}
 
-	private bool HandleModule(ModuleDefinition module)
+	private bool HandleModule(ModuleDefinition module, Action<AssemblyEditorResult.Message> logger)
 	{
 		if (module.AssemblyReferences.FirstOrDefault(r => r.Name == "CobaltCore") is not { } cobaltCoreAssemblyNameReference)
 			return false;
@@ -79,11 +80,11 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 		
 		var didAnything = false;
 		foreach (var type in module.Types)
-			didAnything |= this.HandleType(type, routeTypeReference, stateTypeReference, vecTypeReference);
+			didAnything |= this.HandleType(type, routeTypeReference, stateTypeReference, vecTypeReference, logger);
 		return didAnything;
 	}
 
-	private bool HandleType(TypeDefinition type, TypeReference routeTypeReference, TypeReference stateTypeReference, TypeReference vecTypeReference)
+	private bool HandleType(TypeDefinition type, TypeReference routeTypeReference, TypeReference stateTypeReference, TypeReference vecTypeReference, Action<AssemblyEditorResult.Message> logger)
 	{
 		var didAnything = false;
 		RewriteOverride();
@@ -106,6 +107,7 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 				if (method.Parameters[0].ParameterType.FullName != stateTypeReference.FullName)
 					continue;
 				
+				logger(new() { Level = AssemblyEditorResult.MessageLevel.Debug, Content = $"Rewriting method definition `{method.FullName}` with an extra `{vecTypeReference.FullName}` parameter." });
 				method.Parameters.Add(new ParameterDefinition(type.Module.ImportReference(vecTypeReference)));
 				didAnything = true;
 			}
@@ -127,11 +129,11 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 		void RewriteCalls()
 		{
 			foreach (var method in type.Methods)
-				didAnything |= this.HandleMethod(method, routeTypeReference, stateTypeReference);
+				didAnything |= this.HandleMethod(method, routeTypeReference, stateTypeReference, logger);
 		}
 	}
 
-	private bool HandleMethod(MethodDefinition method, TypeReference routeTypeReference, TypeReference stateTypeReference)
+	private bool HandleMethod(MethodDefinition method, TypeReference routeTypeReference, TypeReference stateTypeReference, Action<AssemblyEditorResult.Message> logger)
 	{
 		if (!method.HasBody)
 			return false;
@@ -159,6 +161,7 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 				continue;
 
 			var facadeMethodReference = method.Module.ImportReference(typeof(RewriteFacades.V1_2).GetMethod(nameof(RewriteFacades.V1_2.MapNodeContents_MakeRoute)));
+			logger(new() { Level = AssemblyEditorResult.MessageLevel.Debug, Content = $"Rewriting method call `{methodReference.FullName}` with `{facadeMethodReference.FullName}`." });
 			instruction.OpCode = COpCodes.Call;
 			instruction.Operand = facadeMethodReference;
 			didAnything = true;

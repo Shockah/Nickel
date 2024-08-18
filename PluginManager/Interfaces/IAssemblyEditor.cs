@@ -13,7 +13,8 @@ public interface IAssemblyEditor
 	/// <param name="name">The name of the assembly.</param>
 	/// <param name="assemblyStream">The <see cref="System.Reflection.Assembly"/> <see cref="Stream"/></param>
 	/// <param name="symbolsStream">An <see cref="System.Reflection.Assembly"/> symbols <see cref="Stream"/>, if any.</param>
-	void EditAssemblyStream(string name, ref Stream assemblyStream, ref Stream? symbolsStream);
+	/// <returns>A result contaning any messages the editor has reported.</returns>
+	AssemblyEditorResult EditAssemblyStream(string name, ref Stream assemblyStream, ref Stream? symbolsStream);
 }
 
 /// <summary>
@@ -27,9 +28,10 @@ public static class IAssemblyEditorExt
 	/// <param name="editor">The editor.</param>
 	/// <param name="name">The name of the assembly.</param>
 	/// <param name="assemblyStream">The <see cref="System.Reflection.Assembly"/> <see cref="Stream"/></param>
-	public static void EditAssemblyStream(this IAssemblyEditor editor, string name, ref Stream assemblyStream)
+	/// <returns>A result contaning any messages the editor has reported.</returns>
+	public static AssemblyEditorResult EditAssemblyStream(this IAssemblyEditor editor, string name, ref Stream assemblyStream)
 	{
 		Stream? symbolsStream = null;
-		editor.EditAssemblyStream(name, ref assemblyStream, ref symbolsStream);
+		return editor.EditAssemblyStream(name, ref assemblyStream, ref symbolsStream);
 	}
 }

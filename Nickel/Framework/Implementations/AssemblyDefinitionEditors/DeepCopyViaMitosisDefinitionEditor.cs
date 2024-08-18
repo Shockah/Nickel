@@ -1,6 +1,8 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
+using System;
 using System.Linq;
 
 namespace Nickel;
@@ -10,7 +12,7 @@ internal sealed class DeepCopyViaMitosisDefinitionEditor : IAssemblyDefinitionEd
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName == "CobaltCore.dll";
 
-	public bool EditAssemblyDefinition(AssemblyDefinition definition)
+	public bool EditAssemblyDefinition(AssemblyDefinition definition, Action<AssemblyEditorResult.Message> logger)
 	{
 		var mutilType = definition.MainModule.GetType("Mutil");
 		var mutilDeepCopyMethod = mutilType.Methods.First(m => m.Name == "DeepCopy");

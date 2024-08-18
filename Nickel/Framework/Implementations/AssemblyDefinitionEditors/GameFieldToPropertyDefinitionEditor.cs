@@ -1,6 +1,8 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,15 +13,15 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName != "CobaltCore.dll";
 	
-	public bool EditAssemblyDefinition(AssemblyDefinition definition)
+	public bool EditAssemblyDefinition(AssemblyDefinition definition, Action<AssemblyEditorResult.Message> logger)
 	{
 		var didAnything = false;
 		foreach (var module in definition.Modules)
-			didAnything |= this.HandleModule(module);
+			didAnything |= this.HandleModule(module, logger);
 		return didAnything;
 	}
 
-	private bool HandleModule(ModuleDefinition module)
+	private bool HandleModule(ModuleDefinition module, Action<AssemblyEditorResult.Message> logger)
 	{
 		if (module.AssemblyReferences.All(r => r.Name != "CobaltCore"))
 			return false;
@@ -29,21 +31,21 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 		
 		var didAnything = false;
 		foreach (var type in module.Types)
-			didAnything |= this.HandleType(type, getters, setters);
+			didAnything |= this.HandleType(type, getters, setters, logger);
 		return didAnything;
 	}
 
-	private bool HandleType(TypeDefinition type, Dictionary<string, MethodReference?> getters, Dictionary<string, MethodReference?> setters)
+	private bool HandleType(TypeDefinition type, Dictionary<string, MethodReference?> getters, Dictionary<string, MethodReference?> setters, Action<AssemblyEditorResult.Message> logger)
 	{
 		var didAnything = false;
 		foreach (var nestedType in type.NestedTypes)
-			didAnything |= this.HandleType(nestedType, getters, setters);
+			didAnything |= this.HandleType(nestedType, getters, setters, logger);
 		foreach (var method in type.Methods)
-			didAnything |= this.HandleMethod(method, getters, setters);
+			didAnything |= this.HandleMethod(method, getters, setters, logger);
 		return didAnything;
 	}
 
-	private bool HandleMethod(MethodDefinition method, Dictionary<string, MethodReference?> getters, Dictionary<string, MethodReference?> setters)
+	private bool HandleMethod(MethodDefinition method, Dictionary<string, MethodReference?> getters, Dictionary<string, MethodReference?> setters, Action<AssemblyEditorResult.Message> logger)
 	{
 		if (!method.HasBody)
 			return false;
@@ -54,16 +56,16 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 		{
 			var instruction = instructions[i];
 			if (instruction.OpCode == OpCodes.Ldfld || instruction.OpCode == OpCodes.Ldflda || instruction.OpCode == OpCodes.Ldsfld || instruction.OpCode == OpCodes.Ldsflda)
-				didAnything |= this.HandleFieldLoadInstruction(ref instruction, method.Module, getters);
+				didAnything |= this.HandleFieldLoadInstruction(ref instruction, method, getters, logger);
 			else if (instruction.OpCode == OpCodes.Stfld || instruction.OpCode == OpCodes.Stsfld)
-				didAnything |= this.HandleFieldStoreInstruction(ref instruction, method.Module, setters);
+				didAnything |= this.HandleFieldStoreInstruction(ref instruction, method, setters, logger);
 			
 			instructions[i] = instruction;
 		}
 		return didAnything;
 	}
 
-	private bool HandleFieldLoadInstruction(ref Mono.Cecil.Cil.Instruction instruction, ModuleDefinition module, Dictionary<string, MethodReference?> cache)
+	private bool HandleFieldLoadInstruction(ref Mono.Cecil.Cil.Instruction instruction, MethodDefinition method, Dictionary<string, MethodReference?> cache, Action<AssemblyEditorResult.Message> logger)
 	{
 		if (instruction.Operand is not FieldReference fieldReference)
 			return false;
@@ -88,9 +90,9 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 				return false;
 			}
 			
-			getterReference = module.ImportReference(propertyDefinition.GetMethod);
+			getterReference = method.Module.ImportReference(propertyDefinition.GetMethod);
 			cache[fieldReference.FullName] = getterReference;
-			// TODO: log rewrites
+			logger(new() { Level = AssemblyEditorResult.MessageLevel.Debug, Content = $"Rewriting field `{fieldReference.FullName}` read in {method.FullName} to {getterReference.FullName}." });
 		}
 		
 		if (getterReference is null)
@@ -101,7 +103,7 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 		return true;
 	}
 
-	private bool HandleFieldStoreInstruction(ref Mono.Cecil.Cil.Instruction instruction, ModuleDefinition module, Dictionary<string, MethodReference?> cache)
+	private bool HandleFieldStoreInstruction(ref Mono.Cecil.Cil.Instruction instruction, MethodDefinition method, Dictionary<string, MethodReference?> cache, Action<AssemblyEditorResult.Message> logger)
 	{
 		if (instruction.Operand is not FieldReference fieldReference)
 			return false;
@@ -126,9 +128,9 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 				return false;
 			}
 			
-			setterReference = module.ImportReference(propertyDefinition.SetMethod);
+			setterReference = method.Module.ImportReference(propertyDefinition.SetMethod);
 			cache[fieldReference.FullName] = setterReference;
-			// TODO: log rewrites
+			logger(new() { Level = AssemblyEditorResult.MessageLevel.Debug, Content = $"Rewriting field `{fieldReference.FullName}` write in {method.FullName} to {setterReference.FullName}." });
 		}
 
 		if (setterReference is null)

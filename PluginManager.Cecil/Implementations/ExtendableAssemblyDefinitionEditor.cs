@@ -16,11 +16,12 @@ public sealed class ExtendableAssemblyDefinitionEditor(Func<IAssemblyResolver> c
 	private readonly List<IAssemblyDefinitionEditor> DefinitionEditors = [];
 
 	/// <inheritdoc/>
-	public void EditAssemblyStream(string name, ref Stream assemblyStream, ref Stream? symbolsStream)
+	public AssemblyEditorResult EditAssemblyStream(string name, ref Stream assemblyStream, ref Stream? symbolsStream)
 	{
+		var messages = new List<AssemblyEditorResult.Message>();
 		var interestedEditors = this.DefinitionEditors.Where(x => x.WillEditAssembly(name)).ToList();
 		if (interestedEditors.Count <= 0)
-			return;
+			return new() { Messages = messages };
 
 		using var assemblyResolver = cecilAssemblyResolverProducer();
 		AssemblyDefinition readDefinition;
@@ -52,7 +53,7 @@ public sealed class ExtendableAssemblyDefinitionEditor(Func<IAssemblyResolver> c
 		}
 		catch (BadImageFormatException)
 		{
-			return;
+			return new() { Messages = messages };
 		}
 
 		using var definition = readDefinition;
@@ -60,14 +61,14 @@ public sealed class ExtendableAssemblyDefinitionEditor(Func<IAssemblyResolver> c
 
 		if (definition.Modules.All(m => (m.Attributes & ModuleAttributes.ILOnly) != 0))
 			foreach (var definitionEditor in interestedEditors)
-				didAnything |= definitionEditor.EditAssemblyDefinition(definition);
+				didAnything |= definitionEditor.EditAssemblyDefinition(definition, message => messages.Add(message));
 
 		if (!didAnything)
 		{
 			assemblyMemoryStream.Position = 0;
 			if (symbolsMemoryStream is not null)
 				symbolsMemoryStream.Position = 0;
-			return;
+			return new() { Messages = messages };
 		}
 
 		var newAssemblyStream = new MemoryStream();
@@ -86,6 +87,7 @@ public sealed class ExtendableAssemblyDefinitionEditor(Func<IAssemblyResolver> c
 
 		assemblyStream = newAssemblyStream;
 		symbolsStream = newSymbolsStream;
+		return new() { Messages = messages };
 	}
 	
 	/// <summary>

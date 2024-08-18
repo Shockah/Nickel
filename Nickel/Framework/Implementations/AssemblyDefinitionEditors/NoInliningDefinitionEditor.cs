@@ -1,5 +1,7 @@
 using Mono.Cecil;
+using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
+using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -10,7 +12,7 @@ internal sealed class NoInliningDefinitionEditor : IAssemblyDefinitionEditor
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName == "CobaltCore.dll";
 
-	public bool EditAssemblyDefinition(AssemblyDefinition definition)
+	public bool EditAssemblyDefinition(AssemblyDefinition definition, Action<AssemblyEditorResult.Message> logger)
 	{
 		var methodImplAttributeCtor = definition.MainModule.ImportReference(typeof(MethodImplAttribute).GetConstructor([typeof(MethodImplOptions)]));
 		var methodImplOptionsTypeReference = definition.MainModule.ImportReference(typeof(MethodImplOptions));

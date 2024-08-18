@@ -1,6 +1,8 @@
 using Mono.Cecil;
+using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using Newtonsoft.Json;
+using System;
 
 namespace Nickel;
 
@@ -9,7 +11,7 @@ internal sealed class GamePublicizerDefinitionEditor : IAssemblyDefinitionEditor
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName == "CobaltCore.dll";
 
-	public bool EditAssemblyDefinition(AssemblyDefinition definition)
+	public bool EditAssemblyDefinition(AssemblyDefinition definition, Action<AssemblyEditorResult.Message> logger)
 	{
 		var jsonIgnoreCtor = definition.MainModule.ImportReference(typeof(JsonIgnoreAttribute).GetConstructor([]));
 		var didAnything = false;
