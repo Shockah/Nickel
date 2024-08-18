@@ -1,9 +1,12 @@
 // ReSharper disable InconsistentNaming
 #pragma warning disable CS0618 // Type or member is obsolete
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 using Nanoray.PluginManager.Cecil;
+using System;
 using System.Linq;
+using System.Reflection.Emit;
+using SOpCodes = System.Reflection.Emit.OpCodes;
+using COpCodes = Mono.Cecil.Cil.OpCodes;
 
 namespace Nickel;
 
@@ -12,8 +15,24 @@ public static partial class RewriteFacades
 {
 	public static partial class V1_2
 	{
+		private static readonly Lazy<Func<MapNodeContents, State, Route>> Emitted_MapNodeContents_MakeRoute = new(() =>
+		{
+			var mapNodeContentsType = typeof(MapNodeContents);
+			var makeRouteMethod = mapNodeContentsType.GetMethod("MakeRoute")!;
+			
+			var method = new DynamicMethod($"{nameof(RewriteFacades)}_{nameof(V1_2)}_{nameof(Emitted_MapNodeContents_MakeRoute)}", typeof(Route), [typeof(MapNodeContents), typeof(State)]);
+			var il = method.GetILGenerator();
+
+			il.Emit(SOpCodes.Ldarg_0);
+			il.Emit(SOpCodes.Ldarg_1);
+			il.Emit(SOpCodes.Callvirt, makeRouteMethod);
+			il.Emit(SOpCodes.Ret);
+
+			return method.CreateDelegate<Func<MapNodeContents, State, Route>>();
+		});
+		
 		public static Route MapNodeContents_MakeRoute(MapNodeContents @this, State s)
-			=> @this.MakeRoute(s, s.map.currentLocation);
+			=> Emitted_MapNodeContents_MakeRoute.Value(@this, s);
 	}
 }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
@@ -35,11 +54,28 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 	{
 		if (module.AssemblyReferences.FirstOrDefault(r => r.Name == "CobaltCore") is not { } cobaltCoreAssemblyNameReference)
 			return false;
-		
 		var cobaltCoreAssemblyDefinition = module.AssemblyResolver.Resolve(cobaltCoreAssemblyNameReference);
-		var routeTypeReference = cobaltCoreAssemblyDefinition.MainModule.GetType("Route");
-		var stateTypeReference = cobaltCoreAssemblyDefinition.MainModule.GetType("State");
-		var vecTypeReference = cobaltCoreAssemblyDefinition.MainModule.GetType("Vec");
+		
+		if (cobaltCoreAssemblyDefinition.MainModule.GetType(nameof(Route)) is not { } routeTypeReference)
+			return false;
+		if (cobaltCoreAssemblyDefinition.MainModule.GetType(nameof(State)) is not { } stateTypeReference)
+			return false;
+		if (cobaltCoreAssemblyDefinition.MainModule.GetType(nameof(Vec)) is not { } vecTypeReference)
+			return false;
+		
+		// if any of these fail, we're not on 1.2
+		if (cobaltCoreAssemblyDefinition.MainModule.GetType(nameof(MapNodeContents)) is not { } mapNodeContentsTypeReference)
+			return false;
+		if (mapNodeContentsTypeReference.Methods.FirstOrDefault(m => m.Name == nameof(MapNodeContents.MakeRoute)) is not { } makeRouteMethodReference)
+			return false;
+		if (makeRouteMethodReference.Parameters.Count != 2)
+			return false;
+		if (makeRouteMethodReference.ReturnType.FullName != routeTypeReference.FullName)
+			return false;
+		if (makeRouteMethodReference.Parameters[0].ParameterType.FullName != stateTypeReference.FullName)
+			return false;
+		if (makeRouteMethodReference.Parameters[1].ParameterType.FullName != vecTypeReference.FullName)
+			return false;
 		
 		var didAnything = false;
 		foreach (var type in module.Types)
@@ -91,11 +127,11 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 		void RewriteCalls()
 		{
 			foreach (var method in type.Methods)
-				didAnything |= this.HandleMethod(method);
+				didAnything |= this.HandleMethod(method, routeTypeReference, stateTypeReference);
 		}
 	}
 
-	private bool HandleMethod(MethodDefinition method)
+	private bool HandleMethod(MethodDefinition method, TypeReference routeTypeReference, TypeReference stateTypeReference)
 	{
 		if (!method.HasBody)
 			return false;
@@ -105,7 +141,7 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 		var instructions = method.Body.Instructions;
 		foreach (var instruction in instructions)
 		{
-			if (instruction.OpCode != OpCodes.Call && instruction.OpCode != OpCodes.Callvirt)
+			if (instruction.OpCode != COpCodes.Call && instruction.OpCode != COpCodes.Callvirt)
 				continue;
 			if (instruction.Operand is not MethodReference methodReference)
 				continue;
@@ -117,9 +153,13 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 				continue;
 			if (methodReference.Parameters.Count != 1)
 				continue;
+			if (methodReference.ReturnType.FullName != routeTypeReference.FullName)
+				continue;
+			if (methodReference.Parameters[0].ParameterType.FullName != stateTypeReference.FullName)
+				continue;
 
 			var facadeMethodReference = method.Module.ImportReference(typeof(RewriteFacades.V1_2).GetMethod(nameof(RewriteFacades.V1_2.MapNodeContents_MakeRoute)));
-			instruction.OpCode = OpCodes.Call;
+			instruction.OpCode = COpCodes.Call;
 			instruction.Operand = facadeMethodReference;
 			didAnything = true;
 		}
