@@ -11,7 +11,8 @@
 * General optimizations.
 
 ### For developers:
-* `IAssemblyDefinitionEditor.EditAssemblyDefinition` now needs to return a `bool` reflecting whether the editor actually edited the assembly.
+* Nickel now rewrites mods to make mods built for pre-1.2 Cobalt Core still launch in 1.2. Some mods may still need to be updated manually.
+* `IAssemblyDefinitionEditor.EditAssemblyDefinition` now needs to return a `bool` reflecting whether the editor actually edited the assembly, and also gets a new parameter which lets an editor log messages.
 * Incorporated a new [Mitosis](https://github.com/Nanoray-pl/Mitosis) library and replaced `Mutil.DeepCopy`'s implementation with one utilizing Mitosis, significantly improving copying performance.
 * Updated the Pintail library, which changes how enums are proxied, improving performance and allowing flag enums to be used.
 
