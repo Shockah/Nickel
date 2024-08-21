@@ -9,7 +9,7 @@ namespace Nanoray.PluginManager;
 public abstract class FileSystemInfoImpl<TFileSystemInfo> : IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>
 	where TFileSystemInfo : FileSystemInfo
 {
-	internal TFileSystemInfo FileSystemInfo { get; }
+	internal readonly TFileSystemInfo FileSystemInfo;
 
 	/// <inheritdoc/>
 	public string Name

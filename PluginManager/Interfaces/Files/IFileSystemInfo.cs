@@ -1,3 +1,5 @@
+using System;
+
 namespace Nanoray.PluginManager;
 
 /// <summary>
@@ -28,6 +30,10 @@ public interface IFileSystemInfo
 
 	/// <summary>The directory this entry is contained in, or <c>null</c> for the root of the file system.</summary>
 	IDirectoryInfo? Parent { get; }
+
+	/// <summary>The root directory this entry is contained in.</summary>
+	IDirectoryInfo Root
+		=> this.Parent?.Root ?? this.AsDirectory ?? throw new InvalidOperationException("This entry has no root directory");
 	
 	/// <summary>Casts this entry to an <see cref="IFileInfo"/>, if it represents one.</summary>
 	IFileInfo? AsFile { get; }
@@ -63,6 +69,10 @@ public interface IFileSystemInfo<out TFileInfo, out TDirectoryInfo> : IFileSyste
 	/// <inheritdoc cref="IFileSystemInfo.Parent"/>
 	new TDirectoryInfo? Parent { get; }
 	
+	/// <inheritdoc cref="IFileSystemInfo.Root"/>
+	new TDirectoryInfo Root
+		=> this.Parent?.Root ?? this.AsDirectory ?? throw new InvalidOperationException("This entry has no root directory");
+	
 	/// <inheritdoc cref="IFileSystemInfo.AsFile"/>
 	new TFileInfo? AsFile { get; }
 	
@@ -72,6 +82,10 @@ public interface IFileSystemInfo<out TFileInfo, out TDirectoryInfo> : IFileSyste
 	/// <inheritdoc/>
 	IDirectoryInfo? IFileSystemInfo.Parent
 		=> this.Parent;
+	
+	/// <inheritdoc/>
+	IDirectoryInfo IFileSystemInfo.Root
+		=> this.Root;
 
 	/// <inheritdoc/>
 	IFileInfo? IFileSystemInfo.AsFile

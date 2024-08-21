@@ -40,7 +40,7 @@ public static class FileSystemInfoExt
 		if (!Equals(fromRoot, toRoot))
 			throw new ArgumentException("The two file systems are unrelated to each other");
 		var relativePath = to.FullName[from.FullName.Length..];
-		if (relativePath.StartsWith('/'))
+		if (relativePath.StartsWith('/') || relativePath.StartsWith('\\'))
 			relativePath = relativePath[1..];
 		return relativePath;
 	}

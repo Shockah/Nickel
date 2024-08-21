@@ -355,6 +355,10 @@ internal sealed class ModManager
 		this.Logger.LogInformation("Loading {Phase} phase mods...", phase);
 		this.CurrentModLoadPhase = new(phase, IsDone: false);
 
+		var pluginLoader = new CaseInsensitivePluginLoader<IModManifest, Mod>(
+			loader: this.ExtendablePluginLoader
+		);
+
 		List<IModManifest> successfulMods = [];
 		foreach (var package in this.ResolvedMods)
 		{
@@ -383,7 +387,7 @@ internal sealed class ModManager
 				continue;
 			}
 
-			var canLoadYesNoOrError = this.ExtendablePluginLoader.CanLoadPlugin(package);
+			var canLoadYesNoOrError = pluginLoader.CanLoadPlugin(package);
 			if (canLoadYesNoOrError.TryPickT2(out var error, out var canLoadYesOrNo))
 			{
 				this.FailedMods.Add(manifest);
@@ -402,7 +406,7 @@ internal sealed class ModManager
 
 			try
 			{
-				this.ExtendablePluginLoader.LoadPlugin(package)
+				pluginLoader.LoadPlugin(package)
 					.Switch(
 						success =>
 						{

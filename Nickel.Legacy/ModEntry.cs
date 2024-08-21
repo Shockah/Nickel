@@ -41,6 +41,11 @@ public sealed class ModEntry : Mod
 		this.Logger = logger;
 		this.Helper = helper;
 		this.Manifest = package.Manifest;
+		
+		var tempModDirectory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), NickelConstants.Name, package.Manifest.UniqueName, "ExtractedModLibrary"));
+		if (tempModDirectory.Exists)
+			tempModDirectory.Delete(true);
+		
 		helper.Events.OnModLoadPhaseFinished += this.OnModLoadPhaseFinishedFirstPriority;
 		helper.Events.OnModLoadPhaseFinished += this.OnModLoadPhaseFinishedLowPriority;
 		helper.Events.OnLoadStringsForLocale += this.OnLoadStringsForLocale;
@@ -51,32 +56,45 @@ public sealed class ModEntry : Mod
 		var legacyAssemblyPluginLoader = new CallbackPluginLoader<IModManifest, Mod>(
 			loader: new ValidatingPluginLoader<IModManifest, Mod>(
 				loader: new ConditionalPluginLoader<IModManifest, Mod>(
-					loader: new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
-						loader: new AssemblyPluginLoader<IAssemblyModManifest, ILegacyManifest, Mod>(
-							requiredPluginDataProvider: p =>
-								new AssemblyPluginLoaderRequiredPluginData
-								{
-									UniqueName = p.Manifest.UniqueName,
-									EntryPointAssembly = p.Manifest.EntryPointAssembly,
-									EntryPointType = p.Manifest.EntryPointType
-								},
-							loadContextProvider: loadContextProvider,
-							partAssembler: new LegacyAssemblyPluginLoaderPartAssembler(
-								helperProvider: byPackageHelperProvider,
-								loggerProvider: loggerProvider,
-								this.Database
+					loader: new CopyingPluginLoader<IModManifest, Mod>(
+						loader: new SpecializedConvertingManifestPluginLoader<IAssemblyModManifest, IModManifest, Mod>(
+							loader: new AssemblyPluginLoader<IAssemblyModManifest, ILegacyManifest, Mod>(
+								requiredPluginDataProvider: p =>
+									new AssemblyPluginLoaderRequiredPluginData
+									{
+										UniqueName = p.Manifest.UniqueName,
+										EntryPointAssembly = p.Manifest.EntryPointAssembly,
+										EntryPointType = p.Manifest.EntryPointType
+									},
+								loadContextProvider: loadContextProvider,
+								partAssembler: new LegacyAssemblyPluginLoaderPartAssembler(
+									helperProvider: byPackageHelperProvider,
+									loggerProvider: loggerProvider,
+									this.Database
+								),
+								parameterInjector: assemblyPluginLoaderParameterInjector
 							),
-							parameterInjector: assemblyPluginLoaderParameterInjector
+							converter: m => m.AsAssemblyModManifest()
 						),
-						converter: m => m.AsAssemblyModManifest()
+						extractedDirectoryProvider: package =>
+						{
+							var packageRoot = package.PackageRoot;
+							while (packageRoot is IDirectoryInfoWrapper packageRootWrapper)
+								packageRoot = packageRootWrapper.Wrapped;
+							
+							if (packageRoot is IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>)
+								return null; // no need to copy
+							
+							var rootExtractedPath = new DirectoryInfoImpl(new DirectoryInfo(Path.Combine(tempModDirectory.FullName, package.Manifest.UniqueName)));
+							logger.LogInformation("Extracting mod {ModName} to {Path}.", package.Manifest.GetDisplayName(@long: false), PathUtilities.SanitizePath(rootExtractedPath.FullName));
+							return rootExtractedPath;
+						}
 					),
 					condition: package =>
 					{
 						if (package.Manifest.ModType != LegacyModType)
 							return new No();
-						return package.PackageRoot is IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl>
-							? new Yes()
-							: new Error<string>("Found a legacy mod, but it is not stored directly on disk (is it in a ZIP file?).");
+						return new Yes();
 					}
 				),
 				validator: (package, mod) =>
