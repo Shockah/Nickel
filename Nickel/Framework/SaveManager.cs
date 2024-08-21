@@ -84,7 +84,7 @@ internal sealed class SaveManager
 			recoveredState.route = new NewRunOptions();
 			recoveredState.runConfig.selectedShip = "artemis";
 			typeof(State).GetField("temporaryStoryVars")?.SetValue(recoveredState, null); // TODO: replace with `nameof` when CC 1.2 goes live
-			typeof(State).GetField("isDuringDailyRun")?.SetValue(recoveredState, false); // TODO: replace with `nameof` when CC 1.2 goes live
+			typeof(State).GetField("dailyDay")?.SetValue(recoveredState, null); // TODO: replace with `nameof` when CC 1.2 goes live
 			recoveredState.storyVars.ResetAfterRun();
 
 			recoveredState.map.Populate(recoveredState, recoveredState.rngZone);
@@ -118,7 +118,7 @@ internal sealed class SaveManager
 			typeof(State).GetField("storyVars")?.SetValue(recoveredState, recoveredStoryVars); // TODO: replace with `nameof` when CC 1.2 goes live
 			typeof(State).GetField("persistentStoryVars")?.SetValue(recoveredState, recoveredStoryVars); // TODO: replace with `nameof` when CC 1.2 goes live
 			typeof(State).GetField("temporaryStoryVars")?.SetValue(recoveredState, null); // TODO: replace with `nameof` when CC 1.2 goes live
-			typeof(State).GetField("isDuringDailyRun")?.SetValue(recoveredState, false); // TODO: replace with `nameof` when CC 1.2 goes live
+			typeof(State).GetField("dailyDay")?.SetValue(recoveredState, null); // TODO: replace with `nameof` when CC 1.2 goes live
 			recoveredState.route = new NewRunOptions();
 			recoveredState.slot = e.Slot;
 
