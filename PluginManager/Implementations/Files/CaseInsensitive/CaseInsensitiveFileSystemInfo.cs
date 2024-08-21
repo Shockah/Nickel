@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace Nanoray.PluginManager.CaseInsensitive;
 
+/// <summary>
+/// An <see cref="IFileSystemInfo{TFileInfo,TDirectoryInfo}"/> wrapper which makes any file operations case insensitive.
+/// </summary>
 public class CaseInsensitiveFileSystemInfo(IFileSystemInfo wrapped) : IFileSystemInfo<CaseInsensitiveFileInfo, CaseInsensitiveDirectoryInfo>, IFileSystemInfoWrapper
 {
 	/// <inheritdoc/>
