@@ -1,15 +1,26 @@
+using Nanoray.ServiceLocator;
 using System;
 
 namespace Nickel;
 
 internal sealed class ModHelper : IModHelper
 {
+	[Injectable]
 	public IModRegistry ModRegistry { get; }
+	
+	[Injectable]
 	public IModEvents Events { get; }
+	
+	[Injectable]
 	public IModData ModData { get; }
+	
+	[Injectable]
 	public IModStorage Storage { get; }
+	
+	[Injectable]
 	public IModUtilities Utilities { get; }
 
+	[Injectable]
 	public IModContent Content
 	{
 		get

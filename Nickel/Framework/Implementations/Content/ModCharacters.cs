@@ -1,3 +1,4 @@
+using Nanoray.ServiceLocator;
 using System;
 
 namespace Nickel;
@@ -14,6 +15,7 @@ internal sealed class ModCharacters : IModCharacters
 		this.V2 = new ModCharactersV2(modManifest, characterManagerProvider);
 	}
 	
+	[Injectable]
 	public IModCharactersV2 V2 { get; }
 
 	public ICharacterAnimationEntry RegisterCharacterAnimation(CharacterAnimationConfiguration configuration)
