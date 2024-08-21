@@ -11,8 +11,8 @@ namespace Nanoray.PluginManager.Implementations;
 /// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
 public sealed class ValidatingPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-	private IPluginPackageResolver<TPluginManifest> Resolver { get; }
-	private Func<IPluginPackage<TPluginManifest>, Error<string>?> Validator { get; }
+	private readonly IPluginPackageResolver<TPluginManifest> Resolver;
+	private readonly Func<IPluginPackage<TPluginManifest>, Error<string>?> Validator;
 
 	/// <summary>
 	/// Creates a new <see cref="ValidatingPluginPackageResolver{TPluginManifest}"/>.

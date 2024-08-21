@@ -49,7 +49,7 @@ internal sealed class CompoundAssemblyResolver(
 
 	public sealed class MultipleExceptions : Exception
 	{
-		public IReadOnlyList<Exception> Exceptions { get; }
+		public readonly IReadOnlyList<Exception> Exceptions;
 
 		public MultipleExceptions(IReadOnlyList<Exception> exceptions) : base(string.Join("\n", exceptions.Select(ex => ex.Message)))
 		{

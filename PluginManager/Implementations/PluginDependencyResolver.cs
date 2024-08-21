@@ -13,7 +13,7 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 	where TPluginManifest : notnull
 	where TVersion : struct, IEquatable<TVersion>, IComparable<TVersion>
 {
-	private Func<TPluginManifest, RequiredManifestData> RequiredManifestDataProvider { get; }
+	private readonly Func<TPluginManifest, RequiredManifestData> RequiredManifestDataProvider;
 
 	/// <summary>
 	/// Creates a new <see cref="PluginDependencyResolver{TPluginManifest,TVersion}"/>.

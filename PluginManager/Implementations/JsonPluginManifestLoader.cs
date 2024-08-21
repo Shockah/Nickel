@@ -11,7 +11,7 @@ namespace Nanoray.PluginManager;
 /// <typeparam name="TPluginManifest"></typeparam>
 public sealed class JsonPluginManifestLoader<TPluginManifest> : IPluginManifestLoader<TPluginManifest>
 {
-	private JsonSerializer Serializer { get; } = new();
+	private readonly JsonSerializer Serializer = new();
 
 	/// <inheritdoc/>
 	public OneOf<TPluginManifest, Error<string>> LoadPluginManifest(Stream stream)

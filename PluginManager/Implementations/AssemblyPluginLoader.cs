@@ -15,10 +15,10 @@ namespace Nanoray.PluginManager;
 /// <typeparam name="TPlugin">The plugin type.</typeparam>
 public sealed class AssemblyPluginLoader<TPluginManifest, TPluginPart, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 {
-	private Func<IPluginPackage<TPluginManifest>, OneOf<AssemblyPluginLoaderRequiredPluginData, Error<string>>> RequiredPluginDataProvider { get; }
-	private IAssemblyPluginLoaderLoadContextProvider<TPluginManifest> LoadContextProvider { get; }
-	private IAssemblyPluginLoaderPartAssembler<TPluginManifest, TPluginPart, TPlugin> PartAssembler { get; }
-	private IAssemblyPluginLoaderParameterInjector<TPluginManifest>? ParameterInjector { get; }
+	private readonly Func<IPluginPackage<TPluginManifest>, OneOf<AssemblyPluginLoaderRequiredPluginData, Error<string>>> RequiredPluginDataProvider;
+	private readonly IAssemblyPluginLoaderLoadContextProvider<TPluginManifest> LoadContextProvider;
+	private readonly IAssemblyPluginLoaderPartAssembler<TPluginManifest, TPluginPart, TPlugin> PartAssembler;
+	private readonly IAssemblyPluginLoaderParameterInjector<TPluginManifest>? ParameterInjector;
 
 	/// <summary>
 	/// Creates a new <see cref="AssemblyPluginLoader{TPluginManifest,TPluginPart,TPlugin}"/>.

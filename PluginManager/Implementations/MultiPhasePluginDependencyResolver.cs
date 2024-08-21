@@ -14,9 +14,9 @@ public sealed class MultiPhasePluginDependencyResolver<TPluginManifest, TVersion
 	where TPluginManifest : notnull
 	where TVersion : struct, IEquatable<TVersion>, IComparable<TVersion>
 {
-	private IPluginDependencyResolver<TPluginManifest, TVersion> Resolver { get; }
-	private Func<TPluginManifest, TLoadPhase> LoadPhaseFunction { get; }
-	private IReadOnlyList<TLoadPhase> LoadPhases { get; }
+	private readonly IPluginDependencyResolver<TPluginManifest, TVersion> Resolver;
+	private readonly Func<TPluginManifest, TLoadPhase> LoadPhaseFunction;
+	private readonly IReadOnlyList<TLoadPhase> LoadPhases;
 
 	/// <summary>
 	/// Creates a new <see cref="MultiPhasePluginDependencyResolver{TPluginManifest,TVersion,TLoadPhase}"/>.

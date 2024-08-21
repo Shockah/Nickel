@@ -12,7 +12,7 @@ namespace Nanoray.PluginManager;
 public sealed class SpecializedPluginManifestLoader<TSpecializedPluginManifest, TPluginManifest> : IPluginManifestLoader<TPluginManifest>
 	where TSpecializedPluginManifest : TPluginManifest
 {
-	private IPluginManifestLoader<TSpecializedPluginManifest> ManifestLoader { get; }
+	private readonly IPluginManifestLoader<TSpecializedPluginManifest> ManifestLoader;
 
 	/// <summary>
 	/// Creates a new <see cref="SpecializedPluginManifestLoader{TSpecializedPluginManifest,TPluginManifest}"/>.

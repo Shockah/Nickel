@@ -13,7 +13,7 @@ namespace Nanoray.PluginManager;
 /// <typeparam name="TPlugin">The plugin type.</typeparam>
 public sealed class ExtendablePluginLoader<TPluginManifest, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 {
-	private List<IPluginLoader<TPluginManifest, TPlugin>> Loaders { get; } = [];
+	private readonly List<IPluginLoader<TPluginManifest, TPlugin>> Loaders = [];
 
 	/// <inheritdoc/>
 	public OneOf<Yes, No, Error<string>> CanLoadPlugin(IPluginPackage<TPluginManifest> package)

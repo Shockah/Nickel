@@ -10,12 +10,12 @@ namespace Nanoray.PluginManager;
 /// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
 public sealed class RecursiveDirectoryPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-	private IDirectoryInfo Directory { get; }
-	private string ManifestFileName { get; }
-	private bool IgnoreDotNames { get; }
-	private bool AllowPluginsInRoot { get; }
-	private Func<IDirectoryInfo, IPluginPackageResolver<TPluginManifest>?>? DirectoryResolverFactory { get; }
-	private Func<IFileInfo, IPluginPackageResolver<TPluginManifest>?>? FileResolverFactory { get; }
+	private readonly IDirectoryInfo Directory;
+	private readonly string ManifestFileName;
+	private readonly bool IgnoreDotNames;
+	private readonly bool AllowPluginsInRoot;
+	private readonly Func<IDirectoryInfo, IPluginPackageResolver<TPluginManifest>?>? DirectoryResolverFactory;
+	private readonly Func<IFileInfo, IPluginPackageResolver<TPluginManifest>?>? FileResolverFactory;
 
 	/// <summary>
 	/// Creates a new <see cref="RecursiveDirectoryPluginPackageResolver{TPluginManifest}"/>.

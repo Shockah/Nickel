@@ -13,8 +13,8 @@ namespace Nanoray.PluginManager;
 public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPluginManifest, TPluginManifest, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 	where TSpecializedPluginManifest : TPluginManifest
 {
-	private IPluginLoader<TSpecializedPluginManifest, TPlugin> Loader { get; }
-	private Func<TPluginManifest, OneOf<TSpecializedPluginManifest, Error<string>>> Converter { get; }
+	private readonly IPluginLoader<TSpecializedPluginManifest, TPlugin> Loader;
+	private readonly Func<TPluginManifest, OneOf<TSpecializedPluginManifest, Error<string>>> Converter;
 
 	/// <summary>
 	/// Creates a new <see cref="SpecializedConvertingManifestPluginLoader{TSpecializedPluginManifest,TPluginManifest,TPlugin}"/>.

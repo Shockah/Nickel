@@ -9,10 +9,10 @@ namespace Nanoray.PluginManager;
 /// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
 public sealed class DirectoryPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-	private IDirectoryInfo Directory { get; }
-	private string ManifestFileName { get; }
-	private IPluginManifestLoader<TPluginManifest> PluginManifestLoader { get; }
-	private SingleFilePluginPackageResolverNoManifestResult NoManifestResult { get; }
+	private readonly IDirectoryInfo Directory;
+	private readonly string ManifestFileName;
+	private readonly IPluginManifestLoader<TPluginManifest> PluginManifestLoader;
+	private readonly SingleFilePluginPackageResolverNoManifestResult NoManifestResult;
 
 	/// <summary>
 	/// Creates a new <see cref="DirectoryPluginPackageResolver{TPluginManifest}"/>.

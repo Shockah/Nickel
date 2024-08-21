@@ -10,7 +10,7 @@ namespace Nanoray.PluginManager;
 /// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
 public sealed class ExtendableAssemblyPluginLoaderParameterInjector<TPluginManifest> : IAssemblyPluginLoaderParameterInjector<TPluginManifest>
 {
-	private List<IAssemblyPluginLoaderParameterInjector<TPluginManifest>> ParameterInjectors { get; } = [];
+	private readonly List<IAssemblyPluginLoaderParameterInjector<TPluginManifest>> ParameterInjectors = [];
 
 	/// <inheritdoc/>
 	public bool TryToInjectParameter(IPluginPackage<TPluginManifest> package, Type type, out object? toInject)

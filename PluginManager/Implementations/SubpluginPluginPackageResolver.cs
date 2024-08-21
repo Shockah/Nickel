@@ -9,8 +9,8 @@ namespace Nanoray.PluginManager;
 /// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
 public sealed class SubpluginPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-	private IPluginPackageResolver<TPluginManifest> BaseResolver { get; }
-	private Func<IPluginPackage<TPluginManifest>, IEnumerable<IPluginPackageResolver<TPluginManifest>>> SubpluginResolverFactory { get; }
+	private readonly IPluginPackageResolver<TPluginManifest> BaseResolver;
+	private readonly Func<IPluginPackage<TPluginManifest>, IEnumerable<IPluginPackageResolver<TPluginManifest>>> SubpluginResolverFactory;
 
 	/// <summary>
 	/// Creates a new <see cref="SubpluginPluginPackageResolver{TPluginManifest}"/>.

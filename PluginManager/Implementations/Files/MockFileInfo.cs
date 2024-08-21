@@ -7,7 +7,7 @@ namespace Nanoray.PluginManager;
 /// </summary>
 public sealed class MockFileInfo : MockFileSystemInfo, IFileInfo<MockFileInfo, MockDirectoryInfo>
 {
-	private byte[] Data { get; }
+	private readonly byte[] Data;
 	
 	/// <summary>
 	/// Creates a new instance of <see cref="MockFileInfo"/>.

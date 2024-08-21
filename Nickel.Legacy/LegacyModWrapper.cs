@@ -26,8 +26,8 @@ internal sealed class LegacyModWrapper : Mod
 		this.Registry = legacyRegistry;
 		this.EventHub = new LegacyPerModEventHub(legacyRegistry.GlobalEventHub, logger);
 
-		DirectoryInfo gameRootFolder = new(Directory.GetCurrentDirectory());
-		DirectoryInfo modRootFolder = new(package.PackageRoot.FullName);
+		var gameRootFolder = new DirectoryInfo(Directory.GetCurrentDirectory());
+		var modRootFolder = new DirectoryInfo(package.PackageRoot.FullName);
 
 		foreach (var manifest in this.LegacyManifests)
 		{

@@ -9,7 +9,7 @@ namespace Nanoray.PluginManager;
 /// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
 public sealed class CompoundAssemblyPluginLoaderParameterInjector<TPluginManifest> : IAssemblyPluginLoaderParameterInjector<TPluginManifest>
 {
-	private IReadOnlyList<IAssemblyPluginLoaderParameterInjector<TPluginManifest>> ParameterInjectors { get; }
+	private readonly IReadOnlyList<IAssemblyPluginLoaderParameterInjector<TPluginManifest>> ParameterInjectors;
 
 	/// <summary>
 	/// Creates a new <see cref="CompoundAssemblyPluginLoaderParameterInjector{TPluginManifest}"/>.

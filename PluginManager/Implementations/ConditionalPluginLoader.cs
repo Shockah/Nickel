@@ -11,8 +11,8 @@ namespace Nanoray.PluginManager;
 /// <typeparam name="TPlugin">The plugin type.</typeparam>
 public sealed class ConditionalPluginLoader<TPluginManifest, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 {
-	private IPluginLoader<TPluginManifest, TPlugin> Loader { get; }
-	private Func<IPluginPackage<TPluginManifest>, OneOf<Yes, No, Error<string>>> Condition { get; }
+	private readonly IPluginLoader<TPluginManifest, TPlugin> Loader;
+	private readonly Func<IPluginPackage<TPluginManifest>, OneOf<Yes, No, Error<string>>> Condition;
 
 	/// <summary>
 	/// Creates a new <see cref="ConditionalPluginLoader{TPluginManifest,TPlugin}"/>.

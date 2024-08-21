@@ -8,9 +8,9 @@ namespace Nickel;
 internal sealed class ModEventManager
 {
 	private readonly IModManifest ModLoaderModManifest;
-	public ManagedEvent<ModLoadPhase> OnModLoadPhaseFinishedEvent { get; }
-	public ManagedEvent<LoadStringsForLocaleEventArgs> OnLoadStringsForLocaleEvent { get; }
-	public ManagedEvent<Exception?> OnGameClosingEvent { get; }
+	public readonly ManagedEvent<ModLoadPhase> OnModLoadPhaseFinishedEvent;
+	public readonly ManagedEvent<LoadStringsForLocaleEventArgs> OnLoadStringsForLocaleEvent;
+	public readonly ManagedEvent<Exception?> OnGameClosingEvent;
 
 	public Artifact PrefixArtifact
 	{

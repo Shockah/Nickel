@@ -338,8 +338,8 @@ internal class CardTraitManager
 	private readonly IModManifest ModManagerModManifest;
 	private readonly ModDataManager ModDataManager;
 
-	internal ManagedEvent<GetDynamicInnateCardTraitOverridesEventArgs> OnGetDynamicInnateCardTraitOverridesEvent { get; }
-	internal ManagedEvent<GetFinalDynamicCardTraitOverridesEventArgs> OnGetFinalDynamicCardTraitOverridesEvent { get; }
+	internal readonly ManagedEvent<GetDynamicInnateCardTraitOverridesEventArgs> OnGetDynamicInnateCardTraitOverridesEvent;
+	internal readonly ManagedEvent<GetFinalDynamicCardTraitOverridesEventArgs> OnGetFinalDynamicCardTraitOverridesEvent;
 
 	internal readonly ICardTraitEntry ExhaustCardTrait;
 	internal readonly ICardTraitEntry RetainCardTrait;

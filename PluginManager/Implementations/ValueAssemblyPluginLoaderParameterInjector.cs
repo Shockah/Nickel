@@ -9,7 +9,7 @@ namespace Nanoray.PluginManager;
 /// <typeparam name="T">The type of value that is being injected</typeparam>
 public sealed class ValueAssemblyPluginLoaderParameterInjector<TPluginManifest, T> : IAssemblyPluginLoaderParameterInjector<TPluginManifest>
 {
-	private T Value { get; }
+	private readonly T Value;
 
 	/// <summary>
 	/// Creates a new <see cref="ValueAssemblyPluginLoaderParameterInjector{TPluginManifest,T}"/>.

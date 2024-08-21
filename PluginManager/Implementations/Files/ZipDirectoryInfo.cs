@@ -14,7 +14,7 @@ public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFile
 	public IEnumerable<IFileSystemInfo<ZipFileInfo, ZipDirectoryInfo>> Children
 		=> this.LazyChildren.Value;
 
-	private Lazy<List<IFileSystemInfo<ZipFileInfo, ZipDirectoryInfo>>> LazyChildren { get; }
+	private readonly Lazy<List<IFileSystemInfo<ZipFileInfo, ZipDirectoryInfo>>> LazyChildren;
 
 	internal ZipDirectoryInfo(ZipArchive archive, string name, ZipDirectoryInfo? parent, bool exists = true) : base(archive, name, parent, exists)
 	{

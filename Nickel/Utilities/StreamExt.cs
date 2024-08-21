@@ -17,7 +17,7 @@ public static class StreamExt
 	{
 		try
 		{
-			MemoryStream memoryStream = new(capacity: (int)(stream.Length - stream.Position));
+			var memoryStream = new MemoryStream(capacity: (int)(stream.Length - stream.Position));
 			stream.CopyTo(memoryStream);
 			memoryStream.Position = 0;
 			return memoryStream;

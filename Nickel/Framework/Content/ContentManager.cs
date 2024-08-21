@@ -7,16 +7,16 @@ namespace Nickel;
 
 internal sealed class ContentManager
 {
-	public SpriteManager Sprites { get; }
-	public DeckManager Decks { get; }
-	public StatusManager Statuses { get; }
-	public CardManager Cards { get; }
-	public ArtifactManager Artifacts { get; }
-	public CharacterManager Characters { get; }
-	public PartManager Parts { get; }
-	public ShipManager Ships { get; }
-	public CardTraitManager CardTraits { get; }
-	public EnemyManager Enemies { get; }
+	public readonly SpriteManager Sprites;
+	public readonly DeckManager Decks;
+	public readonly StatusManager Statuses;
+	public readonly CardManager Cards;
+	public readonly ArtifactManager Artifacts;
+	public readonly CharacterManager Characters;
+	public readonly PartManager Parts;
+	public readonly ShipManager Ships;
+	public readonly CardTraitManager CardTraits;
+	public readonly EnemyManager Enemies;
 
 	private ContentManager(
 		SpriteManager sprites,

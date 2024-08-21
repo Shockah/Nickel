@@ -21,8 +21,7 @@ internal sealed class CompoundCobaltCoreResolver : ICobaltCoreResolver
 			var resultOrError = resolver.ResolveCobaltCore();
 			if (resultOrError.TryPickT0(out var result, out var error))
 				return result;
-			else
-				errors.Add(error.Value);
+			errors.Add(error.Value);
 		}
 		return new Error<string>(string.Join("\n", errors));
 	}

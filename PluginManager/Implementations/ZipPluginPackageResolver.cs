@@ -11,8 +11,8 @@ namespace Nanoray.PluginManager;
 /// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
 public sealed class ZipPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-	private IFileInfo ZipFile { get; }
-	private Func<IDirectoryInfo, IPluginPackageResolver<TPluginManifest>> ResolverFactory { get; }
+	private readonly IFileInfo ZipFile;
+	private readonly Func<IDirectoryInfo, IPluginPackageResolver<TPluginManifest>> ResolverFactory;
 
 	/// <summary>
 	/// Creates a new <see cref="ZipPluginPackageResolver{TPluginManifest}"/>

@@ -13,8 +13,8 @@ namespace Nanoray.PluginManager.Implementations;
 public sealed class DistinctPluginPackageResolver<TPluginManifest, TKey> : IPluginPackageResolver<TPluginManifest>
 	where TKey : IEquatable<TKey>
 {
-	private IPluginPackageResolver<TPluginManifest> Resolver { get; }
-	private Func<IPluginPackage<TPluginManifest>, TKey> KeyFunction { get; }
+	private readonly IPluginPackageResolver<TPluginManifest> Resolver;
+	private readonly Func<IPluginPackage<TPluginManifest>, TKey> KeyFunction;
 
 	/// <summary>
 	/// Creates a new <see cref="DistinctPluginPackageResolver{TPluginManifest,TKey}"/>.

@@ -10,7 +10,7 @@ namespace Nanoray.PluginManager;
 public sealed class DelegateAssemblyPluginLoaderParameterInjector<TPluginManifest, T>
 	: IAssemblyPluginLoaderParameterInjector<TPluginManifest>
 {
-	private Func<IPluginPackage<TPluginManifest>, T> Delegate { get; }
+	private readonly Func<IPluginPackage<TPluginManifest>, T> Delegate;
 
 	/// <summary>
 	/// Creates a new <see cref="DelegateAssemblyPluginLoaderParameterInjector{TPluginManifest,T}"/>

@@ -8,9 +8,9 @@ namespace Nanoray.PluginManager.Implementations;
 /// <typeparam name="TPluginManifest">The type of the plugin manifest.</typeparam>
 public sealed class InnerPluginPackageResolver<TPluginManifest> : IPluginPackageResolver<TPluginManifest>
 {
-	private IPluginPackage<TPluginManifest> OuterPackage { get; }
-	private TPluginManifest InnerManifest { get; }
-	private bool DisposesOuterPackage { get; }
+	private readonly IPluginPackage<TPluginManifest> OuterPackage;
+	private readonly TPluginManifest InnerManifest;
+	private readonly bool DisposesOuterPackage;
 
 	/// <summary>
 	/// Creates a new <see cref="InnerPluginPackageResolver{TPluginManifest}"/>.

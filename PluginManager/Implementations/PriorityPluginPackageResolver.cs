@@ -12,7 +12,7 @@ namespace Nanoray.PluginManager.Implementations;
 public sealed class PriorityPluginPackageResolver<TPluginManifest, TPriority> : IPluginPackageResolver<PluginManifestWithPriority<TPluginManifest, TPriority>>
 	where TPriority : struct, INumber<TPriority>
 {
-	private IPluginPackageResolver<TPluginManifest> Resolver { get; }
+	private readonly IPluginPackageResolver<TPluginManifest> Resolver;
 	private readonly TPriority Priority;
 
 	/// <summary>

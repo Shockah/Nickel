@@ -12,8 +12,8 @@ public sealed class InnerPluginPackage<TPluginManifest> : IPluginPackage<TPlugin
 	/// <inheritdoc/>
 	public IDirectoryInfo PackageRoot { get; }
 
-	private IPluginPackage<TPluginManifest> OuterPackage { get; }
-	private bool DisposesOuterPackage { get; }
+	private readonly IPluginPackage<TPluginManifest> OuterPackage;
+	private readonly bool DisposesOuterPackage;
 
 	/// <summary>
 	/// Creates a new <see cref="InnerPluginPackage{TPluginManifest}"/>.

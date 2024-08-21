@@ -12,8 +12,8 @@ namespace Nanoray.PluginManager;
 /// <typeparam name="TPlugin">The plugin type.</typeparam>
 public sealed class ValidatingPluginLoader<TPluginManifest, TPlugin> : IPluginLoader<TPluginManifest, TPlugin>
 {
-	private IPluginLoader<TPluginManifest, TPlugin> Loader { get; }
-	private Func<IPluginPackage<TPluginManifest>, TPlugin, ValidatingPluginLoaderResult> Validator { get; }
+	private readonly IPluginLoader<TPluginManifest, TPlugin> Loader;
+	private readonly Func<IPluginPackage<TPluginManifest>, TPlugin, ValidatingPluginLoaderResult> Validator;
 
 	/// <summary>
 	/// Creates a new <see cref="ValidatingPluginLoader{TPluginManifest,TPlugin}"/>.
