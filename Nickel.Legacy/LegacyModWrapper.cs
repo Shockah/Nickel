@@ -12,11 +12,11 @@ namespace Nickel;
 
 internal sealed class LegacyModWrapper : Mod
 {
-	internal IPluginPackage<IModManifest> Package { get; }
-	internal IModHelper Helper { get; }
-	internal IReadOnlySet<ILegacyManifest> LegacyManifests { get; }
-	internal ICustomEventHub EventHub { get; }
-	internal LegacyRegistry Registry { get; }
+	internal readonly IPluginPackage<IModManifest> Package;
+	internal readonly IModHelper Helper;
+	internal readonly IReadOnlySet<ILegacyManifest> LegacyManifests;
+	internal readonly ICustomEventHub EventHub;
+	internal readonly LegacyRegistry Registry;
 
 	public LegacyModWrapper(IPluginPackage<IModManifest> package, IReadOnlySet<ILegacyManifest> legacyManifests, LegacyRegistry legacyRegistry, IModHelper helper, ILogger logger)
 	{
@@ -72,7 +72,7 @@ internal sealed class LegacyModWrapper : Mod
 			set { }
 		}
 
-		private IModManifest ModManifest { get; }
+		private readonly IModManifest ModManifest;
 
 		public NewToLegacyManifestStub(IModManifest modManifest)
 		{

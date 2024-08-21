@@ -10,9 +10,6 @@ internal sealed class CallbackPluginLoader<TPluginManifest, TPlugin>(
 	Action<PluginLoadResult<TPlugin>> callback
 ) : IPluginLoader<TPluginManifest, TPlugin>
 {
-	private IPluginLoader<TPluginManifest, TPlugin> Loader { get; } = loader;
-	private Action<PluginLoadResult<TPlugin>> Callback { get; } = callback;
-
 	public CallbackPluginLoader(
 		IPluginLoader<TPluginManifest, TPlugin> loader,
 		Action<TPlugin> callback
@@ -24,12 +21,12 @@ internal sealed class CallbackPluginLoader<TPluginManifest, TPlugin>(
 	{ }
 
 	public OneOf<Yes, No, Error<string>> CanLoadPlugin(IPluginPackage<TPluginManifest> package)
-		=> this.Loader.CanLoadPlugin(package);
+		=> loader.CanLoadPlugin(package);
 
 	public PluginLoadResult<TPlugin> LoadPlugin(IPluginPackage<TPluginManifest> package)
 	{
-		var result = this.Loader.LoadPlugin(package);
-		this.Callback(result);
+		var result = loader.LoadPlugin(package);
+		callback(result);
 		return result;
 	}
 }

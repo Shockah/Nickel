@@ -13,13 +13,13 @@ internal sealed class LegacyEventHub
 	/// <summary>
 	/// Similiar to volatileCustomEventLookup but with the assumption that the user can call DisconnectFromEvent function.
 	/// </summary>
-	private Dictionary<string, Tuple<Type, HashSet<object>>> PersistentCustomEventLookup { get; } = [];
+	private readonly Dictionary<string, Tuple<Type, HashSet<object>>> PersistentCustomEventLookup = [];
 
 	/// <summary>
 	/// Since Cards/Artifacts etc. are not disposable, we cannot hold permanent rerference for fear of an memory leak.
 	/// Thus we only store a week reference to the target instance of the action and the action itself.
 	/// </summary>
-	private Dictionary<string, Tuple<Type, ConditionalWeakTable<object, Delegate>>> VolatileCustomEventLookup { get; } = [];
+	private readonly Dictionary<string, Tuple<Type, ConditionalWeakTable<object, Delegate>>> VolatileCustomEventLookup = [];
 
 	public bool ConnectToEvent<T>(ILogger logger, string eventName, Action<T> handler)
 	{

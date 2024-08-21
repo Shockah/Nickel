@@ -11,9 +11,9 @@ namespace Nickel;
 
 internal sealed class LegacyAssemblyPluginLoaderPartAssembler : IAssemblyPluginLoaderPartAssembler<IAssemblyModManifest, ILegacyManifest, Mod>
 {
-	private Func<IPluginPackage<IModManifest>, IModHelper> HelperProvider { get; }
-	private Func<IModManifest, ILogger> LoggerProvider { get; }
-	private LegacyDatabase Database { get; }
+	private readonly Func<IPluginPackage<IModManifest>, IModHelper> HelperProvider;
+	private readonly Func<IModManifest, ILogger> LoggerProvider;
+	private readonly LegacyDatabase Database;
 
 	public LegacyAssemblyPluginLoaderPartAssembler(
 		Func<IPluginPackage<IModManifest>, IModHelper> helperProvider,

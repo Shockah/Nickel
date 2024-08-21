@@ -10,10 +10,10 @@ namespace Nickel;
 
 internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvider)
 {
-	internal List<LegacyModWrapper> LegacyMods { get; } = [];
-	internal Dictionary<ILegacyManifest, LegacyModWrapper> LegacyManifestToMod { get; } = [];
-	internal List<ILegacyManifest> LegacyManifests { get; } = [];
-	internal LegacyEventHub GlobalEventHub { get; } = new();
+	internal readonly List<LegacyModWrapper> LegacyMods = [];
+	internal readonly Dictionary<ILegacyManifest, LegacyModWrapper> LegacyManifestToMod = [];
+	internal readonly List<ILegacyManifest> LegacyManifests = [];
+	internal readonly LegacyEventHub GlobalEventHub = new();
 
 	private readonly Dictionary<string, ExternalSprite> GlobalNameToSprite = [];
 	private readonly Dictionary<string, ExternalGlossary> GlobalNameToGlossary = [];

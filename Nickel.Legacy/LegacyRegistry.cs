@@ -27,14 +27,13 @@ internal sealed class LegacyRegistry
 	internal LegacyEventHub GlobalEventHub
 		=> this.Database.GlobalEventHub;
 
-	private IModManifest ModManifest { get; }
-	private IModHelper Helper { get; }
-	private ILogger Logger { get; }
+	private readonly IModManifest ModManifest;
+	private readonly IModHelper Helper;
+	private readonly ILogger Logger;
+	private readonly LegacyDatabase Database;
 
 	public Func<object> GetCobaltCoreGraphicsDeviceFunc
 		=> () => MG.inst.GraphicsDevice;
-
-	private LegacyDatabase Database { get; }
 
 	public LegacyRegistry(
 		IModManifest modManifest,

@@ -13,16 +13,16 @@ public sealed class ModEntry : SimpleMod
 {
 	internal static ModEntry Instance { get; private set; } = null!;
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
-	internal ApiImplementation Api { get; private set; }
+	internal readonly ApiImplementation Api;
 	internal readonly Settings Settings;
 	internal IMoreDifficultiesApi? MoreDifficultiesApi { get; private set; }
 
 	internal static bool StopStateTransitions;
 
-	internal ISpriteEntry ScrollUpSprite { get; private set; }
-	internal ISpriteEntry ScrollUpOnSprite { get; private set; }
-	internal ISpriteEntry ScrollDownSprite { get; private set; }
-	internal ISpriteEntry ScrollDownOnSprite { get; private set; }
+	internal readonly ISpriteEntry ScrollUpSprite;
+	internal readonly ISpriteEntry ScrollUpOnSprite;
+	internal readonly ISpriteEntry ScrollDownSprite;
+	internal readonly ISpriteEntry ScrollDownOnSprite;
 
 	private readonly Dictionary<Deck, Type?> ExeCache = [];
 	private readonly Dictionary<Type, Deck> ExeTypeToDeck = [];
