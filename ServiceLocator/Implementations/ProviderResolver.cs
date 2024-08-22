@@ -69,8 +69,7 @@ public sealed class ProviderResolver(
 			this.ResolveDelegates[realComponentType] = resolveDelegate;
 		}
 
-		var typedDelegate = (Func<TComponent>)resolveDelegate;
-		component = typedDelegate();
+		component = (TComponent)(object)resolveDelegate;
 		return true;
 	}
 

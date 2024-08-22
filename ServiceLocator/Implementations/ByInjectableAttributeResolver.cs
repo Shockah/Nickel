@@ -38,7 +38,7 @@ public sealed class ByInjectableAttributeResolver : IResolver
 			if (property.GetMethod is not { } getter)
 				continue;
 
-			var method = new DynamicMethod($"Resolve{property.Name}", property.PropertyType, isStatic ? [] : [this.Type]);
+			var method = new DynamicMethod($"Resolve{property.Name}", property.PropertyType, isStatic ? [] : [typeof(object)]);
 			var il = method.GetILGenerator();
 
 			if (!isStatic)
@@ -58,7 +58,7 @@ public sealed class ByInjectableAttributeResolver : IResolver
 			if (field.GetCustomAttribute<InjectableAttribute>() is null)
 				continue;
 
-			var method = new DynamicMethod($"Resolve{field.Name}", field.FieldType, isStatic ? [] : [this.Type]);
+			var method = new DynamicMethod($"Resolve{field.Name}", field.FieldType, isStatic ? [] : [typeof(object)]);
 			var il = method.GetILGenerator();
 			
 			if (!isStatic)
@@ -79,8 +79,10 @@ public sealed class ByInjectableAttributeResolver : IResolver
 				continue;
 			if (typeMethod.ReturnType == typeof(void))
 				continue;
+			if (typeMethod.GetParameters().Length != 0)
+				continue;
 
-			var method = new DynamicMethod($"ResolveVia{typeMethod.Name}", typeMethod.ReturnType, isStatic ? [] : [this.Type]);
+			var method = new DynamicMethod($"ResolveVia{typeMethod.Name}", typeMethod.ReturnType, isStatic ? [] : [typeof(object)]);
 			var il = method.GetILGenerator();
 			
 			if (!isStatic)
@@ -103,22 +105,20 @@ public sealed class ByInjectableAttributeResolver : IResolver
 	/// <inheritdoc/>
 	public bool TryResolve<TComponent>(IResolver rootResolver, [MaybeNullWhen(false)] out TComponent component)
 	{
-		var isStatic = this.Instance is null;
-		
 		foreach (var (type, rawDelegate) in this.Delegates)
 		{
 			if (!type.IsAssignableTo(typeof(TComponent)))
 				continue;
 
-			if (isStatic)
+			if (this.Instance is null)
 			{
 				var @delegate = (Func<TComponent>)rawDelegate;
 				component = @delegate();
 			}
 			else
 			{
-				var @delegate = (Func<TComponent>)rawDelegate;
-				component = @delegate();
+				var @delegate = (Func<object, TComponent>)rawDelegate;
+				component = @delegate(this.Instance!);
 			}
 			return true;
 		}
