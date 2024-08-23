@@ -106,6 +106,8 @@
 		<Reference Include="Shrike" Private="False" HintPath="$(ModLoaderPath)\Shrike.dll" />
 		<Reference Include="Shrike.Harmony" Private="False" HintPath="$(ModLoaderPath)\Shrike.Harmony.dll" />
 		<Reference Include="OneOf" Private="False" HintPath="$(ModLoaderPath)\OneOf.dll" />
+		<Reference Include="Pintail" Private="False" HintPath="$(ModLoaderPath)\Pintail.dll" />
+		<Reference Include="Mitosis" Private="False" HintPath="$(ModLoaderPath)\Mitosis.dll" Condition="Exists('$(ModLoaderPath)\Mitosis.dll')" />
 		<Reference Include="Microsoft.Extensions.Logging.Abstractions" Private="False" HintPath="$(ModLoaderPath)\Microsoft.Extensions.Logging.Abstractions.dll" />
 		<Reference Condition="$(IsLegacyMod) And Exists('$(LegacyModPath)')" Include="CobaltCoreModding.Definitions" Private="False" HintPath="$(LegacyModPath)\CobaltCoreModding.Definitions.dll" />
 		<Reference Condition="$(IsLegacyMod) And Exists('$(LegacyModPath)')" Include="Nickel.Legacy" Private="False" HintPath="$(LegacyModPath)\Nickel.Legacy.dll" />
