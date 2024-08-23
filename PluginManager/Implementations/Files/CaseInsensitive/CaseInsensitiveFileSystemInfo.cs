@@ -64,14 +64,7 @@ public class CaseInsensitiveFileSystemInfo(IFileSystemInfo wrapped) : IFileSyste
 
 	/// <inheritdoc/>
 	public bool Exists
-	{
-		get
-		{
-			if (this.Parent?.Children.FirstOrDefault(c => c.IsFile && c.Name.Equals(this.Name, StringComparison.InvariantCultureIgnoreCase)) is not null)
-				return true;
-			return false;
-		}
-	}
+		=> GetCaseFixed(this.Wrapped).Exists;
 	
 	/// <inheritdoc/>
 	public CaseInsensitiveFileInfo? AsFile
