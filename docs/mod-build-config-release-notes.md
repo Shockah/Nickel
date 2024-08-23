@@ -2,6 +2,11 @@
 
 # Release notes
 
+## 1.2.3
+Released 23 August 2024.
+
+* The package now adds references for the Pintail and Mitosis libraries.
+
 ## 1.2.2
 Released 5 August 2024.
 

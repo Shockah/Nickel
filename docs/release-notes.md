@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.5.0
+Released 23 August 2024.
 
 ### For players:
 * Nickel is now able to load legacy mods from ZIP files (by first extracting them to a temporary folder). This is done every time Nickel starts, so if you want to avoid some extra load times, it is still recommended to extract mods manually.
@@ -12,7 +13,7 @@
 * General optimizations.
 
 ### For developers:
-* Nickel now rewrites mods to make mods built for pre-1.2 Cobalt Core still launch in 1.2. Some mods may still need to be updated manually.
+* Nickel now rewrites mods to make mods built for pre-1.2 Cobalt Core still launch in upcoming 1.2. Some mods may still need to be updated manually.
 * Plugin (mod) package paths are now case insensitive, no matter the underlying filesystem or storage method.
 * `IAssemblyDefinitionEditor.EditAssemblyDefinition` now needs to return a `bool` reflecting whether the editor actually edited the assembly, and also gets a new parameter which lets an editor log messages.
 * Incorporated a new [Mitosis](https://github.com/Nanoray-pl/Mitosis) library and replaced `Mutil.DeepCopy`'s implementation with one utilizing Mitosis, significantly improving copying performance.
