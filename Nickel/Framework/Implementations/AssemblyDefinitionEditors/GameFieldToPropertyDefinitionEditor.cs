@@ -130,7 +130,7 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 			
 			setterReference = method.Module.ImportReference(propertyDefinition.SetMethod);
 			cache[fieldReference.FullName] = setterReference;
-			logger(new() { Level = AssemblyEditorResult.MessageLevel.Debug, Content = $"Rewriting field `{fieldReference.FullName}` write in {method.FullName} to {setterReference.FullName}." });
+			logger(new() { Level = AssemblyEditorResult.MessageLevel.Debug, Content = $"Rewriting field `{fieldReference.FullName}` write in `{method.FullName}` to {setterReference.FullName}." });
 		}
 
 		if (setterReference is null)

@@ -19,7 +19,7 @@ public static partial class RewriteFacades
 		private static readonly Lazy<Func<MapNodeContents, State, Route>> Emitted_MapNodeContents_MakeRoute = new(() =>
 		{
 			var mapNodeContentsType = typeof(MapNodeContents);
-			var makeRouteMethod = mapNodeContentsType.GetMethod("MakeRoute")!;
+			var makeRouteMethod = mapNodeContentsType.GetMethod(nameof(MapNodeContents.MakeRoute))!;
 			
 			var method = new DynamicMethod($"{nameof(RewriteFacades)}_{nameof(V1_2)}_{nameof(Emitted_MapNodeContents_MakeRoute)}", typeof(Route), [typeof(MapNodeContents), typeof(State)]);
 			var il = method.GetILGenerator();
@@ -161,7 +161,7 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 				continue;
 
 			var facadeMethodReference = method.Module.ImportReference(typeof(RewriteFacades.V1_2).GetMethod(nameof(RewriteFacades.V1_2.MapNodeContents_MakeRoute)));
-			logger(new() { Level = AssemblyEditorResult.MessageLevel.Debug, Content = $"Rewriting method call `{methodReference.FullName}` with `{facadeMethodReference.FullName}`." });
+			logger(new() { Level = AssemblyEditorResult.MessageLevel.Debug, Content = $"Rewriting method call `{methodReference.FullName}` in `{method.FullName}` with `{facadeMethodReference.FullName}`." });
 			instruction.OpCode = COpCodes.Call;
 			instruction.Operand = facadeMethodReference;
 			didAnything = true;
