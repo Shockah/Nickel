@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For players:
+* Updated the Mitosis library, fixing problems with some mods.
+
 ## 1.5.1
 Released 23 August 2024.
 
