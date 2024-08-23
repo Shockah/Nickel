@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.5.1
+Released 23 August 2024.
 
 ### For players:
 * Added more mod rewriters, improving compatibility with pre-1.2 mods on 1.2.
