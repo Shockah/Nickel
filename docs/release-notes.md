@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.5.4
+Released 24 August 2024.
 
 ### For players:
 * Nickel no longer utilizes Mitosis. The library will be brought back after being updated and thoroughly tested.
