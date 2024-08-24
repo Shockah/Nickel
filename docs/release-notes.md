@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.5.3
+Released 24 August 2024.
 
 ### For players:
 * Updated the Mitosis library, again, fixing problems with some mods.
