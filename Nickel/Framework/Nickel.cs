@@ -188,7 +188,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		]));
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GamePublicizerDefinitionEditor());
-		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new DeepCopyViaMitosisDefinitionEditor());
+		// extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new DeepCopyViaMitosisDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GameFieldToPropertyDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new V1_2_MapNodeContents_MakeRoute_DefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new V1_2_CardReward_GetUpgrade_DefinitionEditor());
