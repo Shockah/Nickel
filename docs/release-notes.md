@@ -2,6 +2,12 @@
 
 # Release notes
 
+## Upcoming release
+
+### For players:
+* Updated the Mitosis library, again, fixing problems with some mods.
+* To prevent further additional issues, Nickel will now fallback to the original JSON-based method if Mitosis fails.
+
 ## 1.5.2
 Released 23 August 2024.
 
