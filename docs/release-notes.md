@@ -2,6 +2,11 @@
 
 # Release notes
 
+## 1.5.5
+Released 25 August 2024.
+
+* Rebuilt Nickel against the current version of the game (1.1.2) instead of the upcoming one (1.2). Whoops!
+
 ## 1.5.4
 Released 24 August 2024.
 
