@@ -16,24 +16,25 @@ public static partial class RewriteFacades
 {
 	public static partial class V1_2
 	{
-		private static readonly Lazy<Func<MapNodeContents, State, Route>> Emitted_MapNodeContents_MakeRoute = new(() =>
+		private static readonly Lazy<Func<MapNodeContents, State, Vec, Route>> Emitted_MapNodeContents_MakeRoute = new(() =>
 		{
 			var mapNodeContentsType = typeof(MapNodeContents);
 			var makeRouteMethod = mapNodeContentsType.GetMethod(nameof(MapNodeContents.MakeRoute))!;
 			
-			var method = new DynamicMethod($"{nameof(RewriteFacades)}_{nameof(V1_2)}_{nameof(Emitted_MapNodeContents_MakeRoute)}", typeof(Route), [typeof(MapNodeContents), typeof(State)]);
+			var method = new DynamicMethod($"{nameof(RewriteFacades)}_{nameof(V1_2)}_{nameof(Emitted_MapNodeContents_MakeRoute)}", typeof(Route), [typeof(MapNodeContents), typeof(State), typeof(Vec)]);
 			var il = method.GetILGenerator();
 
 			il.Emit(SOpCodes.Ldarg_0);
 			il.Emit(SOpCodes.Ldarg_1);
+			il.Emit(SOpCodes.Ldarg_2);
 			il.Emit(SOpCodes.Callvirt, makeRouteMethod);
 			il.Emit(SOpCodes.Ret);
 
-			return method.CreateDelegate<Func<MapNodeContents, State, Route>>();
+			return method.CreateDelegate<Func<MapNodeContents, State, Vec, Route>>();
 		});
 		
 		public static Route MapNodeContents_MakeRoute(MapNodeContents @this, State s)
-			=> Emitted_MapNodeContents_MakeRoute.Value(@this, s);
+			=> Emitted_MapNodeContents_MakeRoute.Value(@this, s, s.map.currentLocation);
 	}
 }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
@@ -87,8 +88,13 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 	private bool HandleType(TypeDefinition type, TypeReference routeTypeReference, TypeReference stateTypeReference, TypeReference vecTypeReference, Action<AssemblyEditorResult.Message> logger)
 	{
 		var didAnything = false;
+		
 		RewriteOverride();
 		RewriteCalls();
+
+		foreach (var nestedType in type.NestedTypes)
+			didAnything |= this.HandleType(nestedType, routeTypeReference, stateTypeReference, vecTypeReference, logger);
+		
 		return didAnything;
 
 		void RewriteOverride()

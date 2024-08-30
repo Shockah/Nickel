@@ -106,6 +106,8 @@ internal sealed class V1_2_CardReward_GetUpgrade_DefinitionEditor : IAssemblyDef
 		var didAnything = false;
 		foreach (var method in type.Methods)
 			didAnything |= this.HandleMethod(method, upgradeType, randType, mapBaseType, cardType, logger);
+		foreach (var nestedType in type.NestedTypes)
+			didAnything |= this.HandleType(nestedType, upgradeType, randType, mapBaseType, cardType, logger);
 		return didAnything;
 	}
 
