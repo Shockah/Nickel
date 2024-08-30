@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.5.6
+Released 30 August 2024.
 
 * Fixed Cobalt Core 1.2 rewriters, which fixes issues with mods like Rerolls.
 
