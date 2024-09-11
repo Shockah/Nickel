@@ -1,4 +1,5 @@
 using HarmonyLib;
+using System;
 using System.Linq;
 using System.Reflection;
 
@@ -8,7 +9,8 @@ internal static class DebugMenuFixes
 {
 	public static void ApplyPatches(IHarmony harmony)
 		=> harmony.Patch(
-			original: AccessTools.DeclaredConstructor(typeof(Editor), []),
+			original: AccessTools.DeclaredConstructor(typeof(Editor), [])
+					?? throw new InvalidOperationException($"Could not patch game methods: missing ctor for type `{nameof(Editor)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Editor_ctor_Postfix))
 		);
 

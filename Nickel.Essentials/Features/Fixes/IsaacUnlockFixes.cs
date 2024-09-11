@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace Nickel.Essentials;
 
-internal static class FixIsaacUnlock
+internal static class IsaacUnlockFixes
 {
 	public static void ApplyPatches(IHarmony harmony)
 		=> harmony.Patch(

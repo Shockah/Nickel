@@ -14,7 +14,8 @@ internal static class ArtifactCodexFixes
 {
 	public static void ApplyPatches(IHarmony harmony)
 		=> harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(ArtifactBrowse), nameof(ArtifactBrowse.Render)),
+			original: AccessTools.DeclaredMethod(typeof(ArtifactBrowse), nameof(ArtifactBrowse.Render))
+					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(ArtifactBrowse)}.{nameof(ArtifactBrowse.Render)}`"),
 			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(ArtifactBrowse_Render_Transpiler))
 		);
 
