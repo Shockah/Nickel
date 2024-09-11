@@ -2,7 +2,6 @@ using HarmonyLib;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Nickel.Essentials;
@@ -18,7 +17,6 @@ public enum CardBrowseCurrentPileSetting
 	Off, Tooltip, Icon, Both
 }
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class CardBrowseCurrentPile
 {
 	private static ISpriteEntry InDrawPileIcon = null!;

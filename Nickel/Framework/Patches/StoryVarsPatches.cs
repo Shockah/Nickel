@@ -1,12 +1,10 @@
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Nickel;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class StoryVarsPatches
 {
 	internal static EventHandler<HashSet<Deck>>? OnGetUnlockedChars;

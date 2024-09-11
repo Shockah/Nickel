@@ -3,12 +3,10 @@ using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Nickel.Essentials;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 public sealed class ModEntry : SimpleMod
 {
 	internal static ModEntry Instance { get; private set; } = null!;

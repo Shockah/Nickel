@@ -11,7 +11,6 @@ using System.Reflection.Emit;
 
 namespace Nickel;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class ArtifactRewardPatches
 {
 	internal static EventHandler<GetBlockedArtifactsEventArgs>? OnGetBlockedArtifacts;

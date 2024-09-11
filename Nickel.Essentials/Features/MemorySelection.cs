@@ -11,7 +11,6 @@ using System.Reflection.Emit;
 
 namespace Nickel.Essentials;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class MemorySelection
 {
 	private const int MaxCharactersOnScreen = 6;

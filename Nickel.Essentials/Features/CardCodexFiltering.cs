@@ -3,13 +3,11 @@ using FSPRO;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Nickel.Essentials;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static partial class CardCodexFiltering
 {
 	private static readonly UK DeckFilterKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();

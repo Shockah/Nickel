@@ -2,7 +2,6 @@ using HarmonyLib;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
@@ -17,7 +16,6 @@ internal sealed partial class ProfileSettings
 	public bool StarterCardsTooltip = true;
 }
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class StarterDeckPreview
 {
 	private static bool UpdateNextFrame = true;

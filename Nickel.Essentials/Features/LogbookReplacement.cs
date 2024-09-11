@@ -2,13 +2,11 @@ using FSPRO;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
 namespace Nickel.Essentials;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class LogbookReplacement
 {
 	private static readonly UK SelectCharacterKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();

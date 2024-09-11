@@ -2,12 +2,10 @@ using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Nickel.Essentials;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class UnlockedWindowResize
 {
 	private static bool ForceUpdateOnce = true;

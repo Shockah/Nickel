@@ -10,7 +10,6 @@ using System.Reflection.Emit;
 
 namespace Nickel;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class ShipPatches
 {
 	internal static EventHandler<ShouldStatusFlashEventArgs>? OnShouldStatusFlash;

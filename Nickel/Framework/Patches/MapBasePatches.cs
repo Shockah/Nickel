@@ -1,11 +1,9 @@
 using HarmonyLib;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Nickel;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class MapBasePatches
 {
 	internal static EventHandler<GetEnemyPoolsEventArgs>? OnGetEnemyPools;

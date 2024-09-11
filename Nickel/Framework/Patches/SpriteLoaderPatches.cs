@@ -2,12 +2,10 @@ using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Nickel;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class SpriteLoaderPatches
 {
 	internal static EventHandler<GetTextureEventArgs>? OnGetTexture;

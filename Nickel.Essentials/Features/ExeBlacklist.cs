@@ -22,7 +22,6 @@ internal sealed partial class ProfileSettings
 	public HashSet<Deck> BlacklistedExeOfferings = [];
 }
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class ExeBlacklist
 {
 	private static readonly UK CannotBlacklistWarningKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();

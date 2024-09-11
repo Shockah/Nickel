@@ -1,11 +1,9 @@
 using HarmonyLib;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Nickel;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class GPatches
 {
 	internal static void Apply(Harmony harmony)

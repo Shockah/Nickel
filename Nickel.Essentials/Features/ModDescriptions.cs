@@ -26,7 +26,6 @@ public enum ModDescriptionsKey
 	Off, Ctrl, Shift, Alt, Always
 }
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class ModDescriptions
 {
 	public static void ApplyPatches(IHarmony harmony)

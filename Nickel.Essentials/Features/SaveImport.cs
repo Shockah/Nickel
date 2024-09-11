@@ -14,7 +14,6 @@ using System.Reflection.Emit;
 
 namespace Nickel.Essentials;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class SaveImport
 {
 	private static readonly UK ImportProfileKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();

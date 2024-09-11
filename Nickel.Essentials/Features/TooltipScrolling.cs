@@ -14,7 +14,6 @@ using System.Reflection.Emit;
 
 namespace Nickel.Essentials;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class TooltipScrolling
 {
 	private static string LastTooltipId = "";

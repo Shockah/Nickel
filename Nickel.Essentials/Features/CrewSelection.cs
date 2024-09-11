@@ -20,7 +20,6 @@ internal sealed partial class ProfileSettings
 	public bool DetailedCrewInfo = true;
 }
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class CrewSelection
 {
 	private const int CharactersPerRow = 2;

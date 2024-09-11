@@ -10,7 +10,6 @@ using System.Reflection.Emit;
 
 namespace Nickel;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class CardPatches
 {
 	internal static EventHandler<KeyEventArgs>? OnKey;

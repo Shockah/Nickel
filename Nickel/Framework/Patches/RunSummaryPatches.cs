@@ -1,12 +1,10 @@
 using HarmonyLib;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
 namespace Nickel;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class RunSummaryPatches
 {
 	internal static bool IsDuringRunSummarySaveFromState { get; private set; }

@@ -11,7 +11,6 @@ using System.Reflection.Emit;
 
 namespace Nickel;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class StatePatches
 {
 	internal static bool StopSavingOverride = false;
