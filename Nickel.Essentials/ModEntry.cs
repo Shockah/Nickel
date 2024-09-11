@@ -71,6 +71,7 @@ public sealed class ModEntry : SimpleMod
 		);
 
 		var harmony = helper.Utilities.Harmony;
+		ArtifactCodexFixes.ApplyPatches(harmony);
 		CardBrowseCurrentPile.ApplyPatches(harmony);
 		CardCodexFiltering.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);
