@@ -76,6 +76,7 @@ public sealed class ModEntry : SimpleMod
 		CardBrowseCurrentPile.ApplyPatches(harmony);
 		CardCodexFiltering.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);
+		DebugMenuFixes.ApplyPatches(harmony);
 		ExeBlacklist.ApplyPatches(harmony);
 		FixIsaacUnlock.ApplyPatches(harmony);
 		LogbookReplacement.ApplyPatches(harmony);

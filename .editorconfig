@@ -235,3 +235,5 @@ dotnet_diagnostic.CA1841.severity = warning
 dotnet_diagnostic.CA1713.severity = silent
 dotnet_diagnostic.CA1018.severity = warning
 dotnet_diagnostic.CA1047.severity = warning
+
+resharper_inconsistent_naming_highlighting = none

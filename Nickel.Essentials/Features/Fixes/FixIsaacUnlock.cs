@@ -1,11 +1,9 @@
 using HarmonyLib;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Nickel.Essentials;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal static class FixIsaacUnlock
 {
 	public static void ApplyPatches(IHarmony harmony)
