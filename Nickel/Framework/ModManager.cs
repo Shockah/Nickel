@@ -350,16 +350,12 @@ internal sealed class ModManager
 			);
 	}
 
-	public void LoadMods(ModLoadPhase phase)
+	private IEnumerable<(IModManifest Manifest, Func<Mod?> Step)> GetLoadModsSteps(ModLoadPhase phase)
 	{
-		this.Logger.LogInformation("Loading {Phase} phase mods...", phase);
-		this.CurrentModLoadPhase = new(phase, IsDone: false);
-
 		var pluginLoader = new CaseInsensitivePluginLoader<IModManifest, Mod>(
 			loader: this.ExtendablePluginLoader
 		);
-
-		List<IModManifest> successfulMods = [];
+		
 		foreach (var package in this.ResolvedMods)
 		{
 			var manifest = package.Manifest;
@@ -370,68 +366,114 @@ internal sealed class ModManager
 			if (manifest.LoadPhase != phase)
 				continue;
 
-			var displayName = manifest.GetDisplayName(@long: false);
-			this.Logger.LogDebug("Loading mod {DisplayName} from {Package}...", displayName, package.PackageRoot);
-
-			var failedRequiredDependencies = manifest.Dependencies
-				.Where(d => d.IsRequired && this.FailedMods.Any(m => m.UniqueName == d.UniqueName))
-				.ToList();
-			if (failedRequiredDependencies.Count > 0)
+			yield return (Manifest: manifest, Step: () =>
 			{
-				this.FailedMods.Add(manifest);
-				this.Logger.LogError(
-					"Could not load {DisplayName}: Required dependencies failed to load: {Dependencies}",
-					displayName,
-					string.Join(", ", failedRequiredDependencies.Select(d => d.UniqueName))
-				);
-				continue;
-			}
+				var displayName = manifest.GetDisplayName(@long: false);
+				this.Logger.LogDebug("Loading mod {DisplayName} from {Package}...", displayName, package.PackageRoot);
 
-			var canLoadYesNoOrError = pluginLoader.CanLoadPlugin(package);
-			if (canLoadYesNoOrError.TryPickT2(out var error, out var canLoadYesOrNo))
-			{
-				this.FailedMods.Add(manifest);
-				this.Logger.LogError("Could not load {DisplayName}: {Error}", displayName, error.Value);
-				continue;
-			}
-			if (canLoadYesOrNo.IsT1)
-			{
-				this.FailedMods.Add(manifest);
-				this.Logger.LogError(
-					"Could not load {DisplayName}: no registered loader for this kind of mod.",
-					displayName
-				);
-				continue;
-			}
-
-			try
-			{
-				pluginLoader.LoadPlugin(package)
-					.Switch(
-						success =>
-						{
-							foreach (var warning in success.Warnings)
-								this.Logger.LogWarning("{Warning}", warning);
-
-							this.UniqueNameToPackage[manifest.UniqueName] = package;
-							this.UniqueNameToInstance[manifest.UniqueName] = success.Plugin;
-							successfulMods.Add(manifest);
-							this.Logger.LogInformation("Loaded mod {DisplayName}", manifest.GetDisplayName(@long: true));
-						},
-						error =>
-						{
-							this.FailedMods.Add(manifest);
-							this.Logger.LogError("Could not load {DisplayName}: {Error}", displayName, error.Value);
-						}
+				var failedRequiredDependencies = manifest.Dependencies
+					.Where(d => d.IsRequired && this.FailedMods.Any(m => m.UniqueName == d.UniqueName))
+					.ToList();
+				if (failedRequiredDependencies.Count > 0)
+				{
+					this.FailedMods.Add(manifest);
+					this.Logger.LogError(
+						"Could not load {DisplayName}: Required dependencies failed to load: {Dependencies}",
+						displayName,
+						string.Join(", ", failedRequiredDependencies.Select(d => d.UniqueName))
 					);
-			}
-			catch (Exception ex)
-			{
-				this.FailedMods.Add(manifest);
-				this.Logger.LogError("Could not load {DisplayName}: {ex}", displayName, ex);
-			}
-		}
+					return null;
+				}
 
+				var canLoadYesNoOrError = pluginLoader.CanLoadPlugin(package);
+				if (canLoadYesNoOrError.TryPickT2(out var error, out var canLoadYesOrNo))
+				{
+					this.FailedMods.Add(manifest);
+					this.Logger.LogError("Could not load {DisplayName}: {Error}", displayName, error.Value);
+					return null;
+				}
+				if (canLoadYesOrNo.IsT1)
+				{
+					this.FailedMods.Add(manifest);
+					this.Logger.LogError(
+						"Could not load {DisplayName}: no registered loader for this kind of mod.",
+						displayName
+					);
+					return null;
+				}
+
+				Mod? result = null;
+				try
+				{
+					pluginLoader.LoadPlugin(package)
+						.Switch(
+							success =>
+							{
+								foreach (var warning in success.Warnings)
+									this.Logger.LogWarning("{Warning}", warning);
+
+								this.UniqueNameToPackage[manifest.UniqueName] = package;
+								this.UniqueNameToInstance[manifest.UniqueName] = success.Plugin;
+								this.Logger.LogInformation("Loaded mod {DisplayName}", manifest.GetDisplayName(@long: true));
+								result = success.Plugin;
+							},
+							error =>
+							{
+								this.FailedMods.Add(manifest);
+								this.Logger.LogError("Could not load {DisplayName}: {Error}", displayName, error.Value);
+							}
+						);
+				}
+				catch (Exception ex)
+				{
+					this.FailedMods.Add(manifest);
+					this.Logger.LogError("Could not load {DisplayName}: {ex}", displayName, ex);
+				}
+				return result;
+			});
+		}
+	}
+
+	public IEnumerable<(string name, Action action)> GetGameLoadQueueStepForModLoadPhase(ModLoadPhase phase)
+	{
+		List<IModManifest> successfulMods = [];
+		
+		return [
+			(name: $"Nickel::PreModLoadPhase::{phase}", action: () =>
+			{
+				this.Logger.LogInformation("Loading {Phase} phase mods...", phase);
+				this.CurrentModLoadPhase = new(phase, IsDone: false);
+				
+				// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+				if (DB.currentLocale is null)
+					DB.SetLocale(MG.inst.g.settings.locale, MG.inst.g.settings.highResFont);
+			}),
+			.. this.GetLoadModsSteps(phase).Select<(IModManifest Manifest, Func<Mod?> Step), (string name, Action action)>(step => (name: step.Manifest.GetDisplayName(@long: false), action: () =>
+			{
+				if (step.Step() is not null)
+					successfulMods.Add(step.Manifest);
+			})),
+			(name: $"Nickel::PostModLoadPhase::{phase}", action: () =>
+			{
+				this.CurrentModLoadPhase = new(this.CurrentModLoadPhase.Phase, IsDone: true);
+				this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
+				this.EventManager.OnModLoadPhaseFinishedEvent.Raise(null, phase);
+
+				if (phase == ModLoadPhase.AfterDbInit)
+				{
+					this.DelayedHarmonyManager.ApplyDelayedPatches();
+					this.LogHarmonyPatchesOnce();
+				}
+			})
+		];
+	}
+
+	public void LoadMods(ModLoadPhase phase)
+	{
+		this.Logger.LogInformation("Loading {Phase} phase mods...", phase);
+		this.CurrentModLoadPhase = new(phase, IsDone: false);
+
+		var successfulMods = this.GetLoadModsSteps(phase).Select(step => step.Step()).OfType<IModManifest>().ToList();
 		this.CurrentModLoadPhase = new(this.CurrentModLoadPhase.Phase, IsDone: true);
 		this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
 		this.EventManager.OnModLoadPhaseFinishedEvent.Raise(null, phase);
