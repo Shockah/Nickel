@@ -12,9 +12,11 @@ public sealed class CurrentLocaleOrEnglishLocalizationProvider<TKey>(
 	/// <inheritdoc/>
 	public string? Localize(TKey key, object? tokens = null)
 	{
-		if (provider.Localize(DB.currentLocale.locale, key, tokens) is { } currentLocalized)
+		var locale = DB.currentLocale?.locale ?? "en";
+		
+		if (provider.Localize(locale, key, tokens) is { } currentLocalized)
 			return currentLocalized;
-		if (DB.currentLocale.locale != "en" && provider.Localize("en", key, tokens) is { } englishLocalized)
+		if (locale != "en" && provider.Localize("en", key, tokens) is { } englishLocalized)
 			return englishLocalized;
 		return null;
 	}

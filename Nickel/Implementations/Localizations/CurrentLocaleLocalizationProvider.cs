@@ -11,5 +11,5 @@ public sealed class CurrentLocaleLocalizationProvider<TKey>(
 {
 	/// <inheritdoc/>
 	public string? Localize(TKey key, object? tokens = null)
-		=> provider.Localize(DB.currentLocale.locale, key, tokens);
+		=> provider.Localize(DB.currentLocale?.locale ?? "en", key, tokens);
 }

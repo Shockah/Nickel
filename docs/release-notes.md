@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For developers:
+* `CurrentLocaleLocalizationProvider` and `CurrentLocaleOrEnglishLocalizationProvider` no longer crash if used when the game did not yet load any locale.
+
 ## 1.5.6
 Released 30 August 2024.
 
