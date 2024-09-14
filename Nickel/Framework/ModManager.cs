@@ -526,7 +526,7 @@ internal sealed class ModManager
 
 	internal void ContinueAfterLoadingGameAssembly(SemanticVersion gameVersion)
 	{
-		this.VanillaModManifest = new ModManifest()
+		this.VanillaModManifest = new ModManifest
 		{
 			UniqueName = "CobaltCore",
 			Version = gameVersion,

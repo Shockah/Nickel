@@ -16,7 +16,7 @@ internal sealed class DirectoryPluginPackageResolverTests
 			new MockFileInfo("manifest.json"),
 			new MockFileInfo("mod.dll")
 		]);
-		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader<string>()
+		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader<string>
 		{
 			Manifest = "manifest"
 		};
@@ -45,7 +45,7 @@ internal sealed class DirectoryPluginPackageResolverTests
 		IDirectoryInfo directory = new MockDirectoryInfo("/", [
 			new MockFileInfo("mod.dll")
 		]);
-		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader<string>()
+		IPluginManifestLoader<string> manifestLoader = new MockPluginManifestLoader<string>
 		{
 			Manifest = "manifest"
 		};
