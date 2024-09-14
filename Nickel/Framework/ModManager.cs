@@ -473,7 +473,7 @@ internal sealed class ModManager
 		this.Logger.LogInformation("Loading {Phase} phase mods...", phase);
 		this.CurrentModLoadPhase = new(phase, IsDone: false);
 
-		var successfulMods = this.GetLoadModsSteps(phase).Select(step => step.Step()).OfType<IModManifest>().ToList();
+		var successfulMods = this.GetLoadModsSteps(phase).Select(step => step.Step()).OfType<Mod>().ToList();
 		this.CurrentModLoadPhase = new(this.CurrentModLoadPhase.Phase, IsDone: true);
 		this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
 		this.EventManager.OnModLoadPhaseFinishedEvent.Raise(null, phase);
