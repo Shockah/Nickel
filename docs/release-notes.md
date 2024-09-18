@@ -4,6 +4,9 @@
 
 ## Upcoming release
 
+### For everyone:
+* Updated for the latest game version.
+
 ### For developers:
 * `CurrentLocaleLocalizationProvider` and `CurrentLocaleOrEnglishLocalizationProvider` no longer crash if used when the game did not yet load any locale.
 

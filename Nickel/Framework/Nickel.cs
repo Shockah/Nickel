@@ -364,7 +364,6 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		ArtifactPatches.Apply(harmony);
 		ArtifactRewardPatches.Apply(harmony);
 		CardPatches.Apply(harmony);
-		CheevosPatches.Apply(harmony);
 		CombatPatches.Apply(harmony);
 		DBPatches.Apply(harmony);
 		EventsPatches.Apply(harmony);
