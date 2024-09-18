@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.5.7
+Released 18 September 2024.
 
 ### For everyone:
 * Updated for the latest game version.
