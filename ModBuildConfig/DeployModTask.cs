@@ -78,12 +78,13 @@ public sealed class DeployModTask : Task
 	{
 		var projectDirUri = new Uri(projectDir);
 
-		FileInfo manifestFile = new(Path.Combine(projectDir, ManifestFileName));
+		var manifestFile = new FileInfo(Path.Combine(projectDir, ManifestFileName));
 		if (manifestFile.Exists)
 			yield return (Info: manifestFile, RelativeName: "nickel.json");
 
 		foreach (var file in GetAllFilesFromDirectory(new(targetDir)))
-			yield return file;
+			if (!ShouldIgnore(file.Info))
+				yield return file;
 
 		this.IncludedModProjectPaths = this.IncludedModProjectPaths.Trim();
 		if (this.IncludedModProjectPaths != "")
@@ -115,6 +116,15 @@ public sealed class DeployModTask : Task
 				var relativeName = dirUri.MakeRelativeUri(fileUri).OriginalString;
 				yield return (Info: file, RelativeName: relativeName);
 			}
+		}
+
+		static bool ShouldIgnore(FileInfo file)
+		{
+			if (file.Name.Equals(".DS_Store", StringComparison.InvariantCultureIgnoreCase) || file.Name.Equals("Thumbs.db", StringComparison.InvariantCultureIgnoreCase))
+				return true;
+			if (file.Name.EndsWith(".deps.json"))
+				return true;
+			return false;
 		}
 	}
 

@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* The package now ignores `*.deps.json`, `Thumbs.db` and `.DS_Store` files.
+
 ## 1.2.3
 Released 23 August 2024.
 
