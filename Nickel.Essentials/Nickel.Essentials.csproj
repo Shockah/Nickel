@@ -2,8 +2,11 @@
 	<Import Project="..\Configuration.InternalMod.props" />
 	<PropertyGroup>
 		<RootNamespace>Nickel.Essentials</RootNamespace>
-		<IncludedModProjectPaths>i18n;assets</IncludedModProjectPaths>
 	</PropertyGroup>
+	<ItemGroup>
+		<ModFiles Include="i18n/**" />
+		<ModFiles Include="assets/**" />
+	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="ImGui.NET" Version="1.89.5.0" IncludeAssets="compile" PrivateAssets="all" />
 	</ItemGroup>

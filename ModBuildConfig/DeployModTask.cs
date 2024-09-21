@@ -41,6 +41,8 @@ public sealed class DeployModTask : Task
 	[Required]
 	public string ModZipPath { get; set; } = null!;
 
+	public ITaskItem[] ModFiles { get; set; } = [];
+
 	public string IncludedModProjectPaths { get; set; } = "";
 
 	public string ModVersionValidation { get; set; } = Enum.GetName(typeof(ModVersionValidation), ModBuildConfig.ModVersionValidation.Error)!;
@@ -89,30 +91,38 @@ public sealed class DeployModTask : Task
 		this.IncludedModProjectPaths = this.IncludedModProjectPaths.Trim();
 		if (this.IncludedModProjectPaths != "")
 		{
+			this.Log.LogWarning($"The `IncludedModProjectPaths` property is deprecated: use `ModFiles` instead.");
+			
 			foreach (var includedProjectPath in this.IncludedModProjectPaths.Split(';'))
 			{
 				var path = Path.Combine(projectDir, includedProjectPath);
 				if (Directory.Exists(path))
 				{
-					DirectoryInfo dirInfo = new(path);
+					var dirInfo = new DirectoryInfo(path);
 					foreach (var file in GetAllFilesFromDirectory(dirInfo))
 						yield return file;
 				}
 				else if (File.Exists(path))
 				{
-					Uri fileUri = new(path);
-					var relativeName = projectDirUri.MakeRelativeUri(fileUri).OriginalString;
+					var relativeName = projectDirUri.MakeRelativeUri(new Uri(path)).OriginalString;
 					yield return (new FileInfo(path), relativeName);
 				}
 			}
 		}
 
+		foreach (var includedProjectFile in this.ModFiles)
+		{
+			var path = includedProjectFile.GetMetadata("FullPath");
+			var modPath = includedProjectFile.MetadataNames.OfType<string>().Contains("ModPath") ? includedProjectFile.GetMetadata("ModPath") : projectDirUri.MakeRelativeUri(new Uri(path)).OriginalString;
+			yield return (new FileInfo(path), modPath);
+		}
+
 		static IEnumerable<(FileInfo Info, string RelativeName)> GetAllFilesFromDirectory(DirectoryInfo dirInfo)
 		{
-			Uri dirUri = new(dirInfo.FullName);
+			var dirUri = new Uri(dirInfo.FullName);
 			foreach (var file in dirInfo.EnumerateFiles("*", SearchOption.AllDirectories))
 			{
-				Uri fileUri = new(file.FullName);
+				var fileUri = new Uri(file.FullName);
 				var relativeName = dirUri.MakeRelativeUri(fileUri).OriginalString;
 				yield return (Info: file, RelativeName: relativeName);
 			}
@@ -152,8 +162,8 @@ public sealed class DeployModTask : Task
 	private bool ZipMod(IEnumerable<(FileInfo Info, string RelativeName)> modFiles, string destinationFile, string? innerDirName, ModVersionValidation modVersionValidation)
 	{
 		Directory.CreateDirectory(Path.GetDirectoryName(destinationFile)!);
-		using Stream zipStream = new FileStream(destinationFile, FileMode.Create, FileAccess.Write);
-		using ZipArchive archive = new(zipStream, ZipArchiveMode.Create);
+		using var zipStream = new FileStream(destinationFile, FileMode.Create, FileAccess.Write);
+		using var archive = new ZipArchive(zipStream, ZipArchiveMode.Create);
 
 		foreach (var (fileInfo, fileRelativeName) in modFiles)
 		{
