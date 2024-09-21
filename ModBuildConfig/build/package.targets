@@ -40,7 +40,6 @@
 		<EnableModDeploy Condition="'$(EnableModDeploy)' == ''">true</EnableModDeploy>
 		<EnableModZip Condition="'$(EnableModZip)' == '' And '$(Configuration)' == 'Release'">true</EnableModZip>
 		<EnableModZip Condition="'$(EnableModZip)' == ''">false</EnableModZip>
-		<IncludedModProjectPaths Condition="'$(IncludedModProjectPaths)' == ''"></IncludedModProjectPaths>
 		<ModVersionValidation Condition="'$(ModVersionValidation)' == ''">Error</ModVersionValidation>
 		<EnableGameDebugging Condition="'$(EnableGameDebugging)' == ''">true</EnableGameDebugging>
 	</PropertyGroup>
@@ -134,6 +133,7 @@
 				ModZipPath="$(ModZipPath)"
 				IncludedModProjectPaths="$(IncludedModProjectPaths)"
 				ModVersionValidation="$(ModVersionValidation)"
+				ModFiles="@(ModFiles)"
 		/>
 	</Target>
 </Project>
