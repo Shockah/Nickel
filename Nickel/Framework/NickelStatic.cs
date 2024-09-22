@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Logging;
 using Nanoray.Mitosis;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Nickel;
 
@@ -13,6 +15,22 @@ internal static class NickelStatic
 	{
 		var engine = new DefaultCloneEngine();
 		engine.RegisterCloneListener(Nickel.Instance.ModManager.ModDataManager);
+		engine.RegisterFieldFilter(f =>
+		{
+			var hasJsonProperty = f.GetCustomAttribute<JsonPropertyAttribute>() is not null;
+			var hasJsonIgnore = f.GetCustomAttribute<JsonIgnoreAttribute>() is not null;
+			if ((f.IsPublic || hasJsonProperty) && !hasJsonIgnore)
+				return DefaultCloneEngineFieldFilterBehavior.Clone;
+
+			if (f.DeclaringType!.IsAssignableTo(typeof(IReadOnlyList<object>)))
+				return DefaultCloneEngineFieldFilterBehavior.Clone;
+			if (f.DeclaringType!.IsAssignableTo(typeof(IReadOnlyDictionary<object, object>)))
+				return DefaultCloneEngineFieldFilterBehavior.Clone;
+			if (f.DeclaringType!.IsAssignableTo(typeof(IReadOnlySet<object>)))
+				return DefaultCloneEngineFieldFilterBehavior.Clone;
+			
+			return DefaultCloneEngineFieldFilterBehavior.DoNotInitialize;
+		});
 		return engine;
 	});
 	
