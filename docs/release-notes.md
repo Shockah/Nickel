@@ -6,8 +6,9 @@
 
 * Extended the "sort cards in order" feature to also be enabled for the discard and exhaust pile.
 * Fixed card ordering on the Run Summary screen, especially for modded content.
-* Implemented caching when looking at the card codex, improving framerate.
-* Updated the Pintail library, improving framerate.
+* Reintroduced the Mitosis library, greatly improving performance.
+* Updated the Pintail library, improving performance.
+* Implemented caching when looking at the card codex, improving performance.
 * Other performance improvements.
 
 ## 1.9.0
