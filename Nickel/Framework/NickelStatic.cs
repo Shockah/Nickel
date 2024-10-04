@@ -3,6 +3,7 @@ using Nanoray.Mitosis;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Nickel;
@@ -15,21 +16,32 @@ internal static class NickelStatic
 	{
 		var engine = new DefaultCloneEngine();
 		engine.RegisterCloneListener(Nickel.Instance.ModManager.ModDataManager);
+		engine.RegisterSpecializedEngine(new HashSetCloneEngine(engine));
 		engine.RegisterFieldFilter(f =>
 		{
-			var hasJsonProperty = f.GetCustomAttribute<JsonPropertyAttribute>() is not null;
-			var hasJsonIgnore = f.GetCustomAttribute<JsonIgnoreAttribute>() is not null;
-			if ((f.IsPublic || hasJsonProperty) && !hasJsonIgnore)
+			if (f.GetCustomAttribute<JsonIgnoreAttribute>() is not null)
+				return DefaultCloneEngineFieldFilterBehavior.DoNotInitialize;
+			if (f.IsPublic || f.GetCustomAttribute<JsonPropertyAttribute>() is not null)
 				return DefaultCloneEngineFieldFilterBehavior.Clone;
-
-			if (f.DeclaringType!.IsAssignableTo(typeof(IReadOnlyList<object>)))
+			if (f.FieldType.IsArray)
 				return DefaultCloneEngineFieldFilterBehavior.Clone;
-			if (f.DeclaringType!.IsAssignableTo(typeof(IReadOnlyDictionary<object, object>)))
+			if (GetInterfacesRecursivelyAsEnumerable(f.DeclaringType!, includingSelf: true).Any(i => i.IsConstructedGenericType && i.GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>)))
 				return DefaultCloneEngineFieldFilterBehavior.Clone;
-			if (f.DeclaringType!.IsAssignableTo(typeof(IReadOnlySet<object>)))
-				return DefaultCloneEngineFieldFilterBehavior.Clone;
+			return DefaultCloneEngineFieldFilterBehavior.CopyValue;
 			
-			return DefaultCloneEngineFieldFilterBehavior.DoNotInitialize;
+			static IEnumerable<Type> GetInterfacesRecursivelyAsEnumerable(Type type, bool includingSelf)
+			{
+				if (includingSelf && type.IsInterface)
+					yield return type;
+				foreach (var interfaceType in type.GetInterfaces())
+				{
+					yield return interfaceType;
+					foreach (var recursiveInterfaceType in GetInterfacesRecursivelyAsEnumerable(interfaceType, false))
+					{
+						yield return recursiveInterfaceType;
+					}
+				}
+			}
 		});
 		return engine;
 	});
