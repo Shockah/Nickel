@@ -78,6 +78,7 @@ public sealed class ModEntry : SimpleMod
 		CrewSelection.ApplyPatches(harmony);
 		DebugMenuFixes.ApplyPatches(harmony);
 		ExeBlacklist.ApplyPatches(harmony);
+		ExhaustEntireHandActionFixes.ApplyPatches(harmony);
 		IsaacUnlockFixes.ApplyPatches(harmony);
 		LogbookReplacement.ApplyPatches(harmony);
 		MemorySelection.ApplyPatches(harmony);
