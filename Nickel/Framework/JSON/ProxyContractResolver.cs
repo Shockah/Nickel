@@ -52,8 +52,8 @@ internal sealed class ProxyContractResolver<TContext> : JsonConverter
 			var proxyType = GetType(serializableProxy.ProxyInfo.Proxy) ?? throw new InvalidDataException($"Cannot deserialize {serializableProxy}");
 			var obtainProxyMethod = typeof(IProxyManagerExtensions)
 				.GetMethods()
-				.First(m => m.Name == "ObtainProxy")
-				.MakeGenericMethod([typeof(TContext), proxyType]);
+				.First(m => m.Name == nameof(IProxyManagerExtensions.ObtainProxy))
+				.MakeGenericMethod(typeof(TContext), proxyType);
 			return obtainProxyMethod.Invoke(null, [this.ProxyManager, serializableProxy.Target, serializableProxy.ProxyInfo.Target.Context, serializableProxy.ProxyInfo.Proxy.Context]);
 
 			Type? GetType(SerializableTypeInfo typeInfo)
@@ -84,14 +84,24 @@ internal sealed class ProxyContractResolver<TContext> : JsonConverter
 			writer.WriteNull();
 			return;
 		}
-		if (value is not IProxyObject.IWithProxyTargetInstanceProperty proxyObject)
+		if (value is not IProxyObject.IWithProxyTargetInstanceProperty originalProxyObject)
 			throw new ArgumentException($"Value {value} is not a proxy object", nameof(value));
 
-		var proxyInfo = this.GetProxyInfoFromProxyObject(proxyObject);
+		var finalProxyObject = originalProxyObject;
+		var finalObject = value;
+
+		while (finalObject is IProxyObject.IWithProxyTargetInstanceProperty nestedProxyObject)
+		{
+			finalProxyObject = nestedProxyObject;
+			finalObject = nestedProxyObject.ProxyTargetInstance;
+		}
+
+		var originalProxyInfo = this.GetProxyInfoFromProxyObject(originalProxyObject);
+		var finalProxyInfo = this.GetProxyInfoFromProxyObject(finalProxyObject);
 		var serializableProxy = new SerializableProxy
 		{
-			ProxyInfo = (SerializableProxyInfo)proxyInfo,
-			Target = proxyObject.ProxyTargetInstance
+			ProxyInfo = (SerializableProxyInfo)new ProxyInfo<TContext>(finalProxyInfo.Target, originalProxyInfo.Proxy),
+			Target = finalObject
 		};
 		serializer.Serialize(writer, serializableProxy);
 	}
