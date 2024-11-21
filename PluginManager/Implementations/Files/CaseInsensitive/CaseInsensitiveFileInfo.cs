@@ -9,8 +9,12 @@ public sealed class CaseInsensitiveFileInfo(IFileInfo wrapped) : CaseInsensitive
 {
 	/// <inheritdoc/>
 	public new IFileInfo Wrapped { get; } = wrapped;
-	
+
 	/// <inheritdoc/>
 	public Stream OpenRead()
-		=> GetCaseFixed(this).AsFile!.OpenRead();
+	{
+		if (GetCaseFixed(this).AsFile is not { } file)
+			throw new FileNotFoundException("File not found", this.FullName);
+		return file.OpenRead();
+	}
 }
