@@ -2,6 +2,8 @@
 	<Import Project="..\Configuration.InternalMod.props" />
 	<PropertyGroup>
 		<RootNamespace>Nickel.ModSettings</RootNamespace>
-		<IncludedModProjectPaths>i18n;assets</IncludedModProjectPaths>
 	</PropertyGroup>
+	<ItemGroup>
+		<ModFiles Include="i18n/**" />
+	</ItemGroup>
 </Project>

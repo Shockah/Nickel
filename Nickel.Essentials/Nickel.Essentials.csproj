@@ -6,6 +6,8 @@
 	<ItemGroup>
 		<ModFiles Include="i18n/**" />
 		<ModFiles Include="assets/**" />
+<!--		<ModFiles Include="i18n/**" ModPath="i18n/%(RecursiveDir)%(Filename)%(Extension)" />-->
+<!--		<ModFiles Include="assets/**" ModPath="assets/%(RecursiveDir)%(Filename)%(Extension)" />-->
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="ImGui.NET" Version="1.89.5.0" IncludeAssets="compile" PrivateAssets="all" />

@@ -2,8 +2,10 @@
 	<Import Project="..\Configuration.InternalMod.props" />
 	<PropertyGroup>
 		<RootNamespace>Nickel.UpdateChecks.GitHub</RootNamespace>
-		<IncludedModProjectPaths>i18n</IncludedModProjectPaths>
 	</PropertyGroup>
+	<ItemGroup>
+		<ModFiles Include="i18n/**" />
+	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Nickel.UpdateChecks\Nickel.UpdateChecks.csproj" Private="False" />
 	</ItemGroup>
