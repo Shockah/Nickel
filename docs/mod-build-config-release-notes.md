@@ -4,6 +4,8 @@
 
 ## Upcoming release
 
+* Files to additionally include with a mod package can now be provided with the `ModFiles` MSBuild item list.
+* `IncludedModProjectPaths` is now deprecated.
 * The package now ignores `*.deps.json`, `Thumbs.db` and `.DS_Store` files.
 
 ## 1.2.3
