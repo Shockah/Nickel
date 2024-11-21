@@ -6,7 +6,7 @@
 
 ### For everyone:
 * Nickel now loads `AfterDbInit` mods as their own loading steps, making the game window actually responsive during the mod load process.
-* Incorporated some bugfixes from [Kokoro](https://www.nexusmods.com/cobaltcore/mods/4).
+* Incorporated bugfixes from [Kokoro](https://www.nexusmods.com/cobaltcore/mods/4).
 
 ## 1.5.7
 Released 18 September 2024.
