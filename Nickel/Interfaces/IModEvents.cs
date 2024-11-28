@@ -26,7 +26,7 @@ public interface IModEvents
 	/// <param name="eventName">The name of the <see cref="Artifact"/> method to hook.</param>
 	/// <param name="delegate">The event handler.</param>
 	/// <param name="priority">The priority amongst all other handlers subscribed to the same hook.</param>
-	void RegisterBeforeArtifactsHook<THookDelegate>(string eventName, THookDelegate @delegate, double priority)
+	void RegisterBeforeArtifactsHook<THookDelegate>(string eventName, THookDelegate @delegate, double priority = 0)
 		where THookDelegate : Delegate;
 
 	/// <summary>
@@ -36,7 +36,7 @@ public interface IModEvents
 	/// <param name="method">The <see cref="Artifact"/> method to hook.</param>
 	/// <param name="delegate">The event handler.</param>
 	/// <param name="priority">The priority amongst all other handlers subscribed to the same hook.</param>
-	void RegisterBeforeArtifactsHook<THookDelegate>(MethodInfo method, THookDelegate @delegate, double priority)
+	void RegisterBeforeArtifactsHook<THookDelegate>(MethodInfo method, THookDelegate @delegate, double priority = 0)
 		where THookDelegate : Delegate;
 
 	/// <summary>
@@ -64,7 +64,7 @@ public interface IModEvents
 	/// <param name="eventName">The name of the <see cref="Artifact"/> method to hook.</param>
 	/// <param name="delegate">The event handler.</param>
 	/// <param name="priority">The priority amongst all other handlers subscribed to the same hook.</param>
-	void RegisterAfterArtifactsHook<THookDelegate>(string eventName, THookDelegate @delegate, double priority)
+	void RegisterAfterArtifactsHook<THookDelegate>(string eventName, THookDelegate @delegate, double priority = 0)
 		where THookDelegate : Delegate;
 
 	/// <summary>
@@ -74,7 +74,7 @@ public interface IModEvents
 	/// <param name="method">The <see cref="Artifact"/> method to hook.</param>
 	/// <param name="delegate">The event handler.</param>
 	/// <param name="priority">The priority amongst all other handlers subscribed to the same hook.</param>
-	void RegisterAfterArtifactsHook<THookDelegate>(MethodInfo method, THookDelegate @delegate, double priority)
+	void RegisterAfterArtifactsHook<THookDelegate>(MethodInfo method, THookDelegate @delegate, double priority = 0)
 		where THookDelegate : Delegate;
 
 	/// <summary>

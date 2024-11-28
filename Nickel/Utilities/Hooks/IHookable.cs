@@ -15,7 +15,7 @@ public interface IHookable
 	/// <param name="delegate">The delegate to hook the method with.</param>
 	/// <param name="priority">The priority to call the delegate hook in. Higher priorities get called first.</param>
 	/// <typeparam name="THookDelegate">The type of the delegate to hook the method with.</typeparam>
-	void RegisterMethodHook<THookDelegate>(MethodInfo method, THookDelegate @delegate, double priority)
+	void RegisterMethodHook<THookDelegate>(MethodInfo method, THookDelegate @delegate, double priority = 0)
 		where THookDelegate : Delegate;
 
 	/// <summary>
