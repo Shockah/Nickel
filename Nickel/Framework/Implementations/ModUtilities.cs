@@ -19,6 +19,14 @@ internal sealed class ModUtilities(
 
 	public IProxyManager<string> ProxyManager { get; } = proxyManager;
 
+	public object Unproxy(object potentialProxy)
+	{
+		var current = potentialProxy;
+		while (current is IProxyObject.IWithProxyTargetInstanceProperty proxyObject)
+			current = proxyObject.ProxyTargetInstance;
+		return current;
+	}
+
 	public IHarmony Harmony { get; } = new HarmonyWrapper(harmony);
 
 #pragma warning disable CS0618 // Type or member is obsolete

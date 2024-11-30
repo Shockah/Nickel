@@ -26,6 +26,13 @@ public interface IModUtilities
 	/// <summary>The manager used to proxy between types to allow cross-mod communication without hard assembly references.</summary>
 	/// <seealso cref="IModRegistry.GetApi{TApi}"/>
 	IProxyManager<string> ProxyManager { get; }
+
+	/// <summary>
+	/// Reverses any proxies done via <see cref="ProxyManager"/>, returning the original target.
+	/// </summary>
+	/// <param name="potentialProxy">A potential proxy.</param>
+	/// <returns>A fully unproxied original target, or the passed in object if it is not a proxy.</returns>
+	object Unproxy(object potentialProxy);
 	
 	/// <summary>
 	/// The <see cref="Harmony"/> instance for this mod, used for patching methods.
