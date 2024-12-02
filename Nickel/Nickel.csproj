@@ -59,9 +59,9 @@
 		
 		<!-- game handling -->
 		<PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" />
-		<PackageReference Include="SingleFileExtractor.Core" Version="2.2.0" />
+		<PackageReference Include="SingleFileExtractor.Core" Version="2.2.1" />
 		<PackageReference Include="VdfConverter" Version="1.0.3" />
-		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.2.1105" />
 		<PackageReference Include="Fayti1703.AssemblyTasks" Version="1.1.0" PrivateAssets="none" />
 		<Reference Include="CobaltCore" HintPath="$(IntermediateOutputPath)/CobaltCore.dll" Private="False" />
 

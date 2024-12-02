@@ -6,7 +6,7 @@
 		<ModDeployModsPath>$(ModLoaderPath)\InternalModLibrary</ModDeployModsPath>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Nickel.ModBuildConfig" Version="2.0.0-beta1" />
+		<PackageReference Include="Nickel.ModBuildConfig" Version="2.0.0" />
 		<PackageReference Include="EnumByNameSourceGenerator" Version="1.1.2" PrivateAssets="All" ExcludeAssets="runtime" />
 	</ItemGroup>
 </Project>
