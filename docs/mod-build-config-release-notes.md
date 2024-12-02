@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 2.0.0
+Released 2 December 2024.
 
 * Files to additionally include with a mod package can now be provided with the `ModFiles` MSBuild item list.
 * `IncludedModProjectPaths` is now deprecated.
