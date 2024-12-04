@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.6.0
+Released 4 December 2024.
 
 ### For everyone:
 * Nickel now loads `AfterDbInit` mods as their own loading steps, making the game window actually responsive during the mod load process.
