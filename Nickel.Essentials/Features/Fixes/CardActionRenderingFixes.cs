@@ -24,6 +24,11 @@ internal static class CardActionRenderingFixes
 					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Card)}.{nameof(Card.RenderAction)}.ParenIconParen`"),
 			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Card_RenderAction_ParenIconParen_Transpiler))
 		);
+		harmony.Patch(
+			original: typeof(Card).GetMethods(AccessTools.all).First(m => m.Name.StartsWith("<RenderAction>g__StatusSetToThisIcon") && m.ReturnType == typeof(void))
+					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Card)}.{nameof(Card.RenderAction)}.StatusSetToThisIcon`"),
+			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Card_RenderAction_StatusSetToThisIcon_Transpiler))
+		);
 	}
 	
 	private static IEnumerable<CodeInstruction> Card_RenderAction_IconAndOrNumber_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
@@ -91,4 +96,32 @@ internal static class CardActionRenderingFixes
 		var fadeColor = new Color(Colors.disabledText.r / Colors.textMain.r, Colors.disabledText.g / Colors.textMain.g, Colors.disabledText.b / Colors.textMain.b, Colors.disabledText.a / Colors.textMain.a);
 		return currentColor * fadeColor;
 	}
+	
+	private static IEnumerable<CodeInstruction> Card_RenderAction_StatusSetToThisIcon_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
+	{
+		// ReSharper disable PossibleMultipleEnumeration
+		try
+		{
+			return new SequenceBlockMatcher<CodeInstruction>(instructions)
+				.Find([
+					ILMatches.Ldsfld("textMain"),
+					ILMatches.Call("Render")
+				])
+				.PointerMatcher(SequenceMatcherRelativeElement.Last)
+				.Insert(SequenceMatcherPastBoundsDirection.Before, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
+					new CodeInstruction(OpCodes.Ldarg_0),
+					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Card_RenderAction_StatusSetToThisIcon_Transpiler_ModifyBigNumberColor)))
+				])
+				.AllElements();
+		}
+		catch (Exception ex)
+		{
+			ModEntry.Instance.Logger.LogError("Could not patch method {Method} - {Mod} probably won't work.\nReason: {Exception}", originalMethod, ModEntry.Instance.Package.Manifest.UniqueName, ex);
+			return instructions;
+		}
+		// ReSharper restore PossibleMultipleEnumeration
+	}
+
+	private static Color Card_RenderAction_StatusSetToThisIcon_Transpiler_ModifyBigNumberColor(Color color, AStatus action)
+		=> action.disabled ? Colors.disabledText : color;
 }
