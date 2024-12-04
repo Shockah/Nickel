@@ -6,6 +6,7 @@
 Released 4 December 2024.
 
 ### For everyone:
+* Updated to the latest MonoGame. Please report any issues you encounter with the game itself.
 * Nickel now loads `AfterDbInit` mods as their own loading steps, making the game window actually responsive during the mod load process.
 * Incorporated bugfixes from [Kokoro](https://www.nexusmods.com/cobaltcore/mods/4).
 * Fixed disabled status set action rendering.
