@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed the Logbook not always displaying the highest difficulty for a given crew combo.
+
 ## 1.6.0
 Released 4 December 2024.
 

@@ -121,6 +121,7 @@ internal static class LogbookReplacement
 			{
 				value = g.state.bigStats.combos
 					.Where(kvp => kvp.Value.maxDifficultyWin is not null)
+					.OrderByDescending(kvp => kvp.Value.maxDifficultyWin!.Value)
 					.FirstOrNull(kvp =>
 					{
 						if (BigStats.ParseComboKey(kvp.Key) is not { } parsedKey)
