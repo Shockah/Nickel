@@ -45,7 +45,7 @@ internal sealed class ContentManager
 
 	public static ContentManager Create(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest, IModManifest modManagerModManifest, ModDataManager modDataManager)
 	{
-		var sprites = new SpriteManager(enumCasePool, vanillaModManifest);
+		var sprites = new SpriteManager(loggerProvider, enumCasePool, vanillaModManifest);
 		var decks = new DeckManager(currentModLoadPhaseProvider, enumCasePool, vanillaModManifest);
 		var statuses = new StatusManager(currentModLoadPhaseProvider, enumCasePool, vanillaModManifest);
 		var cards = new CardManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);

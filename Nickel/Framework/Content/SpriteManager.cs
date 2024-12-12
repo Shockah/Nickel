@@ -1,61 +1,76 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 namespace Nickel;
 
 internal sealed class SpriteManager
 {
+	private readonly Func<IModManifest, ILogger> LoggerProvider;
 	private readonly EnumCasePool EnumCasePool;
 	private readonly IModManifest VanillaModManifest;
 	private readonly Dictionary<Spr, ISpriteEntry> SpriteToEntry = [];
 	private readonly Dictionary<string, ISpriteEntry> UniqueNameToEntry = [];
 
-	public SpriteManager(EnumCasePool enumCasePool, IModManifest vanillaModManifest)
+	public SpriteManager(Func<IModManifest, ILogger> loggerProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest)
 	{
+		this.LoggerProvider = loggerProvider;
 		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
 		SpriteLoaderPatches.OnGetTexture += this.OnGetTexture;
 	}
+	
+	private static string StandardizeUniqueName(string uniqueName)
+		=> uniqueName.ToLower(CultureInfo.InvariantCulture);
 
 	public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Texture2D> textureProvider, bool isDynamic)
 	{
 		var uniqueName = $"{owner.UniqueName}::{name}";
-		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
-			throw new ArgumentException($"A sprite with the unique name `{uniqueName}` is already registered", nameof(name));
+		Spr sprite;
+		
+		if (this.UniqueNameToEntry.TryGetValue(StandardizeUniqueName(uniqueName), out var existing))
+		{
+			this.LoggerProvider(owner).LogWarning("A sprite with the unique name `{UniqueName}` is already registered; overriding it.", uniqueName);
+			sprite = existing.Sprite;
+		}
+		else
+		{
+			sprite = this.EnumCasePool.ObtainEnumCase<Spr>();
+		}
 
 		if (isDynamic)
-			return this.RegisterDynamicSprite(new(owner, uniqueName, name, this.EnumCasePool.ObtainEnumCase<Spr>(), textureProvider));
-		else
-			return this.RegisterSprite(new(owner, uniqueName, name, this.EnumCasePool.ObtainEnumCase<Spr>(), textureProvider));
+			return this.ActuallyRegisterSprite(new DynamicEntry(owner, uniqueName, name, sprite, textureProvider));
+		return this.ActuallyRegisterSprite(new StaticEntry(owner, uniqueName, name, sprite, textureProvider));
 	}
 
 	public ISpriteEntry RegisterSprite(IModManifest owner, string name, Func<Stream> streamProvider)
 	{
 		var uniqueName = $"{owner.UniqueName}::{name}";
-		if (this.UniqueNameToEntry.ContainsKey(uniqueName))
-			throw new ArgumentException($"A sprite with the unique name `{uniqueName}` is already registered", nameof(name));
-		return this.RegisterSprite(new(owner, uniqueName, name, this.EnumCasePool.ObtainEnumCase<Spr>(), streamProvider));
+		Spr sprite;
+
+		if (this.UniqueNameToEntry.TryGetValue(StandardizeUniqueName(uniqueName), out var existing))
+		{
+			this.LoggerProvider(owner).LogWarning("A sprite with the unique name `{UniqueName}` is already registered; overriding it.", uniqueName);
+			sprite = existing.Sprite;
+		}
+		else
+		{
+			sprite = this.EnumCasePool.ObtainEnumCase<Spr>();
+		}
+			
+		return this.ActuallyRegisterSprite(new StaticEntry(owner, uniqueName, name, sprite, streamProvider));
 	}
 
-	private StaticEntry RegisterSprite(StaticEntry entry)
+	private T ActuallyRegisterSprite<T>(T entry) where T : ISpriteEntry
 	{
+		var standardizedUniqueName = StandardizeUniqueName(entry.UniqueName);
 		this.SpriteToEntry[entry.Sprite] = entry;
-		this.UniqueNameToEntry[entry.UniqueName] = entry;
+		this.UniqueNameToEntry[standardizedUniqueName] = entry;
 
-		var path = $"{NickelConstants.Name}-managed/{entry.UniqueName}";
-		SpriteMapping.mapping[entry.Sprite] = new SpritePath(path);
-		SpriteMapping.strToId[path] = entry.Sprite;
-		return entry;
-	}
-
-	private DynamicEntry RegisterDynamicSprite(DynamicEntry entry)
-	{
-		this.SpriteToEntry[entry.Sprite] = entry;
-		this.UniqueNameToEntry[entry.UniqueName] = entry;
-
-		var path = $"{NickelConstants.Name}-managed/{entry.UniqueName}";
+		var path = $"{NickelConstants.Name}-managed/{standardizedUniqueName}";
 		SpriteMapping.mapping[entry.Sprite] = new SpritePath(path);
 		SpriteMapping.strToId[path] = entry.Sprite;
 		return entry;
@@ -78,7 +93,7 @@ internal sealed class SpriteManager
 	}
 
 	public ISpriteEntry? LookupByUniqueName(string uniqueName)
-		=> this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
+		=> this.UniqueNameToEntry.GetValueOrDefault(StandardizeUniqueName(uniqueName));
 
 	private void OnGetTexture(object? _, SpriteLoaderPatches.GetTextureEventArgs e)
 	{

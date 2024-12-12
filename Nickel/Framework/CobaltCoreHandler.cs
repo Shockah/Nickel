@@ -62,7 +62,7 @@ internal sealed class CobaltCoreHandler
 					AssemblyEditorResult.MessageLevel.Info => LogLevel.Information,
 					AssemblyEditorResult.MessageLevel.Debug => LogLevel.Debug,
 					_ => LogLevel.Error
-				}, message.Content);
+				}, "{Message}", message.Content);
 		
 		AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
 		{

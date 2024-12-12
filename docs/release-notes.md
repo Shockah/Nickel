@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Improved sprite asset registration and error handling.
+
 ## 1.6.1
 Released 9 December 2024.
 
