@@ -18,9 +18,6 @@ public interface IModManifest
 	/// <summary>The mod's version.</summary>
 	SemanticVersion Version { get; }
 
-	/// <summary>The minimum version of the mod loader that this mod will load in.</summary>
-	SemanticVersion RequiredApiVersion { get; }
-
 	/// <summary>The mod's dependencies on other mods. The mod loader will ensure these are loaded first.</summary>
 	IReadOnlySet<ModDependency> Dependencies { get; }
 

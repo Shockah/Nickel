@@ -218,9 +218,12 @@ internal sealed class ModManager
 			),
 			validator: package =>
 			{
-				if (package.Manifest.RequiredApiVersion > NickelConstants.Version)
+				if (!package.Manifest.AsAssemblyModManifest().TryPickT0(out var assemblyModManifest, out _))
+					return null;
+				
+				if (assemblyModManifest.RequiredApiVersion > NickelConstants.Version)
 					return new Error<string>(
-						$"Mod {package.Manifest.UniqueName} requires API version {package.Manifest.RequiredApiVersion}, but {NickelConstants.Name} is currently {NickelConstants.Version}."
+						$"Mod {package.Manifest.UniqueName} requires API version {assemblyModManifest.RequiredApiVersion}, but {NickelConstants.Name} is currently {NickelConstants.Version}."
 					);
 				return null;
 			}

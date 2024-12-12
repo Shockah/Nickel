@@ -1,3 +1,4 @@
+using Nickel.Common;
 using System.Collections.Generic;
 
 namespace Nickel;
@@ -15,6 +16,9 @@ public interface IAssemblyModManifest : IModManifest
 	/// If not provided, the mod loader will try to automatically find a singular <see cref="Mod"/> subclass.
 	/// </summary>
 	string? EntryPointType { get; }
+
+	/// <summary>The minimum version of the mod loader that this mod will load in.</summary>
+	SemanticVersion RequiredApiVersion { get; }
 
 	/// <summary>The mod's assembly (DLL) references.</summary>
 	IReadOnlyList<ModAssemblyReference> AssemblyReferences { get; }

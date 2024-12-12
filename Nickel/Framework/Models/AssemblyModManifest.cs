@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Nickel.Common;
 using System.Collections.Generic;
 
@@ -10,9 +11,6 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 
 	public SemanticVersion Version
 		=> this.ModManifest.Version;
-
-	public SemanticVersion RequiredApiVersion
-		=> this.ModManifest.RequiredApiVersion;
 
 	public IReadOnlySet<ModDependency> Dependencies
 		=> this.ModManifest.Dependencies;
@@ -41,6 +39,11 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 	public string EntryPointAssembly { get; internal set; } = null!;
 
 	public string? EntryPointType { get; internal set; }
+	
+	[JsonProperty]
+	[JsonRequired]
+	[JsonConverter(typeof(SemanticVersionConverter))]
+	public SemanticVersion RequiredApiVersion { get; internal set; }
 
 	public IReadOnlyList<ModAssemblyReference> AssemblyReferences { get; internal set; } = [];
 

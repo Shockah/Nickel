@@ -4,6 +4,8 @@
 
 ## Upcoming release
 
+### For developers:
+* The `RequiredApiVersion` `nickel.json` field is no longer used on non-assembly mods.
 * Improved sprite asset registration and error handling.
 
 ## 1.6.1

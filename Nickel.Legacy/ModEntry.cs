@@ -289,7 +289,7 @@ public sealed class ModEntry : Mod
 			{
 				EntryPointAssembly = assemblyFileName.Name,
 				UniqueName = name,
-				RequiredApiVersion = this.Manifest.RequiredApiVersion,
+				RequiredApiVersion = this.Manifest.AsAssemblyModManifest().AsT0.RequiredApiVersion,
 				Version = version,
 				Dependencies = new List<ModDependency>
 				{
