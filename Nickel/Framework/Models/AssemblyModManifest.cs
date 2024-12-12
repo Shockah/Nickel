@@ -43,7 +43,7 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 	[JsonProperty]
 	[JsonRequired]
 	[JsonConverter(typeof(SemanticVersionConverter))]
-	public SemanticVersion RequiredApiVersion { get; internal set; }
+	public SemanticVersion? RequiredApiVersion { get; internal set; }
 
 	public IReadOnlyList<ModAssemblyReference> AssemblyReferences { get; internal set; } = [];
 

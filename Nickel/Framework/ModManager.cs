@@ -220,6 +220,8 @@ internal sealed class ModManager
 			{
 				if (!package.Manifest.AsAssemblyModManifest().TryPickT0(out var assemblyModManifest, out _))
 					return null;
+				if (assemblyModManifest is null)
+					return null;
 				
 				if (assemblyModManifest.RequiredApiVersion > NickelConstants.Version)
 					return new Error<string>(

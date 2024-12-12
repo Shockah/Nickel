@@ -18,7 +18,7 @@ public interface IAssemblyModManifest : IModManifest
 	string? EntryPointType { get; }
 
 	/// <summary>The minimum version of the mod loader that this mod will load in.</summary>
-	SemanticVersion RequiredApiVersion { get; }
+	SemanticVersion? RequiredApiVersion { get; }
 
 	/// <summary>The mod's assembly (DLL) references.</summary>
 	IReadOnlyList<ModAssemblyReference> AssemblyReferences { get; }

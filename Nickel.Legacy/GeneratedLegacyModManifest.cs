@@ -18,7 +18,7 @@ internal sealed class GeneratedLegacyModManifest : IAssemblyModManifest
 
 	[JsonProperty]
 	[JsonConverter(typeof(SemanticVersionConverter))]
-	public required SemanticVersion RequiredApiVersion { get; init; }
+	public required SemanticVersion? RequiredApiVersion { get; init; }
 
 	[JsonProperty]
 	public required IReadOnlySet<ModDependency> Dependencies { get; init; }
@@ -27,19 +27,24 @@ internal sealed class GeneratedLegacyModManifest : IAssemblyModManifest
 	public string ModType { get; } = ModEntry.LegacyModType;
 
 	[JsonIgnore]
-	public ModLoadPhase LoadPhase { get; } = ModLoadPhase.AfterGameAssembly;
+	public ModLoadPhase LoadPhase
+		=> ModLoadPhase.AfterGameAssembly;
 
 	[JsonIgnore]
-	public string? DisplayName { get; } = null;
+	public string? DisplayName
+		=> null;
 
 	[JsonIgnore]
-	public string? Description { get; } = null;
+	public string? Description
+		=> null;
 
 	[JsonIgnore]
-	public string? Author { get; } = null;
+	public string? Author
+		=> null;
 
 	[JsonIgnore]
-	public string? EntryPointType { get; } = null;
+	public string? EntryPointType
+		=> null;
 
 	[JsonIgnore]
 	public IReadOnlyList<ModAssemblyReference> AssemblyReferences { get; } = [];
