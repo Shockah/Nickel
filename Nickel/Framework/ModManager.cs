@@ -29,7 +29,7 @@ internal sealed class ModManager
 	internal readonly ModDataManager ModDataManager;
 	private readonly ModStorageManager ModStorageManager;
 	private readonly EnumCasePool EnumCasePool;
-	internal readonly DelayedHarmonyManager DelayedHarmonyManager;
+	private readonly DelayedHarmonyManager DelayedHarmonyManager;
 
 	internal readonly IPluginPackage<IModManifest> ModLoaderPackage;
 	private ModLoadPhaseState CurrentModLoadPhase = new(ModLoadPhase.BeforeGameAssembly, IsDone: false);
@@ -73,7 +73,6 @@ internal sealed class ModManager
 				Version = NickelConstants.Version,
 				DisplayName = NickelConstants.Name,
 				Author = NickelConstants.Name,
-				RequiredApiVersion = NickelConstants.Version
 			},
 			packageRoot: new DirectoryInfoImpl(new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory))
 		);
@@ -537,7 +536,6 @@ internal sealed class ModManager
 			Version = gameVersion,
 			DisplayName = "Cobalt Core",
 			Author = "Rocket Rat Games",
-			RequiredApiVersion = NickelConstants.Version
 		};
 
 		this.ContentManager = ContentManager.Create(() => this.CurrentModLoadPhase, this.ObtainLogger, this.EnumCasePool, this.VanillaModManifest, this.ModLoaderPackage.Manifest, this.ModDataManager);

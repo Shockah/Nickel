@@ -34,7 +34,7 @@ public static class ManifestExt
 
 		bool TryParseEntryPointAssemblyFileName([MaybeNullWhen(false)] out string result)
 		{
-			result = default;
+			result = null;
 			if (!manifest.ExtensionData.TryGetValue(nameof(IAssemblyModManifest.EntryPointAssembly), out var raw))
 				return false;
 			if (raw is not string value)

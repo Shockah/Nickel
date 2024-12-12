@@ -274,7 +274,7 @@ public sealed class ModEntry : Mod
 
 			var attribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>() ?? throw new InvalidOperationException();
 			var version = SemanticVersionParser.TryParse(attribute.InformationalVersion.Split("+")[0], out var parsedVersion)
-				? parsedVersion : new SemanticVersion(1, 0, 0);
+				? parsedVersion : new SemanticVersion(1);
 
 			var dependencies = manifests.SelectMany(m => m.Dependencies).ToList();
 			var requiredDependencies = dependencies

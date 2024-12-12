@@ -16,11 +16,6 @@ internal sealed class ModManifest : IModManifest
 	public SemanticVersion Version { get; internal set; }
 
 	[JsonProperty]
-	[JsonRequired]
-	[JsonConverter(typeof(SemanticVersionConverter))]
-	public SemanticVersion RequiredApiVersion { get; internal set; }
-
-	[JsonProperty]
 	public IReadOnlySet<ModDependency> Dependencies { get; internal set; } = new HashSet<ModDependency>();
 
 	[JsonProperty]
@@ -43,7 +38,7 @@ internal sealed class ModManifest : IModManifest
 	public IReadOnlyList<ISubmodEntry> Submods { get; internal set; } = new List<ISubmodEntry>();
 
 	[JsonExtensionData]
-	public IDictionary<string, object> ExtensionData { get; internal set; } = new Dictionary<string, object>();
+	public IDictionary<string, object> ExtensionData { get; set; } = new Dictionary<string, object>();
 
 	IReadOnlyDictionary<string, object> IModManifest.ExtensionData
 		=> (IReadOnlyDictionary<string, object>)this.ExtensionData;
