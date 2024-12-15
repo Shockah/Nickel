@@ -74,6 +74,7 @@ public sealed class ModEntry : SimpleMod
 		ArtifactCodexFixes.ApplyPatches(harmony);
 		CardActionRenderingFixes.ApplyPatches(harmony);
 		CardBrowseCurrentPile.ApplyPatches(harmony);
+		CardBrowseSortingFixes.ApplyPatches(harmony);
 		CardCodexFiltering.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);
 		DebugMenuFixes.ApplyPatches(harmony);
@@ -102,7 +103,7 @@ public sealed class ModEntry : SimpleMod
 		);
 	}
 
-	public override object? GetApi(IModManifest requestingMod)
+	public override object GetApi(IModManifest requestingMod)
 		=> new ApiImplementation();
 
 	private void PrepareExeInfoIfNeeded()

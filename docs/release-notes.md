@@ -4,6 +4,9 @@
 
 ## Upcoming release
 
+### For everyone:
+* Browsing through cards in hand for action selection will now display the cards in their order in hand.
+
 ### For developers:
 * The `RequiredApiVersion` `nickel.json` field is no longer used on non-assembly mods.
 * The `RequiredApiVersion` `nickel.json` field is now optional on assembly mods.
