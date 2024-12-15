@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 
@@ -6,6 +7,8 @@ namespace Nickel;
 /// <summary>
 /// Describes a simple mod, with a predefined constructor and some properties.
 /// </summary>
+[PublicAPI]
+[UsedImplicitly(ImplicitUseTargetFlags.WithMembers | ImplicitUseTargetFlags.WithInheritors)]
 public abstract class SimpleMod : Mod
 {
 	/// <summary>The mod's package.</summary>

@@ -1,9 +1,13 @@
+using JetBrains.Annotations;
+
 namespace Nickel;
 
 /// <summary>
 /// Describes a single mod.<br/>
 /// Nickel constructs <see cref="Mod"/> instances by finding constructors with parameters it can inject with its DI container.
 /// </summary>
+[PublicAPI]
+[UsedImplicitly(ImplicitUseTargetFlags.WithMembers | ImplicitUseTargetFlags.WithInheritors)]
 public abstract class Mod
 {
 	/// <summary>
