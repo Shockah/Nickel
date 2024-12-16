@@ -4,76 +4,70 @@ using System.Collections.Generic;
 
 namespace Nickel;
 
-internal sealed class ModCards : IModCards
+internal sealed class ModCards(
+	IModManifest modManifest,
+	Func<CardManager> cardManagerProvider,
+	Func<CardTraitManager> cardTraitManagerProvider
+) : IModCards
 {
-	private readonly IModManifest ModManifest;
-	private readonly Func<CardManager> CardManagerProvider;
-	private readonly Func<CardTraitManager> CardTraitManagerProvider;
 	private readonly Dictionary<EventHandler<GetVolatileCardTraitOverridesEventArgs>, EventHandler<GetFinalDynamicCardTraitOverridesEventArgs>> ObsoleteVolatileToFinalEventHandlers = [];
 
-	public ModCards(IModManifest modManifest, Func<CardManager> cardManagerProvider, Func<CardTraitManager> cardTraitManagerProvider)
-	{
-		this.ModManifest = modManifest;
-		this.CardManagerProvider = cardManagerProvider;
-		this.CardTraitManagerProvider = cardTraitManagerProvider;
-	}
-
 	public ICardEntry? LookupByCardType(Type cardType)
-		=> this.CardManagerProvider().LookupByCardType(cardType);
+		=> cardManagerProvider().LookupByCardType(cardType);
 
 	public ICardEntry? LookupByUniqueName(string uniqueName)
-		=> this.CardManagerProvider().LookupByUniqueName(uniqueName);
+		=> cardManagerProvider().LookupByUniqueName(uniqueName);
 
 	public ICardEntry RegisterCard(CardConfiguration configuration)
-		=> this.CardManagerProvider().RegisterCard(this.ModManifest, configuration.CardType.Name, configuration);
+		=> cardManagerProvider().RegisterCard(modManifest, configuration.CardType.Name, configuration);
 
 	public ICardEntry RegisterCard(string name, CardConfiguration configuration)
-		=> this.CardManagerProvider().RegisterCard(this.ModManifest, name, configuration);
+		=> cardManagerProvider().RegisterCard(modManifest, name, configuration);
 
 	public ICardTraitEntry ExhaustCardTrait
-		=> this.CardTraitManagerProvider().ExhaustCardTrait;
+		=> cardTraitManagerProvider().ExhaustCardTrait;
 
 	public ICardTraitEntry RetainCardTrait
-		=> this.CardTraitManagerProvider().RetainCardTrait;
+		=> cardTraitManagerProvider().RetainCardTrait;
 
 	public ICardTraitEntry RecycleCardTrait
-		=> this.CardTraitManagerProvider().RecycleCardTrait;
+		=> cardTraitManagerProvider().RecycleCardTrait;
 
 	public ICardTraitEntry InfiniteCardTrait
-		=> this.CardTraitManagerProvider().InfiniteCardTrait;
+		=> cardTraitManagerProvider().InfiniteCardTrait;
 
 	public ICardTraitEntry UnplayableCardTrait
-		=> this.CardTraitManagerProvider().UnplayableCardTrait;
+		=> cardTraitManagerProvider().UnplayableCardTrait;
 
 	public ICardTraitEntry TemporaryCardTrait
-		=> this.CardTraitManagerProvider().TemporaryCardTrait;
+		=> cardTraitManagerProvider().TemporaryCardTrait;
 
 	public ICardTraitEntry BuoyantCardTrait
-		=> this.CardTraitManagerProvider().BuoyantCardTrait;
+		=> cardTraitManagerProvider().BuoyantCardTrait;
 
 	public ICardTraitEntry SingleUseCardTrait
-		=> this.CardTraitManagerProvider().SingleUseCardTrait;
+		=> cardTraitManagerProvider().SingleUseCardTrait;
 
 	public ICardTraitEntry? LookupTraitByUniqueName(string uniqueName)
-		=> this.CardTraitManagerProvider().LookupByUniqueName(uniqueName);
+		=> cardTraitManagerProvider().LookupByUniqueName(uniqueName);
 
 	public ICardTraitEntry RegisterTrait(string name, CardTraitConfiguration configuration)
-		=> this.CardTraitManagerProvider().RegisterTrait(this.ModManifest, name, configuration);
+		=> cardTraitManagerProvider().RegisterTrait(modManifest, name, configuration);
 
 	public IReadOnlySet<ICardTraitEntry> GetActiveCardTraits(State state, Card card)
-		=> this.CardTraitManagerProvider().GetActiveCardTraits(state, card);
+		=> cardTraitManagerProvider().GetActiveCardTraits(state, card);
 
 	public IReadOnlyDictionary<ICardTraitEntry, CardTraitState> GetAllCardTraits(State state, Card card)
-		=> this.CardTraitManagerProvider().GetAllCardTraits(state, card);
+		=> cardTraitManagerProvider().GetAllCardTraits(state, card);
 
 	public bool IsCardTraitActive(State state, Card card, ICardTraitEntry trait)
-		=> this.CardTraitManagerProvider().IsCardTraitActive(state, card, trait);
+		=> cardTraitManagerProvider().IsCardTraitActive(state, card, trait);
 
 	public CardTraitState GetCardTraitState(State state, Card card, ICardTraitEntry trait)
-		=> this.CardTraitManagerProvider().GetCardTraitState(state, card, trait);
+		=> cardTraitManagerProvider().GetCardTraitState(state, card, trait);
 
 	public void SetCardTraitOverride(State state, Card card, ICardTraitEntry trait, bool? overrideValue, bool permanent)
-		=> this.CardTraitManagerProvider().SetCardTraitOverride(card, trait, overrideValue, permanent);
+		=> cardTraitManagerProvider().SetCardTraitOverride(state, card, trait, overrideValue, permanent);
 
 	public event EventHandler<GetVolatileCardTraitOverridesEventArgs> OnGetVolatileCardTraitOverrides
 	{
@@ -107,13 +101,19 @@ internal sealed class ModCards : IModCards
 
 	public event EventHandler<GetDynamicInnateCardTraitOverridesEventArgs> OnGetDynamicInnateCardTraitOverrides
 	{
-		add => this.CardTraitManagerProvider().OnGetDynamicInnateCardTraitOverridesEvent.Add(value, this.ModManifest);
-		remove => this.CardTraitManagerProvider().OnGetDynamicInnateCardTraitOverridesEvent.Remove(value, this.ModManifest);
+		add => cardTraitManagerProvider().OnGetDynamicInnateCardTraitOverridesEvent.Add(value, modManifest);
+		remove => cardTraitManagerProvider().OnGetDynamicInnateCardTraitOverridesEvent.Remove(value, modManifest);
 	}
 
 	public event EventHandler<GetFinalDynamicCardTraitOverridesEventArgs> OnGetFinalDynamicCardTraitOverrides
 	{
-		add => this.CardTraitManagerProvider().OnGetFinalDynamicCardTraitOverridesEvent.Add(value, this.ModManifest);
-		remove => this.CardTraitManagerProvider().OnGetFinalDynamicCardTraitOverridesEvent.Remove(value, this.ModManifest);
+		add => cardTraitManagerProvider().OnGetFinalDynamicCardTraitOverridesEvent.Add(value, modManifest);
+		remove => cardTraitManagerProvider().OnGetFinalDynamicCardTraitOverridesEvent.Remove(value, modManifest);
+	}
+
+	public event EventHandler<SetCardTraitOverrideEventArgs> OnSetCardTraitOverride
+	{
+		add => cardTraitManagerProvider().OnSetCardTraitOverrideEvent.Add(value, modManifest);
+		remove => cardTraitManagerProvider().OnSetCardTraitOverrideEvent.Remove(value, modManifest);
 	}
 }

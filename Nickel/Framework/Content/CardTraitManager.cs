@@ -340,6 +340,7 @@ internal class CardTraitManager
 
 	internal readonly ManagedEvent<GetDynamicInnateCardTraitOverridesEventArgs> OnGetDynamicInnateCardTraitOverridesEvent;
 	internal readonly ManagedEvent<GetFinalDynamicCardTraitOverridesEventArgs> OnGetFinalDynamicCardTraitOverridesEvent;
+	internal readonly ManagedEvent<SetCardTraitOverrideEventArgs> OnSetCardTraitOverrideEvent;
 
 	internal readonly ICardTraitEntry ExhaustCardTrait;
 	internal readonly ICardTraitEntry RetainCardTrait;
@@ -409,6 +410,12 @@ internal class CardTraitManager
 				};
 			}
 		};
+
+		this.OnSetCardTraitOverrideEvent = new((_, mod, exception) =>
+		{
+			var logger = loggerProvider(mod);
+			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnSetCardTraitOverrideEvent), exception);
+		});
 
 		this.ExhaustCardTrait = new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.exhaust), nameof(Card.exhaustOverride), nameof(Card.exhaustOverrideIsPermanent));
 		this.RetainCardTrait = new VariablePermanenceVanillaEntry(vanillaModManifest, nameof(CardData.retain), nameof(Card.retainOverride), nameof(Card.retainOverrideIsPermanent));
@@ -547,7 +554,7 @@ internal class CardTraitManager
 	public bool IsCardTraitActive(State state, Card card, ICardTraitEntry trait)
 		=> this.GetCardTraitState(state, card, trait).IsActive;
 
-	public void SetCardTraitOverride(Card card, ICardTraitEntry trait, bool? overrideValue, bool permanent)
+	public void SetCardTraitOverride(State state, Card card, ICardTraitEntry trait, bool? overrideValue, bool permanent)
 	{
 		if (trait is not IReadWriteCardTraitEntry rwTrait)
 			throw new NotImplementedException($"Internal error: trait {trait.UniqueName} is supposed to implement the private interface {nameof(IReadWriteCardTraitEntry)}");
@@ -558,6 +565,15 @@ internal class CardTraitManager
 		else
 			rwTrait.SetTemporaryOverride(card, overrides, overrideValue);
 		this.CardTraitStateCache.Remove(card);
+		
+		this.OnSetCardTraitOverrideEvent.Raise(null, new()
+		{
+			State = state,
+			Card = card,
+			CardTrait = trait,
+			OverrideValue = overrideValue,
+			IsPermanent = permanent,
+		});
 	}
 
 	private void UpdateModDataFromFieldsIfNeeded(Card card, OverridesModData? overrides = null)

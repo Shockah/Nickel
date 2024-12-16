@@ -137,4 +137,9 @@ public interface IModCards
 	/// It can be used to set dynamic overrides on a card, which can depend on other traits or other state, <b>including</b> <see cref="CardTraitState.PermanentOverride"/> and <see cref="CardTraitState.TemporaryOverride"/>.
 	/// </summary>
 	event EventHandler<GetFinalDynamicCardTraitOverridesEventArgs> OnGetFinalDynamicCardTraitOverrides;
+
+	/// <summary>
+	/// An event fired whenever a card's card trait is being overridden.
+	/// </summary>
+	event EventHandler<SetCardTraitOverrideEventArgs> OnSetCardTraitOverride;
 }
