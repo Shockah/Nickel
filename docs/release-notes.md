@@ -11,6 +11,7 @@
 ### For developers:
 * Added the `Pool` and `MultiPool` utilities.
 * Added the `IModCards.OnSetCardTraitOverride` event.
+* Added `DeckConfiguration.ShineColorOverride`.
 * The `RequiredApiVersion` `nickel.json` field is no longer used on non-assembly mods.
 * The `RequiredApiVersion` `nickel.json` field is now optional on assembly mods.
 * Improved sprite asset registration and error handling.

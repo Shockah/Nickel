@@ -27,6 +27,8 @@ internal sealed class DeckManager
 		this.Manager = new(currentModLoadPhaseProvider, Inject);
 		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
+
+		CardPatches.OnModifyShineColor += this.OnModifyShineColor;
 	}
 
 	internal bool IsStateInvalid(State state)
@@ -161,6 +163,21 @@ internal sealed class DeckManager
 		var key = entry.Deck.Key();
 		localizations[$"char.{key}"] = name;
 		localizations[$"char.{key}.name"] = name;
+	}
+	
+	private void OnModifyShineColor(object? _, CardPatches.ModifyShineColorEventArgs e)
+	{
+		if (this.LookupByDeck(e.Card.GetMeta().deck) is not { } entry)
+			return;
+		if (entry.Configuration.ShineColorOverride is null)
+			return;
+		
+		e.ShineColor = entry.Configuration.ShineColorOverride(new DeckConfiguration.ShineColorOverrideArgs
+		{
+			State = e.State,
+			Card = e.Card,
+			DefaultShineColor = e.ShineColor,
+		});
 	}
 
 	private sealed class Entry(IModManifest modOwner, string uniqueName, Deck deck, DeckConfiguration configuration)

@@ -14,6 +14,7 @@ internal static class CardPatches
 {
 	internal static EventHandler<KeyEventArgs>? OnKey;
 	internal static EventHandler<TooltipsEventArgs>? OnGetTooltips;
+	internal static EventHandler<ModifyShineColorEventArgs>? OnModifyShineColor;
 	internal static EventHandler<TraitRenderEventArgs>? OnRenderTraits;
 	internal static EventHandler<GettingDataWithOverridesEventArgs>? OnGettingDataWithOverrides;
 	internal static EventHandler<MidGetDataWithOverridesEventArgs>? OnMidGetDataWithOverrides;
@@ -21,6 +22,7 @@ internal static class CardPatches
 	
 	private static readonly Pool<KeyEventArgs> KeyEventArgsPool = new(() => new());
 	private static readonly Pool<TooltipsEventArgs> TooltipsEventArgsPool = new(() => new());
+	private static readonly Pool<ModifyShineColorEventArgs> ModifyShineColorEventArgsPool = new(() => new());
 	private static readonly Pool<TraitRenderEventArgs> TraitRenderEventArgsPool = new(() => new());
 	private static readonly Pool<GettingDataWithOverridesEventArgs> GettingDataWithOverridesEventArgsPool = new(() => new());
 	private static readonly Pool<MidGetDataWithOverridesEventArgs> MidGetDataWithOverridesEventArgsPool = new(() => new());
@@ -77,12 +79,46 @@ internal static class CardPatches
 				.Find([
 					ILMatches.Ldarg(0),
 					ILMatches.Ldloc<State>(originalMethod).CreateLdlocInstruction(out var ldlocState),
-					ILMatches.Call("GetDataWithOverrides")
+					ILMatches.Call("GetDataWithOverrides"),
+				])
+				.Find([
+					ILMatches.Ldloc<CardMeta>(originalMethod),
+					ILMatches.Ldfld("deck"),
+					ILMatches.Stloc<Deck>(originalMethod),
+					ILMatches.Ldloc<Deck>(originalMethod),
+					ILMatches.Instruction(OpCodes.Switch),
+					ILMatches.Br,
+				])
+				.Find([
+					ILMatches.Ldflda("color"),
+					ILMatches.Call("normalize"),
+					ILMatches.Stloc<Color>(originalMethod),
+					ILMatches.Ldloca<Color>(originalMethod),
+					ILMatches.Ldloc<double>(originalMethod),
+					ILMatches.Call("gain"),
+				])
+				.Insert(SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
+					new CodeInstruction(OpCodes.Ldarg_0),
+					ldlocState,
+					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(CardPatches), nameof(Render_Transpiler_ModifyShineColor))),
+				])
+				.Find([
+					ILMatches.Ldflda("color"),
+					ILMatches.Call("normalize"),
+					ILMatches.Stloc<Color>(originalMethod),
+					ILMatches.Ldloca<Color>(originalMethod),
+					ILMatches.Ldloc<double>(originalMethod),
+					ILMatches.Call("gain"),
+				])
+				.Insert(SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
+					new CodeInstruction(OpCodes.Ldarg_0),
+					ldlocState,
+					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(CardPatches), nameof(Render_Transpiler_ModifyShineColor))),
 				])
 				.Find([
 					ILMatches.Ldloc<CardData>(originalMethod).ExtractLabels(out var labels).Anchor(out var findAnchor),
 					ILMatches.Ldfld("buoyant"),
-					ILMatches.Brfalse
+					ILMatches.Brfalse,
 				])
 				.Find([
 					ILMatches.Ldloc<Vec>(originalMethod).CreateLdlocInstruction(out var ldlocVec),
@@ -109,6 +145,19 @@ internal static class CardPatches
 			Nickel.Instance.ModManager.Logger.LogCritical("Could not patch method {Method} - {ModLoaderName} probably won't work.\nReason: {Exception}", originalMethod, NickelConstants.Name, ex);
 			return instructions;
 		}
+	}
+
+	private static Color Render_Transpiler_ModifyShineColor(Color shineColor, Card card, State state)
+	{
+		ModifyShineColorEventArgsPool.Do(args =>
+		{
+			args.Card = card;
+			args.State = state;
+			args.ShineColor = shineColor;
+			OnModifyShineColor?.Invoke(null, args);
+			shineColor = args.ShineColor;
+		});
+		return shineColor;
 	}
 
 	private static void Render_Transpiler_RenderTraits(Card card, State state, ref int cardTraitIndexRef, Vec vec)
@@ -206,6 +255,13 @@ internal static class CardPatches
 		public State State { get; internal set; } = null!;
 		public bool ShowCardTraits { get; internal set; }
 		public IEnumerable<Tooltip> TooltipsEnumerator { get; set; } = null!;
+	}
+
+	internal sealed class ModifyShineColorEventArgs
+	{
+		public Card Card { get; internal set; } = null!;
+		public State State { get; internal set; } = null!;
+		public Color ShineColor { get; set; }
 	}
 
 	internal sealed class TraitRenderEventArgs

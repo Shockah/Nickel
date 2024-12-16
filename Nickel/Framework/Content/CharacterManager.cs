@@ -42,7 +42,7 @@ internal sealed class CharacterManager
 		this.PlayableCharacterManager = new(currentModLoadPhaseProvider, this.Inject);
 		this.NonPlayableCharacterManager = new(currentModLoadPhaseProvider, this.Inject);
 
-		EventsPatches.OnCrystallizedFriendEvent += this.OnCrystallizedFriendEvent;
+		EventsPatches.OnCrystallizedFriendEvent += OnCrystallizedFriendEvent;
 		StatePatches.OnModifyPotentialExeCards += this.OnModifyPotentialExeCards;
 		StoryVarsPatches.OnGetUnlockedChars += this.OnGetUnlockedChars;
 		WizardPatches.OnGetAssignableStatuses += this.OnGetAssignableStatuses;
@@ -556,7 +556,7 @@ internal sealed class CharacterManager
 		localizations[$"char.{entry.CharacterType}.name"] = name;
 	}
 
-	private void OnCrystallizedFriendEvent(object? _, List<Choice> choices)
+	private static void OnCrystallizedFriendEvent(object? _, List<Choice> choices)
 	{
 		foreach (var choice in choices)
 		{
