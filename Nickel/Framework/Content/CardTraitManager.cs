@@ -71,7 +71,7 @@ internal class CardTraitManager
 	{
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = dataFieldName;
-		public CardTraitConfiguration Configuration { get; } = new CardTraitConfiguration
+		public CardTraitConfiguration Configuration { get; } = new()
 		{
 			Icon = (_, _) => Enum.TryParse<Spr>($"icons_{dataFieldName}", out var icon) ? icon : null,
 			Name = _ => Loc.T($"cardtrait.{dataFieldName}.name"),

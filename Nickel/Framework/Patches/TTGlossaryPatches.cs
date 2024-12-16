@@ -10,7 +10,7 @@ internal static class TTGlossaryPatches
 	internal static EventHandler<TryGetIconEventArgs>? OnTryGetIcon;
 
 	private static readonly Stack<TTGlossary> GlossaryStack = new();
-	private static readonly TryGetIconEventArgs TryGetIconEventArgsInstance = new();
+	private static readonly Pool<TryGetIconEventArgs> TryGetIconEventArgsPool = new(() => new());
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -37,12 +37,16 @@ internal static class TTGlossaryPatches
 	{
 		if (!GlossaryStack.TryPeek(out var glossary))
 			return;
-
-		var args = TryGetIconEventArgsInstance;
-		args.Glossary = glossary;
-		args.Sprite = __result;
-		OnTryGetIcon?.Invoke(null, args);
-		__result = args.Sprite;
+		
+		var result = __result;
+		TryGetIconEventArgsPool.Do(args =>
+		{
+			args.Glossary = glossary;
+			args.Sprite = result;
+			OnTryGetIcon?.Invoke(null, args);
+			result = args.Sprite;
+		});
+		__result = result;
 	}
 
 	internal sealed class TryGetIconEventArgs

@@ -14,7 +14,7 @@ internal static class ShipPatches
 {
 	internal static EventHandler<ShouldStatusFlashEventArgs>? OnShouldStatusFlash;
 	
-	private static readonly ShouldStatusFlashEventArgs ShouldStatusFlashEventArgsInstance = new();
+	private static readonly Pool<ShouldStatusFlashEventArgs> ShouldStatusFlashEventArgsPool = new(() => new());
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -58,19 +58,23 @@ internal static class ShipPatches
 		}
 	}
 
-	private static void Ship_RenderStatusRow_Transpiler_ModifyShouldFlash(Ship ship, G g, Status status, ref bool shouldFlash)
+	private static void Ship_RenderStatusRow_Transpiler_ModifyShouldFlash(Ship ship, G g, Status status, ref bool shouldFlashRef)
 	{
 		if (g.state.route is not Combat combat)
 			return;
 		
-		var args = ShouldStatusFlashEventArgsInstance;
-		args.State = g.state;
-		args.Combat = combat;
-		args.Ship = ship;
-		args.Status = status;
-		args.ShouldFlash = shouldFlash;
-		OnShouldStatusFlash?.Invoke(null, args);
-		shouldFlash = args.ShouldFlash;
+		var shouldFlash = shouldFlashRef;
+		ShouldStatusFlashEventArgsPool.Do(args =>
+		{
+			args.State = g.state;
+			args.Combat = combat;
+			args.Ship = ship;
+			args.Status = status;
+			args.ShouldFlash = shouldFlash;
+			OnShouldStatusFlash?.Invoke(null, args);
+			shouldFlash = args.ShouldFlash;
+		});
+		shouldFlashRef = shouldFlash;
 	}
 
 	internal sealed class ShouldStatusFlashEventArgs

@@ -11,7 +11,7 @@ internal static class SpriteLoaderPatches
 	internal static EventHandler<GetTextureEventArgs>? OnGetTexture;
 
 	private static readonly HashSet<Spr> DynamicTextureSprites = [];
-	private static readonly GetTextureEventArgs GetTextureEventArgsInstance = new();
+	private static readonly Pool<GetTextureEventArgs> GetTextureEventArgsPool = new(() => new());
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -25,16 +25,20 @@ internal static class SpriteLoaderPatches
 		if (!DynamicTextureSprites.Contains(id) && SpriteLoader.textures.TryGetValue(id, out __result))
 			return false;
 		__result = null;
-
-		var args = GetTextureEventArgsInstance;
-		args.Sprite = id;
-		args.Texture = __result;
-		OnGetTexture?.Invoke(null, args);
 		
-		__result = args.Texture;
-		if (args.IsDynamic)
-			DynamicTextureSprites.Add(id);
 		
+		Texture2D? result = null;
+		GetTextureEventArgsPool.Do(args =>
+		{
+			args.Sprite = id;
+			args.Texture = result;
+			OnGetTexture?.Invoke(null, args);
+			
+			result = args.Texture;
+			if (args.IsDynamic)
+				DynamicTextureSprites.Add(id);
+		});
+		__result = result;
 		return __result is null;
 	}
 

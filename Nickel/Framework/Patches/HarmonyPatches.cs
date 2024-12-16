@@ -18,7 +18,7 @@ internal static class HarmonyPatches
 	internal static readonly Stack<(DelayedHarmony Harmony, string MemberName, string SourceFilePath, int SourceLineNumber)> DelayedManagerStack = [];
 #pragma warning restore CS0618 // Type or member is obsolete
 
-	private static readonly Lazy<Type> PatchJobsMethodInfoJobType = new(() => AccessTools.Inner(typeof(Harmony).Assembly.GetType("HarmonyLib.PatchJobs")!.MakeGenericType([typeof(MethodInfo)]), "Job"));
+	private static readonly Lazy<Type> PatchJobsMethodInfoJobType = new(() => AccessTools.Inner(typeof(Harmony).Assembly.GetType("HarmonyLib.PatchJobs")!.MakeGenericType(typeof(MethodInfo)), "Job"));
 	private static readonly Lazy<Func<object, MethodBase>> GetOriginal = new(() => CreateFieldGetter<MethodBase>(PatchJobsMethodInfoJobType.Value, "original"));
 	private static readonly Lazy<Func<object, List<HarmonyMethod>>> GetPrefixes = new(() => CreateFieldGetter<List<HarmonyMethod>>(PatchJobsMethodInfoJobType.Value, "prefixes"));
 	private static readonly Lazy<Func<object, List<HarmonyMethod>>> GetPostfixes = new(() => CreateFieldGetter<List<HarmonyMethod>>(PatchJobsMethodInfoJobType.Value, "postfixes"));
@@ -150,6 +150,7 @@ internal static class HarmonyPatches
 
 		var original = GetOriginal.Value(job);
 		
+		// ReSharper disable ExplicitCallerInfoArgument
 		foreach (var prefix in GetPrefixes.Value(job))
 			entry.Harmony.Patch(original, prefix: prefix, memberName: entry.MemberName, sourceFilePath: entry.SourceFilePath, sourceLineNumber: entry.SourceLineNumber);
 		foreach (var postfix in GetPostfixes.Value(job))
@@ -158,6 +159,7 @@ internal static class HarmonyPatches
 			entry.Harmony.Patch(original, transpiler: transpiler, memberName: entry.MemberName, sourceFilePath: entry.SourceFilePath, sourceLineNumber: entry.SourceLineNumber);
 		foreach (var finalizer in GetFinalizers.Value(job))
 			entry.Harmony.Patch(original, finalizer: finalizer, memberName: entry.MemberName, sourceFilePath: entry.SourceFilePath, sourceLineNumber: entry.SourceLineNumber);
+		// ReSharper restore ExplicitCallerInfoArgument
 		individualPrepareResult = false;
 	}
 }

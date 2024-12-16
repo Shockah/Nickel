@@ -13,16 +13,15 @@ namespace Nickel;
 
 internal static class StatePatches
 {
-	internal static bool StopSavingOverride = false;
 	internal static EventHandler<EnumerateAllArtifactsEventArgs>? OnEnumerateAllArtifacts;
 	internal static EventHandler<ModifyPotentialExeCardsEventArgs>? OnModifyPotentialExeCards;
 	internal static EventHandler<LoadEventArgs>? OnLoad;
 	internal static EventHandler<State>? OnUpdating;
 	internal static EventHandler<State>? OnUpdate;
 	
-	private static readonly EnumerateAllArtifactsEventArgs EnumerateAllArtifactsEventArgsInstance = new();
-	private static readonly ModifyPotentialExeCardsEventArgs ModifyPotentialExeCardsEventArgsInstance = new();
-	private static readonly LoadEventArgs LoadEventArgsInstance = new();
+	private static readonly Pool<EnumerateAllArtifactsEventArgs> EnumerateAllArtifactsEventArgsPool = new(() => new());
+	private static readonly Pool<ModifyPotentialExeCardsEventArgs> ModifyPotentialExeCardsEventArgsPool = new(() => new());
+	private static readonly Pool<LoadEventArgs> LoadEventArgsPool = new(() => new());
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -39,7 +38,6 @@ internal static class StatePatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.SaveIfRelease))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.SaveIfRelease)}`"),
-			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(SaveIfRelease_Prefix)),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(SaveIfRelease_Postfix))
 		);
 		harmony.Patch(
@@ -57,11 +55,15 @@ internal static class StatePatches
 
 	private static void EnumerateAllArtifacts_Postfix(State __instance, ref List<Artifact> __result)
 	{
-		var args = EnumerateAllArtifactsEventArgsInstance;
-		args.State = __instance;
-		args.Artifacts = __result;
-		OnEnumerateAllArtifacts?.Invoke(null, args);
-		__result = args.Artifacts;
+		var result = __result;
+		EnumerateAllArtifactsEventArgsPool.Do(args =>
+		{
+			args.State = __instance;
+			args.Artifacts = result;
+			OnEnumerateAllArtifacts?.Invoke(null, args);
+			result = args.Artifacts;
+		});
+		__result = result;
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -97,33 +99,38 @@ internal static class StatePatches
 		}
 	}
 
-	private static void State_PopulateRun_Delegate_Transpiler_ModifyPotentialExeCards(IEnumerable<Deck> chars, ref List<Card> cards)
+	private static void State_PopulateRun_Delegate_Transpiler_ModifyPotentialExeCards(IEnumerable<Deck> chars, ref List<Card> cardsRef)
 	{
-		var args = ModifyPotentialExeCardsEventArgsInstance;
-		args.Characters = chars.ToHashSet();
-		args.ExeCards = cards;
-		OnModifyPotentialExeCards?.Invoke(null, args);
-		cards = args.ExeCards;
+		var cards = cardsRef;
+		ModifyPotentialExeCardsEventArgsPool.Do(args =>
+		{
+			args.Characters = chars.ToHashSet();
+			args.ExeCards = cards;
+			OnModifyPotentialExeCards?.Invoke(null, args);
+			cards = args.ExeCards;
+		});
+		cardsRef = cards;
 	}
-
-	private static bool SaveIfRelease_Prefix()
-		=> !StopSavingOverride;
 
 	private static void SaveIfRelease_Postfix(State __instance)
 	{
 		if (Nickel.Instance.DebugMode != DebugMode.EnabledWithSaving)
 			return;
-		if (FeatureFlags.Debug && !StopSavingOverride)
+		if (FeatureFlags.Debug)
 			__instance.Save();
 	}
 
 	private static void Load_Postfix(int slot, ref State.SaveSlot __result)
 	{
-		var args = LoadEventArgsInstance;
-		args.Slot = slot;
-		args.Data = __result;
-		OnLoad?.Invoke(null, args);
-		__result = args.Data;
+		var result = __result;
+		LoadEventArgsPool.Do(args =>
+		{
+			args.Slot = slot;
+			args.Data = result;
+			OnLoad?.Invoke(null, args);
+			result = args.Data;
+		});
+		__result = result;
 	}
 
 	private static void Update_Prefix(State __instance)

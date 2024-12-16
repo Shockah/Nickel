@@ -6,8 +6,10 @@
 
 ### For everyone:
 * Browsing through cards in hand for action selection will now display the cards in their order in hand.
+* Fixed various bugs that could happen if card data depends on other cards.
 
 ### For developers:
+* Added the `Pool` and `MultiPool` utilities.
 * The `RequiredApiVersion` `nickel.json` field is no longer used on non-assembly mods.
 * The `RequiredApiVersion` `nickel.json` field is now optional on assembly mods.
 * Improved sprite asset registration and error handling.

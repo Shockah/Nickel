@@ -19,11 +19,11 @@ internal static class CardPatches
 	internal static EventHandler<MidGetDataWithOverridesEventArgs>? OnMidGetDataWithOverrides;
 	internal static EventHandler<Card>? OnCopyingWithNewId;
 	
-	private static readonly KeyEventArgs KeyEventArgsInstance = new();
-	private static readonly TooltipsEventArgs TooltipsEventArgsInstance = new();
-	private static readonly TraitRenderEventArgs TraitRenderEventArgsInstance = new();
-	private static readonly GettingDataWithOverridesEventArgs GettingDataWithOverridesEventArgsInstance = new();
-	private static readonly MidGetDataWithOverridesEventArgs MidGetDataWithOverridesEventArgsInstance = new();
+	private static readonly Pool<KeyEventArgs> KeyEventArgsPool = new(() => new());
+	private static readonly Pool<TooltipsEventArgs> TooltipsEventArgsPool = new(() => new());
+	private static readonly Pool<TraitRenderEventArgs> TraitRenderEventArgsPool = new(() => new());
+	private static readonly Pool<GettingDataWithOverridesEventArgs> GettingDataWithOverridesEventArgsPool = new(() => new());
+	private static readonly Pool<MidGetDataWithOverridesEventArgs> MidGetDataWithOverridesEventArgsPool = new(() => new());
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -57,11 +57,15 @@ internal static class CardPatches
 
 	private static void Key_Postfix(Card __instance, ref string __result)
 	{
-		var args = KeyEventArgsInstance;
-		args.Card = __instance;
-		args.Key = __result;
-		OnKey?.Invoke(null, args);
-		__result = args.Key;
+		var result = __result;
+		KeyEventArgsPool.Do(args =>
+		{
+			args.Card = __instance;
+			args.Key = result;
+			OnKey?.Invoke(null, args);
+			result = args.Key;
+		});
+		__result = result;
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -107,35 +111,43 @@ internal static class CardPatches
 		}
 	}
 
-	private static void Render_Transpiler_RenderTraits(Card card, State state, ref int cardTraitIndex, Vec vec)
+	private static void Render_Transpiler_RenderTraits(Card card, State state, ref int cardTraitIndexRef, Vec vec)
 	{
-		var args = TraitRenderEventArgsInstance;
-		args.Card = card;
-		args.State = state;
-		args.CardTraitIndex = cardTraitIndex;
-		args.Position = vec;
-		OnRenderTraits?.Invoke(null, args);
-		cardTraitIndex = args.CardTraitIndex;
+		var cardTraitIndex = cardTraitIndexRef;
+		TraitRenderEventArgsPool.Do(args =>
+		{
+			args.Card = card;
+			args.State = state;
+			args.CardTraitIndex = cardTraitIndex;
+			args.Position = vec;
+			OnRenderTraits?.Invoke(null, args);
+			cardTraitIndex = args.CardTraitIndex;
+		});
+		cardTraitIndexRef = cardTraitIndex;
 	}
 
 	private static void GetAllTooltips_Postfix(Card __instance, State s, bool showCardTraits, ref IEnumerable<Tooltip> __result)
 	{
-		var args = TooltipsEventArgsInstance;
-		args.Card = __instance;
-		args.State = s;
-		args.ShowCardTraits = showCardTraits;
-		args.TooltipsEnumerator = __result;
-		OnGetTooltips?.Invoke(null, args);
-		__result = args.TooltipsEnumerator;
+		var result = __result;
+		TooltipsEventArgsPool.Do(args =>
+		{
+			args.Card = __instance;
+			args.State = s;
+			args.ShowCardTraits = showCardTraits;
+			args.TooltipsEnumerator = result;
+			OnGetTooltips?.Invoke(null, args);
+			result = args.TooltipsEnumerator;
+		});
+		__result = result;
 	}
 
 	private static void GetDataWithOverrides_Prefix(Card __instance, State state)
-	{
-		var args = GettingDataWithOverridesEventArgsInstance;
-		args.Card = __instance;
-		args.State = state;
-		OnGettingDataWithOverrides?.Invoke(null, args);
-	}
+		=> GettingDataWithOverridesEventArgsPool.Do(args =>
+		{
+			args.Card = __instance;
+			args.State = state;
+			OnGettingDataWithOverrides?.Invoke(null, args);
+		});
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> GetDataWithOverrides_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
@@ -164,15 +176,19 @@ internal static class CardPatches
 		}
 	}
 
-	private static void GetDataWithOverrides_Transpiler_ModifyData(Card card, State state, ref CardData data)
+	private static void GetDataWithOverrides_Transpiler_ModifyData(Card card, State state, ref CardData dataRef)
 	{
-		var args = MidGetDataWithOverridesEventArgsInstance;
-		args.Card = card;
-		args.State = state;
-		args.InitialData = data;
-		args.CurrentData = data;
-		OnMidGetDataWithOverrides?.Invoke(null, args);
-		data = args.CurrentData;
+		var data = dataRef;
+		MidGetDataWithOverridesEventArgsPool.Do(args =>
+		{
+			args.Card = card;
+			args.State = state;
+			args.InitialData = data;
+			args.CurrentData = data;
+			OnMidGetDataWithOverrides?.Invoke(null, args);
+			data = args.CurrentData;
+		});
+		dataRef = data;
 	}
 
 	private static void CopyWithNewId_Prefix(Card __instance)

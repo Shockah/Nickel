@@ -7,8 +7,8 @@ namespace Nickel;
 internal static class AIPatches
 {
 	internal static EventHandler<KeyEventArgs>? OnKey;
-	
-	private static readonly KeyEventArgs KeyEventArgsInstance = new();
+
+	private static readonly Pool<KeyEventArgs> KeyEventArgsPool = new(() => new());
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -19,11 +19,15 @@ internal static class AIPatches
 
 	private static void Key_Postfix(AI __instance, ref string __result)
 	{
-		var args = KeyEventArgsInstance;
-		args.AI = __instance;
-		args.Key = __result;
-		OnKey?.Invoke(null, args);
-		__result = args.Key;
+		var result = __result;
+		KeyEventArgsPool.Do(args =>
+		{
+			args.AI = __instance;
+			args.Key = result;
+			OnKey?.Invoke(null, args);
+			result = args.Key;
+		});
+		__result = result;
 	}
 
 	internal sealed class KeyEventArgs

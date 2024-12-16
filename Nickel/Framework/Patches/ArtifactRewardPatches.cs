@@ -15,7 +15,7 @@ internal static class ArtifactRewardPatches
 {
 	internal static EventHandler<GetBlockedArtifactsEventArgs>? OnGetBlockedArtifacts;
 	
-	private static readonly GetBlockedArtifactsEventArgs GetBlockedArtifactsEventArgsInstance = new();
+	private static readonly Pool<GetBlockedArtifactsEventArgs> GetBlockedArtifactsEventArgsPool = new(() => new());
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -33,10 +33,14 @@ internal static class ArtifactRewardPatches
 
 	private static void GetBlockedArtifacts_Postfix(State s, ref HashSet<Type> __result)
 	{
-		var args = GetBlockedArtifactsEventArgsInstance;
-		args.State = s;
-		args.BlockedArtifacts = __result;
-		OnGetBlockedArtifacts?.Invoke(null, args);
+		var result = __result;
+		GetBlockedArtifactsEventArgsPool.Do(args =>
+		{
+			args.State = s;
+			args.BlockedArtifacts = result;
+			OnGetBlockedArtifacts?.Invoke(null, args);
+		});
+		__result = result;
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]

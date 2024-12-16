@@ -8,7 +8,7 @@ internal static class MapBasePatches
 {
 	internal static EventHandler<GetEnemyPoolsEventArgs>? OnGetEnemyPools;
 	
-	private static readonly GetEnemyPoolsEventArgs GetEnemyPoolsEventArgsInstance = new();
+	private static readonly Pool<GetEnemyPoolsEventArgs> GetEnemyPoolsEventArgsPool = new(() => new());
 
 	internal static void ApplyLate(Harmony harmony)
 		=> harmony.PatchVirtual(
@@ -19,13 +19,13 @@ internal static class MapBasePatches
 		);
 
 	private static void GetEnemyPools_Postfix(MapBase __instance, State __0, MapBase.MapEnemyPool __result)
-	{
-		var args = GetEnemyPoolsEventArgsInstance;
-		args.State = __0;
-		args.Map = __instance;
-		args.Pool = __result;
-		OnGetEnemyPools?.Invoke(null, args);
-	}
+		=> GetEnemyPoolsEventArgsPool.Do(args =>
+		{
+			args.State = __0;
+			args.Map = __instance;
+			args.Pool = __result;
+			OnGetEnemyPools?.Invoke(null, args);
+		});
 
 	internal sealed class GetEnemyPoolsEventArgs
 	{
