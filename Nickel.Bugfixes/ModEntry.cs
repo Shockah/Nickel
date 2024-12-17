@@ -18,6 +18,7 @@ public sealed class ModEntry : SimpleMod
 		DebugMenuFixes.ApplyPatches(harmony);
 		ExhaustEntireHandActionFixes.ApplyPatches(harmony);
 		IsaacUnlockFixes.ApplyPatches(harmony);
+		RockFactoryFixes.ApplyPatches(harmony);
 		SecondOpinionsFixes.ApplyPatches(harmony);
 	}
 }

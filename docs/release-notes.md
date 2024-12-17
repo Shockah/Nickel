@@ -8,6 +8,7 @@
 * Browsing through cards in hand for action selection will now display the cards in their order in hand.
 * Fixed various bugs that could happen if card data depends on other cards.
 * Split off a new internal mod `Nickel.Bugfixes` out of `Nickel.Essentials`.
+* The Rock Factory status now works properly when applied to enemies.
 
 ### For developers:
 * Added the `Pool` and `MultiPool` utilities.
