@@ -74,7 +74,7 @@ public static class ProfileBasedValue
 		Action<TProfile, TData> dataSetter,
 		Func<TData, TData> dataCopier
 	)
-		=> new ProfileBasedValue<TProfile, TData>(activeProfileGetter, activeProfileSetter, dataGetter, dataSetter, dataCopier);
+		=> new(activeProfileGetter, activeProfileSetter, dataGetter, dataSetter, dataCopier);
 
 	/// <summary>
 	/// Creates a new <see cref="ProfileBasedValue{TProfile,TData}"/>, which copies its data if needed via <see cref="Mutil.DeepCopy{T}"/>.

@@ -12,6 +12,9 @@ public interface IModEvents
 	/// <summary>An event fired whenever any mod load phase finishes.</summary>
 	event EventHandler<ModLoadPhase> OnModLoadPhaseFinished;
 
+	/// <summary>An event fired whenever the save state gets loaded/changed.</summary>
+	event EventHandler<State> OnSaveLoaded;
+
 	/// <summary>An event fired whenever the game loads a localization (when it first starts, and when a new language gets selected).</summary>
 	event EventHandler<LoadStringsForLocaleEventArgs> OnLoadStringsForLocale;
 

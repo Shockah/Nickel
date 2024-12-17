@@ -21,6 +21,12 @@ internal sealed class ModEvents : IModEvents
 		remove => this.EventManager.OnModLoadPhaseFinishedEvent.Remove(value, this.ModManifest);
 	}
 
+	public event EventHandler<State> OnSaveLoaded
+	{
+		add => this.EventManager.OnSaveLoadedEvent.Add(value, this.ModManifest);
+		remove => this.EventManager.OnSaveLoadedEvent.Remove(value, this.ModManifest);
+	}
+
 	public event EventHandler<LoadStringsForLocaleEventArgs> OnLoadStringsForLocale
 	{
 		add => this.EventManager.OnLoadStringsForLocaleEvent.Add(value, this.ModManifest);

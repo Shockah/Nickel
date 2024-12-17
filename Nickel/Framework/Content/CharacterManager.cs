@@ -410,7 +410,7 @@ internal sealed class CharacterManager
 		}
 		else
 		{
-			entry = default;
+			entry = null;
 			return false;
 		}
 	}
@@ -424,7 +424,7 @@ internal sealed class CharacterManager
 		}
 		else
 		{
-			entry = default;
+			entry = null;
 			return false;
 		}
 	}

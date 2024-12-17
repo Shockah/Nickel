@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For developers:
+* Added the `IModEvents.OnSaveLoaded` event.
+
 ## 1.7.0
 Released 17 December 2024.
 
