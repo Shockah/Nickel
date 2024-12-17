@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 2.0.1
+Released 17 December 2024.
 
 * Mods now have a reference to the `JetBrains.Annotations` package.
 
