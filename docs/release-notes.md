@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.7.0
+Released 17 December 2024.
 
 ### For everyone:
 * Browsing through cards in hand for action selection will now display the cards in their order in hand.
