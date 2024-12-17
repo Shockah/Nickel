@@ -71,21 +71,14 @@ public sealed class ModEntry : SimpleMod
 		);
 
 		var harmony = helper.Utilities.Harmony;
-		ArtifactCodexFixes.ApplyPatches(harmony);
-		CardActionRenderingFixes.ApplyPatches(harmony);
 		CardBrowseCurrentPile.ApplyPatches(harmony);
-		CardBrowseSortingFixes.ApplyPatches(harmony);
 		CardCodexFiltering.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);
-		DebugMenuFixes.ApplyPatches(harmony);
 		ExeBlacklist.ApplyPatches(harmony);
-		ExhaustEntireHandActionFixes.ApplyPatches(harmony);
-		IsaacUnlockFixes.ApplyPatches(harmony);
 		LogbookReplacement.ApplyPatches(harmony);
 		MemorySelection.ApplyPatches(harmony);
 		ModDescriptions.ApplyPatches(harmony);
 		SaveImport.ApplyPatches(harmony);
-		SecondOpinionsFixes.ApplyPatches(harmony);
 		ShipSelection.ApplyPatches(harmony);
 		StarterDeckPreview.ApplyPatches(harmony);
 		TooltipScrolling.ApplyPatches(harmony);

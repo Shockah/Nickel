@@ -8,7 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Nickel.Essentials;
+namespace Nickel.Bugfixes;
 
 internal static class ArtifactCodexFixes
 {

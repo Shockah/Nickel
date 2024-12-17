@@ -1,0 +1,9 @@
+{
+	"UniqueName": "Nickel.Bugfixes",
+	"Version": "{{ModVersion}}",
+	"DisplayName": "Nickel: Bugfixes",
+	"Description": "Provides bugfixes essential for playing the modded game.",
+	"Author": "Nickel",
+	"RequiredApiVersion": "{{ModVersion}}",
+	"EntryPointAssembly": "Nickel.Bugfixes.dll"
+}

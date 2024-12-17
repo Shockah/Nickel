@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\Configuration.InternalMod.props" />
+	<PropertyGroup>
+		<RootNamespace>Nickel.Bugfixes</RootNamespace>
+	</PropertyGroup>
+	<ItemGroup>
+		<ModFiles Include="i18n/**" />
+		<ModFiles Include="assets/**" />
+<!--		<ModFiles Include="i18n/**" ModPath="i18n/%(RecursiveDir)%(Filename)%(Extension)" />-->
+<!--		<ModFiles Include="assets/**" ModPath="assets/%(RecursiveDir)%(Filename)%(Extension)" />-->
+	</ItemGroup>
+</Project>

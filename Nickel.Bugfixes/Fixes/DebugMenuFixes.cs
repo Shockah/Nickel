@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-namespace Nickel.Essentials;
+namespace Nickel.Bugfixes;
 
 internal static class DebugMenuFixes
 {
