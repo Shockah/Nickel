@@ -27,10 +27,12 @@ internal sealed class CharacterManager
 	public CharacterManager(
 		Func<ModLoadPhaseState> currentModLoadPhaseProvider,
 		Func<IModManifest, ILogger> loggerProvider,
+		ModEventManager eventManager,
 		SpriteManager sprites,
 		DeckManager decks,
 		StatusManager statuses,
-		IModManifest vanillaModManifest
+		IModManifest vanillaModManifest,
+		IModManifest modLoaderModManifest
 	)
 	{
 		this.LoggerProvider = loggerProvider;
@@ -42,6 +44,7 @@ internal sealed class CharacterManager
 		this.PlayableCharacterManager = new(currentModLoadPhaseProvider, this.Inject);
 		this.NonPlayableCharacterManager = new(currentModLoadPhaseProvider, this.Inject);
 
+		eventManager.OnModLoadPhaseFinishedEvent.Add(this.OnModLoadPhaseFinished, modLoaderModManifest);
 		EventsPatches.OnCrystallizedFriendEvent += OnCrystallizedFriendEvent;
 		StatePatches.OnModifyPotentialExeCards += this.OnModifyPotentialExeCards;
 		StoryVarsPatches.OnGetUnlockedChars += this.OnGetUnlockedChars;
@@ -494,6 +497,9 @@ internal sealed class CharacterManager
 		StarterDeck.starterSets[entry.V2.Deck] = entry.V2.Starters;
 		StatusMeta.deckToMissingStatus[entry.V2.Deck] = entry.MissingStatus.Status;
 
+		if (entry.V2.SoloStarters is { } soloStarters)
+			SoloStarterDeck.soloStarterSets[entry.V2.Deck] = soloStarters;
+
 		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 	}
 	
@@ -554,6 +560,61 @@ internal sealed class CharacterManager
 			return;
 		localizations[$"char.{entry.CharacterType}"] = name;
 		localizations[$"char.{entry.CharacterType}.name"] = name;
+	}
+
+	[EventPriority(double.MaxValue)]
+	private void OnModLoadPhaseFinished(object? _, ModLoadPhase phase)
+	{
+		if (phase != ModLoadPhase.AfterDbInit)
+			return;
+		this.SetupAfterDbInit();
+	}
+
+	private void SetupAfterDbInit()
+	{
+		foreach (var entry in this.UniqueNameToPlayableCharacterEntry.Values)
+		{
+			if (SoloStarterDeck.soloStarterSets.ContainsKey(entry.V2.Deck))
+				continue;
+
+			var random = new Rand((uint)GetStableHashCode(entry.UniqueName));
+
+			SoloStarterDeck.soloStarterSets[entry.V2.Deck] = new()
+			{
+				artifacts = entry.V2.Starters.artifacts.ToList(),
+				cards = [
+					.. entry.V2.Starters.cards,
+					.. DB.cardMetas
+						.Where(kvp => kvp.Value.deck == entry.V2.Deck && kvp.Value is { unreleased: false, dontOffer: false, rarity: Rarity.common })
+						.Where(kvp => entry.V2.Starters.cards.All(card => card.Key() != kvp.Key))
+						.OrderBy(kvp => kvp.Key)
+						// ReSharper disable once MultipleOrderBy
+						.OrderBy(_ => random.NextInt())
+						.Select(kvp => kvp.Key)
+						.Select(key => DB.cards.GetValueOrDefault(key))
+						.OfType<Type>()
+						.Take(6 - entry.V2.Starters.cards.Count)
+						.Select(cardType => (Card)Activator.CreateInstance(cardType)!)
+				]
+			};
+			
+			// source: https://stackoverflow.com/a/36845864
+			static int GetStableHashCode(string str)
+			{
+				var hash1 = 5381;
+				var hash2 = hash1;
+
+				for (var i = 0; i < str.Length && str[i] != '\0'; i += 2)
+				{
+					hash1 = ((hash1 << 5) + hash1) ^ str[i];
+					if (i == str.Length - 1 || str[i + 1] == '\0')
+						break;
+					hash2 = ((hash2 << 5) + hash2) ^ str[i + 1];
+				}
+
+				return hash1 + hash2 * 1566083941;
+			}
+		}
 	}
 
 	private static void OnCrystallizedFriendEvent(object? _, List<Choice> choices)

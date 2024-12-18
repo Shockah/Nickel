@@ -538,7 +538,15 @@ internal sealed class ModManager
 			Author = "Rocket Rat Games",
 		};
 
-		this.ContentManager = ContentManager.Create(() => this.CurrentModLoadPhase, this.ObtainLogger, this.EnumCasePool, this.VanillaModManifest, this.ModLoaderPackage.Manifest, this.ModDataManager);
+		this.ContentManager = ContentManager.Create(
+			() => this.CurrentModLoadPhase,
+			this.ObtainLogger,
+			this.EventManager,
+			this.EnumCasePool,
+			this.VanillaModManifest,
+			this.ModLoaderPackage.Manifest,
+			this.ModDataManager
+		);
 		this.PrepareJsonSerialization();
 	}
 

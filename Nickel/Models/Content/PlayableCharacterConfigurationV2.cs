@@ -16,6 +16,10 @@ public readonly struct PlayableCharacterConfigurationV2
 	/// <summary>The cards and artifacts this playable <see cref="Character"/> starts with.</summary>
 	public required StarterDeck Starters { get; init; }
 	
+	/// <summary>The cards and artifacts this playable <see cref="Character"/> starts with if the <see cref="DailyJustOneCharacter">Solo Run daily modifier</see> is present.</summary>
+	/// <remarks>If not set, Nickel will pick common cards at random.</remarks>
+	public StarterDeck? SoloStarters { get; init; }
+	
 	/// <summary>The neutral (default) animation for this character.</summary>
 	/// <remarks>Either this property has to be set, or a corresponding call to <see cref="IModCharactersV2.RegisterCharacterAnimation(CharacterAnimationConfigurationV2)"/> has to be done prior to registering the character, but <b>not both</b>.</remarks>
 	public CharacterAnimationConfigurationV2? NeutralAnimation { get; init; }

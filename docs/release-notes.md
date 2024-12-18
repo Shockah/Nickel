@@ -4,8 +4,12 @@
 
 ## Upcoming release
 
+### For everyone:
+* Fixed the game crashing when setting up a daily run with the Solo Run modifier with any modded characters.
+
 ### For developers:
 * Added the `IModEvents.OnSaveLoaded` event.
+* Added `PlayableCharacterConfigurationV2.SoloStarters`.
 
 ## 1.7.0
 Released 17 December 2024.
