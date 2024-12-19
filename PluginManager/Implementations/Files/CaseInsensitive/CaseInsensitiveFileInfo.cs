@@ -17,4 +17,12 @@ public sealed class CaseInsensitiveFileInfo(IFileInfo wrapped) : CaseInsensitive
 			throw new FileNotFoundException("File not found", this.FullName);
 		return file.OpenRead();
 	}
+
+	/// <inheritdoc/>
+	public byte[] ReadAllBytes()
+	{
+		if (GetCaseFixed(this).AsFile is not { } file)
+			throw new FileNotFoundException("File not found", this.FullName);
+		return file.ReadAllBytes();
+	}
 }

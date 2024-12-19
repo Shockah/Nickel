@@ -4,17 +4,12 @@ using System.Linq;
 
 namespace Nickel;
 
-internal sealed class AfterDbInitManager<TEntry>
+internal sealed class AfterDbInitManager<TEntry>(
+	Func<ModLoadPhaseState> currentModLoadPhaseProvider,
+	Action<TEntry> injectMethod
+)
 {
-	private readonly Func<ModLoadPhaseState> CurrentModLoadPhaseProvider;
-	private readonly Action<TEntry> InjectMethod;
 	private readonly List<TEntry> QueuedEntries = [];
-
-	public AfterDbInitManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Action<TEntry> injectMethod)
-	{
-		this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
-		this.InjectMethod = injectMethod;
-	}
 
 	public void InjectQueuedEntries()
 	{
@@ -26,8 +21,8 @@ internal sealed class AfterDbInitManager<TEntry>
 
 	public void QueueOrInject(TEntry entry)
 	{
-		if (this.CurrentModLoadPhaseProvider().Phase >= ModLoadPhase.AfterDbInit)
-			this.InjectMethod(entry);
+		if (currentModLoadPhaseProvider().Phase >= ModLoadPhase.AfterDbInit)
+			injectMethod(entry);
 		else if (!this.QueuedEntries.Contains(entry))
 			this.QueuedEntries.Add(entry);
 	}

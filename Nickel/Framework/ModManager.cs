@@ -640,6 +640,7 @@ internal sealed class ModManager
 				modEvents,
 				() => new ModContent(
 					new ModSprites(package, () => this.ContentManager!.Sprites),
+					new ModAudio(package, () => this.ContentManager!.Audio),
 					new ModDecks(package.Manifest, () => this.ContentManager!.Decks),
 					new ModStatuses(package.Manifest, () => this.ContentManager!.Statuses),
 					new ModCards(package.Manifest, () => this.ContentManager!.Cards, () => this.ContentManager!.CardTraits),

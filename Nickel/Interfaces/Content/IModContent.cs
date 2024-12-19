@@ -1,56 +1,35 @@
 namespace Nickel;
 
 /// <summary>
-/// A mod-specific content registry.<br/>
+/// A mod-specific content registry.
 /// Allows looking up and registering game content.
 /// </summary>
 public interface IModContent
 {
-	/// <summary>
-	/// A mod-specific <see cref="Spr"/> registry.
-	/// Allows looking up and registering sprites.
-	/// </summary>
+	/// <inheritdoc cref="IModSprites"/>
 	IModSprites Sprites { get; }
+	
+	/// <inheritdoc cref="IModAudio"/>
+	IModAudio Audio { get; }
 
-	/// <summary>
-	/// A mod-specific <see cref="Deck"/> registry.
-	/// Allows looking up and registering decks.
-	/// </summary>
+	/// <inheritdoc cref="IModDecks"/>
 	IModDecks Decks { get; }
 
-	/// <summary>
-	/// A mod-specific <see cref="Status"/> registry.
-	/// Allows looking up and registering statuses.
-	/// </summary>
+	/// <inheritdoc cref="IModStatuses"/>
 	IModStatuses Statuses { get; }
 
-	/// <summary>
-	/// A mod-specific <see cref="Card"/> registry.
-	/// Allows looking up and registering cards.
-	/// </summary>
+	/// <inheritdoc cref="IModCards"/>
 	IModCards Cards { get; }
 
-	/// <summary>
-	/// A mod-specific <see cref="Artifact"/> registry.
-	/// Allows looking up and registering artifacts.
-	/// </summary>
+	/// <inheritdoc cref="IModArtifacts"/>
 	IModArtifacts Artifacts { get; }
 
-	/// <summary>
-	/// A mod-specific playable <see cref="Character"/> registry.
-	/// Allows looking up and registering characters.
-	/// </summary>
+	/// <inheritdoc cref="IModCharacters"/>
 	IModCharacters Characters { get; }
 
-	/// <summary>
-	/// A mod-specific <see cref="StarterShip"/> registry.
-	/// Allows looking up and registering ships and ship parts.
-	/// </summary>
+	/// <inheritdoc cref="IModShips"/>
 	IModShips Ships { get; }
 	
-	/// <summary>
-	/// A mod-specific enemy <see cref="AI"/> registry.
-	/// Allows looking up and registering enemies.
-	/// </summary>
+	/// <inheritdoc cref="IModEnemies"/>
 	IModEnemies Enemies { get; }
 }

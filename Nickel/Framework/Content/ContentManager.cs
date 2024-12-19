@@ -8,6 +8,7 @@ namespace Nickel;
 internal sealed class ContentManager
 {
 	public readonly SpriteManager Sprites;
+	public readonly AudioManager Audio;
 	public readonly DeckManager Decks;
 	public readonly StatusManager Statuses;
 	public readonly CardManager Cards;
@@ -20,6 +21,7 @@ internal sealed class ContentManager
 
 	private ContentManager(
 		SpriteManager sprites,
+		AudioManager audio,
 		DeckManager decks,
 		StatusManager statuses,
 		CardManager cards,
@@ -32,6 +34,7 @@ internal sealed class ContentManager
 	)
 	{
 		this.Sprites = sprites;
+		this.Audio = audio;
 		this.Decks = decks;
 		this.Statuses = statuses;
 		this.Cards = cards;
@@ -54,6 +57,7 @@ internal sealed class ContentManager
 	)
 	{
 		var sprites = new SpriteManager(loggerProvider, enumCasePool, vanillaModManifest);
+		var audio = new AudioManager(currentModLoadPhaseProvider, vanillaModManifest);
 		var decks = new DeckManager(currentModLoadPhaseProvider, enumCasePool, vanillaModManifest);
 		var statuses = new StatusManager(currentModLoadPhaseProvider, enumCasePool, vanillaModManifest);
 		var cards = new CardManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
@@ -63,11 +67,12 @@ internal sealed class ContentManager
 		var ships = new ShipManager(currentModLoadPhaseProvider, vanillaModManifest);
 		var cardTraits = new CardTraitManager(loggerProvider, vanillaModManifest, modLoaderModManifest, modDataManager);
 		var enemies = new EnemyManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
-		return new(sprites, decks, statuses, cards, artifacts, characters, parts, ships, cardTraits, enemies);
+		return new(sprites, audio, decks, statuses, cards, artifacts, characters, parts, ships, cardTraits, enemies);
 	}
 
 	internal void InjectQueuedEntries()
 	{
+		this.Audio.InjectQueuedEntries();
 		this.Decks.InjectQueuedEntries();
 		this.Statuses.InjectQueuedEntries();
 		this.Cards.InjectQueuedEntries();
