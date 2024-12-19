@@ -22,6 +22,10 @@ public sealed class FileInfoImpl : FileSystemInfoImpl<FileInfo>, IWritableFileIn
 		=> this.FileSystemInfo.OpenRead();
 
 	/// <inheritdoc/>
+	public byte[] ReadAllBytes()
+		=> File.ReadAllBytes(this.FileSystemInfo.FullName);
+
+	/// <inheritdoc/>
 	public Stream OpenWrite()
 	{
 		this.Parent?.Create();

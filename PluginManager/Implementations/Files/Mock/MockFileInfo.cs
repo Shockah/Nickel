@@ -23,4 +23,8 @@ public sealed class MockFileInfo : MockFileSystemInfo, IFileInfo<MockFileInfo, M
 	/// <inheritdoc/>
 	public Stream OpenRead()
 		=> this.Exists ? new MemoryStream(this.Data) : throw new FileNotFoundException();
+
+	/// <inheritdoc/>
+	public byte[] ReadAllBytes()
+		=> this.Exists ? this.Data : throw new FileNotFoundException();
 }

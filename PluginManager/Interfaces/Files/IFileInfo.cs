@@ -12,6 +12,12 @@ public interface IFileInfo : IFileSystemInfo
 	/// </summary>
 	/// <returns>A new read-only <see cref="Stream"/>.</returns>
 	Stream OpenRead();
+
+	/// <summary>
+	/// Reads the whole file as a byte array.
+	/// </summary>
+	/// <returns>The byte array with the contents of the file.</returns>
+	byte[] ReadAllBytes();
 }
 
 /// <summary>

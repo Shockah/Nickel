@@ -14,13 +14,20 @@ public sealed class ZipFileInfo : ZipFileSystemInfo, IFileInfo<ZipFileInfo, ZipD
 
 	/// <inheritdoc/>
 	public Stream OpenRead()
+		// DeflateStream is dumb and doesn't support `Length`, which breaks assembly loading - copy it to MemoryStream first
+		=> this.ReadToMemoryStream();
+
+	/// <inheritdoc/>
+	public byte[] ReadAllBytes()
+		=> this.ReadToMemoryStream().ToArray();
+
+	private MemoryStream ReadToMemoryStream()
 	{
 		var entryName = this.FullName;
 		if (entryName.StartsWith('/'))
 			entryName = entryName[1..];
 		var entry = this.Archive.GetEntry(entryName) ?? throw new FileNotFoundException("File does not exist", entryName);
-
-		// DeflateStream is dumb and doesn't support `Length`, which breaks assembly loading - copy it to MemoryStream first
+		
 		using var stream = entry.Open();
 		var memoryStream = new MemoryStream();
 		stream.CopyTo(memoryStream);

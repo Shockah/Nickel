@@ -2,23 +2,17 @@ using System;
 
 namespace Nickel;
 
-internal sealed class ModDecks : IModDecks
+internal sealed class ModDecks(
+	IModManifest modManifest,
+	Func<DeckManager> deckManagerProvider
+) : IModDecks
 {
-	private readonly IModManifest ModManifest;
-	private readonly Func<DeckManager> DeckManagerProvider;
-
-	public ModDecks(IModManifest modManifest, Func<DeckManager> deckManagerProvider)
-	{
-		this.ModManifest = modManifest;
-		this.DeckManagerProvider = deckManagerProvider;
-	}
-
 	public IDeckEntry? LookupByDeck(Deck deck)
-		=> this.DeckManagerProvider().LookupByDeck(deck);
+		=> deckManagerProvider().LookupByDeck(deck);
 
 	public IDeckEntry? LookupByUniqueName(string uniqueName)
-		=> this.DeckManagerProvider().LookupByUniqueName(uniqueName);
+		=> deckManagerProvider().LookupByUniqueName(uniqueName);
 
 	public IDeckEntry RegisterDeck(string name, DeckConfiguration configuration)
-		=> this.DeckManagerProvider().RegisterDeck(this.ModManifest, name, configuration);
+		=> deckManagerProvider().RegisterDeck(modManifest, name, configuration);
 }
