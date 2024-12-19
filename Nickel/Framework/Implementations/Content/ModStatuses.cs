@@ -2,23 +2,17 @@ using System;
 
 namespace Nickel;
 
-internal sealed class ModStatuses : IModStatuses
+internal sealed class ModStatuses(
+	IModManifest modManifest,
+	Func<StatusManager> statusManagerProvider
+) : IModStatuses
 {
-	private readonly IModManifest ModManifest;
-	private readonly Func<StatusManager> StatusManagerProvider;
-
-	public ModStatuses(IModManifest modManifest, Func<StatusManager> statusManagerProvider)
-	{
-		this.ModManifest = modManifest;
-		this.StatusManagerProvider = statusManagerProvider;
-	}
-
 	public IStatusEntry? LookupByStatus(Status status)
-		=> this.StatusManagerProvider().LookupByStatus(status);
+		=> statusManagerProvider().LookupByStatus(status);
 
 	public IStatusEntry? LookupByUniqueName(string uniqueName)
-		=> this.StatusManagerProvider().LookupByUniqueName(uniqueName);
+		=> statusManagerProvider().LookupByUniqueName(uniqueName);
 
 	public IStatusEntry RegisterStatus(string name, StatusConfiguration configuration)
-		=> this.StatusManagerProvider().RegisterStatus(this.ModManifest, name, configuration);
+		=> statusManagerProvider().RegisterStatus(modManifest, name, configuration);
 }
