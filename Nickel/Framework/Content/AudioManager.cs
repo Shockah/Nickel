@@ -1,27 +1,35 @@
 ﻿using FMOD;
-using FSPRO;
+using FMOD.Studio;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
 
 namespace Nickel;
 
-internal sealed class AudioManager(
-	Func<ModLoadPhaseState> currentModLoadPhaseProvider,
-	IModManifest vanillaModManifest
-)
+internal sealed class AudioManager
 {
-	private readonly AfterDbInitManager<ModSoundEntry> Manager = new(currentModLoadPhaseProvider, Inject);
-	private Dictionary<GUID, BuiltInSoundEntry>? IdToBuiltInSounds;
-	private Dictionary<string, BuiltInSoundEntry>? UniqueNameToBuiltInSounds;
+	private readonly AfterDbInitManager<ModSoundEntry> ModSoundManager;
+	private readonly AfterDbInitManager<BankEntry> BankManager;
+	private readonly IModManifest VanillaModManifest;
+	private readonly HashSet<GUID> HandledBanks = [];
+	private readonly Dictionary<GUID, EventSoundEntry> IdToEventSounds = [];
+	private readonly Dictionary<string, EventSoundEntry> UniqueNameToEventSounds = [];
 	private readonly Dictionary<string, ModSoundEntry> UniqueNameToModSounds = [];
+
+	public AudioManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
+	{
+		this.ModSoundManager = new(currentModLoadPhaseProvider, Inject);
+		this.BankManager = new(currentModLoadPhaseProvider, this.Inject);
+		this.VanillaModManifest = vanillaModManifest;
+	}
 
 	private static string StandardizeUniqueName(string uniqueName)
 		=> uniqueName.ToLower(CultureInfo.InvariantCulture);
 
-	public ISoundEntry RegisterSound(IModManifest owner, string name, byte[] data)
+	public void RegisterBank(byte[] data)
+		=> this.BankManager.QueueOrInject(new(data));
+
+	public IModSoundEntry RegisterSound(IModManifest owner, string name, byte[] data)
 	{
 		var uniqueName = $"{owner.UniqueName}::{name}";
 
@@ -30,35 +38,45 @@ internal sealed class AudioManager(
 
 		var entry = new ModSoundEntry(owner, uniqueName, name, data);
 		this.UniqueNameToModSounds[StandardizeUniqueName(uniqueName)] = entry;
-		this.Manager.QueueOrInject(entry);
+		this.ModSoundManager.QueueOrInject(entry);
 		return entry;
 	}
 
-	[MemberNotNull(nameof(this.IdToBuiltInSounds), nameof(this.UniqueNameToBuiltInSounds))]
-	private void SetupBuiltInSounds()
+	private void HandleAllBanks()
 	{
-		if (this.IdToBuiltInSounds is not null && this.UniqueNameToBuiltInSounds is not null)
+		if (Audio.inst is not { } audio)
 			return;
-		
-		this.IdToBuiltInSounds = [];
-		this.UniqueNameToBuiltInSounds = [];
-			
-		foreach (var field in typeof(Event).GetFields(BindingFlags.Public | BindingFlags.Static))
-		{
-			if (field.FieldType != typeof(GUID))
-				continue;
-			var fieldId = (GUID)field.GetValue(null)!;
-			var fieldName = field.Name;
-			var entry = new BuiltInSoundEntry(vanillaModManifest, fieldName, fieldName, fieldId);
-			this.IdToBuiltInSounds[fieldId] = entry;
-			this.UniqueNameToBuiltInSounds[entry.UniqueName] = entry;
-		}
+
+		Audio.Catch(audio.fmodStudioSystem.getBankList(out var banks));
+		foreach (var bank in banks)
+			this.HandleBank(bank);
 	}
 
-	public ISoundEntry? LookupSoundById(GUID id)
+	private void HandleBank(Bank bank)
 	{
-		this.SetupBuiltInSounds();
-		return this.IdToBuiltInSounds.GetValueOrDefault(id);
+		Audio.Catch(bank.getID(out var bankId));
+		if (!this.HandledBanks.Add(bankId))
+			return;
+
+		Audio.Catch(bank.getEventList(out var eventDescriptions));
+		foreach (var eventDescription in eventDescriptions)
+		{
+			Audio.Catch(eventDescription.getID(out var eventId));
+			var eventIdString = FmodGuidToString(eventId);
+			// TODO: pass in correct manifest after allowing mods to load their own banks
+			var entry = new EventSoundEntry(this.VanillaModManifest, eventIdString, eventIdString, bankId, eventId);
+			this.IdToEventSounds[eventId] = entry;
+			this.UniqueNameToEventSounds[eventIdString] = entry;
+		}
+	}
+	
+	private static string FmodGuidToString(GUID guid)
+		=> $"{(uint)guid.Data1:X4}:{(uint)guid.Data2:X4}:{(uint)guid.Data3:X4}:{(uint)guid.Data4:X4}";
+
+	public IEventSoundEntry? LookupSoundByEventId(GUID eventId)
+	{
+		this.HandleAllBanks();
+		return this.IdToEventSounds.GetValueOrDefault(eventId);
 	}
 
 	public ISoundEntry? LookupSoundByUniqueName(string uniqueName)
@@ -66,16 +84,16 @@ internal sealed class AudioManager(
 		if (this.UniqueNameToModSounds.TryGetValue(StandardizeUniqueName(uniqueName), out var modEntry))
 			return modEntry;
 		
-		this.SetupBuiltInSounds();
-		return this.UniqueNameToBuiltInSounds.GetValueOrDefault(uniqueName);
+		this.HandleAllBanks();
+		return this.UniqueNameToEventSounds.GetValueOrDefault(uniqueName);
 	}
 
 	internal void InjectQueuedEntries()
-		=> this.Manager.InjectQueuedEntries();
+		=> this.ModSoundManager.InjectQueuedEntries();
 
 	private static void Inject(ModSoundEntry entry)
 	{
-		if (entry.Sound is not null)
+		if (entry.SoundStorage is not null)
 			return;
 		if (Audio.inst is not { } audio)
 			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is `null`");
@@ -92,6 +110,19 @@ internal sealed class AudioManager(
 		Audio.Catch(coreSystem.createSound(entry.Data, MODE.DEFAULT | MODE.OPENMEMORY | MODE.CREATESAMPLE, ref soundInfo, out var sound));
 
 		entry.Data = null;
-		entry.Sound = sound;
+		entry.SoundStorage = sound;
 	}
+
+	private void Inject(BankEntry entry)
+	{
+		if (Audio.inst is not { } audio)
+			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is `null`");
+
+		Audio.Catch(audio.fmodStudioSystem.loadBankMemory(entry.Data, LOAD_BANK_FLAGS.NORMAL, out var bank));
+		this.HandleBank(bank);
+	}
+
+	private record BankEntry(
+		byte[] Data
+	);
 }

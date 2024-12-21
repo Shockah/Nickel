@@ -3,13 +3,12 @@ using FMOD.Studio;
 
 namespace Nickel;
 
-internal sealed class BuiltInSoundInstance(BuiltInSoundEntry entry, EventInstance instance) : ISoundInstance
+internal sealed class EventSoundInstance(EventSoundEntry entry, EventInstance instance) : IEventSoundInstance
 {
-	public ISoundEntry Entry { get; } = entry;
+	public IEventSoundEntry Entry { get; } = entry;
+	public EventInstance Instance { get; } = instance;
 
-	private EventInstance Instance = instance;
-
-	~BuiltInSoundInstance()
+	~EventSoundInstance()
 	{
 		Audio.Catch(this.Instance.getPlaybackState(out var playbackState));
 		if (playbackState is PLAYBACK_STATE.STOPPED)

@@ -12,9 +12,9 @@ public interface IModAudio
 	/// <summary>
 	/// Retrieves an <see cref="ISoundEntry"/> for a given built-in ID.
 	/// </summary>
-	/// <param name="id">The ID that is used to play this sound.</param>
+	/// <param name="eventId">The ID that is used to play this sound.</param>
 	/// <returns>The related sound entry, or <c>null</c> for an invalid ID.</returns>
-	ISoundEntry? LookupSoundById(GUID id);
+	IEventSoundEntry? LookupSoundByEventId(GUID eventId);
 
 	/// <summary>
 	/// Retrieves an <see cref="ISoundEntry"/> for a given unique sound name.
@@ -32,7 +32,7 @@ public interface IModAudio
 	/// </summary>
 	/// <param name="file">The file to load the audio data from.</param>
 	/// <returns>A new sound entry.</returns>
-	ISoundEntry RegisterSound(IFileInfo file);
+	IModSoundEntry RegisterSound(IFileInfo file);
 
 	/// <summary>
 	/// Registers a sound, with audio data coming from a file.<br/>
@@ -40,7 +40,7 @@ public interface IModAudio
 	/// <param name="name">The name for the content.</param>
 	/// <param name="file">The file to load the audio data from.</param>
 	/// <returns>A new sprite entry.</returns>
-	ISoundEntry RegisterSound(string name, IFileInfo file);
+	IModSoundEntry RegisterSound(string name, IFileInfo file);
 
 	/// <summary>
 	/// Registers a sound with given audio data.
@@ -50,7 +50,7 @@ public interface IModAudio
 	/// </remarks>
 	/// <param name="data">The audio data.</param>
 	/// <returns>A new sound entry.</returns>
-	ISoundEntry RegisterSound(byte[] data);
+	IModSoundEntry RegisterSound(byte[] data);
 
 	/// <summary>
 	/// Registers a sound with given audio data.
@@ -58,7 +58,9 @@ public interface IModAudio
 	/// <param name="name">The name for the content.</param>
 	/// <param name="data">The audio data.</param>
 	/// <returns>A new sound entry.</returns>
-	ISoundEntry RegisterSound(string name, byte[] data);
+	IModSoundEntry RegisterSound(string name, byte[] data);
+	
+	void RegisterBank(byte[] data);
 
 	/// <summary>
 	/// Creates a new sound instance (which by default starts playing immediately).

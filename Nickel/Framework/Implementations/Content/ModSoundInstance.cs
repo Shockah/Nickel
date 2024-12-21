@@ -2,11 +2,10 @@
 
 namespace Nickel;
 
-internal sealed class ModSoundInstance(ModSoundEntry entry, Channel channel) : ISoundInstance
+internal sealed class ModSoundInstance(ModSoundEntry entry, Channel channel) : IModSoundInstance
 {
-	public ISoundEntry Entry { get; } = entry;
-	
-	private Channel Channel = channel;
+	public IModSoundEntry Entry { get; } = entry;
+	public Channel Channel { get; } = channel;
 
 	public bool IsPaused
 	{

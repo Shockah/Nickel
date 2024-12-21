@@ -9,13 +9,13 @@ internal sealed class ModAudio(
 	Func<AudioManager> audioManagerProvider
 ) : IModAudio
 {
-	public ISoundEntry? LookupSoundById(GUID id)
-		=> audioManagerProvider().LookupSoundById(id);
+	public IEventSoundEntry? LookupSoundByEventId(GUID eventId)
+		=> audioManagerProvider().LookupSoundByEventId(eventId);
 
 	public ISoundEntry? LookupSoundByUniqueName(string uniqueName)
 		=> audioManagerProvider().LookupSoundByUniqueName(uniqueName);
 	
-	public ISoundEntry RegisterSound(IFileInfo file)
+	public IModSoundEntry RegisterSound(IFileInfo file)
 	{
 		string soundName;
 		try
@@ -31,14 +31,17 @@ internal sealed class ModAudio(
 		return audioManagerProvider().RegisterSound(package.Manifest, soundName, file.ReadAllBytes());
 	}
 
-	public ISoundEntry RegisterSound(string name, IFileInfo file)
+	public IModSoundEntry RegisterSound(string name, IFileInfo file)
 		=> audioManagerProvider().RegisterSound(package.Manifest, name, file.ReadAllBytes());
 
-	public ISoundEntry RegisterSound(byte[] data)
+	public IModSoundEntry RegisterSound(byte[] data)
 		=> audioManagerProvider().RegisterSound(package.Manifest, Guid.NewGuid().ToString(), data);
 
-	public ISoundEntry RegisterSound(string name, byte[] data)
+	public IModSoundEntry RegisterSound(string name, byte[] data)
 		=> audioManagerProvider().RegisterSound(package.Manifest, name, data);
+
+	public void RegisterBank(byte[] data)
+		=> audioManagerProvider().RegisterBank(data);
 
 	public ISoundInstance CreateInstance(ISoundEntry entry, bool started = true)
 		=> entry.CreateInstance(this, started);
