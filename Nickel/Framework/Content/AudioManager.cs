@@ -3,6 +3,7 @@ using FMOD.Studio;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 
 namespace Nickel;
 
@@ -26,17 +27,17 @@ internal sealed class AudioManager
 	private static string StandardizeUniqueName(string uniqueName)
 		=> uniqueName.ToLower(CultureInfo.InvariantCulture);
 
-	public void RegisterBank(byte[] data)
-		=> this.BankManager.QueueOrInject(new(data));
+	public void RegisterBank(IModManifest owner, Func<Stream> streamProvider)
+		=> this.BankManager.QueueOrInject(new(owner, streamProvider));
 
-	public IModSoundEntry RegisterSound(IModManifest owner, string name, byte[] data)
+	public IModSoundEntry RegisterSound(IModManifest owner, string name, Func<Stream> streamProvider)
 	{
 		var uniqueName = $"{owner.UniqueName}::{name}";
 
 		if (this.UniqueNameToModSounds.ContainsKey(StandardizeUniqueName(uniqueName)))
 			throw new ArgumentException($"A sprite with the unique name `{uniqueName}` is already registered.");
 
-		var entry = new ModSoundEntry(owner, uniqueName, name, data);
+		var entry = new ModSoundEntry(owner, uniqueName, name, streamProvider);
 		this.UniqueNameToModSounds[StandardizeUniqueName(uniqueName)] = entry;
 		this.ModSoundManager.QueueOrInject(entry);
 		return entry;
@@ -49,10 +50,10 @@ internal sealed class AudioManager
 
 		Audio.Catch(audio.fmodStudioSystem.getBankList(out var banks));
 		foreach (var bank in banks)
-			this.HandleBank(bank);
+			this.HandleBank(this.VanillaModManifest, bank);
 	}
 
-	private void HandleBank(Bank bank)
+	private void HandleBank(IModManifest owner, Bank bank)
 	{
 		Audio.Catch(bank.getID(out var bankId));
 		if (!this.HandledBanks.Add(bankId))
@@ -64,7 +65,7 @@ internal sealed class AudioManager
 			Audio.Catch(eventDescription.getID(out var eventId));
 			var eventIdString = FmodGuidToString(eventId);
 			// TODO: pass in correct manifest after allowing mods to load their own banks
-			var entry = new EventSoundEntry(this.VanillaModManifest, eventIdString, eventIdString, bankId, eventId);
+			var entry = new EventSoundEntry(owner, eventIdString, eventIdString, bankId, eventId);
 			this.IdToEventSounds[eventId] = entry;
 			this.UniqueNameToEventSounds[eventIdString] = entry;
 		}
@@ -97,19 +98,21 @@ internal sealed class AudioManager
 			return;
 		if (Audio.inst is not { } audio)
 			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is `null`");
-		if (entry.Data is null)
-			throw new NullReferenceException($"{nameof(ModSoundEntry)}.{nameof(ModSoundEntry.Data)} is `null`");
+		if (entry.StreamProvider is null)
+			throw new NullReferenceException($"{nameof(ModSoundEntry)}.{nameof(ModSoundEntry.StreamProvider)} is `null`");
 		
 		Audio.Catch(audio.fmodStudioSystem.getCoreSystem(out var coreSystem));
+
+		var data = entry.StreamProvider().ToMemoryStream().ToArray();
 		
 		var soundInfo = new CREATESOUNDEXINFO
 		{
 			cbsize = MarshalHelper.SizeOf(typeof(CREATESOUNDEXINFO)),
-			length = (uint)entry.Data.Length,
+			length = (uint)data.Length,
 		};
-		Audio.Catch(coreSystem.createSound(entry.Data, MODE.DEFAULT | MODE.OPENMEMORY | MODE.CREATESAMPLE, ref soundInfo, out var sound));
+		Audio.Catch(coreSystem.createSound(data, MODE.DEFAULT | MODE.OPENMEMORY | MODE.CREATESAMPLE, ref soundInfo, out var sound));
 
-		entry.Data = null;
+		entry.StreamProvider = null;
 		entry.SoundStorage = sound;
 	}
 
@@ -117,12 +120,15 @@ internal sealed class AudioManager
 	{
 		if (Audio.inst is not { } audio)
 			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is `null`");
+		
+		var data = entry.StreamProvider().ToMemoryStream().ToArray();
 
-		Audio.Catch(audio.fmodStudioSystem.loadBankMemory(entry.Data, LOAD_BANK_FLAGS.NORMAL, out var bank));
-		this.HandleBank(bank);
+		Audio.Catch(audio.fmodStudioSystem.loadBankMemory(data, LOAD_BANK_FLAGS.NORMAL, out var bank));
+		this.HandleBank(entry.Owner, bank);
 	}
 
 	private record BankEntry(
-		byte[] Data
+		IModManifest Owner,
+		Func<Stream> StreamProvider
 	);
 }

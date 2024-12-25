@@ -1,5 +1,7 @@
 ﻿using FMOD;
 using Nanoray.PluginManager;
+using System;
+using System.IO;
 
 namespace Nickel;
 
@@ -41,26 +43,36 @@ public interface IModAudio
 	/// <param name="file">The file to load the audio data from.</param>
 	/// <returns>A new sprite entry.</returns>
 	IModSoundEntry RegisterSound(string name, IFileInfo file);
-
+	
 	/// <summary>
-	/// Registers a sound with given audio data.
+	/// Registers a sound, with audio data coming from a <see cref="Stream"/>.
 	/// </summary>
 	/// <remarks>
-	/// The audio entry will have a random content name.
+	/// The sound entry will have a random content name.
 	/// </remarks>
-	/// <param name="data">The audio data.</param>
+	/// <param name="streamProvider">A stream provider.</param>
 	/// <returns>A new sound entry.</returns>
-	IModSoundEntry RegisterSound(byte[] data);
+	IModSoundEntry RegisterSound(Func<Stream> streamProvider);
 
 	/// <summary>
-	/// Registers a sound with given audio data.
+	/// Registers a sound, with audio data coming from a <see cref="Stream"/>.
 	/// </summary>
 	/// <param name="name">The name for the content.</param>
-	/// <param name="data">The audio data.</param>
+	/// <param name="streamProvider">A stream provider.</param>
 	/// <returns>A new sound entry.</returns>
-	IModSoundEntry RegisterSound(string name, byte[] data);
+	IModSoundEntry RegisterSound(string name, Func<Stream> streamProvider);
 	
-	void RegisterBank(byte[] data);
+	/// <summary>
+	/// Registers an FMOD sound event bank from a file.
+	/// </summary>
+	/// <param name="file">The file to load the bank from.</param>
+	void RegisterBank(IFileInfo file);
+	
+	/// <summary>
+	/// Registers an FMOD sound event bank from a <see cref="Stream"/>.
+	/// </summary>
+	/// <param name="streamProvider">A stream provider.</param>
+	void RegisterBank(Func<Stream> streamProvider);
 
 	/// <summary>
 	/// Creates a new sound instance (which by default starts playing immediately).

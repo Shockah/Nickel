@@ -1,8 +1,9 @@
 ﻿using System;
+using System.IO;
 
 namespace Nickel;
 
-internal sealed class ModSoundEntry(IModManifest modOwner, string uniqueName, string localName, byte[] data) : IModSoundEntry
+internal sealed class ModSoundEntry(IModManifest modOwner, string uniqueName, string localName, Func<Stream> streamProvider) : IModSoundEntry
 {
 	public IModManifest ModOwner { get; } = modOwner;
 	public string UniqueName { get; } = uniqueName;
@@ -11,7 +12,7 @@ internal sealed class ModSoundEntry(IModManifest modOwner, string uniqueName, st
 	public FMOD.Sound Sound
 		=> this.SoundStorage ?? throw new NullReferenceException("Mod sound entry is not injected yet");
 	
-	internal byte[]? Data = data;
+	internal Func<Stream>? StreamProvider = streamProvider;
 	internal FMOD.Sound? SoundStorage;
 
 	public IModSoundInstance CreateInstance(IModAudio helper, bool started = true)

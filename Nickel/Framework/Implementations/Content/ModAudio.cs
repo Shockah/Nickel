@@ -1,6 +1,7 @@
 ﻿using FMOD;
 using Nanoray.PluginManager;
 using System;
+using System.IO;
 
 namespace Nickel;
 
@@ -28,20 +29,23 @@ internal sealed class ModAudio(
 		{
 			soundName = file.FullName;
 		}
-		return audioManagerProvider().RegisterSound(package.Manifest, soundName, file.ReadAllBytes());
+		return audioManagerProvider().RegisterSound(package.Manifest, soundName, file.OpenRead);
 	}
 
 	public IModSoundEntry RegisterSound(string name, IFileInfo file)
-		=> audioManagerProvider().RegisterSound(package.Manifest, name, file.ReadAllBytes());
+		=> audioManagerProvider().RegisterSound(package.Manifest, name, file.OpenRead);
 
-	public IModSoundEntry RegisterSound(byte[] data)
-		=> audioManagerProvider().RegisterSound(package.Manifest, Guid.NewGuid().ToString(), data);
+	public IModSoundEntry RegisterSound(Func<Stream> streamProvider)
+		=> audioManagerProvider().RegisterSound(package.Manifest, Guid.NewGuid().ToString(), streamProvider);
 
-	public IModSoundEntry RegisterSound(string name, byte[] data)
-		=> audioManagerProvider().RegisterSound(package.Manifest, name, data);
+	public IModSoundEntry RegisterSound(string name, Func<Stream> streamProvider)
+		=> audioManagerProvider().RegisterSound(package.Manifest, name, streamProvider);
 
-	public void RegisterBank(byte[] data)
-		=> audioManagerProvider().RegisterBank(data);
+	public void RegisterBank(IFileInfo file)
+		=> audioManagerProvider().RegisterBank(package.Manifest, file.OpenRead);
+
+	public void RegisterBank(Func<Stream> streamProvider)
+		=> audioManagerProvider().RegisterBank(package.Manifest, streamProvider);
 
 	public ISoundInstance CreateInstance(ISoundEntry entry, bool started = true)
 		=> entry.CreateInstance(this, started);
