@@ -39,6 +39,9 @@ public readonly struct PlayableCharacterConfigurationV2
 	
 	/// <summary>A localization provider for the description of the playable <see cref="Character"/>.</summary>
 	public SingleLocalizationProvider? Description { get; init; }
+	
+	/// <summary>Describes all aspects of a playable character's dialogue babble.</summary>
+	public CharacterBabbleConfiguration? Babble { get; init; }
 
 	/// <summary>
 	/// Describes all aspects of a playable character's <c>Character Is Missing</c> <see cref="Status"/>.

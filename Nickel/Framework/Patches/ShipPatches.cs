@@ -20,11 +20,11 @@ internal static class ShipPatches
 		=> harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Ship), nameof(Ship.RenderStatusRow))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Ship)}.{nameof(Ship.RenderStatusRow)}`"),
-			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Ship_RenderStatusRow_Transpiler))
+			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(RenderStatusRow_Transpiler))
 		);
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-	private static IEnumerable<CodeInstruction> Ship_RenderStatusRow_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
+	private static IEnumerable<CodeInstruction> RenderStatusRow_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
 		try
 		{
@@ -47,7 +47,7 @@ internal static class ShipPatches
 					new CodeInstruction(OpCodes.Ldarg_1),
 					ldlocStatus,
 					ldlocaShouldFlash,
-					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Ship_RenderStatusRow_Transpiler_ModifyShouldFlash)))
+					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(RenderStatusRow_Transpiler_ModifyShouldFlash)))
 				])
 				.AllElements();
 		}
@@ -58,7 +58,7 @@ internal static class ShipPatches
 		}
 	}
 
-	private static void Ship_RenderStatusRow_Transpiler_ModifyShouldFlash(Ship ship, G g, Status status, ref bool shouldFlashRef)
+	private static void RenderStatusRow_Transpiler_ModifyShouldFlash(Ship ship, G g, Status status, ref bool shouldFlashRef)
 	{
 		if (g.state.route is not Combat combat)
 			return;

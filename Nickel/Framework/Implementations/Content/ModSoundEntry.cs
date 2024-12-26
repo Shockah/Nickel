@@ -15,7 +15,7 @@ internal sealed class ModSoundEntry(IModManifest modOwner, string uniqueName, st
 	internal Func<Stream>? StreamProvider = streamProvider;
 	internal FMOD.Sound? SoundStorage;
 
-	public IModSoundInstance CreateInstance(IModAudio helper, bool started = true)
+	public IModSoundInstance CreateInstance(bool started = true)
 	{
 		if (Audio.inst is not { } audio)
 			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is `null`");

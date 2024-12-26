@@ -44,4 +44,22 @@ public sealed class Pool<T>(
 			this.Return(@object);
 		}
 	}
+
+	/// <summary>
+	/// Runs the given action on a newly retrieved object, which is then safely returned to the pool.
+	/// </summary>
+	/// <param name="func">The action to run.</param>
+	/// <typeparam name="R">The type of object to return.</typeparam>
+	public R Do<R>(Func<T, R> func)
+	{
+		var @object = this.Get();
+		try
+		{
+			return func(@object);
+		}
+		finally
+		{
+			this.Return(@object);
+		}
+	}
 }

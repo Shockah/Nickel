@@ -11,8 +11,8 @@ public interface IModSoundEntry : ISoundEntry
 	FMOD.Sound Sound { get; }
 	
 	/// <inheritdoc cref="ISoundEntry.CreateInstance"/>
-	new IModSoundInstance CreateInstance(IModAudio helper, bool started = true);
+	new IModSoundInstance CreateInstance(bool started = true);
 	
-	ISoundInstance ISoundEntry.CreateInstance(IModAudio helper, bool started)
-		=> this.CreateInstance(helper, started);
+	ISoundInstance ISoundEntry.CreateInstance(bool started)
+		=> this.CreateInstance(started);
 }

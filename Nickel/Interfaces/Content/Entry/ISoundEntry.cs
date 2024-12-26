@@ -11,8 +11,7 @@ public interface ISoundEntry : IModOwned
 	/// <summary>
 	/// Creates a new sound instance for playback purposes.
 	/// </summary>
-	/// <param name="helper">The mod-specific audio helper.</param>
 	/// <param name="started">Whether the sound should play immediately. Defaults to <c>true</c>.</param>
 	/// <returns>A new sound instance.</returns>
-	ISoundInstance CreateInstance(IModAudio helper, bool started = true);
+	ISoundInstance CreateInstance(bool started = true);
 }

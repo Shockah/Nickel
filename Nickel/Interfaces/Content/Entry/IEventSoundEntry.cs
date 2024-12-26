@@ -18,8 +18,8 @@ public interface IEventSoundEntry : ISoundEntry
 	GUID EventId { get; }
 	
 	/// <inheritdoc cref="ISoundEntry.CreateInstance"/>
-	new IEventSoundInstance CreateInstance(IModAudio helper, bool started = true);
+	new IEventSoundInstance CreateInstance(bool started = true);
 	
-	ISoundInstance ISoundEntry.CreateInstance(IModAudio helper, bool started)
-		=> this.CreateInstance(helper, started);
+	ISoundInstance ISoundEntry.CreateInstance(bool started)
+		=> this.CreateInstance(started);
 }

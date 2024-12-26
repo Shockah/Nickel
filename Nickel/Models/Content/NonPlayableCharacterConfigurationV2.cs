@@ -20,4 +20,7 @@ public readonly struct NonPlayableCharacterConfigurationV2
 	
 	/// <summary>A localization provider for the name of the <see cref="Character"/>.</summary>
 	public SingleLocalizationProvider? Name { get; init; }
+	
+	/// <summary>Describes all aspects of a non-playable character's dialogue babble.</summary>
+	public CharacterBabbleConfiguration? Babble { get; init; }
 }

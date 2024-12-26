@@ -12,7 +12,7 @@ internal sealed class EventSoundEntry(IModManifest modOwner, string uniqueName, 
 	public GUID BankId { get; } = bankId;
 	public GUID EventId { get; } = eventId;
 
-	public IEventSoundInstance CreateInstance(IModAudio helper, bool started = true)
+	public IEventSoundInstance CreateInstance(bool started = true)
 	{
 		if (Audio.inst is not { } audio)
 			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is `null`");

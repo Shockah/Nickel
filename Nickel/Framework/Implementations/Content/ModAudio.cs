@@ -41,6 +41,9 @@ internal sealed class ModAudio(
 	public IModSoundEntry RegisterSound(string name, Func<Stream> streamProvider)
 		=> audioManagerProvider().RegisterSound(package.Manifest, name, streamProvider);
 
+	public void RegisterSoundEntry(ISoundEntry entry)
+		=> audioManagerProvider().RegisterSoundEntry(entry);
+
 	public void RegisterBank(IFileInfo file)
 		=> audioManagerProvider().RegisterBank(package.Manifest, file.OpenRead);
 
@@ -48,5 +51,5 @@ internal sealed class ModAudio(
 		=> audioManagerProvider().RegisterBank(package.Manifest, streamProvider);
 
 	public ISoundInstance CreateInstance(ISoundEntry entry, bool started = true)
-		=> entry.CreateInstance(this, started);
+		=> entry.CreateInstance(started);
 }

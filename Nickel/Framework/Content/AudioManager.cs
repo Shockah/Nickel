@@ -16,6 +16,7 @@ internal sealed class AudioManager
 	private readonly Dictionary<GUID, EventSoundEntry> IdToEventSounds = [];
 	private readonly Dictionary<string, EventSoundEntry> UniqueNameToEventSounds = [];
 	private readonly Dictionary<string, ModSoundEntry> UniqueNameToModSounds = [];
+	private readonly Dictionary<string, ISoundEntry> UniqueNameToCustomSounds = [];
 
 	public AudioManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
 	{
@@ -35,12 +36,20 @@ internal sealed class AudioManager
 		var uniqueName = $"{owner.UniqueName}::{name}";
 
 		if (this.UniqueNameToModSounds.ContainsKey(StandardizeUniqueName(uniqueName)))
-			throw new ArgumentException($"A sprite with the unique name `{uniqueName}` is already registered.");
+			throw new ArgumentException($"A sound with the unique name `{uniqueName}` is already registered");
 
 		var entry = new ModSoundEntry(owner, uniqueName, name, streamProvider);
 		this.UniqueNameToModSounds[StandardizeUniqueName(uniqueName)] = entry;
 		this.ModSoundManager.QueueOrInject(entry);
 		return entry;
+	}
+
+	public void RegisterSoundEntry(ISoundEntry entry)
+	{
+		if (this.UniqueNameToModSounds.ContainsKey(StandardizeUniqueName(entry.UniqueName)))
+			throw new ArgumentException($"A sound with the unique name `{entry.UniqueName}` is already registered");
+		
+		this.UniqueNameToCustomSounds[StandardizeUniqueName(entry.UniqueName)] = entry;
 	}
 
 	private void HandleAllBanks()
@@ -64,7 +73,6 @@ internal sealed class AudioManager
 		{
 			Audio.Catch(eventDescription.getID(out var eventId));
 			var eventIdString = FmodGuidToString(eventId);
-			// TODO: pass in correct manifest after allowing mods to load their own banks
 			var entry = new EventSoundEntry(owner, eventIdString, eventIdString, bankId, eventId);
 			this.IdToEventSounds[eventId] = entry;
 			this.UniqueNameToEventSounds[eventIdString] = entry;
@@ -84,6 +92,8 @@ internal sealed class AudioManager
 	{
 		if (this.UniqueNameToModSounds.TryGetValue(StandardizeUniqueName(uniqueName), out var modEntry))
 			return modEntry;
+		if (this.UniqueNameToCustomSounds.TryGetValue(StandardizeUniqueName(uniqueName), out var customEntry))
+			return customEntry;
 		
 		this.HandleAllBanks();
 		return this.UniqueNameToEventSounds.GetValueOrDefault(uniqueName);

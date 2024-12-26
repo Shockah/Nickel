@@ -61,6 +61,12 @@ public interface IModAudio
 	/// <param name="streamProvider">A stream provider.</param>
 	/// <returns>A new sound entry.</returns>
 	IModSoundEntry RegisterSound(string name, Func<Stream> streamProvider);
+
+	/// <summary>
+	/// Registers a custom sound entry.
+	/// </summary>
+	/// <param name="entry">The entry to register.</param>
+	void RegisterSoundEntry(ISoundEntry entry);
 	
 	/// <summary>
 	/// Registers an FMOD sound event bank from a file.

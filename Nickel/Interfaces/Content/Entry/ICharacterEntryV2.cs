@@ -13,4 +13,9 @@ public interface ICharacterEntryV2 : IModOwned
 	
 	/// <summary>The custom border sprite to use for rendering the face of this <see cref="Character"/>.</summary>
 	Spr? BorderSprite { get; }
+	
+	/// <summary>
+	/// Describes all aspects of a character's dialogue babble.
+	/// </summary>
+	CharacterBabbleConfiguration? Babble { get; }
 }

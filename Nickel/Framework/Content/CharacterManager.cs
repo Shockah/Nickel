@@ -46,6 +46,8 @@ internal sealed class CharacterManager
 
 		eventManager.OnModLoadPhaseFinishedEvent.Add(this.OnModLoadPhaseFinished, modLoaderModManifest);
 		EventsPatches.OnCrystallizedFriendEvent += OnCrystallizedFriendEvent;
+		ShoutPatches.OnModifyBabblePeriod += this.OnModifyBabblePeriod;
+		ShoutPatches.OnModifyBabbleSound += this.OnModifyBabbleSound;
 		StatePatches.OnModifyPotentialExeCards += this.OnModifyPotentialExeCards;
 		StoryVarsPatches.OnGetUnlockedChars += this.OnGetUnlockedChars;
 		WizardPatches.OnGetAssignableStatuses += this.OnGetAssignableStatuses;
@@ -640,6 +642,24 @@ internal sealed class CharacterManager
 		}
 	}
 
+	private void OnModifyBabblePeriod(object? _, ShoutPatches.ModifyBabblePeriodEventArgs e)
+	{
+		if (!this.CharacterTypeToCharacterEntry.TryGetValue(e.Shout.who, out var characterEntry))
+			return;
+		if (characterEntry.Babble?.Period is not { } period)
+			return;
+		e.Period = period;
+	}
+
+	private void OnModifyBabbleSound(object? _, ShoutPatches.ModifyBabbleSoundEventArgs e)
+	{
+		if (!this.CharacterTypeToCharacterEntry.TryGetValue(e.Shout.who, out var characterEntry))
+			return;
+		if (characterEntry.Babble?.Sound is not { } sound)
+			return;
+		e.Sound = sound;
+	}
+
 	private void OnModifyPotentialExeCards(object? _, StatePatches.ModifyPotentialExeCardsEventArgs e)
 	{
 		foreach (var character in this.UniqueNameToPlayableCharacterEntry.Values)
@@ -716,6 +736,7 @@ internal sealed class CharacterManager
 		public string UniqueName { get; } = uniqueName;
 		public IStatusEntry MissingStatus { get; } = missingStatus;
 		public string CharacterType => this.V2.Deck == Deck.colorless ? "comp" : this.V2.Deck.Key();
+		public CharacterBabbleConfiguration? Babble => this.V2.Babble;
 
 		CharacterConfiguration ICharacterEntry.Configuration => this.V1;
 		
@@ -734,6 +755,7 @@ internal sealed class CharacterManager
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
 		public string CharacterType => this.V2.CharacterType;
+		public CharacterBabbleConfiguration? Babble => this.V2.Babble;
 		
 		NonPlayableCharacterConfigurationV2 INonPlayableCharacterEntryV2.Configuration => this.V2;
 		Spr? ICharacterEntryV2.BorderSprite => this.V2.BorderSprite;

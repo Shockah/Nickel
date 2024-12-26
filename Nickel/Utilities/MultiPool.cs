@@ -34,6 +34,15 @@ public sealed class MultiPool
 	public void Do<T>(Action<T> action) where T : class, new()
 		=> this.GetPool<T>().Do(action);
 
+	/// <summary>
+	/// Runs the given action on a newly retrieved object, which is then safely returned to the pool.
+	/// </summary>
+	/// <param name="func">The action to run.</param>
+	/// <typeparam name="T">The type of object.</typeparam>
+	/// <typeparam name="R">The type of object to return.</typeparam>
+	public R Do<T, R>(Func<T, R> func) where T : class, new()
+		=> this.GetPool<T>().Do(func);
+
 	private Pool<T> GetPool<T>() where T : class, new()
 	{
 		if (!this.Pools.TryGetValue(typeof(T), out var rawPool))
