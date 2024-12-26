@@ -87,14 +87,26 @@ internal sealed class ModManager
 		this.EnumCasePool = new();
 		this.DelayedHarmonyManager = new();
 
-		var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"{this.GetType().Namespace}.Proxies, Version={this.GetType().Assembly.GetName().Version}, Culture=neutral"), AssemblyBuilderAccess.Run);
-		var moduleBuilder = assemblyBuilder.DefineDynamicModule($"{this.GetType().Namespace}.Proxies");
-		this.ProxyManager = new ProxyManager<string>(moduleBuilder, new()
-		{
-			ProxyPrepareBehavior = ProxyManagerProxyPrepareBehavior.Eager,
-			ProxyObjectInterfaceMarking = ProxyObjectInterfaceMarking.MarkerWithProperty,
-			AccessLevelChecking = AccessLevelChecking.DisabledButOnlyAllowPublicMembers,
-		});
+		var moduleBuilders = new Dictionary<UnorderedPair<string>, ModuleBuilder>();
+		this.ProxyManager = new ProxyManager<string>(
+			proxyInfo =>
+			{
+				var key = new UnorderedPair<string>(proxyInfo.Target.Context, proxyInfo.Proxy.Context);
+				if (!moduleBuilders.TryGetValue(key, out var moduleBuilder))
+				{
+					var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"{this.GetType().Namespace}.Proxies{moduleBuilders.Count}, Version={this.GetType().Assembly.GetName().Version}, Culture=neutral"), AssemblyBuilderAccess.Run);
+					moduleBuilder = assemblyBuilder.DefineDynamicModule($"{this.GetType().Namespace}.Proxies");
+					moduleBuilders[key] = moduleBuilder;
+				}
+				return moduleBuilder;
+			},
+			new()
+			{
+				ProxyPrepareBehavior = ProxyManagerProxyPrepareBehavior.Eager,
+				ProxyObjectInterfaceMarking = ProxyObjectInterfaceMarking.MarkerWithProperty,
+				AccessLevelChecking = AccessLevelChecking.DisabledButOnlyAllowPublicMembers,
+			}
+		);
 
 		var loadContextProvider = new AssemblyModLoadContextProvider(
 			AssemblyLoadContext.GetLoadContext(this.GetType().Assembly) ?? AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default,
