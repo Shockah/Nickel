@@ -17,10 +17,11 @@ internal sealed class AudioManager
 	private readonly Dictionary<string, EventSoundEntry> UniqueNameToEventSounds = [];
 	private readonly Dictionary<string, ModSoundEntry> UniqueNameToModSounds = [];
 	private readonly Dictionary<string, ISoundEntry> UniqueNameToCustomSounds = [];
+	private bool InjectedAnyModSounds;
 
 	public AudioManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
 	{
-		this.ModSoundManager = new(currentModLoadPhaseProvider, Inject);
+		this.ModSoundManager = new(currentModLoadPhaseProvider, this.Inject);
 		this.BankManager = new(currentModLoadPhaseProvider, this.Inject);
 		this.VanillaModManifest = vanillaModManifest;
 	}
@@ -102,7 +103,7 @@ internal sealed class AudioManager
 	internal void InjectQueuedEntries()
 		=> this.ModSoundManager.InjectQueuedEntries();
 
-	private static void Inject(ModSoundEntry entry)
+	private void Inject(ModSoundEntry entry)
 	{
 		if (entry.SoundStorage is not null)
 			return;
@@ -121,6 +122,13 @@ internal sealed class AudioManager
 			length = (uint)data.Length,
 		};
 		Audio.Catch(coreSystem.createSound(data, MODE.DEFAULT | MODE.OPENMEMORY | MODE.CREATESAMPLE, ref soundInfo, out var sound));
+
+		if (!this.InjectedAnyModSounds)
+		{
+			this.InjectedAnyModSounds = true;
+			Audio.Catch(audio.fmodStudioSystem.getBus("bus:/Sfx", out var bus));
+			Audio.Catch(bus.lockChannelGroup());
+		}
 
 		entry.StreamProvider = null;
 		entry.SoundStorage = sound;

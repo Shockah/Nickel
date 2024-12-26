@@ -13,5 +13,5 @@ public readonly struct CharacterBabbleConfiguration
 	/// <summary>
 	/// The period in which the character makes the sound (aka how often it is made).
 	/// </summary>
-	public double Period { get; init; }
+	public double? Period { get; init; }
 }

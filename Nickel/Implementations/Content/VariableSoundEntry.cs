@@ -39,13 +39,18 @@ public sealed class VariableSoundEntry(
 	public ISoundInstance CreateInstance(bool started = true)
 	{
 		var instance = this.Wrapped.CreateInstance(started);
+		
 		var minVolume = Math.Min(this.Configuration.MinVolume, this.Configuration.MaxVolume);
 		var maxVolume = Math.Max(this.Configuration.MinVolume, this.Configuration.MaxVolume);
+		var volume = (float)(minVolume + Random.Shared.NextDouble() * (maxVolume - minVolume));
+		instance.Volume = volume;
+		
 		var minPitch = Math.Min(this.Configuration.MinPitch, this.Configuration.MaxPitch);
 		var maxPitch = Math.Max(this.Configuration.MinPitch, this.Configuration.MaxPitch);
-		var volume = minVolume + Random.Shared.NextDouble() * (maxVolume - minVolume);
-		var pitch = minPitch + Random.Shared.NextDouble() * (maxPitch - minPitch);
-		return new Instance(this, instance, (float)volume, (float)pitch);
+		var pitch = (float)(minPitch + Random.Shared.NextDouble() * (maxPitch - minPitch));
+		instance.Pitch = pitch;
+		
+		return new Instance(this, instance, volume, pitch);
 	}
 
 	private sealed class Instance(VariableSoundEntry entry, ISoundInstance instance, float volume, float pitch) : ISoundInstance

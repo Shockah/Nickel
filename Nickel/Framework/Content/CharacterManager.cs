@@ -12,6 +12,7 @@ internal sealed class CharacterManager
 {
 	private readonly Func<IModManifest, ILogger> LoggerProvider;
 	private readonly SpriteManager Sprites;
+	private readonly AudioManager Audio;
 	private readonly DeckManager Decks;
 	private readonly StatusManager Statuses;
 	private readonly IModManifest VanillaModManifest;
@@ -29,6 +30,7 @@ internal sealed class CharacterManager
 		Func<IModManifest, ILogger> loggerProvider,
 		ModEventManager eventManager,
 		SpriteManager sprites,
+		AudioManager audio,
 		DeckManager decks,
 		StatusManager statuses,
 		IModManifest vanillaModManifest,
@@ -37,6 +39,7 @@ internal sealed class CharacterManager
 	{
 		this.LoggerProvider = loggerProvider;
 		this.Sprites = sprites;
+		this.Audio = audio;
 		this.Decks = decks;
 		this.Statuses = statuses;
 		this.VanillaModManifest = vanillaModManifest;
@@ -67,10 +70,12 @@ internal sealed class CharacterManager
 	
 	private PlayableCharacterEntry CreateForVanilla(Deck deck)
 	{
-		var borderSprite = DB.charPanels[deck.Key()];
+		var key = deck.Key();
+		var alias = Character.GetSpriteAliasIfExists(key);
+		var borderSprite = DB.charPanels[key];
 		var starters = StarterDeck.starterSets[deck];
-		var neutralAnimationFrames = DB.charAnimations[Character.GetSpriteAliasIfExists(deck.Key())]["neutral"];
-		var miniAnimationFrames = DB.charAnimations[Character.GetSpriteAliasIfExists(deck.Key())]["mini"];
+		var neutralAnimationFrames = DB.charAnimations[alias]["neutral"];
+		var miniAnimationFrames = DB.charAnimations[alias]["mini"];
 		var startLocked = deck is Deck.goat or Deck.eunice or Deck.hacker or Deck.shard;
 		var missingStatusColor = DB.statuses[StatusMeta.deckToMissingStatus[deck]].color;
 		var missingStatusSprite = DB.statuses[StatusMeta.deckToMissingStatus[deck]].icon;
@@ -124,13 +129,13 @@ internal sealed class CharacterManager
 				Starters = starters,
 				NeutralAnimation = new()
 				{
-					CharacterType = deck == Deck.colorless ? "comp" : deck.Key(),
+					CharacterType = alias,
 					LoopTag = "neutral",
 					Frames = neutralAnimationFrames
 				},
 				MiniAnimation = new()
 				{
-					CharacterType = deck == Deck.colorless ? "comp" : deck.Key(),
+					CharacterType = alias,
 					LoopTag = "mini",
 					Frames = miniAnimationFrames
 				},
@@ -141,7 +146,12 @@ internal sealed class CharacterManager
 					Sprite = missingStatusSprite
 				},
 				ExeCardType = exeCardType,
-				Description = description
+				Description = description,
+				Babble = new()
+				{
+					Sound = this.Audio.LookupSoundByEventId(Shout.GetCharBabble(alias)),
+					Period = Shout.BABBLE_INTERVAL_LETTERS,
+				},
 			},
 			missingStatus: this.Statuses.LookupByStatus(StatusMeta.deckToMissingStatus[deck])!
 		);

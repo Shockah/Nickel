@@ -1,4 +1,5 @@
 ﻿using FMOD;
+using FMOD.Studio;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Nanoray.Shrike;
@@ -37,7 +38,7 @@ internal static class ShoutPatches
 					ILMatches.Ldfld("progress"),
 					ILMatches.Ldarg(0),
 					ILMatches.Ldfld("lastBabble"),
-					ILMatches.LdcR8(4.0).Anchor(out var babblePeriodAnchor),
+					ILMatches.LdcR8(Shout.BABBLE_INTERVAL_LETTERS).Anchor(out var babblePeriodAnchor),
 					ILMatches.Instruction(OpCodes.Add),
 					ILMatches.AnyBle,
 				])
@@ -76,7 +77,7 @@ internal static class ShoutPatches
 			return args.Period;
 		});
 
-	private static void Update_Transpiler_DoPlay(GUID babbleId, bool release, Shout shout)
+	private static EventInstance? Update_Transpiler_DoPlay(GUID? babbleId, bool release, Shout shout)
 	{
 		var sound = ModifyBabbleSoundEventArgsPool.Do(args =>
 		{
@@ -87,12 +88,10 @@ internal static class ShoutPatches
 		});
 
 		if (sound is null)
-		{
-			Audio.Play(babbleId, release);
-			return;
-		}
+			return Audio.Play(babbleId, release);
 
-		sound.CreateInstance();
+		var instance = sound.CreateInstance();
+		return instance is IEventSoundInstance eventInstance ? eventInstance.Instance : null;
 	}
 
 	internal sealed class ModifyBabblePeriodEventArgs
