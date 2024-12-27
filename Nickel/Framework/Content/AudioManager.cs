@@ -16,7 +16,7 @@ internal sealed class AudioManager
 	private readonly Dictionary<GUID, EventSoundEntry> IdToEventSounds = [];
 	private readonly Dictionary<string, EventSoundEntry> UniqueNameToEventSounds = [];
 	private readonly Dictionary<string, ModSoundEntry> UniqueNameToModSounds = [];
-	private readonly Dictionary<string, ISoundEntry> UniqueNameToCustomSounds = [];
+	private readonly Dictionary<string, ICustomSoundEntry> UniqueNameToCustomSounds = [];
 	private bool InjectedAnyModSounds;
 
 	public AudioManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
@@ -45,12 +45,16 @@ internal sealed class AudioManager
 		return entry;
 	}
 
-	public void RegisterSoundEntry(ISoundEntry entry)
+	public TEntry RegisterSound<TEntry, TArgs>(ICustomSoundEntryFactory<TEntry, TArgs> factory, IModManifest owner, string name, TArgs args) where TEntry : ICustomSoundEntry
 	{
-		if (this.UniqueNameToModSounds.ContainsKey(StandardizeUniqueName(entry.UniqueName)))
-			throw new ArgumentException($"A sound with the unique name `{entry.UniqueName}` is already registered");
+		var uniqueName = factory.GetUniqueName(owner, name, args);
 		
+		if (this.UniqueNameToModSounds.ContainsKey(StandardizeUniqueName(uniqueName)))
+			throw new ArgumentException($"A sound with the unique name `{uniqueName}` is already registered");
+
+		var entry = factory.CreateEntry(owner, uniqueName, name, args);
 		this.UniqueNameToCustomSounds[StandardizeUniqueName(entry.UniqueName)] = entry;
+		return entry;
 	}
 
 	private void HandleAllBanks()

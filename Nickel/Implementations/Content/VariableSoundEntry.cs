@@ -5,48 +5,42 @@ namespace Nickel;
 /// <summary>
 /// A sound entry that can vary its volume and pitch each time it is played.
 /// </summary>
-/// <param name="modOwner">The mod that owns this content.</param>
-/// <param name="localName">The local (mod-level) name of the sound. This has to be unique across the mod. This is usually a file path relative to the mod's package root.</param>
-/// <param name="wrapped">The sound entry wrapped by this entry and used whenever a sound is to be played.</param>
-/// <param name="configuration">The parameters of this variable sound entry.</param>
-public sealed class VariableSoundEntry(
-	IModManifest modOwner,
-	string localName,
-	ISoundEntry wrapped,
-	VariableSoundEntryConfiguration configuration
-) : ISoundEntry
+public sealed class VariableSoundEntry : ICustomSoundEntry
 {
 	/// <inheritdoc/>
-	public IModManifest ModOwner { get; } = modOwner;
+	public IModManifest ModOwner { get; }
 	
 	/// <inheritdoc/>
-	public string UniqueName { get; } = $"{modOwner.UniqueName}::{localName}";
+	public string UniqueName { get; }
 	
 	/// <inheritdoc/>
-	public string LocalName { get; } = localName;
-
-	/// <summary>
-	/// The sound wrapped by this object.
-	/// </summary>
-	public ISoundEntry Wrapped { get; } = wrapped;
+	public string LocalName { get; }
 	
 	/// <summary>
 	/// The parameters of this variable sound entry.
 	/// </summary>
-	public VariableSoundEntryConfiguration Configuration { get; } = configuration;
+	public VariableSoundEntryArgs Args { get; }
+
+	internal VariableSoundEntry(IModManifest modOwner, string uniqueName, string localName, VariableSoundEntryArgs args)
+	{
+		this.ModOwner = modOwner;
+		this.UniqueName = uniqueName;
+		this.LocalName = localName;
+		this.Args = args;
+	}
 
 	/// <inheritdoc/>
 	public ISoundInstance CreateInstance(bool started = true)
 	{
-		var instance = this.Wrapped.CreateInstance(started);
+		var instance = this.Args.Wrapped.CreateInstance(started);
 		
-		var minVolume = Math.Min(this.Configuration.MinVolume, this.Configuration.MaxVolume);
-		var maxVolume = Math.Max(this.Configuration.MinVolume, this.Configuration.MaxVolume);
+		var minVolume = Math.Min(this.Args.MinVolume, this.Args.MaxVolume);
+		var maxVolume = Math.Max(this.Args.MinVolume, this.Args.MaxVolume);
 		var volume = (float)(minVolume + Random.Shared.NextDouble() * (maxVolume - minVolume));
 		instance.Volume = volume;
 		
-		var minPitch = Math.Min(this.Configuration.MinPitch, this.Configuration.MaxPitch);
-		var maxPitch = Math.Max(this.Configuration.MinPitch, this.Configuration.MaxPitch);
+		var minPitch = Math.Min(this.Args.MinPitch, this.Args.MaxPitch);
+		var maxPitch = Math.Max(this.Args.MinPitch, this.Args.MaxPitch);
 		var pitch = (float)(minPitch + Random.Shared.NextDouble() * (maxPitch - minPitch));
 		instance.Pitch = pitch;
 		
@@ -71,7 +65,7 @@ public sealed class VariableSoundEntry(
 		
 		public float Pitch
 		{
-			get => volume <= 0 ? 0 : instance.Pitch / pitch;
+			get => pitch <= 0 ? 0 : instance.Pitch / pitch;
 			set => instance.Pitch = value * pitch;
 		}
 	}

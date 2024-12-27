@@ -39,7 +39,7 @@ public interface IModAudio
 	/// <summary>
 	/// Registers a sound, with audio data coming from a file.<br/>
 	/// </summary>
-	/// <param name="name">The name for the content.</param>
+	/// <param name="name">The local (mod-level) name of the sound. This has to be unique across the mod.</param>
 	/// <param name="file">The file to load the audio data from.</param>
 	/// <returns>A new sprite entry.</returns>
 	IModSoundEntry RegisterSound(string name, IFileInfo file);
@@ -57,16 +57,21 @@ public interface IModAudio
 	/// <summary>
 	/// Registers a sound, with audio data coming from a <see cref="Stream"/>.
 	/// </summary>
-	/// <param name="name">The name for the content.</param>
+	/// <param name="name">The local (mod-level) name of the sound. This has to be unique across the mod.</param>
 	/// <param name="streamProvider">A stream provider.</param>
 	/// <returns>A new sound entry.</returns>
 	IModSoundEntry RegisterSound(string name, Func<Stream> streamProvider);
-
+	
 	/// <summary>
-	/// Registers a custom sound entry.
+	/// Registers a sound with a custom implementation.
 	/// </summary>
-	/// <param name="entry">The entry to register.</param>
-	void RegisterSoundEntry(ISoundEntry entry);
+	/// <param name="factory">The factory that will create the sound entry.</param>
+	/// <param name="name">The local (mod-level) name of the sound. This has to be unique across the mod.</param>
+	/// <param name="args">The arguments used to create the sound.</param>
+	/// <typeparam name="TEntry">The type of the sound entry.</typeparam>
+	/// <typeparam name="TArgs">The type of arguments used to create the sound.</typeparam>
+	/// <returns>A new sound entry.</returns>
+	TEntry RegisterSound<TEntry, TArgs>(ICustomSoundEntryFactory<TEntry, TArgs> factory, string name, TArgs args) where TEntry : ICustomSoundEntry;
 	
 	/// <summary>
 	/// Registers an FMOD sound event bank from a file.

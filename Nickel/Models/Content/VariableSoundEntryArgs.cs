@@ -3,36 +3,31 @@
 /// <summary>
 /// Describes the parameters of a <see cref="VariableSoundEntry">variable sound entry</see>.
 /// </summary>
-public readonly struct VariableSoundEntryConfiguration
+/// <param name="wrapped">The sound entry wrapped by this entry and used whenever a sound is to be played.</param>
+public sealed class VariableSoundEntryArgs(ISoundEntry wrapped)
 {
 	/// <summary>
-	/// The default configuration of a <see cref="VariableSoundEntry">variable sound entry</see>.
+	/// The sound entry wrapped by this entry and used whenever a sound is to be played.
 	/// </summary>
-	public static VariableSoundEntryConfiguration Default { get; } = new()
-	{
-		MinVolume = 1,
-		MaxVolume = 1,
-		MinPitch = 1,
-		MaxPitch = 1,
-	};
-	
+	public ISoundEntry Wrapped { get; } = wrapped;
+
 	/// <summary>
 	/// The minimum volume the sound will play at.
 	/// </summary>
-	public float MinVolume { get; init; }
+	public float MinVolume { get; init; } = 1f;
 	
 	/// <summary>
 	/// The maximum volume the sound will play at.
 	/// </summary>
-	public float MaxVolume { get; init; }
+	public float MaxVolume { get; init; } = 1f;
 	
 	/// <summary>
 	/// The minimum pitch the sound will play at.
 	/// </summary>
-	public float MinPitch { get; init; }
+	public float MinPitch { get; init; } = 1f;
 	
 	/// <summary>
 	/// The maximum pitch the sound will play at.
 	/// </summary>
-	public float MaxPitch { get; init; }
+	public float MaxPitch { get; init; } = 1f;
 }
