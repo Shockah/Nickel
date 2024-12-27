@@ -1,5 +1,7 @@
 ﻿using FMOD;
 using FMOD.Studio;
+using FSPRO;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -9,21 +11,29 @@ namespace Nickel;
 
 internal sealed class AudioManager
 {
+	private readonly Func<IModManifest, ILogger> LoggerProvider;
 	private readonly AfterDbInitManager<ModSoundEntry> ModSoundManager;
 	private readonly AfterDbInitManager<BankEntry> BankManager;
+	private readonly EnumCasePool EnumCasePool;
 	private readonly IModManifest VanillaModManifest;
 	private readonly HashSet<GUID> HandledBanks = [];
 	private readonly Dictionary<GUID, EventSoundEntry> IdToEventSounds = [];
 	private readonly Dictionary<string, EventSoundEntry> UniqueNameToEventSounds = [];
 	private readonly Dictionary<string, ModSoundEntry> UniqueNameToModSounds = [];
 	private readonly Dictionary<string, ICustomSoundEntry> UniqueNameToCustomSounds = [];
+	private readonly Dictionary<GUID, Song?> IdToSongs = [];
+	private readonly Dictionary<Song, GUID> SongToIds = [];
 	private bool InjectedAnyModSounds;
 
-	public AudioManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
+	public AudioManager(Func<IModManifest, ILogger> loggerProvider, Func<ModLoadPhaseState> currentModLoadPhaseProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest)
 	{
+		this.LoggerProvider = loggerProvider;
 		this.ModSoundManager = new(currentModLoadPhaseProvider, this.Inject);
 		this.BankManager = new(currentModLoadPhaseProvider, this.Inject);
+		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
+
+		AudioPatches.OnPlaySong += this.OnPlaySong;
 	}
 
 	private static string StandardizeUniqueName(string uniqueName)
@@ -61,13 +71,15 @@ internal sealed class AudioManager
 	{
 		if (Audio.inst is not { } audio)
 			return;
+		if (!audio.didLoadBanks)
+			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.didLoadBanks)} is `false`");
 
 		Audio.Catch(audio.fmodStudioSystem.getBankList(out var banks));
 		foreach (var bank in banks)
 			this.HandleBank(this.VanillaModManifest, bank);
 	}
 
-	private void HandleBank(IModManifest owner, Bank bank)
+	private void HandleBank(IModManifest owner, FMOD.Studio.Bank bank)
 	{
 		Audio.Catch(bank.getID(out var bankId));
 		if (!this.HandledBanks.Add(bankId))
@@ -77,17 +89,14 @@ internal sealed class AudioManager
 		foreach (var eventDescription in eventDescriptions)
 		{
 			Audio.Catch(eventDescription.getID(out var eventId));
-			var eventIdString = FmodGuidToString(eventId);
+			var eventIdString = eventId.ToSystemGuid().ToString();
 			var entry = new EventSoundEntry(owner, eventIdString, eventIdString, bankId, eventId);
 			this.IdToEventSounds[eventId] = entry;
 			this.UniqueNameToEventSounds[eventIdString] = entry;
 		}
 	}
-	
-	private static string FmodGuidToString(GUID guid)
-		=> $"{(uint)guid.Data1:X4}:{(uint)guid.Data2:X4}:{(uint)guid.Data3:X4}:{(uint)guid.Data4:X4}";
 
-	public IEventSoundEntry? LookupSoundByEventId(GUID eventId)
+	public EventSoundEntry? LookupSoundByEventId(GUID eventId)
 	{
 		this.HandleAllBanks();
 		return this.IdToEventSounds.GetValueOrDefault(eventId);
@@ -102,6 +111,61 @@ internal sealed class AudioManager
 		
 		this.HandleAllBanks();
 		return this.UniqueNameToEventSounds.GetValueOrDefault(uniqueName);
+	}
+
+	public Song? ObtainSongForEventId(IModManifest requester, GUID eventId)
+	{
+		if (eventId == Event.Songs_Epoch)
+			return Song.Epoch;
+		if (this.IdToSongs.TryGetValue(eventId, out var existingSong))
+			return existingSong;
+		if (this.LookupSoundByEventId(eventId) is not { } entry)
+			return null;
+		
+		if (Audio.inst is not { } audio)
+			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is `null`");
+		if (!audio.didLoadBanks)
+			throw new InvalidOperationException($"{nameof(Audio)}.{nameof(Audio.didLoadBanks)} is `false`");
+		
+		return this.UnvalidatedCreateSongForSound(requester, entry, audio);
+	}
+
+	public Song? ObtainSongForSound(IModManifest requester, IEventSoundEntry entry)
+	{
+		if (entry.EventId == Event.Songs_Epoch)
+			return Song.Epoch;
+		if (this.IdToSongs.TryGetValue(entry.EventId, out var existingSong))
+			return existingSong;
+		
+		if (Audio.inst is not { } audio)
+			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is `null`");
+		if (!audio.didLoadBanks)
+			throw new InvalidOperationException($"{nameof(Audio)}.{nameof(Audio.didLoadBanks)} is `false`");
+
+		return this.UnvalidatedCreateSongForSound(requester, entry, audio);
+	}
+
+	private Song? UnvalidatedCreateSongForSound(IModManifest requester, IEventSoundEntry entry, Audio audio)
+	{
+		Audio.Catch(audio.fmodStudioSystem.getEventByID(entry.EventId, out var @event));
+		ValidateParameter("MenuLowPass", LogLevel.Warning);
+		ValidateParameter("Combat", LogLevel.Debug);
+		ValidateParameter("SceneLayer", LogLevel.Debug);
+		ValidateParameter("NoTransition", LogLevel.Debug);
+
+		var song = this.EnumCasePool.ObtainEnumCase<Song>();
+		this.IdToSongs[entry.EventId] = song;
+		this.SongToIds[song] = entry.EventId;
+		return song;
+
+		void ValidateParameter(string parameterName, LogLevel logLevel)
+		{
+			var result = @event.getParameterDescriptionByName(parameterName, out _);
+			if (result == RESULT.OK)
+				return;
+			
+			this.LoggerProvider(requester).Log(logLevel, "Requested FMOD bank song `{UniqueName}` does not have a `{ParameterName}` parameter or it is invalid.", entry.UniqueName, parameterName);
+		}
 	}
 
 	internal void InjectQueuedEntries()
@@ -147,6 +211,15 @@ internal sealed class AudioManager
 
 		Audio.Catch(audio.fmodStudioSystem.loadBankMemory(data, LOAD_BANK_FLAGS.NORMAL, out var bank));
 		this.HandleBank(entry.Owner, bank);
+	}
+	
+	private void OnPlaySong(object? _, AudioPatches.PlaySongArgs e)
+	{
+		if (!this.SongToIds.TryGetValue(e.MusicState.scene, out var actualEventId))
+			return;
+		
+		e.Id = actualEventId;
+		e.MusicState = e.MusicState with { scene = 0 };
 	}
 
 	private record BankEntry(

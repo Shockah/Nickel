@@ -55,6 +55,9 @@ internal sealed class ModAudio(
 	public void RegisterBank(Func<Stream> streamProvider)
 		=> audioManagerProvider().RegisterBank(package.Manifest, streamProvider);
 
-	public ISoundInstance CreateInstance(ISoundEntry entry, bool started = true)
-		=> entry.CreateInstance(started);
+	public Song? ObtainSongForEventId(GUID eventId)
+		=> audioManagerProvider().ObtainSongForEventId(package.Manifest, eventId);
+	
+	public Song? ObtainSongForSound(IEventSoundEntry entry)
+		=> audioManagerProvider().ObtainSongForSound(package.Manifest, entry);
 }

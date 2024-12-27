@@ -12,7 +12,7 @@ namespace Nickel;
 public interface IModAudio
 {
 	/// <summary>
-	/// Retrieves an <see cref="ISoundEntry"/> for a given built-in ID.
+	/// Retrieves an <see cref="ISoundEntry"/> for a given FMOD bank event ID.
 	/// </summary>
 	/// <param name="eventId">The ID that is used to play this sound.</param>
 	/// <returns>The related sound entry, or <c>null</c> for an invalid ID.</returns>
@@ -98,10 +98,16 @@ public interface IModAudio
 	void RegisterBank(Func<Stream> streamProvider);
 
 	/// <summary>
-	/// Creates a new sound instance (which by default starts playing immediately).
+	/// Obtains a <see cref="Song"/> for a given FMOD bank event ID, that can be used to play music.
 	/// </summary>
-	/// <param name="entry">The sound entry to create the instance for.</param>
-	/// <param name="started">Whether the sound should play immediately. Defaults to <c>true</c>.</param>
-	/// <returns>A sound instance that allows further control over the sound.</returns>
-	ISoundInstance CreateInstance(ISoundEntry entry, bool started = true);
+	/// <param name="eventId">The ID that is used to play this music.</param>
+	/// <returns>The <see cref="Song"/> value that can be used to play this music.</returns>
+	Song? ObtainSongForEventId(GUID eventId);
+
+	/// <summary>
+	/// Obtains a <see cref="Song"/> for a given FMOD bank event sound entry, that can be used to play music.
+	/// </summary>
+	/// <param name="entry">The sound entry to use as music.</param>
+	/// <returns>The <see cref="Song"/> value that can be used to play this music.</returns>
+	Song? ObtainSongForSound(IEventSoundEntry entry);
 }
