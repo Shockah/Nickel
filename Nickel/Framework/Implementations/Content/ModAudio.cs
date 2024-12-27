@@ -44,6 +44,11 @@ internal sealed class ModAudio(
 	public TEntry RegisterSound<TEntry, TArgs>(ICustomSoundEntryFactory<TEntry, TArgs> factory, string name, TArgs args) where TEntry : ICustomSoundEntry
 		=> audioManagerProvider().RegisterSound(factory, package.Manifest, name, args);
 
+	public TEntry RegisterSound<TEntry, TArgs>(string name, TArgs args)
+		where TEntry : ICustomSoundEntry
+		where TArgs : ICustomSoundEntryArgsWithDefaultFactory<TEntry, TArgs>
+		=> audioManagerProvider().RegisterSound(TArgs.DefaultFactory, package.Manifest, name, args);
+
 	public void RegisterBank(IFileInfo file)
 		=> audioManagerProvider().RegisterBank(package.Manifest, file.OpenRead);
 

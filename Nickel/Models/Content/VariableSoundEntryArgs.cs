@@ -4,8 +4,12 @@
 /// Describes the parameters of a <see cref="VariableSoundEntry">variable sound entry</see>.
 /// </summary>
 /// <param name="wrapped">The sound entry wrapped by this entry and used whenever a sound is to be played.</param>
-public sealed class VariableSoundEntryArgs(ISoundEntry wrapped)
+public sealed class VariableSoundEntryArgs(ISoundEntry wrapped) : ICustomSoundEntryArgsWithDefaultFactory<VariableSoundEntry, VariableSoundEntryArgs>
 {
+	/// <inheritdoc/>
+	public static ICustomSoundEntryFactory<VariableSoundEntry, VariableSoundEntryArgs> DefaultFactory
+		=> VariableSoundEntryFactory.Instance;
+	
 	/// <summary>
 	/// The sound entry wrapped by this entry and used whenever a sound is to be played.
 	/// </summary>

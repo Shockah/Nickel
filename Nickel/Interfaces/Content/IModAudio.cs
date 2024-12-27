@@ -74,6 +74,18 @@ public interface IModAudio
 	TEntry RegisterSound<TEntry, TArgs>(ICustomSoundEntryFactory<TEntry, TArgs> factory, string name, TArgs args) where TEntry : ICustomSoundEntry;
 	
 	/// <summary>
+	/// Registers a sound with a custom implementation.
+	/// </summary>
+	/// <param name="name">The local (mod-level) name of the sound. This has to be unique across the mod.</param>
+	/// <param name="args">The arguments used to create the sound.</param>
+	/// <typeparam name="TEntry">The type of the sound entry.</typeparam>
+	/// <typeparam name="TArgs">The type of arguments used to create the sound.</typeparam>
+	/// <returns>A new sound entry.</returns>
+	TEntry RegisterSound<TEntry, TArgs>(string name, TArgs args)
+		where TEntry : ICustomSoundEntry
+		where TArgs : ICustomSoundEntryArgsWithDefaultFactory<TEntry, TArgs>;
+	
+	/// <summary>
 	/// Registers an FMOD sound event bank from a file.
 	/// </summary>
 	/// <param name="file">The file to load the bank from.</param>
