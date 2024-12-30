@@ -61,30 +61,14 @@ internal sealed class PartManager
 
 	public bool TryGetPartTypeByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IPartTypeEntry entry)
 	{
-		if (this.UniqueNameToPartTypeEntry.TryGetValue(uniqueName, out var typedEntry))
-		{
-			entry = typedEntry;
-			return true;
-		}
-		else
-		{
-			entry = default;
-			return false;
-		}
+		entry = null;
+		return this.UniqueNameToPartTypeEntry.TryGetValue(uniqueName, out var typedEntry);
 	}
 
 	public bool TryGetPartByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IPartEntry entry)
 	{
-		if (this.UniqueNameToPartInstanceEntry.TryGetValue(uniqueName, out var typedEntry))
-		{
-			entry = typedEntry;
-			return true;
-		}
-		else
-		{
-			entry = null;
-			return false;
-		}
+		entry = null;
+		return this.UniqueNameToPartInstanceEntry.TryGetValue(uniqueName, out var typedEntry);
 	}
 
 	private static void Inject(PartTypeEntry entry)

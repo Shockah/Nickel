@@ -5,9 +5,7 @@ using System.Linq;
 
 namespace Nickel;
 
-internal sealed class CompoundAssemblyResolver(
-	IEnumerable<IAssemblyResolver> resolvers
-) : IAssemblyResolver
+internal sealed class CompoundAssemblyResolver(IEnumerable<IAssemblyResolver> resolvers) : IAssemblyResolver
 {
 	public void Dispose()
 	{

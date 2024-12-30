@@ -7,46 +7,37 @@ using System.IO;
 
 namespace Nickel;
 
-internal sealed class ModStorage : IModStorage
+internal sealed class ModStorage(
+	IModManifest modManifest,
+	Func<ILogger> loggerProvider,
+	IWritableDirectoryInfo commonStorageDirectory,
+	IWritableDirectoryInfo commonPrivateStorageDirectory,
+	ModStorageManager modStorageManager
+) : IModStorage
 {
-	private readonly IModManifest ModManifest;
-	private readonly Func<ILogger> LoggerProvider;
-	private readonly IWritableDirectoryInfo CommonStorageDirectory;
-	private readonly IWritableDirectoryInfo CommonPrivateStorageDirectory;
-	private readonly ModStorageManager ModStorageManager;
-
-	public ModStorage(IModManifest modManifest, Func<ILogger> loggerProvider, IWritableDirectoryInfo commonStorageDirectory, IWritableDirectoryInfo commonPrivateStorageDirectory, ModStorageManager modStorageManager)
-	{
-		this.ModManifest = modManifest;
-		this.LoggerProvider = loggerProvider;
-		this.CommonStorageDirectory = commonStorageDirectory;
-		this.CommonPrivateStorageDirectory = commonPrivateStorageDirectory;
-		this.ModStorageManager = modStorageManager;
-	}
-
 	public IWritableDirectoryInfo StorageDirectory
-		=> this.CommonStorageDirectory.GetRelativeDirectory(this.ModManifest.UniqueName);
+		=> commonStorageDirectory.GetRelativeDirectory(modManifest.UniqueName);
 
 	public IWritableFileInfo GetMainStorageFile(string fileExtension)
-		=> this.CommonStorageDirectory.GetRelativeFile($"{this.ModManifest.UniqueName}.{fileExtension}");
+		=> commonStorageDirectory.GetRelativeFile($"{modManifest.UniqueName}.{fileExtension}");
 
 	public IWritableDirectoryInfo PrivateStorageDirectory
-		=> this.CommonPrivateStorageDirectory.GetRelativeDirectory(this.ModManifest.UniqueName);
+		=> commonPrivateStorageDirectory.GetRelativeDirectory(modManifest.UniqueName);
 
 	public IWritableFileInfo GetMainPrivateStorageFile(string fileExtension)
-		=> this.CommonPrivateStorageDirectory.GetRelativeFile($"{this.ModManifest.UniqueName}.{fileExtension}");
+		=> commonPrivateStorageDirectory.GetRelativeFile($"{modManifest.UniqueName}.{fileExtension}");
 
 	public void ApplyGlobalJsonSerializerSettings(Action<JsonSerializerSettings> function, double priority = 0)
-		=> this.ModStorageManager.ApplyGlobalJsonSerializerSettings(function, priority);
+		=> modStorageManager.ApplyGlobalJsonSerializerSettings(function, priority);
 
 	public void ApplyJsonSerializerSettings(Action<JsonSerializerSettings> function, double priority = 0)
-		=> this.ModStorageManager.ApplyJsonSerializerSettingsForMod(this.ModManifest, function, priority);
+		=> modStorageManager.ApplyJsonSerializerSettingsForMod(modManifest, function, priority);
 
 	public JsonSerializerSettings JsonSerializerSettings
-		=> this.ModStorageManager.GetSerializerSettingsForMod(this.ModManifest);
+		=> modStorageManager.GetSerializerSettingsForMod(modManifest);
 
 	public JsonSerializer JsonSerializer
-		=> this.ModStorageManager.GetSerializerForMod(this.ModManifest);
+		=> modStorageManager.GetSerializerForMod(modManifest);
 
 	public bool TryLoadJson<T>(IFileInfo file, [MaybeNullWhen(false)] out T obj)
 	{
@@ -65,14 +56,14 @@ internal sealed class ModStorage : IModStorage
 			obj = this.JsonSerializer.Deserialize<T>(jsonReader);
 			if (obj is null)
 			{
-				this.LoggerProvider().LogWarning("Failed to load the JSON settings file {file}.", file);
+				loggerProvider().LogWarning("Failed to load the JSON settings file {file}.", file);
 				return false;
 			}
 			return true;
 		}
 		catch (Exception ex)
 		{
-			this.LoggerProvider().LogWarning("Failed to load the JSON settings file `{file}`: {ex}", file, ex);
+			loggerProvider().LogWarning("Failed to load the JSON settings file `{file}`: {ex}", file, ex);
 			obj = default;
 			return false;
 		}
@@ -89,7 +80,7 @@ internal sealed class ModStorage : IModStorage
 		}
 		catch (Exception ex)
 		{
-			this.LoggerProvider().LogWarning("Failed to save the JSON settings file `{file}`: {ex}", file, ex);
+			loggerProvider().LogWarning("Failed to save the JSON settings file `{file}`: {ex}", file, ex);
 		}
 	}
 }

@@ -9,69 +9,46 @@ using System.Linq;
 
 namespace Nickel;
 
-internal sealed class ModRegistry : IModRegistry
+internal sealed class ModRegistry(
+	IModManifest modManifest,
+	Func<IModManifest?> vanillaModManifestProvider,
+	Func<IModManifest> modLoaderModManifestProvider,
+	DirectoryInfo modsDirectory,
+	IReadOnlyDictionary<string, Mod> modUniqueNameToInstance,
+	IReadOnlyDictionary<string, IPluginPackage<IModManifest>> modUniqueNameToPackage,
+	IReadOnlyList<IPluginPackage<IModManifest>> resolvedModPackages,
+	IProxyManager<string> proxyManager,
+	Func<ModLoadPhaseState> currentModLoadPhaseProvider,
+	IModEvents modEvents
+) : IModRegistry
 {
+	public DirectoryInfo ModsDirectory { get; } = modsDirectory;
+
+	private readonly Dictionary<string, object?> ApiCache = [];
+	
 	public IModManifest VanillaModManifest
 	{
 		get
 		{
-			if (this.VanillaModManifestProvider() is not { } manifest)
+			if (vanillaModManifestProvider() is not { } manifest)
 				throw new InvalidOperationException("Cannot access game manifest before the game assembly is loaded.");
 			return manifest;
 		}
 	}
 
 	public IModManifest ModLoaderModManifest
-		=> this.ModLoaderModManifestProvider();
+		=> modLoaderModManifestProvider();
 
 	public IReadOnlyDictionary<string, IModManifest> ResolvedMods
-		=> this.ResolvedModPackages
+		=> resolvedModPackages
 			.ToDictionary(m => m.Manifest.UniqueName, m => m.Manifest);
 
 	public IReadOnlyDictionary<string, IModManifest> LoadedMods
-		=> this.ModUniqueNameToPackage
+		=> modUniqueNameToPackage
 			.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Manifest);
 
-	public DirectoryInfo ModsDirectory { get; }
-
-	private readonly IModManifest ModManifest;
-	private readonly IReadOnlyDictionary<string, Mod> ModUniqueNameToInstance;
-	private readonly IReadOnlyDictionary<string, IPluginPackage<IModManifest>> ModUniqueNameToPackage;
-	private readonly IReadOnlyList<IPluginPackage<IModManifest>> ResolvedModPackages;
-	private readonly IProxyManager<string> ProxyManager;
-	private readonly Func<ModLoadPhaseState> CurrentModLoadPhaseProvider;
-	private readonly Func<IModManifest?> VanillaModManifestProvider;
-	private readonly Func<IModManifest> ModLoaderModManifestProvider;
-	private readonly IModEvents ModEvents;
-	private readonly Dictionary<string, object?> ApiCache = [];
-
-	public ModRegistry(
-		IModManifest modManifest,
-		Func<IModManifest?> vanillaModManifestProvider,
-		Func<IModManifest> modLoaderModManifestProvider,
-		DirectoryInfo modsDirectory,
-		IReadOnlyDictionary<string, Mod> modUniqueNameToInstance,
-		IReadOnlyDictionary<string, IPluginPackage<IModManifest>> modUniqueNameToPackage,
-		IReadOnlyList<IPluginPackage<IModManifest>> resolvedModPackages,
-		IProxyManager<string> proxyManager,
-		Func<ModLoadPhaseState> currentModLoadPhaseProvider,
-		IModEvents modEvents
-	)
-	{
-		this.ModManifest = modManifest;
-		this.VanillaModManifestProvider = vanillaModManifestProvider;
-		this.ModLoaderModManifestProvider = modLoaderModManifestProvider;
-		this.ModsDirectory = modsDirectory;
-		this.ModUniqueNameToInstance = modUniqueNameToInstance;
-		this.ModUniqueNameToPackage = modUniqueNameToPackage;
-		this.ResolvedModPackages = resolvedModPackages;
-		this.ProxyManager = proxyManager;
-		this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
-		this.ModEvents = modEvents;
-	}
-
 	public bool TryProxy<TProxy>(object @object, [MaybeNullWhen(false)] out TProxy proxy) where TProxy : class
-		=> this.ProxyManager.TryProxy(@object, "TryProxy", this.ModManifest.UniqueName, out proxy);
+		=> proxyManager.TryProxy(@object, "TryProxy", modManifest.UniqueName, out proxy);
 
 	public TProxy? AsProxy<TProxy>(object? @object) where TProxy : class
 		=> @object is not null && this.TryProxy<TProxy>(@object, out var proxy) ? proxy : null;
@@ -80,22 +57,22 @@ internal sealed class ModRegistry : IModRegistry
 	{
 		if (!typeof(TApi).IsInterface)
 			throw new ArgumentException($"The requested API type {typeof(TApi)} is not an interface.");
-		if (!this.ModUniqueNameToInstance.TryGetValue(uniqueName, out var mod))
+		if (!modUniqueNameToInstance.TryGetValue(uniqueName, out var mod))
 			return null;
-		if (!this.ModUniqueNameToPackage.TryGetValue(uniqueName, out var package))
+		if (!modUniqueNameToPackage.TryGetValue(uniqueName, out var package))
 			return null;
 		if (minimumVersion is not null && minimumVersion > package.Manifest.Version)
 			return null;
 
 		if (!this.ApiCache.TryGetValue(uniqueName, out var apiObject))
 		{
-			apiObject = mod.GetApi(this.ModManifest);
+			apiObject = mod.GetApi(modManifest);
 			this.ApiCache[uniqueName] = apiObject;
 		}
 		if (apiObject is null)
 			throw new ArgumentException($"The mod {uniqueName} does not expose an API.");
 
-		return this.ProxyManager.ObtainProxy<string, TApi>(apiObject, uniqueName, this.ModManifest.UniqueName);
+		return proxyManager.ObtainProxy<string, TApi>(apiObject, uniqueName, modManifest.UniqueName);
 	}
 
 	public void AwaitApi<TApi>(string uniqueName, Action<TApi> callback) where TApi : class
@@ -109,14 +86,14 @@ internal sealed class ModRegistry : IModRegistry
 			return;
 		}
 
-		if (this.CurrentModLoadPhaseProvider() is { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
+		if (currentModLoadPhaseProvider() is { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
 			return;
 
-		this.ModEvents.OnModLoadPhaseFinished += OnModLoadPhaseFinished;
+		modEvents.OnModLoadPhaseFinished += OnModLoadPhaseFinished;
 
 		void OnModLoadPhaseFinished(object? sender, ModLoadPhase phase)
 		{
-			this.ModEvents.OnModLoadPhaseFinished -= OnModLoadPhaseFinished;
+			modEvents.OnModLoadPhaseFinished -= OnModLoadPhaseFinished;
 			this.AwaitApi(uniqueName, minimumVersion, callback);
 		}
 	}
@@ -132,17 +109,17 @@ internal sealed class ModRegistry : IModRegistry
 			return;
 		}
 
-		if (this.CurrentModLoadPhaseProvider() is { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
+		if (currentModLoadPhaseProvider() is { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
 		{
 			callback(null);
 			return;
 		}
 
-		this.ModEvents.OnModLoadPhaseFinished += OnModLoadPhaseFinished;
+		modEvents.OnModLoadPhaseFinished += OnModLoadPhaseFinished;
 
 		void OnModLoadPhaseFinished(object? sender, ModLoadPhase phase)
 		{
-			this.ModEvents.OnModLoadPhaseFinished -= OnModLoadPhaseFinished;
+			modEvents.OnModLoadPhaseFinished -= OnModLoadPhaseFinished;
 			this.AwaitApiOrNull(uniqueName, minimumVersion, callback);
 		}
 	}

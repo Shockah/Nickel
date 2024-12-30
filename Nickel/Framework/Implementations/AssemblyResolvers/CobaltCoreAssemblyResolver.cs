@@ -5,9 +5,7 @@ using System.IO;
 
 namespace Nickel;
 
-internal sealed class CobaltCoreAssemblyResolver(
-	CobaltCoreResolveResult? resolveResult
-) : IAssemblyResolver
+internal sealed class CobaltCoreAssemblyResolver(CobaltCoreResolveResult? resolveResult) : IAssemblyResolver
 {
 	private readonly Dictionary<string, AssemblyDefinition> AssemblyDefinitions = [];
 	

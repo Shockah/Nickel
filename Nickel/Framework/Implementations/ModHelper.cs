@@ -2,13 +2,21 @@ using System;
 
 namespace Nickel;
 
-internal sealed class ModHelper : IModHelper
+internal sealed class ModHelper(
+	IModRegistry modRegistry,
+	IModEvents events,
+	Func<IModContent> contentProvider,
+	IModData modData,
+	IModStorage storage,
+	IModUtilities utilities,
+	Func<ModLoadPhaseState> currentModLoadPhaseProvider
+) : IModHelper
 {
-	public IModRegistry ModRegistry { get; }
-	public IModEvents Events { get; }
-	public IModData ModData { get; }
-	public IModStorage Storage { get; }
-	public IModUtilities Utilities { get; }
+	public IModRegistry ModRegistry { get; } = modRegistry;
+	public IModEvents Events { get; } = events;
+	public IModData ModData { get; } = modData;
+	public IModStorage Storage { get; } = storage;
+	public IModUtilities Utilities { get; } = utilities;
 
 	public IModContent Content
 	{
@@ -20,17 +28,6 @@ internal sealed class ModHelper : IModHelper
 		}
 	}
 
-	private Lazy<IModContent> ContentStorage { get; }
-	private Func<ModLoadPhaseState> CurrentModLoadPhaseProvider { get; }
-
-	public ModHelper(IModRegistry modRegistry, IModEvents events, Func<IModContent> contentProvider, IModData modData, IModStorage storage, IModUtilities utilities, Func<ModLoadPhaseState> currentModLoadPhaseProvider)
-	{
-		this.ModRegistry = modRegistry;
-		this.Events = events;
-		this.ModData = modData;
-		this.Storage = storage;
-		this.Utilities = utilities;
-		this.ContentStorage = new Lazy<IModContent>(contentProvider);
-		this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
-	}
+	private Lazy<IModContent> ContentStorage { get; } = new(contentProvider);
+	private Func<ModLoadPhaseState> CurrentModLoadPhaseProvider { get; } = currentModLoadPhaseProvider;
 }

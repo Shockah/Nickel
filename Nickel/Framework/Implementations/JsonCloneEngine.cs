@@ -4,9 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Nickel;
 
-internal sealed class JsonCloneEngine(
-	JsonSerializer serializer
-) : ICloneEngine
+internal sealed class JsonCloneEngine(JsonSerializer serializer) : ICloneEngine
 {
 	public T Clone<T>(T value)
 	{

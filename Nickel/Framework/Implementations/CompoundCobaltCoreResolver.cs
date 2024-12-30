@@ -4,19 +4,12 @@ using System.Collections.Generic;
 
 namespace Nickel;
 
-internal sealed class CompoundCobaltCoreResolver : ICobaltCoreResolver
+internal sealed class CompoundCobaltCoreResolver(IReadOnlyList<ICobaltCoreResolver> resolvers) : ICobaltCoreResolver
 {
-	private readonly IReadOnlyList<ICobaltCoreResolver> Resolvers;
-
-	public CompoundCobaltCoreResolver(IReadOnlyList<ICobaltCoreResolver> resolvers)
-	{
-		this.Resolvers = resolvers;
-	}
-
 	public OneOf<CobaltCoreResolveResult, Error<string>> ResolveCobaltCore()
 	{
 		List<string> errors = [];
-		foreach (var resolver in this.Resolvers)
+		foreach (var resolver in resolvers)
 		{
 			var resultOrError = resolver.ResolveCobaltCore();
 			if (resultOrError.TryPickT0(out var result, out var error))

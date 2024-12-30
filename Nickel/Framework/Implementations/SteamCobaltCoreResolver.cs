@@ -10,15 +10,8 @@ using VdfParser;
 
 namespace Nickel;
 
-internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
+internal sealed class SteamCobaltCoreResolver(Func<FileInfo, FileInfo?, ICobaltCoreResolver> resolverFactory) : ICobaltCoreResolver
 {
-	private readonly Func<FileInfo, FileInfo?, ICobaltCoreResolver> ResolverFactory;
-
-	public SteamCobaltCoreResolver(Func<FileInfo, FileInfo?, ICobaltCoreResolver> resolverFactory)
-	{
-		this.ResolverFactory = resolverFactory;
-	}
-
 	public OneOf<CobaltCoreResolveResult, Error<string>> ResolveCobaltCore()
 	{
 		List<string> potentialSteamLocations = [];
@@ -138,7 +131,7 @@ internal sealed class SteamCobaltCoreResolver : ICobaltCoreResolver
 			if (pdbPath.Exists != true)
 				pdbPath = null;
 
-			var resolver = this.ResolverFactory(singleFileApplicationPath, pdbPath);
+			var resolver = resolverFactory(singleFileApplicationPath, pdbPath);
 			return resolver.ResolveCobaltCore();
 		}
 
