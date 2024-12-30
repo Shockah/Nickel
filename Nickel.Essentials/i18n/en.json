@@ -27,6 +27,9 @@
 			"description": "The card has been exhausted."
 		}
 	},
+	"cardBrowseOrderSortMode": {
+		"mode": "Order"
+	},
 	"crewSelection": {
 		"detailedCrewInfoSetting": {
 			"name": "Detailed crew info",

@@ -119,7 +119,7 @@ internal static class CardBrowseOrderSortMode
 	private static void CardBrowse_GetSortModeLabel_Postfix(CardBrowse.SortMode mode, ref string __result)
 	{
 		if (mode == OrderSortMode)
-			__result = "Order";
+			__result = ModEntry.Instance.Localizations.Localize(["cardBrowseOrderSortMode", "mode"]);
 	}
 
 	internal sealed class Hook : IEssentialsApi.IHook
