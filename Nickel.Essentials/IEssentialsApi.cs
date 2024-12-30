@@ -8,6 +8,19 @@ namespace Nickel.Essentials;
 public interface IEssentialsApi
 {
 	/// <summary>
+	/// Registers a new hook related to the features of the <c>Nickel.Essentials</c> built-in mod.
+	/// </summary>
+	/// <param name="hook">The hook.</param>
+	/// <param name="priority">The priority for the hook. Higher priority hooks are called before lower priority ones. Defaults to <c>0</c></param>
+	void RegisterHook(IHook hook, double priority = 0);
+			
+	/// <summary>
+	/// Unregisters the given hook related to the features of the <c>Nickel.Essentials</c> built-in mod.
+	/// </summary>
+	/// <param name="hook">The hook.</param>
+	void UnregisterHook(IHook hook);
+	
+	/// <summary>
 	/// Returns the EXE card type (see <a href="https://cobaltcore.wiki.gg/wiki/CAT">CAT</a>) for the given <see cref="Deck"/>.<br/>
 	/// Takes into account EXE cards added by legacy mods, which are not available by reading <see cref="PlayableCharacterConfigurationV2.ExeCardType"/>.
 	/// </summary>
@@ -40,4 +53,28 @@ public interface IEssentialsApi
 	
 	/// <summary>The ship that is currently being previewed by hovering over its button while <see cref="IsShowingShips"/> is <c>true</c>.</summary>
 	StarterShip? PreviewingShip { get; }
+
+	/// <summary>
+	/// A hook related to the features of the <c>Nickel.Essentials</c> built-in mod.
+	/// </summary>
+	public interface IHook
+	{
+		/// <summary>
+		/// Allows controlling whether the "Order" sort mode is enabled for the given <see cref="CardBrowse"/>.
+		/// </summary>
+		/// <param name="args">The arguments for the hook method.</param>
+		/// <returns><c>true</c> if the "Order" sort mode should be enabled, <c>false</c> if not, <c>null</c> if the hook does not care.</returns>
+		bool? ShouldAllowOrderSortModeInCardBrowse(IShouldAllowOrderSortModeInCardBrowseArgs args) => null;
+		
+		/// <summary>
+		/// The arguments for the <see cref="ShouldAllowOrderSortModeInCardBrowse"/> hook method.
+		/// </summary>
+		public interface IShouldAllowOrderSortModeInCardBrowseArgs
+		{
+			/// <summary>
+			/// The route the "Order" sort mode should be enabled for or not.
+			/// </summary>
+			CardBrowse Route { get; }
+		}
+	}
 }

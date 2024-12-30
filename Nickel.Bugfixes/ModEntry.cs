@@ -14,7 +14,6 @@ public sealed class ModEntry : SimpleMod
 		var harmony = helper.Utilities.Harmony;
 		ArtifactCodexFixes.ApplyPatches(harmony);
 		CardActionRenderingFixes.ApplyPatches(harmony);
-		CardBrowseSortingFixes.ApplyPatches(harmony);
 		DebugMenuFixes.ApplyPatches(harmony);
 		ExhaustEntireHandActionFixes.ApplyPatches(harmony);
 		IsaacUnlockFixes.ApplyPatches(harmony);

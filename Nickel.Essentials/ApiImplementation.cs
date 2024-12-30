@@ -4,6 +4,12 @@ namespace Nickel.Essentials;
 
 public sealed class ApiImplementation : IEssentialsApi
 {
+	public void RegisterHook(IEssentialsApi.IHook hook, double priority = 0)
+		=> ModEntry.Instance.Hooks.Register(hook, priority);
+
+	public void UnregisterHook(IEssentialsApi.IHook hook)
+		=> ModEntry.Instance.Hooks.Unregister(hook);
+
 	public Type? GetExeCardTypeForDeck(Deck deck)
 		=> ModEntry.Instance.GetExeCardTypeForDeck(deck);
 

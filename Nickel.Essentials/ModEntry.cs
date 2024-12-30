@@ -22,6 +22,8 @@ public sealed class ModEntry : SimpleMod
 	internal readonly ISpriteEntry ScrollDownSprite;
 	internal readonly ISpriteEntry ScrollDownOnSprite;
 
+	internal readonly HookManager<IEssentialsApi.IHook> Hooks;
+
 	private readonly Dictionary<Deck, Type?> ExeCache = [];
 	private readonly Dictionary<Type, Deck> ExeTypeToDeck = [];
 
@@ -31,6 +33,7 @@ public sealed class ModEntry : SimpleMod
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
 		Instance = this;
+		this.Hooks = new(package.Manifest.UniqueName);
 		this.Api = new();
 		this.Localizations = new MissingPlaceholderLocalizationProvider<IReadOnlyList<string>>(
 			new CurrentLocaleOrEnglishLocalizationProvider<IReadOnlyList<string>>(
@@ -72,6 +75,7 @@ public sealed class ModEntry : SimpleMod
 
 		var harmony = helper.Utilities.Harmony;
 		CardBrowseCurrentPile.ApplyPatches(harmony);
+		CardBrowseOrderSortMode.ApplyPatches(harmony);
 		CardCodexFiltering.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);
 		ExeBlacklist.ApplyPatches(harmony);
@@ -83,6 +87,8 @@ public sealed class ModEntry : SimpleMod
 		StarterDeckPreview.ApplyPatches(harmony);
 		TooltipScrolling.ApplyPatches(harmony);
 		UnlockedWindowResize.ApplyPatches(harmony);
+		
+		this.Hooks.Register(new CardBrowseOrderSortMode.Hook());
 
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.ShuffleDeck))
