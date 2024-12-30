@@ -11,6 +11,13 @@ internal sealed class EventSoundEntry(IModManifest modOwner, string uniqueName, 
 	public string LocalName { get; } = localName;
 	public GUID BankId { get; } = bankId;
 	public GUID EventId { get; } = eventId;
+	private int NextId;
+
+	public override string ToString()
+		=> this.UniqueName;
+
+	public override int GetHashCode()
+		=> this.UniqueName.GetHashCode();
 
 	public IEventSoundInstance CreateInstance(bool started = true)
 	{
@@ -21,6 +28,6 @@ internal sealed class EventSoundEntry(IModManifest modOwner, string uniqueName, 
 
 		if (!started)
 			eventInstance.stop(STOP_MODE.IMMEDIATE);
-		return new EventSoundInstance(this, eventInstance);
+		return new EventSoundInstance(this, eventInstance, this.NextId++);
 	}
 }

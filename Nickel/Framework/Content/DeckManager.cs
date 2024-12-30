@@ -187,5 +187,11 @@ internal sealed class DeckManager
 		public string UniqueName { get; } = uniqueName;
 		public Deck Deck { get; } = deck;
 		public DeckConfiguration Configuration { get; } = configuration;
+
+		public override string ToString()
+			=> this.UniqueName;
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 	}
 }

@@ -1,11 +1,18 @@
 ﻿using FMOD;
+using System;
 
 namespace Nickel;
 
-internal sealed class ModSoundInstance(ModSoundEntry entry, Channel channel) : IModSoundInstance
+internal sealed class ModSoundInstance(ModSoundEntry entry, Channel channel, int id) : IModSoundInstance
 {
 	public IModSoundEntry Entry { get; } = entry;
 	public Channel Channel { get; } = channel;
+
+	public override string ToString()
+		=> this.Entry.UniqueName;
+
+	public override int GetHashCode()
+		=> HashCode.Combine(this.Entry.UniqueName.GetHashCode(), id);
 
 	public bool IsPaused
 	{

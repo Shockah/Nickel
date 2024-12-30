@@ -109,5 +109,11 @@ internal sealed class ShipManager
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
 		public ShipConfiguration Configuration { get; } = configuration;
+
+		public override string ToString()
+			=> this.UniqueName;
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 	}
 }

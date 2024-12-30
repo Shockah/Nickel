@@ -26,9 +26,9 @@ public sealed class CaseInsensitiveDirectoryInfo(IDirectoryInfo wrapped) : CaseI
 
 	/// <inheritdoc/>
 	public CaseInsensitiveFileInfo GetRelativeFile(string relativePath)
-		=> new CaseInsensitiveFileInfo(this.Wrapped.GetRelativeFile(relativePath));
+		=> new(this.Wrapped.GetRelativeFile(relativePath));
 	
 	/// <inheritdoc/>
 	public CaseInsensitiveDirectoryInfo GetRelativeDirectory(string relativePath)
-		=> new CaseInsensitiveDirectoryInfo(this.Wrapped.GetRelativeDirectory(relativePath));
+		=> new(this.Wrapped.GetRelativeDirectory(relativePath));
 }

@@ -164,5 +164,11 @@ internal sealed class EnemyManager
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
 		public EnemyConfiguration Configuration { get; internal set; } = configuration;
+
+		public override string ToString()
+			=> this.UniqueName;
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 	}
 }

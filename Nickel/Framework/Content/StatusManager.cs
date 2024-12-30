@@ -176,5 +176,11 @@ internal sealed class StatusManager
 		public string UniqueName { get; } = uniqueName;
 		public Status Status { get; } = status;
 		public StatusConfiguration Configuration { get; } = configuration;
+
+		public override string ToString()
+			=> this.UniqueName;
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 	}
 }

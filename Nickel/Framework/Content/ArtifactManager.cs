@@ -119,5 +119,11 @@ internal sealed class ArtifactManager
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
 		public ArtifactConfiguration Configuration { get; internal set; } = configuration;
+
+		public override string ToString()
+			=> this.UniqueName;
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 	}
 }

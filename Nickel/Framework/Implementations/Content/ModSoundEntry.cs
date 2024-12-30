@@ -14,6 +14,13 @@ internal sealed class ModSoundEntry(IModManifest modOwner, string uniqueName, st
 	
 	internal Func<Stream>? StreamProvider = streamProvider;
 	internal FMOD.Sound? SoundStorage;
+	private int NextId;
+
+	public override string ToString()
+		=> this.UniqueName;
+
+	public override int GetHashCode()
+		=> this.UniqueName.GetHashCode();
 
 	public IModSoundInstance CreateInstance(bool started = true)
 	{
@@ -24,6 +31,6 @@ internal sealed class ModSoundEntry(IModManifest modOwner, string uniqueName, st
 		Audio.Catch(audio.fmodStudioSystem.getBus("bus:/Sfx", out var bus));
 		Audio.Catch(bus.getChannelGroup(out var channelGroup));
 		Audio.Catch(coreSystem.playSound(this.Sound, channelGroup, !started, out var channel));
-		return new ModSoundInstance(this, channel);
+		return new ModSoundInstance(this, channel, this.NextId++);
 	}
 }

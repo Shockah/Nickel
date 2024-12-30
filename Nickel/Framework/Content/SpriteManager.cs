@@ -105,17 +105,16 @@ internal sealed class SpriteManager
 		e.IsDynamic = entry is DynamicEntry;
 	}
 
-	private sealed class StaticEntry
-		: ISpriteEntry
+	private sealed class StaticEntry : ISpriteEntry
 	{
 		public IModManifest ModOwner { get; }
 		public string UniqueName { get; }
 		public string LocalName { get; }
 		public Spr Sprite { get; }
 
-		private Func<Stream>? StreamProvider { get; set; }
-		private Func<Texture2D>? TextureProvider { get; set; }
-		private Texture2D? TextureStorage { get; set; }
+		private Func<Stream>? StreamProvider;
+		private Func<Texture2D>? TextureProvider;
+		private Texture2D? TextureStorage;
 
 		public StaticEntry(IModManifest modOwner, string uniqueName, string localName, Spr sprite, Func<Stream> streamProvider)
 		{
@@ -160,27 +159,34 @@ internal sealed class SpriteManager
 			this.StreamProvider = null;
 			return texture;
 		}
+
+		public override string ToString()
+			=> this.UniqueName;
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 	}
 	
-	private sealed class DynamicEntry
-		: ISpriteEntry
+	private sealed class DynamicEntry(
+		IModManifest modOwner,
+		string uniqueName,
+		string localName,
+		Spr sprite,
+		Func<Texture2D> textureProvider
+	) : ISpriteEntry
 	{
-		public IModManifest ModOwner { get; }
-		public string UniqueName { get; }
-		public string LocalName { get; }
-		public Spr Sprite { get; }
-		private Func<Texture2D> TextureProvider { get; }
-
-		public DynamicEntry(IModManifest modOwner, string uniqueName, string localName, Spr sprite, Func<Texture2D> textureProvider)
-		{
-			this.ModOwner = modOwner;
-			this.UniqueName = uniqueName;
-			this.LocalName = localName;
-			this.Sprite = sprite;
-			this.TextureProvider = textureProvider;
-		}
+		public IModManifest ModOwner { get; } = modOwner;
+		public string UniqueName { get; } = uniqueName;
+		public string LocalName { get; } = localName;
+		public Spr Sprite { get; } = sprite;
 
 		public Texture2D ObtainTexture()
-			=> this.TextureProvider();
+			=> textureProvider();
+
+		public override string ToString()
+			=> this.UniqueName;
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 	}
 }

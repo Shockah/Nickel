@@ -11,8 +11,8 @@ public sealed class VariableSoundEntryFactory : ICustomSoundEntryFactory<Variabl
 	public static VariableSoundEntryFactory Instance { get; } = new();
 	
 	/// <inheritdoc/>
-	public string GetUniqueName(IModManifest owner, string localName, VariableSoundEntryArgs args)
-		=> $"{owner.UniqueName}::{localName}[{args.Wrapped.UniqueName}]";
+	public string GetDefaultName(IModManifest owner, VariableSoundEntryArgs args)
+		=> $"Variable[Volume = {args.MinVolume} -- {args.MaxVolume}, Pitch = {args.MinPitch} -- {args.MaxPitch}, Wrapped = {args.Wrapped}]";
 
 	/// <inheritdoc/>
 	public VariableSoundEntry CreateEntry(IModManifest owner, string uniqueName, string localName, VariableSoundEntryArgs args)

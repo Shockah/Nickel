@@ -729,6 +729,12 @@ internal sealed class CharacterManager
 		CharacterAnimationConfiguration ICharacterAnimationEntry.Configuration => this.V1 ?? throw new InvalidOperationException();
 		
 		CharacterAnimationConfigurationV2 ICharacterAnimationEntryV2.Configuration => this.V2;
+
+		public override string ToString()
+			=> this.UniqueName;
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 	}
 
 	private sealed class PlayableCharacterEntry(
@@ -752,6 +758,12 @@ internal sealed class CharacterManager
 		
 		PlayableCharacterConfigurationV2 IPlayableCharacterEntryV2.Configuration => this.V2;
 		Spr? ICharacterEntryV2.BorderSprite => this.V2.BorderSprite;
+
+		public override string ToString()
+			=> this.UniqueName;
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 	}
 
 	private sealed class NonPlayableCharacterEntry(
@@ -769,5 +781,11 @@ internal sealed class CharacterManager
 		
 		NonPlayableCharacterConfigurationV2 INonPlayableCharacterEntryV2.Configuration => this.V2;
 		Spr? ICharacterEntryV2.BorderSprite => this.V2.BorderSprite;
+
+		public override string ToString()
+			=> this.UniqueName;
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 	}
 }

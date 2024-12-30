@@ -1,9 +1,10 @@
 ﻿using FMOD;
 using FMOD.Studio;
+using System;
 
 namespace Nickel;
 
-internal sealed class EventSoundInstance(EventSoundEntry entry, EventInstance instance) : IEventSoundInstance
+internal sealed class EventSoundInstance(EventSoundEntry entry, EventInstance instance, int id) : IEventSoundInstance
 {
 	public IEventSoundEntry Entry { get; } = entry;
 	public EventInstance Instance { get; } = instance;
@@ -24,6 +25,12 @@ internal sealed class EventSoundInstance(EventSoundEntry entry, EventInstance in
 			return this.Instance.release();
 		});
 	}
+
+	public override string ToString()
+		=> this.Entry.UniqueName;
+
+	public override int GetHashCode()
+		=> HashCode.Combine(this.Entry.UniqueName.GetHashCode(), id);
 
 	public bool IsPaused
 	{

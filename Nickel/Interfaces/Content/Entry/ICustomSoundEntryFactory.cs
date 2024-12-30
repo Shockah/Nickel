@@ -8,19 +8,18 @@
 public interface ICustomSoundEntryFactory<out TEntry, in TArgs> where TEntry : ICustomSoundEntry
 {
 	/// <summary>
-	/// Provides the <see cref="IModOwned.UniqueName"/> for a new custom sound entry.
+	/// Provides the <see cref="ISoundEntry.LocalName"/> for a new custom sound entry.
 	/// </summary>
 	/// <param name="owner">The mod that owns this content.</param>
-	/// <param name="localName">The local (mod-level) name of the sound. This has to be unique across the mod.</param>
 	/// <param name="args">The arguments used to create the sound.</param>
 	/// <returns>The unique name for the new custom sound entry.</returns>
-	string GetUniqueName(IModManifest owner, string localName, TArgs args);
+	string GetDefaultName(IModManifest owner, TArgs args);
 	
 	/// <summary>
 	/// Creates a new sound entry.
 	/// </summary>
 	/// <param name="owner">The mod that owns this content.</param>
-	/// <param name="uniqueName">The unique name for the new custom sound entry, returned earlier via <see cref="GetUniqueName"/>.</param>
+	/// <param name="uniqueName">The unique name for the new custom sound entry, returned earlier via <see cref="GetDefaultName"/>.</param>
 	/// <param name="localName">The local (mod-level) name of the sound. This has to be unique across the mod.</param>
 	/// <param name="args">The arguments used to create the sound.</param>
 	/// <returns>A new sound entry.</returns>

@@ -63,6 +63,17 @@ public interface IModAudio
 	IModSoundEntry RegisterSound(string name, Func<Stream> streamProvider);
 	
 	/// <summary>
+	/// Registers a sound with a custom implementation.<br/>
+	/// The factory will provide a default content name.
+	/// </summary>
+	/// <param name="factory">The factory that will create the sound entry.</param>
+	/// <param name="args">The arguments used to create the sound.</param>
+	/// <typeparam name="TEntry">The type of the sound entry.</typeparam>
+	/// <typeparam name="TArgs">The type of arguments used to create the sound.</typeparam>
+	/// <returns>A new sound entry.</returns>
+	TEntry RegisterSound<TEntry, TArgs>(ICustomSoundEntryFactory<TEntry, TArgs> factory, TArgs args) where TEntry : ICustomSoundEntry;
+	
+	/// <summary>
 	/// Registers a sound with a custom implementation.
 	/// </summary>
 	/// <param name="factory">The factory that will create the sound entry.</param>
@@ -72,6 +83,18 @@ public interface IModAudio
 	/// <typeparam name="TArgs">The type of arguments used to create the sound.</typeparam>
 	/// <returns>A new sound entry.</returns>
 	TEntry RegisterSound<TEntry, TArgs>(ICustomSoundEntryFactory<TEntry, TArgs> factory, string name, TArgs args) where TEntry : ICustomSoundEntry;
+	
+	/// <summary>
+	/// Registers a sound with a custom implementation.<br/>
+	/// The factory will provide a default content name.
+	/// </summary>
+	/// <param name="args">The arguments used to create the sound.</param>
+	/// <typeparam name="TEntry">The type of the sound entry.</typeparam>
+	/// <typeparam name="TArgs">The type of arguments used to create the sound.</typeparam>
+	/// <returns>A new sound entry.</returns>
+	TEntry RegisterSound<TEntry, TArgs>(TArgs args)
+		where TEntry : ICustomSoundEntry
+		where TArgs : ICustomSoundEntryArgsWithDefaultFactory<TEntry, TArgs>;
 	
 	/// <summary>
 	/// Registers a sound with a custom implementation.

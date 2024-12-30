@@ -21,6 +21,8 @@ public sealed class VariableSoundEntry : ICustomSoundEntry
 	/// </summary>
 	public VariableSoundEntryArgs Args { get; }
 
+	private int NextId;
+
 	internal VariableSoundEntry(IModManifest modOwner, string uniqueName, string localName, VariableSoundEntryArgs args)
 	{
 		this.ModOwner = modOwner;
@@ -28,6 +30,14 @@ public sealed class VariableSoundEntry : ICustomSoundEntry
 		this.LocalName = localName;
 		this.Args = args;
 	}
+
+	/// <inheritdoc/>
+	public override string ToString()
+		=> this.UniqueName;
+
+	/// <inheritdoc/>
+	public override int GetHashCode()
+		=> this.UniqueName.GetHashCode();
 
 	/// <inheritdoc/>
 	public ISoundInstance CreateInstance(bool started = true)
@@ -44,12 +54,18 @@ public sealed class VariableSoundEntry : ICustomSoundEntry
 		var pitch = (float)(minPitch + Random.Shared.NextDouble() * (maxPitch - minPitch));
 		instance.Pitch = pitch;
 		
-		return new Instance(this, instance, volume, pitch);
+		return new Instance(this, instance, volume, pitch, this.NextId++);
 	}
 
-	private sealed class Instance(VariableSoundEntry entry, ISoundInstance instance, float volume, float pitch) : ISoundInstance
+	private sealed class Instance(VariableSoundEntry entry, ISoundInstance instance, float volume, float pitch, int id) : ISoundInstance
 	{
 		public ISoundEntry Entry { get; } = entry;
+
+		public override string ToString()
+			=> this.Entry.UniqueName;
+
+		public override int GetHashCode()
+			=> HashCode.Combine(this.Entry.UniqueName.GetHashCode(), id);
 
 		public bool IsPaused
 		{

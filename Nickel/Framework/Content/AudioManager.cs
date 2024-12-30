@@ -57,7 +57,7 @@ internal sealed class AudioManager
 
 	public TEntry RegisterSound<TEntry, TArgs>(ICustomSoundEntryFactory<TEntry, TArgs> factory, IModManifest owner, string name, TArgs args) where TEntry : ICustomSoundEntry
 	{
-		var uniqueName = factory.GetUniqueName(owner, name, args);
+		var uniqueName = $"{owner.UniqueName}::{name}";
 		
 		if (this.UniqueNameToModSounds.ContainsKey(StandardizeUniqueName(uniqueName)))
 			throw new ArgumentException($"A sound with the unique name `{uniqueName}` is already registered");

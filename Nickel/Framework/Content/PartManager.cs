@@ -82,7 +82,7 @@ internal sealed class PartManager
 		}
 		else
 		{
-			entry = default;
+			entry = null;
 			return false;
 		}
 	}
@@ -105,6 +105,12 @@ internal sealed class PartManager
 		public string UniqueName { get; } = uniqueName;
 		public PType PartType { get; } = partType;
 		public PartTypeConfiguration Configuration { get; } = configuration;
+
+		public override string ToString()
+			=> this.UniqueName;
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 	}
 
 	private sealed class PartEntry(IModManifest modOwner, string uniqueName, PartConfiguration configuration)
@@ -113,5 +119,11 @@ internal sealed class PartManager
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
 		public PartConfiguration Configuration { get; } = configuration;
+
+		public override string ToString()
+			=> this.UniqueName;
+
+		public override int GetHashCode()
+			=> this.UniqueName.GetHashCode();
 	}
 }
