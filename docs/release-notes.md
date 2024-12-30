@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.8.0
+Released 30 December 2024.
 
 ### For everyone:
 * Updated the Pintail library, greatly improving mod load times.
