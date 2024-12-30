@@ -94,7 +94,7 @@ internal static class SaveImport
 			route._slotsCache = Enumerable.Range(0, 3)
 				.Select(State.Load)
 				.ToList();
-			route._slotsBackupCache = route._slotsCache.Select(_ => (State.SaveSlot?)null).ToList();
+			route._slotsBackupCache = route._slotsCache.Select(State.SaveSlot? (_) => null).ToList();
 			route._availableSlotActionsCache = route._slotsCache.Select((_, i) => route.GetAvailableActionsForSlot(i).ToList()).ToList();
 		});
 		return false;
@@ -238,6 +238,9 @@ internal static class SaveImport
 				targetSavePath = new FileInfo(targetSavePath).Directory!.FullName;
 
 				Audio.Play(Event.Click);
+				
+				foreach (var filePath in Directory.EnumerateFiles(targetSavePath, "*", SearchOption.AllDirectories))
+					File.Delete(filePath);
 
 				state.slot = this.TargetSlot;
 				g.settings.saveSlot = this.TargetSlot;

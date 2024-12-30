@@ -6,9 +6,10 @@
 
 ### For everyone:
 * Updated the Pintail library, greatly improving mod load times.
-* Fixed the game crashing when setting up a daily run with the Solo Run modifier with any modded characters.
 * The "current pile" indicator icons will no longer display if currently viewing a single pile.
 * The "sort cards in order" feature when browsing through cards in hand is now a proper sort mode, and it got moved from `Nickel.Bugfixes` to `Nickel.Essentials`.
+* Fixed the game crashing when setting up a daily run with the Solo Run modifier with any modded characters.
+* Fixed a crash when importing a save file while there are still some leftover files in the slot being imported into.
 
 ### For developers:
 * Added `IModHelper.Content.Audio` which allows adding new sounds and music.
