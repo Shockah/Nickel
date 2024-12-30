@@ -15,6 +15,7 @@ internal sealed class CharacterManager
 	private readonly AudioManager Audio;
 	private readonly DeckManager Decks;
 	private readonly StatusManager Statuses;
+	private readonly CardManager Cards;
 	private readonly IModManifest VanillaModManifest;
 	private readonly AfterDbInitManager<AnimationEntry> AnimationManager;
 	private readonly AfterDbInitManager<PlayableCharacterEntry> PlayableCharacterManager;
@@ -33,6 +34,7 @@ internal sealed class CharacterManager
 		AudioManager audio,
 		DeckManager decks,
 		StatusManager statuses,
+		CardManager cards,
 		IModManifest vanillaModManifest,
 		IModManifest modLoaderModManifest
 	)
@@ -42,6 +44,7 @@ internal sealed class CharacterManager
 		this.Audio = audio;
 		this.Decks = decks;
 		this.Statuses = statuses;
+		this.Cards = cards;
 		this.VanillaModManifest = vanillaModManifest;
 		this.AnimationManager = new(currentModLoadPhaseProvider, Inject);
 		this.PlayableCharacterManager = new(currentModLoadPhaseProvider, this.Inject);
@@ -229,11 +232,8 @@ internal sealed class CharacterManager
 	public ICharacterEntry? LookupByUniqueName(string uniqueName)
 		=> this.UniqueNameToPlayableCharacterEntry.GetValueOrDefault(uniqueName);
 
-	public ICharacterEntry RegisterCharacter(IModManifest owner, string name, CharacterConfiguration v1)
+	public PlayableCharacterEntry RegisterCharacter(IModManifest owner, string name, CharacterConfiguration v1)
 	{
-		if (this.Decks.LookupByDeck(v1.Deck) is not { } deckEntry)
-			throw new ArgumentException("Invalid character `Deck`");
-		
 #pragma warning disable CS0618 // Type or member is obsolete
 		if (v1.Starters is not null && (v1.StarterCardTypes is not null || v1.StarterArtifactTypes is not null))
 			throw new ArgumentException($"A character should only have `{nameof(CharacterConfiguration.Starters)}` or `{nameof(CharacterConfiguration.StarterCardTypes)}`/`{nameof(CharacterConfiguration.StarterArtifactTypes)}` defined, but not both");
@@ -272,17 +272,7 @@ internal sealed class CharacterManager
 		};
 #pragma warning restore CS0618 // Type or member is obsolete
 
-		var uniqueName = $"{owner.UniqueName}::{name}";
-		if (this.UniqueNameToPlayableCharacterEntry.ContainsKey(uniqueName))
-			throw new ArgumentException($"A character with the unique name `{uniqueName}` is already registered", nameof(name));
-		
-		var missingStatus = this.RegisterMissingStatus(owner, $"{name}::MissingStatus", deckEntry, v1.MissingStatus.Color, v1.MissingStatus.Sprite);
-		var entry = new PlayableCharacterEntry(owner, uniqueName, v1, v2, missingStatus);
-		this.UniqueNameToPlayableCharacterEntry[entry.UniqueName] = entry;
-		this.DeckToCharacterEntry[entry.V2.Deck] = entry;
-		this.CharacterTypeToCharacterEntry[entry.CharacterType] = entry;
-		this.PlayableCharacterManager.QueueOrInject(entry);
-		return entry;
+		return this.RegisterPlayableCharacterV2(owner, name, v2, v1);
 	}
 	#endregion
 
@@ -355,12 +345,22 @@ internal sealed class CharacterManager
 	public ICharacterEntryV2? LookupByUniqueNameV2(string uniqueName)
 		=> this.UniqueNameToPlayableCharacterEntry.GetValueOrDefault(uniqueName);
 	
-	public IPlayableCharacterEntryV2 RegisterPlayableCharacterV2(IModManifest owner, string name, PlayableCharacterConfigurationV2 v2)
+	public PlayableCharacterEntry RegisterPlayableCharacterV2(IModManifest owner, string localName, PlayableCharacterConfigurationV2 v2, CharacterConfiguration? maybeV1 = null)
 	{
 		if (this.Decks.LookupByDeck(v2.Deck) is not { } deckEntry)
 			throw new ArgumentException("Invalid character `Deck`");
 		
-		var v1 = new CharacterConfiguration
+		var uniqueName = $"{owner.UniqueName}::{localName}";
+		if (this.UniqueNameToPlayableCharacterEntry.ContainsKey(uniqueName))
+			throw new ArgumentException($"A character with the unique name `{uniqueName}` is already registered", nameof(localName));
+		
+		if (v2.ExeCardType is { } exeCardType && this.Cards.LookupByCardType(exeCardType) is { } exeCardEntry && exeCardEntry.Configuration.Meta.deck != Deck.colorless)
+			this.LoggerProvider(owner).LogWarning(
+				"Registering a playable character `{Character}` with an EXE card `{Card}` for deck `{Deck}`, but EXE cards should use the `{CatDeck}` deck instead.",
+				uniqueName, exeCardEntry.UniqueName, exeCardEntry.Configuration.Meta.deck.Key(), Deck.colorless.Key()
+			);
+		
+		var v1 = maybeV1 ?? new CharacterConfiguration
 		{
 			Deck = v2.Deck,
 			BorderSprite = v2.BorderSprite,
@@ -388,12 +388,8 @@ internal sealed class CharacterManager
 			ExeCardType = v2.ExeCardType,
 			Description = v2.Description
 		};
-
-		var uniqueName = $"{owner.UniqueName}::{name}";
-		if (this.UniqueNameToPlayableCharacterEntry.ContainsKey(uniqueName))
-			throw new ArgumentException($"A character with the unique name `{uniqueName}` is already registered", nameof(name));
 		
-		var missingStatus = this.RegisterMissingStatus(owner, $"{name}::MissingStatus", deckEntry, v2.MissingStatus.Color, v2.MissingStatus.Sprite);
+		var missingStatus = this.RegisterMissingStatus(owner, $"{localName}::MissingStatus", deckEntry, v2.MissingStatus.Color, v2.MissingStatus.Sprite);
 		var entry = new PlayableCharacterEntry(owner, uniqueName, v1, v2, missingStatus);
 		this.UniqueNameToPlayableCharacterEntry[entry.UniqueName] = entry;
 		this.DeckToCharacterEntry[entry.V2.Deck] = entry;
@@ -737,7 +733,7 @@ internal sealed class CharacterManager
 			=> this.UniqueName.GetHashCode();
 	}
 
-	private sealed class PlayableCharacterEntry(
+	public sealed class PlayableCharacterEntry(
 		IModManifest modOwner,
 		string uniqueName,
 		CharacterConfiguration v1,

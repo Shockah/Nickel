@@ -9,8 +9,11 @@
 * Fixed the game crashing when setting up a daily run with the Solo Run modifier with any modded characters.
 
 ### For developers:
+* Added `IModHelper.Content.Audio` which allows adding new sounds and music.
 * Added the `IModEvents.OnSaveLoaded` event.
 * Added `PlayableCharacterConfigurationV2.SoloStarters`.
+* Added `(Non)PlayableCharacterConfigurationV2.Babble` which allows customizing the way the character talks in dialogue.
+* Nickel now validates whether the provided `ExeCardType` for a playable character uses the `Deck.colorless` deck.
 
 ## 1.7.0
 Released 17 December 2024.
