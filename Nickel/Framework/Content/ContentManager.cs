@@ -57,7 +57,7 @@ internal sealed class ContentManager
 	)
 	{
 		var sprites = new SpriteManager(loggerProvider, enumCasePool, vanillaModManifest);
-		var audio = new AudioManager(loggerProvider, currentModLoadPhaseProvider, enumCasePool, vanillaModManifest);
+		var audio = new AudioManager(loggerProvider, currentModLoadPhaseProvider, enumCasePool, vanillaModManifest, modLoaderModManifest);
 		var decks = new DeckManager(currentModLoadPhaseProvider, enumCasePool, vanillaModManifest);
 		var statuses = new StatusManager(currentModLoadPhaseProvider, enumCasePool, vanillaModManifest);
 		var cards = new CardManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 
 namespace Nickel;
 
@@ -16,6 +17,7 @@ internal sealed class AudioManager
 	private readonly AfterDbInitManager<BankEntry> BankManager;
 	private readonly EnumCasePool EnumCasePool;
 	private readonly IModManifest VanillaModManifest;
+	private readonly IModManifest ModLoaderModManifest;
 	private readonly HashSet<GUID> HandledBanks = [];
 	private readonly Dictionary<GUID, EventSoundEntry> IdToEventSounds = [];
 	private readonly Dictionary<string, EventSoundEntry> UniqueNameToEventSounds = [];
@@ -24,16 +26,26 @@ internal sealed class AudioManager
 	private readonly Dictionary<GUID, Song?> IdToSongs = [];
 	private readonly Dictionary<Song, GUID> SongToIds = [];
 	private bool InjectedAnyModSounds;
+	private bool LoggedFailedInjectWarning;
 
-	public AudioManager(Func<IModManifest, ILogger> loggerProvider, Func<ModLoadPhaseState> currentModLoadPhaseProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest)
+	public AudioManager(
+		Func<IModManifest, ILogger> loggerProvider,
+		Func<ModLoadPhaseState> currentModLoadPhaseProvider,
+		EnumCasePool enumCasePool,
+		IModManifest vanillaModManifest,
+		IModManifest modLoaderModManifest
+	)
 	{
 		this.LoggerProvider = loggerProvider;
 		this.ModSoundManager = new(currentModLoadPhaseProvider, this.Inject);
 		this.BankManager = new(currentModLoadPhaseProvider, this.Inject);
 		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
+		this.ModLoaderModManifest = modLoaderModManifest;
 
 		AudioPatches.OnPlaySong += this.OnPlaySong;
+
+		this.PreloadVanillaBank();
 	}
 
 	private static string StandardizeUniqueName(string uniqueName)
@@ -70,9 +82,9 @@ internal sealed class AudioManager
 	private void HandleAllBanks()
 	{
 		if (Audio.inst is not { } audio)
-			return;
+			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is not yet initialized");
 		if (!audio.didLoadBanks)
-			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.didLoadBanks)} is `false`");
+			return;
 
 		Audio.Catch(audio.fmodStudioSystem.getBankList(out var banks));
 		foreach (var bank in banks)
@@ -94,6 +106,22 @@ internal sealed class AudioManager
 			this.IdToEventSounds[eventId] = entry;
 			this.UniqueNameToEventSounds[eventIdString] = entry;
 		}
+	}
+
+	private void PreloadVanillaBank()
+	{
+		foreach (var field in typeof(Event).GetFields(BindingFlags.Static | BindingFlags.Public))
+		{
+			if (field.FieldType != typeof(GUID))
+				continue;
+			var eventId = (GUID)field.GetValue(null)!;
+			var eventIdString = eventId.ToSystemGuid().ToString();
+			var entry = new EventSoundEntry(this.VanillaModManifest, eventIdString, eventIdString, FSPRO.Bank.Master, eventId);
+			this.IdToEventSounds[eventId] = entry;
+			this.UniqueNameToEventSounds[eventIdString] = entry;
+		}
+
+		this.HandledBanks.Add(FSPRO.Bank.Master);
 	}
 
 	public EventSoundEntry? LookupSoundByEventId(GUID eventId)
@@ -123,9 +151,9 @@ internal sealed class AudioManager
 			return null;
 		
 		if (Audio.inst is not { } audio)
-			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is `null`");
+			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is not yet initialized");
 		if (!audio.didLoadBanks)
-			throw new InvalidOperationException($"{nameof(Audio)}.{nameof(Audio.didLoadBanks)} is `false`");
+			return null;
 		
 		return this.UnvalidatedCreateSongForSound(requester, entry, audio);
 	}
@@ -138,9 +166,9 @@ internal sealed class AudioManager
 			return existingSong;
 		
 		if (Audio.inst is not { } audio)
-			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is `null`");
+			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is not yet initialized");
 		if (!audio.didLoadBanks)
-			throw new InvalidOperationException($"{nameof(Audio)}.{nameof(Audio.didLoadBanks)} is `false`");
+			return null;
 
 		return this.UnvalidatedCreateSongForSound(requester, entry, audio);
 	}
@@ -169,14 +197,26 @@ internal sealed class AudioManager
 	}
 
 	internal void InjectQueuedEntries()
-		=> this.ModSoundManager.InjectQueuedEntries();
+	{
+		this.BankManager.InjectQueuedEntries();
+		this.ModSoundManager.InjectQueuedEntries();
+	}
 
 	private void Inject(ModSoundEntry entry)
 	{
 		if (entry.SoundStorage is not null)
 			return;
-		if (Audio.inst is not { } audio)
-			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is `null`");
+
+		if (Audio.inst is not { didLoadBanks: true } audio)
+		{
+			if (!this.LoggedFailedInjectWarning)
+			{
+				this.LoggedFailedInjectWarning = true;
+				this.LoggerProvider(this.ModLoaderModManifest).LogWarning("Attempted to inject mod audio failed - audio not initialized properly");
+			}
+			return;
+		}
+		
 		if (entry.StreamProvider is null)
 			throw new NullReferenceException($"{nameof(ModSoundEntry)}.{nameof(ModSoundEntry.StreamProvider)} is `null`");
 		
@@ -204,8 +244,15 @@ internal sealed class AudioManager
 
 	private void Inject(BankEntry entry)
 	{
-		if (Audio.inst is not { } audio)
-			throw new NullReferenceException($"{nameof(Audio)}.{nameof(Audio.inst)} is `null`");
+		if (Audio.inst is not { didLoadBanks: true } audio)
+		{
+			if (!this.LoggedFailedInjectWarning)
+			{
+				this.LoggedFailedInjectWarning = true;
+				this.LoggerProvider(this.ModLoaderModManifest).LogWarning("Attempted to inject mod audio failed - audio not initialized properly");
+			}
+			return;
+		}
 		
 		var data = entry.StreamProvider().ToMemoryStream().ToArray();
 
