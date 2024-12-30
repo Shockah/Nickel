@@ -7,6 +7,7 @@
 ### For everyone:
 * Updated the Pintail library, greatly improving mod load times.
 * Fixed the game crashing when setting up a daily run with the Solo Run modifier with any modded characters.
+* The "current pile" indicator icons will no longer display if currently viewing a single pile.
 
 ### For developers:
 * Added `IModHelper.Content.Audio` which allows adding new sounds and music.

@@ -23,7 +23,7 @@ internal static class CardBrowseCurrentPile
 	private static ISpriteEntry InDiscardPileIcon = null!;
 	private static ISpriteEntry InExhaustPileIcon = null!;
 
-	private static bool IsRenderingCardBrowse;
+	private static CardBrowse? RenderedCardBrowse;
 
 	public static void ApplyPatches(IHarmony harmony)
 	{
@@ -110,18 +110,20 @@ internal static class CardBrowseCurrentPile
 	}
 
 	private static void CardBrowse_Render_Prefix(CardBrowse __instance)
-		=> IsRenderingCardBrowse = __instance.subRoute is null;
+		=> RenderedCardBrowse = __instance.subRoute is null ? __instance : null;
 
 	private static void CardBrowse_Render_Finalizer()
-		=> IsRenderingCardBrowse = false;
+		=> RenderedCardBrowse = null;
 
 	private static void Card_Render_Postfix(Card __instance, G g, Vec? posOverride)
 	{
-		if (!IsRenderingCardBrowse)
+		if (RenderedCardBrowse is not { } cardBrowse)
 			return;
 		if (ModEntry.Instance.Settings.ProfileBased.Current.CardBrowseCurrentPile is CardBrowseCurrentPileSetting.Off or CardBrowseCurrentPileSetting.Tooltip)
 			return;
 		if (g.state.route is not Combat combat)
+			return;
+		if (cardBrowse.browseSource is CardBrowse.Source.Codex or CardBrowse.Source.DrawPile or CardBrowse.Source.DiscardPile or CardBrowse.Source.ExhaustPile or CardBrowse.Source.Hand)
 			return;
 		if (GetCardDestinationIcon(GetCardCurrentPile(g.state, combat, __instance)) is not { } icon)
 			return;
@@ -137,11 +139,13 @@ internal static class CardBrowseCurrentPile
 
 	private static void Card_GetAllTooltips_Postfix(Card __instance, G g, ref IEnumerable<Tooltip> __result)
 	{
-		if (!IsRenderingCardBrowse)
+		if (RenderedCardBrowse is not { } cardBrowse)
 			return;
 		if (ModEntry.Instance.Settings.ProfileBased.Current.CardBrowseCurrentPile is CardBrowseCurrentPileSetting.Off or CardBrowseCurrentPileSetting.Icon)
 			return;
 		if (g.state.route is not Combat combat)
+			return;
+		if (cardBrowse.browseSource is CardBrowse.Source.Codex or CardBrowse.Source.DrawPile or CardBrowse.Source.DiscardPile or CardBrowse.Source.ExhaustPile or CardBrowse.Source.Hand)
 			return;
 		if (GetCardDestinationTooltip(GetCardCurrentPile(g.state, combat, __instance)) is not { } tooltip)
 			return;
