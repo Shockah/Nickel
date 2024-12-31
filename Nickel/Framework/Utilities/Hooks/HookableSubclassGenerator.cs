@@ -419,13 +419,10 @@ internal readonly struct GeneratedHookableSubclass<T>
 	public Func<T> Factory { get; init; }
 }
 
-file sealed class HookSubclassStaticGlue(
-	ByParameterDelegateMapper byParameterDelegateMapper,
-	ObjectifiedDelegateMapper objectifiedDelegateMapper
-)
+file sealed class HookSubclassStaticGlue(ByParameterDelegateMapper byParameterDelegateMapper, ObjectifiedDelegateMapper objectifiedDelegateMapper)
 {
-	public ByParameterDelegateMapper ByParameterDelegateMapper { get; } = byParameterDelegateMapper;
-	public ObjectifiedDelegateMapper ObjectifiedDelegateMapper { get; } = objectifiedDelegateMapper;
+	public readonly ByParameterDelegateMapper ByParameterDelegateMapper = byParameterDelegateMapper;
+	public readonly ObjectifiedDelegateMapper ObjectifiedDelegateMapper = objectifiedDelegateMapper;
 	private readonly List<(MethodInfo Method, HookableSubclassMethodResultReducer? ResultReducer, Func<object?[], object?>? InitialValue)> HookedMethods = [];
 
 	public bool TryGetHookedMethod(int hookedMethodIndex, out (MethodInfo Method, HookableSubclassMethodResultReducer? ResultReducer, Func<object?[], object?>? InitialValue) result)
@@ -445,9 +442,7 @@ file sealed class HookSubclassStaticGlue(
 	}
 }
 
-file sealed class HookSubclassGlue(
-	HookSubclassStaticGlue staticGlue
-)
+file sealed class HookSubclassGlue(HookSubclassStaticGlue staticGlue)
 {
 	// TODO: probably move some of it to the StaticGlue for reusage
 	private readonly Dictionary<MethodInfo, OrderedList<Delegate, double>> CompiledDelegates = [];
@@ -560,14 +555,14 @@ file static class TypeExtensions
 {
 	public static IEnumerable<MethodInfo> FindClassMethods(this Type baseType, bool includePrivate, Func<MethodInfo, bool>? filter = null)
 	{
-		filter ??= (_) => true;
+		filter ??= _ => true;
 		return baseType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy | (includePrivate ? BindingFlags.NonPublic : 0))
 			.Where(m => m is { IsVirtual: true, IsFinal: false } && filter(m));
 	}
 
 	public static IEnumerable<MethodInfo> FindInterfaceMethods(this Type baseType, bool includePrivate, Func<MethodInfo, bool>? filter = null)
 	{
-		filter ??= (_) => true;
+		filter ??= _ => true;
 		foreach (var method in baseType.GetMethods(BindingFlags.Instance | BindingFlags.Public | (includePrivate ? BindingFlags.NonPublic : 0)))
 			if (filter(method))
 				yield return method;
