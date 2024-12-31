@@ -7,6 +7,8 @@ namespace Nickel;
 /// Represents a pool of objects of a single type.
 /// </summary>
 /// <param name="factory">A function that creates new objects of the given type.</param>
+/// <param name="onReturn">An optional function that gets called whenever an object is returned to the pool.</param>
+/// <param name="onReuse">An optional function that gets called whenever an object previously returned to the pool is being reused.</param>
 /// <typeparam name="T">The type of objects stored and created by this pool.</typeparam>
 public sealed class Pool<T>(
 	Func<T> factory,
