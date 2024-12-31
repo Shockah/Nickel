@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.8.1
+Released 31 December 2024.
 
 ### For everyone:
 * Nickel is no longer registering special hidden artifacts to make some of its functionality work. This brings Nickel's behavior more in line with vanilla, making seeds compatible between them (as long as no content mods are involved).
