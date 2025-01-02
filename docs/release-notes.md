@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.8.2
+Released 2 January 2025.
 
 * Partially reverted the special hidden artifact registration change, as it caused a different issue. The behavior should still be more in line with vanilla.
 
