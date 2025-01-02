@@ -7,6 +7,7 @@ namespace Nickel;
 
 internal sealed class ModEventManager
 {
+	private readonly IModManifest ModLoaderModManifest;
 	public readonly ManagedEvent<ModLoadPhase> OnModLoadPhaseFinishedEvent;
 	public readonly ManagedEvent<LoadStringsForLocaleEventArgs> OnLoadStringsForLocaleEvent;
 	public readonly ManagedEvent<Exception?> OnGameClosingEvent;
@@ -63,6 +64,7 @@ internal sealed class ModEventManager
 
 	public ModEventManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest modLoaderModManifest)
 	{
+		this.ModLoaderModManifest = modLoaderModManifest;
 		this.CurrentModLoadPhaseProvider = currentModLoadPhaseProvider;
 		this.LoggerProvider = loggerProvider;
 		this.OnModLoadPhaseFinishedEvent = new((_, mod, exception) =>
@@ -141,7 +143,8 @@ internal sealed class ModEventManager
 	}
 
 	private GeneratedHookableSubclass<Artifact> CreateHookableArtifactSubclass()
-		=> new HookableSubclassGenerator().GenerateHookableSubclass<Artifact>(method =>
+	{
+		var subclass = new HookableSubclassGenerator().GenerateHookableSubclass<Artifact>(method =>
 		{
 			if (method.Name == nameof(Artifact.ReplaceSpawnedThing))
 				return (
@@ -170,4 +173,27 @@ internal sealed class ModEventManager
 				);
 			return null;
 		});
+
+		if (this.CurrentModLoadPhaseProvider().Phase == ModLoadPhase.AfterDbInit)
+		{
+			RegisterArtifact();
+		}
+		else
+		{
+			this.OnModLoadPhaseFinishedEvent.Add((_, phase) =>
+			{
+				if (phase == ModLoadPhase.AfterDbInit)
+					RegisterArtifact();
+			}, this.ModLoaderModManifest);
+		}
+		return subclass;
+
+		void RegisterArtifact()
+			=> DB.artifactMetas[subclass.Type.Name] = new()
+			{
+				owner = Deck.colorless,
+				unremovable = true,
+				pools = [ArtifactPool.Unreleased]
+			};
+	}
 }
