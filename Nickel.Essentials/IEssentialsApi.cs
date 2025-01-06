@@ -39,7 +39,7 @@ public interface IEssentialsApi
 	/// Checks whether the given type represents an EXE card type (see <a href="https://cobaltcore.wiki.gg/wiki/CAT">CAT</a>).
 	/// </summary>
 	/// <param name="type">The type.</param>
-	/// <returns>whether the given type represents an EXE card type.</returns>
+	/// <returns>Whether the given type represents an EXE card type.</returns>
 	bool IsExeCardType(Type type);
 
 	/// <summary>The <see cref="UK"/> part of a <see cref="UIKey"/> used by the button that toggles between showing a list of ships on the <see cref="NewRunOptions"/> screen.</summary>
