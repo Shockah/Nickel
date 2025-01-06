@@ -62,6 +62,7 @@ public sealed class ModEntry : SimpleMod
 						() => package.Manifest.DisplayName ?? package.Manifest.UniqueName,
 						this.Settings.ProfileBased
 					),
+					ArtifactCodexCategories.MakeSettings(api),
 					CrewSelection.MakeSettings(api),
 					StarterDeckPreview.MakeSettings(api),
 					ExeBlacklist.MakeSettings(api),
@@ -74,6 +75,7 @@ public sealed class ModEntry : SimpleMod
 		);
 
 		var harmony = helper.Utilities.Harmony;
+		ArtifactCodexCategories.ApplyPatches(harmony);
 		CardBrowseCurrentPile.ApplyPatches(harmony);
 		CardBrowseOrderSortMode.ApplyPatches(harmony);
 		CardCodexFiltering.ApplyPatches(harmony);

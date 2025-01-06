@@ -1,4 +1,20 @@
 {
+	"artifactCodexCategories": {
+		"shipCategory": {
+			"setting": {
+				"name": "Ship artifact codex category",
+				"description": "Whether ship-specific artifacts should be moved to their own category in the codex."
+			},
+			"title": "Ship"
+		},
+		"eventCategory": {
+			"setting": {
+				"name": "Event artifact codex category",
+				"description": "Whether event artifacts should be moved to their own category in the codex."
+			},
+			"title": "Event"
+		}
+	},
 	"cardBrowseCurrentPile": {
 		"setting": {
 			"name": "Show card pile",
