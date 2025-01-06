@@ -9,13 +9,17 @@ internal sealed class ShipManager
 	private readonly IModManifest VanillaModManifest;
 	private readonly AfterDbInitManager<Entry> Manager;
 	private readonly Dictionary<string, Entry> UniqueNameToEntry = [];
+	private readonly Dictionary<string, StarterShip> VanillaShips;
 
 	public ShipManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
 	{
 		this.VanillaModManifest = vanillaModManifest;
 		this.Manager = new(currentModLoadPhaseProvider, this.Inject);
+		
 		StoryVarsPatches.OnGetUnlockedShips += this.OnGetUnlockedShips;
 		ArtifactRewardPatches.OnGetBlockedArtifacts += this.OnGetBlockedArtifacts;
+
+		this.VanillaShips = StarterShip.ships.ToDictionary();
 	}
 
 	private void OnGetUnlockedShips(object? _, HashSet<string> unlockedShips)
@@ -62,7 +66,38 @@ internal sealed class ShipManager
 	}
 
 	public IShipEntry? LookupByUniqueName(string uniqueName)
-		=> this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
+	{
+		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var entry))
+			return entry;
+
+		if (this.VanillaShips.TryGetValue(uniqueName, out var ship))
+		{
+			var partsChassisSpr = Enum.Parse<Spr>("parts_chassis");
+			entry = new Entry(this.VanillaModManifest, uniqueName, new()
+			{
+				Ship = ship,
+				UnderChassisSprite = ship.ship.chassisUnder is { } chassisUnder ? DB.parts.GetValueOrDefault(chassisUnder, partsChassisSpr) : partsChassisSpr,
+				OverChassisSprite = ship.ship.chassisOver is { } chassisOver ? DB.parts.GetValueOrDefault(chassisOver) : null,
+				StartLocked = uniqueName != "artemis",
+				Name = _ => Loc.T($"ship.{uniqueName}.name"),
+				Description = _ => Loc.T($"ship.{uniqueName}.desc"),
+				ExclusiveArtifactTypes = uniqueName switch
+				{
+					"artemis" => new HashSet<Type> { typeof(HunterWings) },
+					"ares" => new HashSet<Type> { typeof(AresCannonV2), typeof(ControlRodsV2) },
+					"jupiter" => new HashSet<Type> { typeof(JupiterDroneHubV2), typeof(JupiterDroneHubV3), typeof(JupiterDroneHubV4), typeof(JupiterDroneHubV5), typeof(RadarSubwoofer) },
+					"gemini" => new HashSet<Type> { typeof(GeminiCoreBooster) },
+					"boat" => new HashSet<Type> { typeof(TideRunnerAnchorV2) },
+					_ => null
+				},
+			});
+
+			this.UniqueNameToEntry[uniqueName] = entry;
+			return entry;
+		}
+		
+		return null;
+	}
 
 	private void Inject(Entry entry)
 	{

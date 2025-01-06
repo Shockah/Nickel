@@ -25,6 +25,7 @@ internal sealed class CharacterManager
 	private readonly Dictionary<string, NonPlayableCharacterEntry> UniqueNameToNonPlayableCharacterEntry = [];
 	private readonly Dictionary<Deck, PlayableCharacterEntry> DeckToCharacterEntry = [];
 	private readonly Dictionary<string, ICharacterEntryV2> CharacterTypeToCharacterEntry = [];
+	private readonly List<string> VanillaPlayableCharacterDeckNames;
 
 	public CharacterManager(
 		Func<ModLoadPhaseState> currentModLoadPhaseProvider,
@@ -57,6 +58,8 @@ internal sealed class CharacterManager
 		StatePatches.OnModifyPotentialExeCards += this.OnModifyPotentialExeCards;
 		StoryVarsPatches.OnGetUnlockedChars += this.OnGetUnlockedChars;
 		WizardPatches.OnGetAssignableStatuses += this.OnGetAssignableStatuses;
+
+		this.VanillaPlayableCharacterDeckNames = StarterDeck.starterSets.Keys.Select(d => d.Key()).ToList();
 	}
 
 	internal void InjectQueuedEntries()
@@ -96,9 +99,9 @@ internal sealed class CharacterManager
 		};
 		SingleLocalizationProvider description = _ => Loc.T($"char.{deck}.desc");
 		
-		return new PlayableCharacterEntry(
+		var result = new PlayableCharacterEntry(
 			modOwner: this.VanillaModManifest,
-			uniqueName: Enum.GetName(deck)!,
+			uniqueName: key,
 			v1: new()
 			{
 				Deck = deck,
@@ -158,6 +161,8 @@ internal sealed class CharacterManager
 			},
 			missingStatus: this.Statuses.LookupByStatus(StatusMeta.deckToMissingStatus[deck])!
 		);
+		this.UniqueNameToPlayableCharacterEntry[key] = result;
+		return result;
 	}
 
 	private IStatusEntry RegisterMissingStatus(
@@ -230,7 +235,18 @@ internal sealed class CharacterManager
 	}
 
 	public ICharacterEntry? LookupByUniqueName(string uniqueName)
-		=> this.UniqueNameToPlayableCharacterEntry.GetValueOrDefault(uniqueName);
+	{
+		if (this.UniqueNameToPlayableCharacterEntry.TryGetValue(uniqueName, out var entry))
+			return entry;
+
+		if (this.VanillaPlayableCharacterDeckNames.Contains(uniqueName))
+		{
+			var deck = Enum.Parse<Deck>(uniqueName);
+			return this.CreateForVanilla(deck);
+		}
+
+		return null;
+	}
 
 	public PlayableCharacterEntry RegisterCharacter(IModManifest owner, string name, CharacterConfiguration v1)
 	{
@@ -343,7 +359,18 @@ internal sealed class CharacterManager
 	}
 
 	public ICharacterEntryV2? LookupByUniqueNameV2(string uniqueName)
-		=> this.UniqueNameToPlayableCharacterEntry.GetValueOrDefault(uniqueName);
+	{
+		if (this.UniqueNameToPlayableCharacterEntry.TryGetValue(uniqueName, out var entry))
+			return entry;
+
+		if (this.VanillaPlayableCharacterDeckNames.Contains(uniqueName))
+		{
+			var deck = Enum.Parse<Deck>(uniqueName);
+			return this.CreateForVanilla(deck);
+		}
+
+		return null;
+	}
 	
 	public PlayableCharacterEntry RegisterPlayableCharacterV2(IModManifest owner, string localName, PlayableCharacterConfigurationV2 v2, CharacterConfiguration? maybeV1 = null)
 	{

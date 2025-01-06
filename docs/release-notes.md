@@ -2,6 +2,14 @@
 
 # Release notes
 
+## Upcoming release
+
+### For everyone:
+* Updated the Pintail library, improving framerate.
+
+### For developers:
+* The `IModCharacters(.V2).LookupByUniqueName` and `IModShips.LookupByUniqueName` methods now return correct information for vanilla entries.
+
 ## 1.8.2
 Released 2 January 2025.
 
