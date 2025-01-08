@@ -448,19 +448,24 @@ internal class CardTraitManager
 		StatePatches.OnUpdate += this.OnStateUpdate;
 	}
 
-	private void OnRenderTraits(object? sender, CardPatches.TraitRenderEventArgs e)
+	private void OnRenderTraits(object? sender, ref CardPatches.TraitRenderEventArgs e)
 	{
 		foreach (var trait in this.GetActiveCardTraits(e.State, e.Card).Where(t => t is not VanillaEntry))
 			if (trait.Configuration.Icon(e.State, e.Card) is { } icon)
 				Draw.Sprite(icon, e.Position.x, e.Position.y - 8 * e.CardTraitIndex++);
 	}
 
-	private void OnGetCardTooltips(object? sender, CardPatches.TooltipsEventArgs e)
-		=> e.TooltipsEnumerator = e.TooltipsEnumerator.Concat(
+	private void OnGetCardTooltips(object? sender, ref CardPatches.TooltipsEventArgs e)
+	{
+		var state = e.State;
+		var card = e.Card;
+		
+		e.TooltipsEnumerator = e.TooltipsEnumerator.Concat(
 			this.GetActiveCardTraits(e.State, e.Card)
 				.Where(t => t is not VanillaEntry)
-				.SelectMany(t => t.Configuration.Tooltips?.Invoke(e.State, e.Card) ?? [])
+				.SelectMany(t => t.Configuration.Tooltips?.Invoke(state, card) ?? [])
 		);
+	}
 
 	private void OnGettingDataWithOverrides(object? sender, CardPatches.GettingDataWithOverridesEventArgs e)
 	{
@@ -471,7 +476,7 @@ internal class CardTraitManager
 		this.UpdateModDataFromFieldsIfNeeded(e.Card);
 	}
 
-	private void OnMidGetDataWithOverrides(object? sender, CardPatches.MidGetDataWithOverridesEventArgs e)
+	private void OnMidGetDataWithOverrides(object? sender, ref CardPatches.MidGetDataWithOverridesEventArgs e)
 	{
 		var traitState = (Dictionary<ICardTraitEntry, CardTraitState>)this.GetAllCardTraits(e.State, e.Card);
 		e.CurrentData.exhaust = traitState[this.ExhaustCardTrait].IsActive;

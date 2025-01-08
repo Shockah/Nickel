@@ -120,7 +120,7 @@ internal sealed class EnemyManager
 			localizations[$"enemy.{entry.UniqueName}.name"] = name;
 	}
 
-	private void OnKey(object? _, AIPatches.KeyEventArgs e)
+	private void OnKey(object? _, ref AIPatches.KeyEventArgs e)
 	{
 		if (e.AI.GetType().Assembly == typeof(AI).Assembly)
 			return;

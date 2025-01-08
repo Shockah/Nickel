@@ -95,7 +95,7 @@ internal sealed class SpriteManager
 	public ISpriteEntry? LookupByUniqueName(string uniqueName)
 		=> this.UniqueNameToEntry.GetValueOrDefault(StandardizeUniqueName(uniqueName));
 
-	private void OnGetTexture(object? _, SpriteLoaderPatches.GetTextureEventArgs e)
+	private void OnGetTexture(object? _, ref SpriteLoaderPatches.GetTextureEventArgs e)
 	{
 		if (e.Texture is not null)
 			return;

@@ -3,7 +3,6 @@ using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Mono.Cecil;
 using Nanoray.PluginManager.Cecil;
-using Nanoray.Shrike;
 using Nickel.Common;
 using System;
 using System.Collections.Generic;
@@ -456,8 +455,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 	private void OnLoadStringsForLocale(object? _, LoadStringsForLocaleEventArgs e)
 		=> this.ModManager.ContentManager?.InjectLocalizations(e.Locale, e.Localizations);
 
-	private void OnTryInitSteam(object? _, StructRef<bool> initSteam)
-		=> initSteam.Value = this.LaunchArguments.InitSteam ?? true;
+	private void OnTryInitSteam(object? _, ref bool initSteam)
+		=> initSteam = this.LaunchArguments.InitSteam ?? true;
 
 	private static DirectoryInfo GetOrCreateDefaultInternalModLibraryDirectory()
 	{

@@ -165,7 +165,7 @@ internal sealed class DeckManager
 		localizations[$"char.{key}.name"] = name;
 	}
 	
-	private void OnModifyShineColor(object? _, CardPatches.ModifyShineColorEventArgs e)
+	private void OnModifyShineColor(object? _, ref CardPatches.ModifyShineColorEventArgs e)
 	{
 		if (this.LookupByDeck(e.Card.GetMeta().deck) is not { } entry)
 			return;

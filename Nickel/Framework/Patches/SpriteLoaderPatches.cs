@@ -8,10 +8,9 @@ namespace Nickel;
 
 internal static class SpriteLoaderPatches
 {
-	internal static EventHandler<GetTextureEventArgs>? OnGetTexture;
+	internal static RefEventHandler<GetTextureEventArgs>? OnGetTexture;
 
 	private static readonly HashSet<Spr> DynamicTextureSprites = [];
-	private static readonly Pool<GetTextureEventArgs> GetTextureEventArgsPool = new(() => new());
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -26,26 +25,24 @@ internal static class SpriteLoaderPatches
 			return false;
 		__result = null;
 		
-		
-		Texture2D? result = null;
-		GetTextureEventArgsPool.Do(args =>
+		var args = new GetTextureEventArgs
 		{
-			args.Sprite = id;
-			args.Texture = result;
-			OnGetTexture?.Invoke(null, args);
-			
-			result = args.Texture;
-			if (args.IsDynamic)
-				DynamicTextureSprites.Add(id);
-		});
-		__result = result;
+			Sprite = id,
+			Texture = __result,
+		};
+		OnGetTexture?.Invoke(null, ref args);
+
+		if (args.IsDynamic)
+			DynamicTextureSprites.Add(id);
+		
+		__result = args.Texture;
 		return __result is null;
 	}
 
-	internal sealed class GetTextureEventArgs
+	internal struct GetTextureEventArgs
 	{
-		public Spr Sprite { get; internal set; }
-		public Texture2D? Texture { get; set; }
-		public bool IsDynamic { get; set; }
+		public required Spr Sprite { get; init; }
+		public required Texture2D? Texture;
+		public bool IsDynamic;
 	}
 }

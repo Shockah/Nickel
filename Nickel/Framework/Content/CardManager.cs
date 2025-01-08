@@ -103,7 +103,7 @@ internal sealed class CardManager
 			localizations[$"card.{entry.UniqueName}.name"] = name;
 	}
 
-	private void OnKey(object? _, CardPatches.KeyEventArgs e)
+	private void OnKey(object? _, ref CardPatches.KeyEventArgs e)
 	{
 		var cardType = e.Card.GetType();
 		if (cardType.Assembly == typeof(Card).Assembly)

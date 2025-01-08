@@ -12,20 +12,13 @@ namespace Nickel;
 
 internal static class CardPatches
 {
-	internal static EventHandler<KeyEventArgs>? OnKey;
-	internal static EventHandler<TooltipsEventArgs>? OnGetTooltips;
-	internal static EventHandler<ModifyShineColorEventArgs>? OnModifyShineColor;
-	internal static EventHandler<TraitRenderEventArgs>? OnRenderTraits;
+	internal static RefEventHandler<KeyEventArgs>? OnKey;
+	internal static RefEventHandler<TooltipsEventArgs>? OnGetTooltips;
+	internal static RefEventHandler<ModifyShineColorEventArgs>? OnModifyShineColor;
+	internal static RefEventHandler<TraitRenderEventArgs>? OnRenderTraits;
 	internal static EventHandler<GettingDataWithOverridesEventArgs>? OnGettingDataWithOverrides;
-	internal static EventHandler<MidGetDataWithOverridesEventArgs>? OnMidGetDataWithOverrides;
+	internal static RefEventHandler<MidGetDataWithOverridesEventArgs>? OnMidGetDataWithOverrides;
 	internal static EventHandler<Card>? OnCopyingWithNewId;
-	
-	private static readonly Pool<KeyEventArgs> KeyEventArgsPool = new(() => new());
-	private static readonly Pool<TooltipsEventArgs> TooltipsEventArgsPool = new(() => new());
-	private static readonly Pool<ModifyShineColorEventArgs> ModifyShineColorEventArgsPool = new(() => new());
-	private static readonly Pool<TraitRenderEventArgs> TraitRenderEventArgsPool = new(() => new());
-	private static readonly Pool<GettingDataWithOverridesEventArgs> GettingDataWithOverridesEventArgsPool = new(() => new());
-	private static readonly Pool<MidGetDataWithOverridesEventArgs> MidGetDataWithOverridesEventArgsPool = new(() => new());
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -59,15 +52,13 @@ internal static class CardPatches
 
 	private static void Key_Postfix(Card __instance, ref string __result)
 	{
-		var result = __result;
-		KeyEventArgsPool.Do(args =>
+		var args = new KeyEventArgs
 		{
-			args.Card = __instance;
-			args.Key = result;
-			OnKey?.Invoke(null, args);
-			result = args.Key;
-		});
-		__result = result;
+			Card = __instance,
+			Key = __result,
+		};
+		OnKey?.Invoke(null, ref args);
+		__result = args.Key;
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -149,53 +140,47 @@ internal static class CardPatches
 
 	private static Color Render_Transpiler_ModifyShineColor(Color shineColor, Card card, State state)
 	{
-		ModifyShineColorEventArgsPool.Do(args =>
+		var args = new ModifyShineColorEventArgs
 		{
-			args.Card = card;
-			args.State = state;
-			args.ShineColor = shineColor;
-			OnModifyShineColor?.Invoke(null, args);
-			shineColor = args.ShineColor;
-		});
-		return shineColor;
+			Card = card,
+			State = state,
+			ShineColor = shineColor,
+		};
+		OnModifyShineColor?.Invoke(null, ref args);
+		return args.ShineColor;
 	}
 
-	private static void Render_Transpiler_RenderTraits(Card card, State state, ref int cardTraitIndexRef, Vec vec)
+	private static void Render_Transpiler_RenderTraits(Card card, State state, ref int cardTraitIndex, Vec vec)
 	{
-		var cardTraitIndex = cardTraitIndexRef;
-		TraitRenderEventArgsPool.Do(args =>
+		var args = new TraitRenderEventArgs
 		{
-			args.Card = card;
-			args.State = state;
-			args.CardTraitIndex = cardTraitIndex;
-			args.Position = vec;
-			OnRenderTraits?.Invoke(null, args);
-			cardTraitIndex = args.CardTraitIndex;
-		});
-		cardTraitIndexRef = cardTraitIndex;
+			Card = card,
+			State = state,
+			CardTraitIndex = cardTraitIndex,
+			Position = vec,
+		};
+		OnRenderTraits?.Invoke(null, ref args);
+		cardTraitIndex = args.CardTraitIndex;
 	}
 
 	private static void GetAllTooltips_Postfix(Card __instance, State s, bool showCardTraits, ref IEnumerable<Tooltip> __result)
 	{
-		var result = __result;
-		TooltipsEventArgsPool.Do(args =>
+		var args = new TooltipsEventArgs
 		{
-			args.Card = __instance;
-			args.State = s;
-			args.ShowCardTraits = showCardTraits;
-			args.TooltipsEnumerator = result;
-			OnGetTooltips?.Invoke(null, args);
-			result = args.TooltipsEnumerator;
-		});
-		__result = result;
+			Card = __instance,
+			State = s,
+			ShowCardTraits = showCardTraits,
+			TooltipsEnumerator = __result,
+		};
+		OnGetTooltips?.Invoke(null, ref args);
+		__result = args.TooltipsEnumerator;
 	}
 
 	private static void GetDataWithOverrides_Prefix(Card __instance, State state)
-		=> GettingDataWithOverridesEventArgsPool.Do(args =>
+		=> OnGettingDataWithOverrides?.Invoke(null, new GettingDataWithOverridesEventArgs
 		{
-			args.Card = __instance;
-			args.State = state;
-			OnGettingDataWithOverrides?.Invoke(null, args);
+			Card = __instance,
+			State = state,
 		});
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -225,64 +210,62 @@ internal static class CardPatches
 		}
 	}
 
-	private static void GetDataWithOverrides_Transpiler_ModifyData(Card card, State state, ref CardData dataRef)
+	private static void GetDataWithOverrides_Transpiler_ModifyData(Card card, State state, ref CardData data)
 	{
-		var data = dataRef;
-		MidGetDataWithOverridesEventArgsPool.Do(args =>
+		var args = new MidGetDataWithOverridesEventArgs
 		{
-			args.Card = card;
-			args.State = state;
-			args.InitialData = data;
-			args.CurrentData = data;
-			OnMidGetDataWithOverrides?.Invoke(null, args);
-			data = args.CurrentData;
-		});
-		dataRef = data;
+			Card = card,
+			State = state,
+			InitialData = data,
+			CurrentData = data,
+		};
+		OnMidGetDataWithOverrides?.Invoke(null, ref args);
+		data = args.CurrentData;
 	}
 
 	private static void CopyWithNewId_Prefix(Card __instance)
 		=> OnCopyingWithNewId?.Invoke(null, __instance);
 
-	internal sealed class KeyEventArgs
+	internal struct KeyEventArgs
 	{
-		public Card Card { get; internal set; } = null!;
-		public string Key { get; set; } = null!;
+		public required Card Card { get; init; }
+		public required string Key;
 	}
 
-	internal sealed class TooltipsEventArgs
+	internal struct TooltipsEventArgs
 	{
-		public Card Card { get; internal set; } = null!;
-		public State State { get; internal set; } = null!;
-		public bool ShowCardTraits { get; internal set; }
-		public IEnumerable<Tooltip> TooltipsEnumerator { get; set; } = null!;
+		public required Card Card { get; init; }
+		public required State State { get; init; }
+		public required bool ShowCardTraits { get; init; }
+		public required IEnumerable<Tooltip> TooltipsEnumerator;
 	}
 
-	internal sealed class ModifyShineColorEventArgs
+	internal struct ModifyShineColorEventArgs
 	{
-		public Card Card { get; internal set; } = null!;
-		public State State { get; internal set; } = null!;
-		public Color ShineColor { get; set; }
+		public required Card Card { get; init; }
+		public required State State { get; init; }
+		public required Color ShineColor;
 	}
 
-	internal sealed class TraitRenderEventArgs
+	internal struct TraitRenderEventArgs
 	{
-		public Card Card { get; internal set; } = null!;
-		public State State { get; internal set; } = null!;
-		public int CardTraitIndex { get; set; }
-		public Vec Position { get; set; }
+		public required Card Card { get; init; }
+		public required State State { get; init; }
+		public required int CardTraitIndex;
+		public required Vec Position;
 	}
 
-	internal sealed class GettingDataWithOverridesEventArgs
+	internal readonly struct GettingDataWithOverridesEventArgs
 	{
-		public Card Card { get; internal set; } = null!;
-		public State State { get; internal set; } = null!;
+		public required Card Card { get; init; }
+		public required State State { get; init; }
 	}
 
-	internal sealed class MidGetDataWithOverridesEventArgs
+	internal struct MidGetDataWithOverridesEventArgs
 	{
-		public Card Card { get; internal set; } = null!;
-		public State State { get; internal set; } = null!;
-		public CardData InitialData { get; internal set; }
-		public CardData CurrentData;
+		public required Card Card { get; init; }
+		public required State State { get; init; }
+		public required CardData InitialData { get; init; }
+		public required CardData CurrentData;
 	}
 }

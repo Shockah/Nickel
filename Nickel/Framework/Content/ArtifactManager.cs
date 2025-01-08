@@ -104,7 +104,7 @@ internal sealed class ArtifactManager
 			localizations[$"artifact.{entry.UniqueName}.desc"] = description;
 	}
 
-	private void OnKey(object? _, ArtifactPatches.KeyEventArgs e)
+	private void OnKey(object? _, ref ArtifactPatches.KeyEventArgs e)
 	{
 		if (e.Artifact.GetType().Assembly == typeof(Artifact).Assembly)
 			return;

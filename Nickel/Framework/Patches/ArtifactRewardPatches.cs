@@ -14,8 +14,6 @@ namespace Nickel;
 internal static class ArtifactRewardPatches
 {
 	internal static EventHandler<GetBlockedArtifactsEventArgs>? OnGetBlockedArtifacts;
-	
-	private static readonly Pool<GetBlockedArtifactsEventArgs> GetBlockedArtifactsEventArgsPool = new(() => new());
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -33,14 +31,12 @@ internal static class ArtifactRewardPatches
 
 	private static void GetBlockedArtifacts_Postfix(State s, ref HashSet<Type> __result)
 	{
-		var result = __result;
-		GetBlockedArtifactsEventArgsPool.Do(args =>
+		var args = new GetBlockedArtifactsEventArgs
 		{
-			args.State = s;
-			args.BlockedArtifacts = result;
-			OnGetBlockedArtifacts?.Invoke(null, args);
-		});
-		__result = result;
+			State = s,
+			BlockedArtifacts = __result,
+		};
+		OnGetBlockedArtifacts?.Invoke(null, args);
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -68,9 +64,9 @@ internal static class ArtifactRewardPatches
 	private static string GetOffering_Delegate_Transpiler_GetKey(Type type)
 		=> ((Artifact)Activator.CreateInstance(type)!).Key();
 
-	internal sealed class GetBlockedArtifactsEventArgs
+	internal readonly struct GetBlockedArtifactsEventArgs
 	{
-		public State State { get; internal set; } = null!;
-		public HashSet<Type> BlockedArtifacts { get; internal set; } = null!;
+		public required State State { get; init; }
+		public required HashSet<Type> BlockedArtifacts { get; init; }
 	}
 }

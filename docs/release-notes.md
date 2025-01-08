@@ -5,8 +5,9 @@
 ## Upcoming release
 
 ### For everyone:
-* Updated the Pintail library, improving framerate.
 * The artifact codex now has separate categories for ship-specific and event artifacts.
+* Updated the Pintail library, improving framerate.
+* Other small performance improvements.
 
 ### For developers:
 * The `IModCharacters(.V2).LookupByUniqueName` and `IModShips.LookupByUniqueName` methods now return correct information for vanilla entries.

@@ -260,7 +260,7 @@ internal sealed class AudioManager
 		this.HandleBank(entry.Owner, bank);
 	}
 	
-	private void OnPlaySong(object? _, AudioPatches.PlaySongArgs e)
+	private void OnPlaySong(object? _, ref AudioPatches.PlaySongArgs e)
 	{
 		if (!this.SongToIds.TryGetValue(e.MusicState.scene, out var actualEventId))
 			return;

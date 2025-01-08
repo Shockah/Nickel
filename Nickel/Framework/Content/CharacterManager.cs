@@ -675,7 +675,7 @@ internal sealed class CharacterManager
 		}
 	}
 
-	private void OnModifyBabblePeriod(object? _, ShoutPatches.ModifyBabblePeriodEventArgs e)
+	private void OnModifyBabblePeriod(object? _, ref ShoutPatches.ModifyBabblePeriodEventArgs e)
 	{
 		if (!this.CharacterTypeToCharacterEntry.TryGetValue(e.Shout.who, out var characterEntry))
 			return;
@@ -684,7 +684,7 @@ internal sealed class CharacterManager
 		e.Period = period;
 	}
 
-	private void OnModifyBabbleSound(object? _, ShoutPatches.ModifyBabbleSoundEventArgs e)
+	private void OnModifyBabbleSound(object? _, ref ShoutPatches.ModifyBabbleSoundEventArgs e)
 	{
 		if (!this.CharacterTypeToCharacterEntry.TryGetValue(e.Shout.who, out var characterEntry))
 			return;
@@ -693,7 +693,7 @@ internal sealed class CharacterManager
 		e.Sound = sound;
 	}
 
-	private void OnModifyPotentialExeCards(object? _, StatePatches.ModifyPotentialExeCardsEventArgs e)
+	private void OnModifyPotentialExeCards(object? _, ref StatePatches.ModifyPotentialExeCardsEventArgs e)
 	{
 		foreach (var character in this.UniqueNameToPlayableCharacterEntry.Values)
 		{
@@ -723,7 +723,7 @@ internal sealed class CharacterManager
 		}
 	}
 
-	private void OnGetAssignableStatuses(object? _, WizardPatches.GetAssignableStatusesEventArgs e)
+	private void OnGetAssignableStatuses(object? _, ref WizardPatches.GetAssignableStatusesEventArgs e)
 	{
 		e.Statuses.RemoveAll(s => s == Status.heat);
 		foreach (var character in e.State.characters)

@@ -48,7 +48,7 @@ internal sealed class StatusManager
 		}
 	}
 
-	private void OnShouldStatusFlash(object? _, ShipPatches.ShouldStatusFlashEventArgs e)
+	private void OnShouldStatusFlash(object? _, ref ShipPatches.ShouldStatusFlashEventArgs e)
 	{
 		if (this.LookupByStatus(e.Status) is not { } entry)
 			return;
@@ -57,7 +57,7 @@ internal sealed class StatusManager
 		e.ShouldFlash = shouldFlash(e.State, e.Combat, e.Ship, e.Status);
 	}
 
-	private void OnTryGetIcon(object? _, TTGlossaryPatches.TryGetIconEventArgs e)
+	private void OnTryGetIcon(object? _, ref TTGlossaryPatches.TryGetIconEventArgs e)
 	{
 		var keySplit = e.Glossary.key.Split(".");
 		if (keySplit.Length < 2)

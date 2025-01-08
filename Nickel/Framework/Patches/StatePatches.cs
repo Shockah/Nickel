@@ -13,15 +13,11 @@ namespace Nickel;
 
 internal static class StatePatches
 {
-	internal static EventHandler<EnumerateAllArtifactsEventArgs>? OnEnumerateAllArtifacts;
-	internal static EventHandler<ModifyPotentialExeCardsEventArgs>? OnModifyPotentialExeCards;
-	internal static EventHandler<LoadEventArgs>? OnLoad;
+	internal static RefEventHandler<EnumerateAllArtifactsEventArgs>? OnEnumerateAllArtifacts;
+	internal static RefEventHandler<ModifyPotentialExeCardsEventArgs>? OnModifyPotentialExeCards;
+	internal static RefEventHandler<LoadEventArgs>? OnLoad;
 	internal static EventHandler<State>? OnUpdating;
 	internal static EventHandler<State>? OnUpdate;
-	
-	private static readonly Pool<EnumerateAllArtifactsEventArgs> EnumerateAllArtifactsEventArgsPool = new(() => new());
-	private static readonly Pool<ModifyPotentialExeCardsEventArgs> ModifyPotentialExeCardsEventArgsPool = new(() => new());
-	private static readonly Pool<LoadEventArgs> LoadEventArgsPool = new(() => new());
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -55,15 +51,13 @@ internal static class StatePatches
 
 	private static void EnumerateAllArtifacts_Postfix(State __instance, ref List<Artifact> __result)
 	{
-		var result = __result;
-		EnumerateAllArtifactsEventArgsPool.Do(args =>
+		var args = new EnumerateAllArtifactsEventArgs
 		{
-			args.State = __instance;
-			args.Artifacts = result;
-			OnEnumerateAllArtifacts?.Invoke(null, args);
-			result = args.Artifacts;
-		});
-		__result = result;
+			State = __instance,
+			Artifacts = __result
+		};
+		OnEnumerateAllArtifacts?.Invoke(null, ref args);
+		__result = args.Artifacts;
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -99,17 +93,15 @@ internal static class StatePatches
 		}
 	}
 
-	private static void State_PopulateRun_Delegate_Transpiler_ModifyPotentialExeCards(IEnumerable<Deck> chars, ref List<Card> cardsRef)
+	private static void State_PopulateRun_Delegate_Transpiler_ModifyPotentialExeCards(IEnumerable<Deck> chars, ref List<Card> cards)
 	{
-		var cards = cardsRef;
-		ModifyPotentialExeCardsEventArgsPool.Do(args =>
+		var args = new ModifyPotentialExeCardsEventArgs
 		{
-			args.Characters = chars.ToHashSet();
-			args.ExeCards = cards;
-			OnModifyPotentialExeCards?.Invoke(null, args);
-			cards = args.ExeCards;
-		});
-		cardsRef = cards;
+			Characters = chars.ToHashSet(),
+			ExeCards = cards,
+		};
+		OnModifyPotentialExeCards?.Invoke(null, ref args);
+		cards = args.ExeCards;
 	}
 
 	private static void SaveIfRelease_Postfix(State __instance)
@@ -122,15 +114,13 @@ internal static class StatePatches
 
 	private static void Load_Postfix(int slot, ref State.SaveSlot __result)
 	{
-		var result = __result;
-		LoadEventArgsPool.Do(args =>
+		var args = new LoadEventArgs
 		{
-			args.Slot = slot;
-			args.Data = result;
-			OnLoad?.Invoke(null, args);
-			result = args.Data;
-		});
-		__result = result;
+			Slot = slot,
+			Data = __result,
+		};
+		OnLoad?.Invoke(null, ref args);
+		__result = args.Data;
 	}
 
 	private static void Update_Prefix(State __instance)
@@ -139,21 +129,21 @@ internal static class StatePatches
 	private static void Update_Postfix(State __instance)
 		=> OnUpdate?.Invoke(null, __instance);
 
-	internal sealed class EnumerateAllArtifactsEventArgs
+	internal struct EnumerateAllArtifactsEventArgs
 	{
-		public State State { get; internal set; } = null!;
-		public List<Artifact> Artifacts { get; set; } = null!;
+		public required State State { get; init; }
+		public required List<Artifact> Artifacts;
 	}
 
-	internal sealed class ModifyPotentialExeCardsEventArgs
+	internal struct ModifyPotentialExeCardsEventArgs
 	{
-		public HashSet<Deck> Characters { get; internal set; } = null!;
-		public List<Card> ExeCards { get; set; } = null!;
+		public required HashSet<Deck> Characters { get; init; }
+		public required List<Card> ExeCards;
 	}
 
-	internal sealed class LoadEventArgs
+	internal struct LoadEventArgs
 	{
-		public int Slot { get; internal set; }
-		public State.SaveSlot Data { get; set; } = null!;
+		public required int Slot { get; init; }
+		public required State.SaveSlot Data;
 	}
 }

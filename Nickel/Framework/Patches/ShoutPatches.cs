@@ -14,11 +14,8 @@ namespace Nickel;
 
 internal static class ShoutPatches
 {
-	internal static EventHandler<ModifyBabblePeriodEventArgs>? OnModifyBabblePeriod;
-	internal static EventHandler<ModifyBabbleSoundEventArgs>? OnModifyBabbleSound;
-	
-	private static readonly Pool<ModifyBabblePeriodEventArgs> ModifyBabblePeriodEventArgsPool = new(() => new());
-	private static readonly Pool<ModifyBabbleSoundEventArgs> ModifyBabbleSoundEventArgsPool = new(() => new());
+	internal static RefEventHandler<ModifyBabblePeriodEventArgs>? OnModifyBabblePeriod;
+	internal static RefEventHandler<ModifyBabbleSoundEventArgs>? OnModifyBabbleSound;
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -69,40 +66,41 @@ internal static class ShoutPatches
 	}
 
 	private static double Update_Transpiler_ModifyBabblePeriod(double babblePeriod, Shout shout)
-		=> ModifyBabblePeriodEventArgsPool.Do(args =>
+	{
+		var args = new ModifyBabblePeriodEventArgs
 		{
-			args.Shout = shout;
-			args.Period = babblePeriod;
-			OnModifyBabblePeriod?.Invoke(null, args);
-			return args.Period;
-		});
+			Shout = shout,
+			Period = babblePeriod,
+		};
+		OnModifyBabblePeriod?.Invoke(null, ref args);
+		return args.Period;
+	}
 
 	private static EventInstance? Update_Transpiler_DoPlay(GUID? babbleId, bool release, Shout shout)
 	{
-		var sound = ModifyBabbleSoundEventArgsPool.Do(args =>
+		var args = new ModifyBabbleSoundEventArgs
 		{
-			args.Shout = shout;
-			args.Sound = null;
-			OnModifyBabbleSound?.Invoke(null, args);
-			return args.Sound;
-		});
-
-		if (sound is null)
+			Shout = shout,
+			Sound = null,
+		};
+		OnModifyBabbleSound?.Invoke(null, ref args);
+		
+		if (args.Sound is null)
 			return Audio.Play(babbleId, release);
-
-		var instance = sound.CreateInstance();
+		
+		var instance = args.Sound.CreateInstance();
 		return instance is IEventSoundInstance eventInstance ? eventInstance.Instance : null;
 	}
 
-	internal sealed class ModifyBabblePeriodEventArgs
+	internal struct ModifyBabblePeriodEventArgs
 	{
-		public Shout Shout { get; internal set; } = null!;
-		public double Period { get; set; }
+		public required Shout Shout { get; init; }
+		public required double Period;
 	}
 
-	internal sealed class ModifyBabbleSoundEventArgs
+	internal struct ModifyBabbleSoundEventArgs
 	{
-		public Shout Shout { get; internal set; } = null!;
-		public ISoundEntry? Sound { get; set; }
+		public required Shout Shout { get; init; }
+		public required ISoundEntry? Sound;
 	}
 }

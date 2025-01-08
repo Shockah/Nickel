@@ -7,10 +7,9 @@ namespace Nickel;
 
 internal static class TTGlossaryPatches
 {
-	internal static EventHandler<TryGetIconEventArgs>? OnTryGetIcon;
+	internal static RefEventHandler<TryGetIconEventArgs>? OnTryGetIcon;
 
 	private static readonly Stack<TTGlossary> GlossaryStack = new();
-	private static readonly Pool<TryGetIconEventArgs> TryGetIconEventArgsPool = new(() => new());
 
 	internal static void Apply(Harmony harmony)
 	{
@@ -38,20 +37,18 @@ internal static class TTGlossaryPatches
 		if (!GlossaryStack.TryPeek(out var glossary))
 			return;
 		
-		var result = __result;
-		TryGetIconEventArgsPool.Do(args =>
+		var args = new TryGetIconEventArgs
 		{
-			args.Glossary = glossary;
-			args.Sprite = result;
-			OnTryGetIcon?.Invoke(null, args);
-			result = args.Sprite;
-		});
-		__result = result;
+			Glossary = glossary,
+			Sprite = __result,
+		};
+		OnTryGetIcon?.Invoke(null, ref args);
+		__result = args.Sprite;
 	}
 
-	internal sealed class TryGetIconEventArgs
+	internal struct TryGetIconEventArgs
 	{
-		public TTGlossary Glossary { get; internal set; } = null!;
-		public Spr? Sprite { get; set; }
+		public required TTGlossary Glossary { get; init; }
+		public required Spr? Sprite;
 	}
 }

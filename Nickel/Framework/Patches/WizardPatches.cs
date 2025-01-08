@@ -7,9 +7,7 @@ namespace Nickel;
 
 internal static class WizardPatches
 {
-	internal static EventHandler<GetAssignableStatusesEventArgs>? OnGetAssignableStatuses;
-		
-	private static readonly Pool<GetAssignableStatusesEventArgs> GetAssignableStatusesEventArgsPool = new(() => new());
+	internal static RefEventHandler<GetAssignableStatusesEventArgs>? OnGetAssignableStatuses;
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -20,20 +18,18 @@ internal static class WizardPatches
 
 	private static void GetAssignableStatuses_Postfix(State s, ref List<Status> __result)
 	{
-		var result = __result;
-		GetAssignableStatusesEventArgsPool.Do(args =>
+		var args = new GetAssignableStatusesEventArgs
 		{
-			args.State = s;
-			args.Statuses = result;
-			OnGetAssignableStatuses?.Invoke(null, args);
-			result = args.Statuses;
-		});
-		__result = result;
+			State = s,
+			Statuses = __result,
+		};
+		OnGetAssignableStatuses?.Invoke(null, ref args);
+		__result = args.Statuses;
 	}
 
-	internal sealed class GetAssignableStatusesEventArgs
+	internal struct GetAssignableStatusesEventArgs
 	{
-		public State State { get; internal set; } = null!;
-		public List<Status> Statuses { get; set; } = null!;
+		public required State State { get; init; }
+		public required List<Status> Statuses;
 	}
 }

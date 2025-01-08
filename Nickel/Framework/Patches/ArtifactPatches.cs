@@ -6,9 +6,7 @@ namespace Nickel;
 
 internal static class ArtifactPatches
 {
-	internal static EventHandler<KeyEventArgs>? OnKey;
-	
-	private static readonly Pool<KeyEventArgs> KeyEventArgsPool = new(() => new());
+	internal static RefEventHandler<KeyEventArgs>? OnKey;
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -19,20 +17,18 @@ internal static class ArtifactPatches
 
 	private static void Key_Postfix(Artifact __instance, ref string __result)
 	{
-		var result = __result;
-		KeyEventArgsPool.Do(args =>
+		var args = new KeyEventArgs
 		{
-			args.Artifact = __instance;
-			args.Key = result;
-			OnKey?.Invoke(null, args);
-			result = args.Key;
-		});
-		__result = result;
+			Artifact = __instance,
+			Key = __result,
+		};
+		OnKey?.Invoke(null, ref args);
+		__result = args.Key;
 	}
 
-	internal sealed class KeyEventArgs
+	internal struct KeyEventArgs
 	{
-		public Artifact Artifact { get; internal set; } = null!;
-		public string Key { get; set; } = null!;
+		public required Artifact Artifact { get; init; }
+		public required string Key;
 	}
 }

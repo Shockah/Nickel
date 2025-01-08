@@ -12,7 +12,7 @@ namespace Nickel;
 
 internal static class ProgramPatches
 {
-	internal static EventHandler<StructRef<bool>>? OnTryInitSteam;
+	internal static RefEventHandler<bool>? OnTryInitSteam;
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -42,8 +42,7 @@ internal static class ProgramPatches
 
 	private static bool TryInitSteam_Transpiler_ModifyInitSteam(bool initSteam)
 	{
-		var args = new StructRef<bool>(initSteam);
-		OnTryInitSteam?.Invoke(null, args);
-		return args.Value;
+		OnTryInitSteam?.Invoke(null, ref initSteam);
+		return initSteam;
 	}
 }

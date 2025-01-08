@@ -12,9 +12,7 @@ namespace Nickel;
 
 internal static class ShipPatches
 {
-	internal static EventHandler<ShouldStatusFlashEventArgs>? OnShouldStatusFlash;
-	
-	private static readonly Pool<ShouldStatusFlashEventArgs> ShouldStatusFlashEventArgsPool = new(() => new());
+	internal static RefEventHandler<ShouldStatusFlashEventArgs>? OnShouldStatusFlash;
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -58,31 +56,29 @@ internal static class ShipPatches
 		}
 	}
 
-	private static void RenderStatusRow_Transpiler_ModifyShouldFlash(Ship ship, G g, Status status, ref bool shouldFlashRef)
+	private static void RenderStatusRow_Transpiler_ModifyShouldFlash(Ship ship, G g, Status status, ref bool shouldFlash)
 	{
 		if (g.state.route is not Combat combat)
 			return;
 		
-		var shouldFlash = shouldFlashRef;
-		ShouldStatusFlashEventArgsPool.Do(args =>
+		var args = new ShouldStatusFlashEventArgs
 		{
-			args.State = g.state;
-			args.Combat = combat;
-			args.Ship = ship;
-			args.Status = status;
-			args.ShouldFlash = shouldFlash;
-			OnShouldStatusFlash?.Invoke(null, args);
-			shouldFlash = args.ShouldFlash;
-		});
-		shouldFlashRef = shouldFlash;
+			State = g.state,
+			Combat = combat,
+			Ship = ship,
+			Status = status,
+			ShouldFlash = shouldFlash
+		};
+		OnShouldStatusFlash?.Invoke(null, ref args);
+		shouldFlash = args.ShouldFlash;
 	}
 
-	internal sealed class ShouldStatusFlashEventArgs
+	internal struct ShouldStatusFlashEventArgs
 	{
-		public State State { get; internal set; } = null!;
-		public Combat Combat { get; internal set; } = null!;
-		public Ship Ship { get; internal set; } = null!;
-		public Status Status { get; internal set; }
-		public bool ShouldFlash { get; set; }
+		public required State State { get; init; }
+		public required Combat Combat { get; init; }
+		public required Ship Ship { get; init; }
+		public required Status Status { get; init; }
+		public required bool ShouldFlash;
 	}
 }

@@ -22,7 +22,7 @@ internal sealed class SaveManager
 		StatePatches.OnLoad += this.OnLoad;
 	}
 
-	private void OnLoad(object? _, StatePatches.LoadEventArgs e)
+	private void OnLoad(object? _, ref StatePatches.LoadEventArgs e)
 	{
 		this.MarkAsCorruptedIfNeeded(e.Data);
 		if (!e.Data.isCorrupted)

@@ -108,7 +108,7 @@ internal sealed class ModEventManager
 		GPatches.OnAfterFrame += this.OnAfterFrame;
 	}
 
-	private void OnEnumerateAllArtifacts(object? _, StatePatches.EnumerateAllArtifactsEventArgs e)
+	private void OnEnumerateAllArtifacts(object? _, ref StatePatches.EnumerateAllArtifactsEventArgs e)
 	{
 		if (e.State.IsOutsideRun() || RunSummaryPatches.IsDuringRunSummarySaveFromState)
 			return;
@@ -121,7 +121,7 @@ internal sealed class ModEventManager
 	}
 
 	[EventPriority(-1)]
-	private void OnArtifactKey(object? _, ArtifactPatches.KeyEventArgs e)
+	private void OnArtifactKey(object? _, ref ArtifactPatches.KeyEventArgs e)
 	{
 		if (ReferenceEquals(e.Artifact, this.PrefixArtifact) || ReferenceEquals(e.Artifact, this.SuffixArtifact))
 			e.Key = e.Artifact.GetType().Name;

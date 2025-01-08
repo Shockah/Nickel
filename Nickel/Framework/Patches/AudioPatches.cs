@@ -7,9 +7,7 @@ namespace Nickel;
 
 internal static class AudioPatches
 {
-	internal static EventHandler<PlaySongArgs>? OnPlaySong;
-
-	private static readonly Pool<PlaySongArgs> PlaySongArgsPool = new(() => new());
+	internal static RefEventHandler<PlaySongArgs>? OnPlaySong;
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -20,27 +18,21 @@ internal static class AudioPatches
 
 	private static void PlaySong_Prefix(Audio __instance, ref GUID id, ref MusicState ms)
 	{
-		var nonRefId = id;
-		var nonRefMusicState = ms;
-		
-		PlaySongArgsPool.Do(args =>
+		var args = new PlaySongArgs
 		{
-			args.Audio = __instance;
-			args.Id = nonRefId;
-			args.MusicState = nonRefMusicState;
-			OnPlaySong?.Invoke(null, args);
-			nonRefId = args.Id;
-			nonRefMusicState = args.MusicState;
-		});
-
-		id = nonRefId;
-		ms = nonRefMusicState;
+			Audio = __instance,
+			Id = id,
+			MusicState = ms,
+		};
+		OnPlaySong?.Invoke(null, ref args);
+		id = args.Id;
+		ms = args.MusicState;
 	}
 
-	internal sealed class PlaySongArgs
+	internal struct PlaySongArgs
 	{
-		public Audio Audio { get; internal set; } = null!;
-		public GUID Id { get; set; }
-		public MusicState MusicState { get; set; }
+		public required Audio Audio { get; init; }
+		public required GUID Id;
+		public required MusicState MusicState;
 	}
 }
