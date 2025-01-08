@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.9.0
+Released 8 January 2025.
 
 ### For everyone:
 * The artifact codex now has separate categories for ship-specific and event artifacts.

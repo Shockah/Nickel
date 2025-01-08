@@ -93,9 +93,9 @@ internal static partial class CardCodexFiltering
 		if (__instance.subRoute is not null)
 			return;
 
-		var topOffset = 54;
-		var bottomOffset = 62;
-		var scale = 0.875;
+		const int topOffset = 54;
+		const int bottomOffset = 62;
+		const double scale = 0.875;
 		
 		var preferredHeightOnScreen = MG.inst.PIX_H - topOffset - bottomOffset;
 		var maxFilterScroll = Math.Max((DeckTypes.Count + 1) / 2 * 16 - preferredHeightOnScreen, 0);
