@@ -680,6 +680,8 @@ internal sealed class CharacterManager
 	{
 		if (!this.CharacterTypeToCharacterEntry.TryGetValue(e.Shout.who, out var characterEntry))
 			return;
+		if (characterEntry.ModOwner == this.VanillaModManifest)
+			return;
 		if (characterEntry.Babble?.Period is not { } period)
 			return;
 		e.Period = period;
@@ -688,6 +690,8 @@ internal sealed class CharacterManager
 	private void OnModifyBabbleSound(object? _, ref ShoutPatches.ModifyBabbleSoundEventArgs e)
 	{
 		if (!this.CharacterTypeToCharacterEntry.TryGetValue(e.Shout.who, out var characterEntry))
+			return;
+		if (characterEntry.ModOwner == this.VanillaModManifest)
 			return;
 		if (characterEntry.Babble?.Sound is not { } sound)
 			return;
