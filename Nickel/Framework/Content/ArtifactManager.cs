@@ -64,8 +64,28 @@ internal sealed class ArtifactManager
 			return entry;
 		if (type.Assembly != typeof(Artifact).Assembly)
 			return null;
+		
+		var vanillaEntry = this.CreateVanillaEntry(type);
+		this.ArtifactTypeToEntry[type] = vanillaEntry;
+		this.UniqueNameToEntry[vanillaEntry.UniqueName] = vanillaEntry;
+		return vanillaEntry;
+	}
 
-		return new Entry(
+	public IArtifactEntry? LookupByUniqueName(string uniqueName)
+	{
+		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var entry))
+			return entry;
+		if (typeof(Artifact).Assembly.GetType(uniqueName) is not { } vanillaType)
+			return null;
+		
+		var vanillaEntry = this.CreateVanillaEntry(vanillaType);
+		this.ArtifactTypeToEntry[vanillaType] = vanillaEntry;
+		this.UniqueNameToEntry[uniqueName] = vanillaEntry;
+		return vanillaEntry;
+	}
+
+	private Entry CreateVanillaEntry(Type type)
+		=> new(
 			modOwner: this.VanillaModManifest,
 			uniqueName: type.Name,
 			configuration: new()
@@ -74,13 +94,9 @@ internal sealed class ArtifactManager
 				Meta = DB.artifactMetas[type.Name],
 				Sprite = DB.artifactSprites[type.Name],
 				Name = _ => Loc.T($"artifact.{type.Name}.name"),
-				Description = _ => Loc.T($"artifact.{type.Name}.desc")
+				Description = _ => Loc.T($"artifact.{type.Name}.desc"),
 			}
 		);
-	}
-
-	public IArtifactEntry? LookupByUniqueName(string uniqueName)
-		=> this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
 
 	private static void Inject(Entry entry)
 	{

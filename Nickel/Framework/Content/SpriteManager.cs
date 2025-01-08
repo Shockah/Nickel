@@ -82,18 +82,36 @@ internal sealed class SpriteManager
 			return entry;
 		if (Enum.GetName(spr) is not { } vanillaName)
 			return null;
+		
+		var vanillaEntry = this.CreateVanillaEntry(spr, StandardizeUniqueName(vanillaName));
+		this.SpriteToEntry[spr] = vanillaEntry;
+		this.UniqueNameToEntry[vanillaEntry.UniqueName] = vanillaEntry;
+		return vanillaEntry;
+	}
 
-		return new StaticEntry(
+	public ISpriteEntry? LookupByUniqueName(string uniqueName)
+	{
+		uniqueName = StandardizeUniqueName(uniqueName);
+		
+		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var entry))
+			return entry;
+		if (!Enum.TryParse<Spr>(uniqueName, out var spr))
+			return null;
+		
+		var vanillaEntry = this.CreateVanillaEntry(spr, uniqueName);
+		this.SpriteToEntry[spr] = vanillaEntry;
+		this.UniqueNameToEntry[vanillaEntry.UniqueName] = vanillaEntry;
+		return vanillaEntry;
+	}
+
+	private StaticEntry CreateVanillaEntry(Spr spr, string vanillaName)
+		=> new(
 			modOwner: this.VanillaModManifest,
 			uniqueName: vanillaName,
 			localName: vanillaName,
 			sprite: spr,
 			textureProvider: () => SpriteLoader.Get(spr)!
 		);
-	}
-
-	public ISpriteEntry? LookupByUniqueName(string uniqueName)
-		=> this.UniqueNameToEntry.GetValueOrDefault(StandardizeUniqueName(uniqueName));
 
 	private void OnGetTexture(object? _, ref SpriteLoaderPatches.GetTextureEventArgs e)
 	{

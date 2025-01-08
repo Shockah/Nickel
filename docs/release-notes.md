@@ -10,7 +10,7 @@
 * Other small performance improvements.
 
 ### For developers:
-* The `IModCharacters(.V2).LookupByUniqueName` and `IModShips.LookupByUniqueName` methods now return correct information for vanilla entries.
+* The `IModCharacters(.V2)/IModShips/IModCards/IModArtifacts/IModDecks/IModStatuses/IModSprites.LookupByUniqueName` methods now return correct information for vanilla entries.
 
 ## 1.8.2
 Released 2 January 2025.

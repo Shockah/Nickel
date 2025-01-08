@@ -125,7 +125,27 @@ internal sealed class DeckManager
 		if (!Enum.IsDefined(deck))
 			return null;
 
-		return new Entry(
+		var vanillaEntry = this.CreateVanillaEntry(deck);
+		this.DeckToEntry[deck] = vanillaEntry;
+		this.UniqueNameToEntry[vanillaEntry.UniqueName] = vanillaEntry;
+		return vanillaEntry;
+	}
+
+	public IDeckEntry? LookupByUniqueName(string uniqueName)
+	{
+		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var entry))
+			return entry;
+		if (!Enum.TryParse<Deck>(uniqueName, out var deck))
+			return null;
+		
+		var vanillaEntry = this.CreateVanillaEntry(deck);
+		this.DeckToEntry[deck] = vanillaEntry;
+		this.UniqueNameToEntry[vanillaEntry.UniqueName] = vanillaEntry;
+		return vanillaEntry;
+	}
+
+	private Entry CreateVanillaEntry(Deck deck)
+		=> new(
 			modOwner: this.VanillaModManifest,
 			uniqueName: Enum.GetName(deck)!,
 			deck: deck,
@@ -135,13 +155,9 @@ internal sealed class DeckManager
 				DefaultCardArt = DB.cardArtDeckDefault.TryGetValue(deck, out var defaultCardArt) ? defaultCardArt : Enum.Parse<Spr>(deck == Deck.trash ? "cards_ColorlessTrash" : "cards_colorless"),
 				BorderSprite = DB.deckBorders.TryGetValue(deck, out var borderSprite) ? borderSprite : Enum.Parse<Spr>("cardShared_border_colorless"),
 				OverBordersSprite = DB.deckBordersOver.TryGetValue(deck, out var overBordersSprite) ? overBordersSprite : null,
-				Name = _ => Loc.T($"char.{deck}.name")
+				Name = _ => Loc.T($"char.{deck}"),
 			}
 		);
-	}
-
-	public IDeckEntry? LookupByUniqueName(string uniqueName)
-		=> this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
 
 	private static void Inject(Entry entry)
 	{

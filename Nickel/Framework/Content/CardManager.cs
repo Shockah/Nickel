@@ -64,7 +64,27 @@ internal sealed class CardManager
 		if (type.Assembly != typeof(Card).Assembly)
 			return null;
 
-		return new Entry(
+		var vanillaEntry = this.CreateVanillaEntry(type);
+		this.CardTypeToEntry[type] = vanillaEntry;
+		this.UniqueNameToEntry[vanillaEntry.UniqueName] = vanillaEntry;
+		return vanillaEntry;
+	}
+
+	public ICardEntry? LookupByUniqueName(string uniqueName)
+	{
+		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var entry))
+			return entry;
+		if (typeof(Card).Assembly.GetType(uniqueName) is not { } vanillaType)
+			return null;
+		
+		var vanillaEntry = this.CreateVanillaEntry(vanillaType);
+		this.CardTypeToEntry[vanillaType] = vanillaEntry;
+		this.UniqueNameToEntry[uniqueName] = vanillaEntry;
+		return vanillaEntry;
+	}
+
+	private Entry CreateVanillaEntry(Type type)
+		=> new(
 			modOwner: this.VanillaModManifest,
 			uniqueName: type.Name,
 			configuration: new()
@@ -72,13 +92,9 @@ internal sealed class CardManager
 				CardType = type,
 				Meta = DB.cardMetas[type.Name],
 				Art = DB.cardArt.TryGetValue(type.Name, out var art) ? art : null,
-				Name = _ => Loc.T($"card.{type.Name}.name")
+				Name = _ => Loc.T($"card.{type.Name}.name"),
 			}
 		);
-	}
-
-	public ICardEntry? LookupByUniqueName(string uniqueName)
-		=> this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
 
 	private static void Inject(Entry entry)
 	{

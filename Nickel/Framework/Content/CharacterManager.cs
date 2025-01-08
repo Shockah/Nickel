@@ -162,6 +162,7 @@ internal sealed class CharacterManager
 			missingStatus: this.Statuses.LookupByStatus(StatusMeta.deckToMissingStatus[deck])!
 		);
 		this.UniqueNameToPlayableCharacterEntry[key] = result;
+		this.CharacterTypeToCharacterEntry[result.CharacterType] = result;
 		return result;
 	}
 

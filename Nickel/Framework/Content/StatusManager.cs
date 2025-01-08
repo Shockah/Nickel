@@ -138,7 +138,27 @@ internal sealed class StatusManager
 		if (!Enum.IsDefined(status))
 			return null;
 
-		return new Entry(
+		var vanillaEntry = this.CreateVanillaEntry(status);
+		this.StatusToEntry[status] = vanillaEntry;
+		this.UniqueNameToEntry[vanillaEntry.UniqueName] = vanillaEntry;
+		return vanillaEntry;
+	}
+
+	public IStatusEntry? LookupByUniqueName(string uniqueName)
+	{
+		if (this.UniqueNameToEntry.TryGetValue(uniqueName, out var entry))
+			return entry;
+		if (!Enum.TryParse<Status>(uniqueName, out var status))
+			return null;
+		
+		var vanillaEntry = this.CreateVanillaEntry(status);
+		this.StatusToEntry[status] = vanillaEntry;
+		this.UniqueNameToEntry[vanillaEntry.UniqueName] = vanillaEntry;
+		return vanillaEntry;
+	}
+
+	private Entry CreateVanillaEntry(Status status)
+		=> new(
 			modOwner: this.VanillaModManifest,
 			uniqueName: Enum.GetName(status)!,
 			status: status,
@@ -146,13 +166,9 @@ internal sealed class StatusManager
 			{
 				Definition = DB.statuses[status],
 				Name = _ => Loc.T($"status.{status}.name"),
-				Description = _ => Loc.T($"status.{status}.desc")
+				Description = _ => Loc.T($"status.{status}.desc"),
 			}
 		);
-	}
-
-	public IStatusEntry? LookupByUniqueName(string uniqueName)
-		=> this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
 
 	private static void Inject(Entry entry)
 	{
