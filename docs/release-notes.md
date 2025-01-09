@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Small performance improvements.
+
 ## 1.9.0
 Released 8 January 2025.
 
