@@ -4,7 +4,8 @@
 
 ## Upcoming release
 
-* Small performance improvements.
+* Updated the Pintail library, improving framerate.
+* Other performance improvements.
 
 ## 1.9.0
 Released 8 January 2025.
