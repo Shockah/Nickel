@@ -5,29 +5,21 @@ using System.Collections.Generic;
 
 namespace Nickel;
 
-internal sealed class ModStringEnumConverter<T> : JsonConverter
+internal sealed class ModStringEnumConverter<T>(
+	Func<string, T> modStringToEnumProvider,
+	Func<T, string> modEnumToStringProvider
+) : JsonConverter
 	where T : struct, Enum
 {
-	private readonly Func<string, T> ModStringToEnumProvider;
-	private readonly Func<T, string> ModEnumToStringProvider;
-
 	private readonly Dictionary<string, T> StringToEnum = [];
 	private readonly Dictionary<T, string> EnumToString = [];
-	private bool IsPrepared = false;
-
-	public ModStringEnumConverter(
-		Func<string, T> modStringToEnumProvider,
-		Func<T, string> modEnumToStringProvider
-	)
-	{
-		this.ModStringToEnumProvider = modStringToEnumProvider;
-		this.ModEnumToStringProvider = modEnumToStringProvider;
-	}
+	private bool IsPrepared;
 
 	private void PrepareIfNeeded()
 	{
 		if (this.IsPrepared)
 			return;
+		
 		foreach (var @enum in Enum.GetValues<T>())
 		{
 			var name = Enum.GetName(@enum);
@@ -36,6 +28,8 @@ internal sealed class ModStringEnumConverter<T> : JsonConverter
 			this.StringToEnum[name] = @enum;
 			this.EnumToString[@enum] = name;
 		}
+
+		this.IsPrepared = true;
 	}
 
 	public override bool CanConvert(Type objectType)
@@ -54,7 +48,7 @@ internal sealed class ModStringEnumConverter<T> : JsonConverter
 		if (this.StringToEnum.TryGetValue(rawValue, out var value))
 			return value;
 
-		var modValue = this.ModStringToEnumProvider(rawValue);
+		var modValue = modStringToEnumProvider(rawValue);
 		this.StringToEnum[rawValue] = modValue;
 		this.EnumToString[modValue] = rawValue;
 		return modValue;
@@ -75,7 +69,7 @@ internal sealed class ModStringEnumConverter<T> : JsonConverter
 			return;
 		}
 
-		rawValue = this.ModEnumToStringProvider(typedValue);
+		rawValue = modEnumToStringProvider(typedValue);
 		this.StringToEnum[rawValue] = typedValue;
 		this.EnumToString[typedValue] = rawValue;
 		writer.WriteValue(rawValue);
