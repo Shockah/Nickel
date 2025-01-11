@@ -18,7 +18,7 @@ public readonly struct GetFinalDynamicCardTraitOverridesEventArgs
 	/// <summary>A dictionary containing the state of all known card traits on the card.</summary>
 	public required IReadOnlyDictionary<ICardTraitEntry, CardTraitState> TraitStates { get; init; }
 	
-	internal Dictionary<ICardTraitEntry, bool?> Overrides { get; init; }
+	internal List<(ICardTraitEntry Trait, bool? OverrideValue)> Overrides { get; init; }
 
 	/// <summary>
 	/// Set a dynamic override for the given trait that <b>does</b> take <see cref="CardTraitState.PermanentOverride"/> and <see cref="CardTraitState.TemporaryOverride"/> into account.
@@ -26,5 +26,16 @@ public readonly struct GetFinalDynamicCardTraitOverridesEventArgs
 	/// <param name="trait">The card trait to override.</param>
 	/// <param name="overrideValue">Whether the card trait should be active. A value of <c>null</c> clears the override.</param>
 	public void SetOverride(ICardTraitEntry trait, bool? overrideValue)
-		=> this.Overrides[trait] = overrideValue;
+	{
+		for (var i = this.Overrides.Count - 1; i >= 0; i--)
+		{
+			if (this.Overrides[i].Trait == trait)
+			{
+				this.Overrides[i] = (trait, overrideValue);
+				return;
+			}
+		}
+
+		this.Overrides.Add((trait, overrideValue));
+	}
 }

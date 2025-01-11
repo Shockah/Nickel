@@ -121,8 +121,14 @@ public sealed class ManagedEvent<TEventArgs>
 				}
 				else
 				{
+					IModManifest? previousSubscriber = null;
 					foreach (var handler in this.Handlers)
+					{
+						this.ModifyEventArgsBetweenSubscribers?.Invoke(previousSubscriber, handler.Mod, sender, ref args);
 						handler.Handler(sender, args);
+						previousSubscriber = handler.Mod;
+					}
+					this.ModifyEventArgsBetweenSubscribers?.Invoke(previousSubscriber, null, sender, ref args);
 				}
 			}
 			finally

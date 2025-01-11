@@ -362,10 +362,8 @@ internal class CardTraitManager
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnGetFinalDynamicCardTraitOverridesEvent), exception);
 		})
 		{
-			ModifyEventArgsBetweenSubscribers = (IModManifest? previousSubscriber, IModManifest? _, object? _, ref GetDynamicInnateCardTraitOverridesEventArgs args) =>
+			ModifyEventArgsBetweenSubscribers = (IModManifest? _, IModManifest? _, object? _, ref GetDynamicInnateCardTraitOverridesEventArgs args) =>
 			{
-				if (previousSubscriber is null)
-					return;
 				if (args.Overrides.Count == 0)
 					return;
 
@@ -378,11 +376,8 @@ internal class CardTraitManager
 						newDynamicInnateTraitOverrides.Remove(overrideTrait);
 				}
 
-				args = args with
-				{
-					DynamicInnateTraitOverrides = newDynamicInnateTraitOverrides,
-					Overrides = []
-				};
+				args.Overrides.Clear();
+				args = args with { DynamicInnateTraitOverrides = newDynamicInnateTraitOverrides };
 			}
 		};
 
@@ -392,10 +387,8 @@ internal class CardTraitManager
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnGetFinalDynamicCardTraitOverridesEvent), exception);
 		})
 		{
-			ModifyEventArgsBetweenSubscribers = (IModManifest? previousSubscriber, IModManifest? _, object? _, ref GetFinalDynamicCardTraitOverridesEventArgs args) =>
+			ModifyEventArgsBetweenSubscribers = (IModManifest? _, IModManifest? _, object? _, ref GetFinalDynamicCardTraitOverridesEventArgs args) =>
 			{
-				if (previousSubscriber is null)
-					return;
 				if (args.Overrides.Count == 0)
 					return;
 
@@ -403,11 +396,8 @@ internal class CardTraitManager
 				foreach (var (overrideTrait, overrideValue) in args.Overrides)
 					newTraitStates[overrideTrait] = newTraitStates[overrideTrait] with { FinalDynamicOverride = overrideValue };
 
-				args = args with
-				{
-					TraitStates = newTraitStates,
-					Overrides = []
-				};
+				args.Overrides.Clear();
+				args = args with { TraitStates = newTraitStates };
 			}
 		};
 
@@ -609,7 +599,7 @@ internal class CardTraitManager
 
 	private IReadOnlyDictionary<ICardTraitEntry, CardTraitState> CreateCardTraitStates(State state, Card card)
 	{
-		Dictionary<ICardTraitEntry, CardTraitState> results = [];
+		Dictionary<ICardTraitEntry, CardTraitState> results = new(this.SynthesizedVanillaEntries.Count + this.UniqueNameToEntry.Count);
 		HashSet<ICardTraitEntry> innateTraits = [];
 		var overrides = this.ModDataManager.ObtainModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides");
 		this.UpdateModDataFromFieldsIfNeeded(card, overrides);
@@ -628,6 +618,8 @@ internal class CardTraitManager
 		if (wasCurrentlyCreatingCardTraitStates)
 			return results;
 
+		List<(ICardTraitEntry Trait, bool? OverrideValue)> argsOverrides = [];
+
 		var dynamicInnateOverridesEventArgs = this.OnGetDynamicInnateCardTraitOverridesEvent.Raise(null, new()
 		{
 			State = state,
@@ -635,7 +627,7 @@ internal class CardTraitManager
 			CardData = data,
 			InnateTraits = innateTraits,
 			DynamicInnateTraitOverrides = ImmutableDictionary<ICardTraitEntry, bool>.Empty,
-			Overrides = [],
+			Overrides = argsOverrides,
 		});
 
 		foreach (var (trait, overrideValue) in dynamicInnateOverridesEventArgs.DynamicInnateTraitOverrides)
@@ -647,7 +639,7 @@ internal class CardTraitManager
 			Card = card,
 			CardData = data,
 			TraitStates = results,
-			Overrides = []
+			Overrides = argsOverrides
 		});
 
 		if (!wasCurrentlyCreatingCardTraitStates)
