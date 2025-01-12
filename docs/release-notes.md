@@ -6,7 +6,7 @@
 
 * Extended the "sort cards in order" feature to also be enabled for the discard and exhaust pile.
 * Fixed card ordering on the Run Summary screen, especially for modded content.
-* Implemented caching when looking at the card codex, improving framerate.
+* Implemented caching when browsing cards, improving framerate.
 * Updated the Pintail library, improving framerate.
 * Other performance improvements.
 

@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace Nickel.Bugfixes;
 
-internal static class CardCodexCacheFixes
+internal static class CardBrowseCacheFixes
 {
 	private static CardBrowse? LastCardBrowse;
 	private static CardBrowse? CardBrowseGettingCardList;
@@ -36,7 +36,7 @@ internal static class CardCodexCacheFixes
 
 	private static void CardBrowse_GetCardList_Prefix(CardBrowse __instance, G g)
 	{
-		if (__instance.browseSource != CardBrowse.Source.Codex)
+		if (__instance.browseAction is not null || __instance.GetType() != typeof(CardBrowse))
 			return;
 
 		if (LastCardBrowse == __instance)
@@ -63,7 +63,7 @@ internal static class CardCodexCacheFixes
 
 	private static bool Card_GetDataWithOverrides_Prefix(Card __instance, ref CardData __result)
 	{
-		if (CardBrowseGettingCardList is not { browseSource: CardBrowse.Source.Codex })
+		if (CardBrowseGettingCardList is not { browseAction: null } route || route.GetType() != typeof(CardBrowse))
 			return true;
 		
 		__result = CardDataCache.GetValueOrDefault(__instance);
@@ -72,7 +72,7 @@ internal static class CardCodexCacheFixes
 
 	private static bool Nickel_CardTraitManager_ObtainCardTraitStates_Prefix(Card card, ref IReadOnlyDictionary<ICardTraitEntry, CardTraitState> __result)
 	{
-		if (CardBrowseGettingCardList is not { browseSource: CardBrowse.Source.Codex })
+		if (CardBrowseGettingCardList is not { browseAction: null } route || route.GetType() != typeof(CardBrowse))
 			return true;
 		
 		__result = CardTraitStateCache.GetValueOrDefault(card) ?? new Dictionary<ICardTraitEntry, CardTraitState>();
