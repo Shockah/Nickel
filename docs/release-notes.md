@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.10.0
+Released 12 January 2025.
 
 * Extended the "sort cards in order" feature to also be enabled for the discard and exhaust pile.
 * Fixed card ordering on the Run Summary screen, especially for modded content.
