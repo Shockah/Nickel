@@ -5,6 +5,7 @@
 ## Upcoming release
 
 * Extended the "sort cards in order" feature to also be enabled for the discard and exhaust pile.
+* Fixed card ordering on the Run Summary screen, especially for modded content.
 * Updated the Pintail library, improving framerate.
 * Other performance improvements.
 
