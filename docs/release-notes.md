@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed Mitosis-related issues. Hopefully for good.
+
 ## 1.10.0
 Released 12 January 2025.
 

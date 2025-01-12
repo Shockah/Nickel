@@ -25,15 +25,31 @@ internal static class NickelStatic
 		{
 			if (f.FieldType.Assembly == pintailAssembly)
 				return DefaultCloneEngineFieldFilterBehavior.CopyValue;
-			if (f.GetCustomAttribute<JsonIgnoreAttribute>() is not null)
-				return DefaultCloneEngineFieldFilterBehavior.DoNotInitialize;
-			if (f.FieldType.IsArray)
+			if (f.DeclaringType is { } declaringType && declaringType.IsAssignableTo(typeof(IProxyObject)))
 				return DefaultCloneEngineFieldFilterBehavior.Clone;
-			if (f.IsPublic || f.GetCustomAttribute<JsonPropertyAttribute>() is not null)
+
+			var property = GetPropertyInfoForBackingField(f);
+			if (f.GetCustomAttribute<JsonIgnoreAttribute>() is not null || property?.GetCustomAttribute<JsonIgnoreAttribute>() is not null)
+				return DefaultCloneEngineFieldFilterBehavior.DoNotInitialize;
+			if (f.IsPublic || property?.GetMethod?.IsPublic == true || f.GetCustomAttribute<JsonPropertyAttribute>() is not null || property?.GetCustomAttribute<JsonPropertyAttribute>() is not null)
+				return DefaultCloneEngineFieldFilterBehavior.Clone;
+			
+			if (f.FieldType.IsArray)
 				return DefaultCloneEngineFieldFilterBehavior.Clone;
 			if (GetInterfacesRecursivelyAsEnumerable(f.DeclaringType!, includingSelf: true).Any(i => i.IsConstructedGenericType && i.GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>)))
 				return DefaultCloneEngineFieldFilterBehavior.Clone;
-			return DefaultCloneEngineFieldFilterBehavior.CopyValue;
+			return DefaultCloneEngineFieldFilterBehavior.DoNotInitialize;
+
+			static PropertyInfo? GetPropertyInfoForBackingField(FieldInfo field)
+			{
+				if (field.DeclaringType is not { } declaringType)
+					return null;
+				if (!field.Name.EndsWith(">k__BackingField"))
+					return null;
+
+				var propertyName = field.Name.Substring(1, field.Name.Length - 17);
+				return declaringType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+			}
 			
 			static IEnumerable<Type> GetInterfacesRecursivelyAsEnumerable(Type type, bool includingSelf)
 			{
