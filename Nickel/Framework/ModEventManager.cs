@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Nickel;
@@ -102,22 +101,25 @@ internal sealed class ModEventManager
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnSaveLoadedEvent), exception);
 		});
 		
-		StatePatches.OnEnumerateAllArtifacts += this.OnEnumerateAllArtifacts;
+		StatePatches.OnEnumerateAllArtifactsBeforeAddingArtifacts += this.OnEnumerateAllArtifactsBeforeAddingArtifacts;
+		StatePatches.OnEnumerateAllArtifactsAfterAddingArtifacts += this.OnEnumerateAllArtifactsAfterAddingArtifacts;
 		ArtifactPatches.OnKey += this.OnArtifactKey;
 		CheevosPatches.OnCheckOnLoad += this.OnCheckOnLoad;
 		GPatches.OnAfterFrame += this.OnAfterFrame;
 	}
 
-	private void OnEnumerateAllArtifacts(object? _, ref StatePatches.EnumerateAllArtifactsEventArgs e)
+	private void OnEnumerateAllArtifactsBeforeAddingArtifacts(object? _, StatePatches.EnumerateAllArtifactsEventArgs e)
 	{
 		if (e.State.IsOutsideRun() || RunSummaryPatches.IsDuringRunSummarySaveFromState)
 			return;
-		
-		var artifacts = new List<Artifact>(e.Artifacts.Count + 2);
-		artifacts.Add(this.PrefixArtifact);
-		artifacts.AddRange(e.Artifacts);
-		artifacts.Add(this.SuffixArtifact);
-		e.Artifacts = artifacts;
+		e.Artifacts.Add(this.PrefixArtifact);
+	}
+
+	private void OnEnumerateAllArtifactsAfterAddingArtifacts(object? _, StatePatches.EnumerateAllArtifactsEventArgs e)
+	{
+		if (e.State.IsOutsideRun() || RunSummaryPatches.IsDuringRunSummarySaveFromState)
+			return;
+		e.Artifacts.Add(this.SuffixArtifact);
 	}
 
 	[EventPriority(-1)]
