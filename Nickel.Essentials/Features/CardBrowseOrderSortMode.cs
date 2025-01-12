@@ -125,7 +125,7 @@ internal static class CardBrowseOrderSortMode
 	internal sealed class Hook : IEssentialsApi.IHook
 	{
 		public bool? ShouldAllowOrderSortModeInCardBrowse(IEssentialsApi.IHook.IShouldAllowOrderSortModeInCardBrowseArgs args)
-			=> args.Route.browseSource == CardBrowse.Source.Hand ? true : null;
+			=> args.Route.browseSource is CardBrowse.Source.Hand or CardBrowse.Source.DiscardPile or CardBrowse.Source.ExhaustPile ? true : null;
 	}
 
 	private sealed class Args : IEssentialsApi.IHook.IShouldAllowOrderSortModeInCardBrowseArgs
