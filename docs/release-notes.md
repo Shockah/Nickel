@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.10.2
+Released 14 January 2025.
 
 * Fixed the Save Import feature crashing the game.
 
