@@ -119,7 +119,6 @@ internal static class SaveImport
 			return true;
 		if (ModEntry.Instance.Helper.ModData.GetOptionalModData<Route>(__instance, "Subroute") is not { } subroute)
 			return true;
-
 		
 		subroute.Render(g);
 		return false;
@@ -239,8 +238,9 @@ internal static class SaveImport
 
 				Audio.Play(Event.Click);
 				
-				foreach (var filePath in Directory.EnumerateFiles(targetSavePath, "*", SearchOption.AllDirectories))
-					File.Delete(filePath);
+				if (Directory.Exists(targetSavePath))
+					foreach (var filePath in Directory.EnumerateFiles(targetSavePath, "*", SearchOption.AllDirectories))
+						File.Delete(filePath);
 
 				state.slot = this.TargetSlot;
 				g.settings.saveSlot = this.TargetSlot;
