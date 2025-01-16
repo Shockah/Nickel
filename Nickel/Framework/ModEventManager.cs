@@ -81,19 +81,9 @@ internal sealed class ModEventManager
 			var logger = loggerProvider(mod);
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnGameClosingEvent), exception);
 		});
-
-		this.OnModLoadPhaseFinishedEvent.Add(this.OnModLoadPhaseFinished, modLoaderModManifest);
 	}
 
-	[EventPriority(double.MaxValue)]
-	private void OnModLoadPhaseFinished(object? _, ModLoadPhase phase)
-	{
-		if (phase != ModLoadPhase.AfterGameAssembly)
-			return;
-		this.SetupAfterGameAssembly();
-	}
-
-	private void SetupAfterGameAssembly()
+	internal void SetupAfterGameAssembly()
 	{
 		this.OnSaveLoadedEventStorage = new ManagedEvent<State>((_, mod, exception) =>
 		{

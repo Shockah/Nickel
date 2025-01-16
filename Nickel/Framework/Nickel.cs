@@ -308,6 +308,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 			LogPatches.OnLine += (_, obj) => gameLogger.LogDebug("{GameLogLine}", obj.ToString());
 			ProgramPatches.OnTryInitSteam += instance.OnTryInitSteam;
+			instance.ModManager.EventManager.SetupAfterGameAssembly();
 			instance.ModManager.LoadMods(ModLoadPhase.AfterGameAssembly);
 
 			FeatureFlags.OverrideSaveLocation = savePath.FullName;
