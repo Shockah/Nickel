@@ -11,10 +11,10 @@ using System.Runtime.Loader;
 
 namespace Nickel;
 
-internal sealed class ProxyContractResolver<TContext>(IProxyManager<TContext> proxyManager) : JsonConverter
+internal sealed class ProxyContractResolver(IProxyManager<string> proxyManager) : JsonConverter
 {
 	private readonly Dictionary<Type, int> NestingCounter = [];
-	private readonly Dictionary<Type, Func<IProxyManager<TContext>, object, object>> ObtainProxyDelegates = [];
+	private readonly Dictionary<Type, Func<IProxyManager<string>, object, string, string, object>> ObtainProxyDelegates = [];
 	private readonly Dictionary<SerializableTypeInfo, Type?> SerializableTypeToType = [];
 
 	public override bool CanConvert(Type objectType)
@@ -44,21 +44,21 @@ internal sealed class ProxyContractResolver<TContext>(IProxyManager<TContext> pr
 				var obtainProxyMethod = typeof(IProxyManagerExtensions)
 					.GetMethods()
 					.First(m => m.Name == nameof(IProxyManagerExtensions.ObtainProxy))
-					.MakeGenericMethod(typeof(TContext), proxyType);
+					.MakeGenericMethod(typeof(string), proxyType);
 				
-				var method = new DynamicMethod($"ObtainProxy_{proxyType.Name}", typeof(object), [typeof(IProxyManager<TContext>), typeof(object)]);
+				var method = new DynamicMethod($"ObtainProxy_{proxyType.Name}", typeof(object), [typeof(IProxyManager<string>), typeof(object), typeof(string), typeof(string)]);
 				var il = method.GetILGenerator();
 				il.Emit(OpCodes.Ldarg_0);
 				il.Emit(OpCodes.Ldarg_1);
-				il.Emit(OpCodes.Ldstr, "!Serialization!");
-				il.Emit(OpCodes.Ldstr, "!Serialization!");
+				il.Emit(OpCodes.Ldarg_2);
+				il.Emit(OpCodes.Ldarg_3);
 				il.Emit(OpCodes.Call, obtainProxyMethod);
 				il.Emit(OpCodes.Ret);
 				
-				obtainProxyDelegate = method.CreateDelegate<Func<IProxyManager<TContext>, object, object>>();
+				obtainProxyDelegate = method.CreateDelegate<Func<IProxyManager<string>, object, string, string, object>>();
 				this.ObtainProxyDelegates[proxyType] = obtainProxyDelegate;
 			}
-			return obtainProxyDelegate(proxyManager, serializableProxy.Target);
+			return obtainProxyDelegate(proxyManager, serializableProxy.Target, serializableProxy.TargetContext ?? "!Serialization!", serializableProxy.ProxyContext ?? "!Serialization!");
 
 			Type? GetTypeFromInfo(SerializableTypeInfo typeInfo)
 			{
@@ -95,34 +95,60 @@ internal sealed class ProxyContractResolver<TContext>(IProxyManager<TContext> pr
 			return;
 		}
 		
-		if (value is not IProxyObject.IWithProxyTargetInstanceProperty originalProxyObject)
+		if (value is not IProxyObject)
 			throw new ArgumentException($"Value {value} is not a proxy object", nameof(value));
-		if (GetChildMostTypes(originalProxyObject.GetType().GetInterfaces().Where(t => t.Assembly != typeof(IProxyManager<>).Assembly)).SingleOrDefault() is not { } proxyInterfaceType)
+		
+		if (GetProxyType(value) is not { } proxyInterfaceType)
 			throw new ArgumentException("Unknown proxy type to serialize", nameof(value));
-
-		var finalObject = value;
-
-		while (finalObject is IProxyObject.IWithProxyTargetInstanceProperty nestedProxyObject)
-			finalObject = nestedProxyObject.ProxyTargetInstance;
 
 		var serializableProxy = new SerializableProxy
 		{
 			TypeInfo = (SerializableTypeInfo)proxyInterfaceType,
-			Target = finalObject
+			Target = GetRootTargetObject(value),
+			ProxyContext = GetProxyContext(value),
+			TargetContext = GetTargetContext(value),
 		};
 		this.SerializableTypeToType[serializableProxy.TypeInfo] = proxyInterfaceType;
 		serializer.Serialize(writer, serializableProxy);
 
-		List<Type> GetChildMostTypes(IEnumerable<Type> types)
+		static Type? GetProxyType(object @object)
+			=> GetProxyTypeUsingMarkerInterface(@object) ?? GetProxyTypeUsingReflection(@object);
+
+		static Type? GetProxyTypeUsingMarkerInterface(object @object)
+			=> (@object as IProxyObject.IWithProxyInfoProperty<string>)?.ProxyInfo.Proxy.Type;
+
+		static Type? GetProxyTypeUsingReflection(object @object)
 		{
+			var pintailAssembly = typeof(IProxyManager<>).Assembly;
 			var results = new List<Type>();
-			foreach (var type in types)
+			foreach (var interfaceType in @object.GetType().GetInterfaces())
 			{
-				if (results.Any(result => result.IsAssignableTo(type)))
+				if (interfaceType.Assembly == pintailAssembly)
 					continue;
-				results.Add(type);
+				if (results.Any(result => result.IsAssignableTo(interfaceType)))
+					continue;
+				results.Add(interfaceType);
 			}
-			return results;
+			return results.FirstOrDefault();
+		}
+
+		static string? GetProxyContext(object @object)
+			=> (@object as IProxyObject.IWithProxyInfoProperty<string>)?.ProxyInfo.Proxy.Context;
+
+		static string? GetTargetContext(object @object)
+		{
+			var finalObject = @object;
+			while (finalObject is IProxyObject.IWithProxyTargetInstanceProperty nestedProxyObject)
+				finalObject = nestedProxyObject.ProxyTargetInstance;
+			return (finalObject as IProxyObject.IWithProxyInfoProperty<string>)?.ProxyInfo.Target.Context;
+		}
+
+		static object GetRootTargetObject(object @object)
+		{
+			var finalObject = @object;
+			while (finalObject is IProxyObject.IWithProxyTargetInstanceProperty nestedProxyObject)
+				finalObject = nestedProxyObject.ProxyTargetInstance;
+			return finalObject;
 		}
 	}
 
@@ -133,6 +159,9 @@ internal sealed class ProxyContractResolver<TContext>(IProxyManager<TContext> pr
 
 		[JsonProperty(TypeNameHandling = TypeNameHandling.Auto)]
 		public required object Target { get; init; }
+		
+		public string? ProxyContext { get; init; }
+		public string? TargetContext { get; init; }
 	}
 
 	public readonly struct SerializableTypeInfo

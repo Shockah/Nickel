@@ -103,7 +103,7 @@ internal sealed class ModManager
 			new()
 			{
 				ProxyPrepareBehavior = ProxyManagerProxyPrepareBehavior.Eager,
-				ProxyObjectInterfaceMarking = ProxyObjectInterfaceMarking.MarkerWithProperty,
+				ProxyObjectInterfaceMarking = ProxyObjectInterfaceMarking.IncludeProxyTargetInstance | ProxyObjectInterfaceMarking.IncludeProxyInfo,
 				AccessLevelChecking = AccessLevelChecking.DisabledButOnlyAllowPublicMembers,
 			}
 		);
@@ -564,7 +564,7 @@ internal sealed class ModManager
 
 	private void PrepareJsonSerialization()
 	{
-		var proxyContractResolver = new ProxyContractResolver<string>(this.ProxyManager);
+		var proxyContractResolver = new ProxyContractResolver(this.ProxyManager);
 
 		JSONSettings.indented.Converters.Add(proxyContractResolver);
 		JSONSettings.indented.ContractResolver = new ConditionalWeakTableExtensionDataContractResolver(
@@ -593,7 +593,7 @@ internal sealed class ModManager
 	{
 		if (type.IsAssignableTo(typeof(IProxyObject.IWithProxyTargetInstanceProperty)))
 		{
-			contract.Converter = new ProxyContractResolver<string>(this.ProxyManager);
+			contract.Converter = new ProxyContractResolver(this.ProxyManager);
 			return;
 		}
 		this.ContentManager!.ModifyJsonContract(type, contract);

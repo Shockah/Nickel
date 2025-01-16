@@ -169,7 +169,7 @@ public sealed class ModEntry : SimpleMod
 			);
 	}
 
-	public override object? GetApi(IModManifest requestingMod)
+	public override object GetApi(IModManifest requestingMod)
 		=> new ApiImplementation();
 
 	internal static string GetModNameForUpdatePurposes(IModManifest mod)

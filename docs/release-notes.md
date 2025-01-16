@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Updated the Pintail library, allowing for a very slight performance improvement and fix for a potential bug.
+
 ## 1.10.2
 Released 14 January 2025.
 
