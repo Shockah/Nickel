@@ -62,11 +62,9 @@ public sealed class ModEntry : SimpleMod
 						() => package.Manifest.DisplayName ?? package.Manifest.UniqueName,
 						this.Settings.ProfileBased
 					),
-					ArtifactCodexCategories.MakeSettings(api),
 					CrewSelection.MakeSettings(api),
 					StarterDeckPreview.MakeSettings(api),
 					ExeBlacklist.MakeSettings(api),
-					CardBrowseCurrentPile.MakeSettings(api),
 					ModDescriptions.MakeSettings(api),
 				]).SubscribeToOnMenuClose(
 					_ => helper.Storage.SaveJson(this.SettingsFile, this.Settings)
@@ -75,9 +73,6 @@ public sealed class ModEntry : SimpleMod
 		);
 
 		var harmony = helper.Utilities.Harmony;
-		ArtifactCodexCategories.ApplyPatches(harmony);
-		CardBrowseCurrentPile.ApplyPatches(harmony);
-		CardBrowseOrderSortMode.ApplyPatches(harmony);
 		CardCodexFiltering.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);
 		ExeBlacklist.ApplyPatches(harmony);
@@ -89,8 +84,6 @@ public sealed class ModEntry : SimpleMod
 		StarterDeckPreview.ApplyPatches(harmony);
 		TooltipScrolling.ApplyPatches(harmony);
 		UnlockedWindowResize.ApplyPatches(harmony);
-		
-		this.Hooks.Register(new CardBrowseOrderSortMode.Hook());
 
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.ShuffleDeck))
