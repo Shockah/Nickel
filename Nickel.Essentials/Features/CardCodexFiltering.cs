@@ -82,7 +82,14 @@ internal static partial class CardCodexFiltering
 		DeckTypes = __instance.GetCardList(g)
 			.Select(c => c.GetMeta().deck)
 			.Distinct()
-			.OrderBy(d => (int)d)
+			.OrderBy(deck =>
+			{
+				if (deck == Deck.colorless)
+					return -1;
+				var index = NewRunOptions.allChars.IndexOf(deck);
+				return index == -1 ? int.MaxValue : index;
+			})
+			.ThenBy(deck => deck)
 			.ToList();
 	}
 
