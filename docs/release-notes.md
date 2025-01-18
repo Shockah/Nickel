@@ -5,6 +5,9 @@
 ## Upcoming release
 
 ### For everyone:
+* Moved the extra artifact codex categories feature into its own mod, [UI Suite](https://www.nexusmods.com/cobaltcore/mods/45).
+* Moved the card pile indicators while browsing feature into its own mod, [UI Suite](https://www.nexusmods.com/cobaltcore/mods/45).
+* Moved the sort cards by actual order feature into its own mod, [UI Suite](https://www.nexusmods.com/cobaltcore/mods/45).
 * Added an option to sort characters and ships in crew/ship selection by name.
 * Numeric mod settings can now be Shift-clicked to adjust them faster.
 * Updated the Pintail library, allowing for a very slight performance improvement and fix for a potential bug.
