@@ -5,7 +5,7 @@
 ## Upcoming release
 
 ### For everyone:
-* Added an option to sort characters in crew selection by name.
+* Added an option to sort characters and ships in crew/ship selection by name.
 * Numeric mod settings can now be Shift-clicked to adjust them faster.
 * Updated the Pintail library, allowing for a very slight performance improvement and fix for a potential bug.
 * Fixed sorting modded cards by deck/rarity.

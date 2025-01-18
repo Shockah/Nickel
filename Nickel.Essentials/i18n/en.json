@@ -7,6 +7,14 @@
 		"sortVanillaCrewByName": {
 			"name": "   Also sort vanilla crew",
 			"description": "Additionally sort vanilla characters together with modded characters."
+		},
+		"sortShipsByName": {
+			"name": "Sort ship selection by name",
+			"description": "Sort modded ships in ship selection by name, as opposed to the internal order."
+		},
+		"sortVanillaShipsByName": {
+			"name": "   Also sort vanilla ships",
+			"description": "Additionally sort vanilla ships together with modded ships."
 		}
 	},
 	"crewSelection": {
