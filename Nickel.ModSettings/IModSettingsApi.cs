@@ -445,6 +445,13 @@ public interface IModSettingsApi
 		
 		/// <summary>The next value function. If <c>null</c>, the right arrow button will be hidden.</summary>
 		Func<T, T?> NextValue { get; set; }
+
+		/// <summary>How many steps should be applied if the Shift key is held while clicking on the arrow buttons.</summary>
+		int MultipleStepsCount
+		{
+			get => throw new InvalidProgramException("Real implementation in `Nickel.ModSettings`");
+			set => throw new InvalidProgramException("Real implementation in `Nickel.ModSettings`");
+		}
 		
 		/// <summary>The value formatter, used for displaying the value between the arrow buttons.</summary>
 		Func<T, string>? ValueFormatter { get; set; }
@@ -482,6 +489,12 @@ public interface IModSettingsApi
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
 		IStepperModSetting<T> SetNextValue(Func<T, T?> value);
+		
+		/// <summary>Sets the <see cref="MultipleStepsCount"/> function.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		IStepperModSetting<T> SetMultipleStepsCount(int value)
+			=> throw new InvalidProgramException("Real implementation in `Nickel.ModSettings`");
 		
 		/// <summary>Sets the <see cref="ValueFormatter"/>.</summary>
 		/// <param name="value">The new value.</param>

@@ -14,6 +14,7 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, OnInputP
 	public required Action<T> Setter { get; set; }
 	public required Func<T, T?> PreviousValue { get; set; }
 	public required Func<T, T?> NextValue { get; set; }
+	public int MultipleStepsCount { get; set; } = 1;
 	public Func<T, string>? ValueFormatter { get; set; }
 	public Func<Rect, double>? ValueWidth { get; set; }
 	public Action<G, IModSettingsApi.IModSettingsRoute>? OnClick { get; set; }
@@ -68,6 +69,12 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, OnInputP
 	IModSettingsApi.IStepperModSetting<T> IModSettingsApi.IStepperModSetting<T>.SetNextValue(Func<T, T?> value)
 	{
 		this.NextValue = value;
+		return this;
+	}
+
+	IModSettingsApi.IStepperModSetting<T> IModSettingsApi.IStepperModSetting<T>.SetMultipleStepsCount(int value)
+	{
+		this.MultipleStepsCount = value;
 		return this;
 	}
 
@@ -135,20 +142,29 @@ public sealed class StepperModSetting<T> : BaseModSetting, OnMouseDown, OnInputP
 
 	public void OnMouseDown(G g, Box b)
 	{
-		var value = this.Getter();
 		Audio.Play(Event.Click);
 
 		if (b.key == this.StepperLeftKey)
 		{
-			if (this.PreviousValue(value) is not { } newValue)
-				return;
-			this.Setter(newValue);
+			var steps = Input.shift ? this.MultipleStepsCount : 1;
+			for (var i = 0; i < steps; i++)
+			{
+				var value = this.Getter();
+				if (this.PreviousValue(value) is not { } newValue)
+					break;
+				this.Setter(newValue);
+			}
 		}
 		else if (b.key == this.StepperRightKey)
 		{
-			if (this.NextValue(value) is not { } newValue)
-				return;
-			this.Setter(newValue);
+			var steps = Input.shift ? this.MultipleStepsCount : 1;
+			for (var i = 0; i < steps; i++)
+			{
+				var value = this.Getter();
+				if (this.NextValue(value) is not { } newValue)
+					return;
+				this.Setter(newValue);
+			}
 		}
 		else if (b.key == this.Key)
 		{

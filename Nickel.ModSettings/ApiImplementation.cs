@@ -118,7 +118,7 @@ public sealed class ApiImplementation : IModSettingsApi
 				}
 				return newValue;
 			}
-		);
+		).SetMultipleStepsCount(5);
 
 	public IModSettingsApi.IStepperModSetting<T> MakeEnumStepper<T>(Func<string> title, Func<T> getter, Action<T> setter) where T : struct, Enum
 		=> this.MakeStepper(

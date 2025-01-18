@@ -4,9 +4,13 @@
 
 ## Upcoming release
 
+### For everyone:
 * Updated the Pintail library, allowing for a very slight performance improvement and fix for a potential bug.
-* Fixed the `OnSaveLoadedEvent` being available too late.
+* Numeric mod settings can now be Shift-clicked to adjust them faster.
 * Fixed sorting modded cards by deck/rarity.
+
+### For developers:
+* Fixed the `OnSaveLoadedEvent` being available too late.
 
 ## 1.10.2
 Released 14 January 2025.
