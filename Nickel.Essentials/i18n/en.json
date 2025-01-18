@@ -1,4 +1,14 @@
 {
+	"crewAndShipSorting": {
+		"sortCrewByName": {
+			"name": "Sort crew selection by name",
+			"description": "Sort modded characters in crew selection by name, as opposed to the internal order."
+		},
+		"sortVanillaCrewByName": {
+			"name": "   Also sort vanilla crew",
+			"description": "Additionally sort vanilla characters together with modded characters."
+		}
+	},
 	"crewSelection": {
 		"detailedCrewInfoSetting": {
 			"name": "Detailed crew info",

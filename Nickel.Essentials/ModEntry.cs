@@ -62,18 +62,24 @@ public sealed class ModEntry : SimpleMod
 						() => package.Manifest.DisplayName ?? package.Manifest.UniqueName,
 						this.Settings.ProfileBased
 					),
+					CrewAndShipSorting.MakeSettings(api),
 					CrewSelection.MakeSettings(api),
 					StarterDeckPreview.MakeSettings(api),
 					ExeBlacklist.MakeSettings(api),
 					ModDescriptions.MakeSettings(api),
 				]).SubscribeToOnMenuClose(
-					_ => helper.Storage.SaveJson(this.SettingsFile, this.Settings)
+					_ =>
+					{
+						helper.Storage.SaveJson(this.SettingsFile, this.Settings);
+						CrewAndShipSorting.Refresh();
+					}
 				)
 			)
 		);
 
 		var harmony = helper.Utilities.Harmony;
 		CardCodexFiltering.ApplyPatches(harmony);
+		CrewAndShipSorting.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);
 		ExeBlacklist.ApplyPatches(harmony);
 		LogbookReplacement.ApplyPatches(harmony);
