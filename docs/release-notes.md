@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.11.0
+Released 18 January 2025.
 
 ### For everyone:
 * Moved the extra artifact codex categories feature into its own mod, [UI Suite](https://www.nexusmods.com/cobaltcore/mods/45).
