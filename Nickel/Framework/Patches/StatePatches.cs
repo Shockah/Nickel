@@ -65,13 +65,11 @@ internal static class StatePatches
 					new CodeInstruction(OpCodes.Ldarg_0),
 					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(EnumerateAllArtifacts_Transpiler_BeforeAddingArtifacts))),
 				])
-				.Find([
-					ILMatches.Ldarg(0),
-					ILMatches.Ldfld(nameof(State.artifacts)),
-					ILMatches.Call("AddRange"),
-				])
-				.Insert(SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
-					new CodeInstruction(OpCodes.Ldarg_0),
+				.Find(ILMatches.Instruction(OpCodes.Endfinally))
+				.PointerMatcher(SequenceMatcherRelativeElement.AfterLast)
+				.ExtractLabels(out var labels)
+				.Insert(SequenceMatcherPastBoundsDirection.Before, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
+					new CodeInstruction(OpCodes.Ldarg_0).WithLabels(labels),
 					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(EnumerateAllArtifacts_Transpiler_AfterAddingArtifacts))),
 				])
 				.AllElements();

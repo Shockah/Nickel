@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed "after" artifact hooks being called at the wrong time (before crew artifacts).
+
 ## 1.11.0
 Released 18 January 2025.
 
