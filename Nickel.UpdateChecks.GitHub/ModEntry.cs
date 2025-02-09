@@ -1,8 +1,11 @@
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Nickel.Common;
+using Nickel.ModSettings;
+using Nickel.UpdateChecks.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,9 +20,9 @@ namespace Nickel.UpdateChecks.GitHub;
 
 public sealed class ModEntry : SimpleMod, IUpdateSource
 {
+	private const string SourceKey = "GitHub";
 	private const long UpdateCheckThrottleDuration = 60 * 5;
 
-	internal static ModEntry Instance { get; private set; } = null!;
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
 	private IWritableFileInfo DatabaseFile
@@ -31,9 +34,11 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	private readonly SemaphoreSlim Semaphore = new(1, 1);
 	private readonly Database Database;
 
+	private object IconSpriteEntry = null!;
+	private object IconOnSpriteEntry = null!;
+
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
-		Instance = this;
 		this.Localizations = new MissingPlaceholderLocalizationProvider<IReadOnlyList<string>>(
 			new CurrentLocaleOrEnglishLocalizationProvider<IReadOnlyList<string>>(
 				new JsonLocalizationProvider(
@@ -46,18 +51,23 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		this.Database = helper.Storage.LoadJson<Database>(this.DatabaseFile);
 		this.Client = this.MakeHttpClient();
 		
-		helper.ModRegistry.GetApi<IUpdateChecksTrimmedApi>("Nickel.UpdateChecks")!.RegisterUpdateSource("GitHub", this);
+		helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!.RegisterUpdateSource(SourceKey, this);
 		
 		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
 		{
 			if (phase != ModLoadPhase.AfterDbInit)
 				return;
-			this.SetupAfterDbInit();
+			if (!this.Helper.ModRegistry.LoadedMods.ContainsKey("Nickel.UpdateChecks.UI"))
+				return;
+			this.SetupUI();
 		};
 	}
 
-	private void SetupAfterDbInit()
+	private void SetupUI()
 	{
+		this.IconSpriteEntry = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/ProviderIcon.png"));
+		this.IconOnSpriteEntry = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/ProviderIconOn.png"));
+		
 		var updateChecksApi = this.Helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!;
 		if (this.Helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
 			settingsApi.RegisterModSettings(
@@ -221,6 +231,25 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				yield return new(UpdateSourceMessageLevel.Error, this.Localizations.Localize(["message", "unauthorized"]));
 		}
 	}
+	
+	[UsedImplicitly]
+	public string Name
+		=> "GitHub";
+
+	[UsedImplicitly]
+	public Spr? GetIcon(IModManifest mod, UpdateDescriptor descriptor, bool hover)
+		=> ((ISpriteEntry)(hover ? this.IconOnSpriteEntry : this.IconSpriteEntry)).Sprite;
+
+	[UsedImplicitly]
+	public IEnumerable<Tooltip> GetVisitWebsiteTooltips(IModManifest mod, UpdateDescriptor descriptor)
+		=> [
+			new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::VisitWebsite::GitHub")
+			{
+				TitleColor = Colors.textBold,
+				Title = this.Localizations.Localize(["visitWebsite", "title"]),
+				Description = this.Localizations.Localize(["visitWebsite", "description"])
+			}
+		];
 
 	public async Task<IReadOnlyDictionary<IModManifest, UpdateDescriptor>> GetLatestVersionsAsync(IEnumerable<(IModManifest Mod, object? ManifestEntry)> mods)
 	{
@@ -236,7 +265,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 			foreach (var modEntry in remainingMods)
 				if (this.Database.UniqueNameToEntry.TryGetValue(modEntry.Mod.UniqueName, out var entry))
-					results[modEntry.Mod] = new(entry.Version, [entry.Url]);
+					results[modEntry.Mod] = new(SourceKey, entry.Version, entry.Url);
 
 			if (now - this.Database.LastUpdate < UpdateCheckThrottleDuration)
 			{
@@ -283,7 +312,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 					var (release, version) = matchingReleases.MaxBy(e => e.Release.PublishedAt);
 
 					remainingMods.Remove(modEntry);
-					results[modEntry.Mod] = new(version, [release.Url]);
+					results[modEntry.Mod] = new(SourceKey, version, release.Url);
 					this.Database.UniqueNameToEntry[modEntry.Mod.UniqueName] = new Database.Entry { Version = version, Url = release.Url };
 				}
 			}

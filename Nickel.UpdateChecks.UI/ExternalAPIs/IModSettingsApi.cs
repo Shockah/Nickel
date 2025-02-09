@@ -3,13 +3,19 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace Nickel.UpdateChecks;
+namespace Nickel.ModSettings;
 
 /// <summary>
 /// Provides access to <c>Nickel.ModSettings</c> APIs.
 /// </summary>
 public interface IModSettingsApi
 {
+	/// <summary>
+	/// Overrides the title of the mod on the mod settings screen.
+	/// </summary>
+	/// <param name="title">The title to show, or <c>null</c> for the default.</param>
+	void OverrideModSettingsTitle(string? title);
+	
 	/// <summary>
 	/// Registers settings for a mod.
 	/// </summary>
@@ -348,6 +354,9 @@ public interface IModSettingsApi
 		
 		/// <summary>The horizontal alignment of the title.</summary>
 		HorizontalAlignment TitleHorizontalAlignment { get; set; }
+		
+		/// <summary>The spacing between the title and the value text.</summary>
+		int Spacing { get; set; }
 
 		/// <summary>Sets the <see cref="Title"/>.</summary>
 		/// <param name="value">The new value.</param>
@@ -373,6 +382,11 @@ public interface IModSettingsApi
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
 		IButtonModSetting SetTitleHorizontalAlignment(HorizontalAlignment value);
+
+		/// <summary>Sets the <see cref="Spacing"/> between the title and the value text.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		IButtonModSetting SetSpacing(int value);
 	}
 
 	/// <summary>
@@ -437,6 +451,13 @@ public interface IModSettingsApi
 		
 		/// <summary>The next value function. If <c>null</c>, the right arrow button will be hidden.</summary>
 		Func<T, T?> NextValue { get; set; }
+
+		/// <summary>How many steps should be applied if the Shift key is held while clicking on the arrow buttons.</summary>
+		int MultipleStepsCount
+		{
+			get => throw new InvalidProgramException("Real implementation in `Nickel.ModSettings`");
+			set => throw new InvalidProgramException("Real implementation in `Nickel.ModSettings`");
+		}
 		
 		/// <summary>The value formatter, used for displaying the value between the arrow buttons.</summary>
 		Func<T, string>? ValueFormatter { get; set; }
@@ -474,6 +495,12 @@ public interface IModSettingsApi
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
 		IStepperModSetting<T> SetNextValue(Func<T, T?> value);
+		
+		/// <summary>Sets the <see cref="MultipleStepsCount"/> function.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		IStepperModSetting<T> SetMultipleStepsCount(int value)
+			=> throw new InvalidProgramException("Real implementation in `Nickel.ModSettings`");
 		
 		/// <summary>Sets the <see cref="ValueFormatter"/>.</summary>
 		/// <param name="value">The new value.</param>

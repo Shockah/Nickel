@@ -18,5 +18,9 @@
 	"message": {
 		"missingToken": "GitHub token is not provided in mod settings. It is <c=cheevoGold>recommended</c> for Nickel to be able to perform update checks for mods hosted on GitHub.",
 		"unauthorized": "There was a problem authorizing with GitHub - is your provided token expired or revoked? Update it in mod settings."
+	},
+	"visitWebsite": {
+		"title": "Open GitHub",
+		"description": "Open GitHub to download the mod update."
 	}
 }

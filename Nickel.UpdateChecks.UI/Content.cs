@@ -1,4 +1,4 @@
-namespace Nickel.UpdateChecks;
+﻿namespace Nickel.UpdateChecks.UI;
 
 internal sealed class Content
 {
@@ -6,4 +6,6 @@ internal sealed class Content
 	public ISpriteEntry WarningMessageOverlayIcon = null!;
 	public ISpriteEntry ErrorMessageOverlayIcon = null!;
 	public ISpriteEntry UpdateAvailableTooltipIcon = null!;
+	public ISpriteEntry DefaultVisitWebsiteIcon = null!;
+	public ISpriteEntry DefaultVisitWebsiteOnIcon = null!;
 }

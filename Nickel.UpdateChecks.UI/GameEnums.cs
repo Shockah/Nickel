@@ -1,6 +1,6 @@
 using Nanoray.EnumByNameSourceGenerator;
 
-namespace Nickel.UpdateChecks;
+namespace Nickel.UpdateChecks.UI;
 
 [EnumByName(typeof(Spr))]
 internal static partial class StableSpr { }

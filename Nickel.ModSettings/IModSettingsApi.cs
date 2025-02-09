@@ -11,6 +11,12 @@ namespace Nickel.ModSettings;
 public interface IModSettingsApi
 {
 	/// <summary>
+	/// Overrides the title of the mod on the mod settings screen.
+	/// </summary>
+	/// <param name="title">The title to show, or <c>null</c> for the default.</param>
+	void OverrideModSettingsTitle(string? title);
+	
+	/// <summary>
 	/// Registers settings for a mod.
 	/// </summary>
 	/// <param name="settings">The settings.</param>

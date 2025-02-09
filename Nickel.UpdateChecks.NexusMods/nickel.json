@@ -12,6 +12,11 @@
 		{
 			"UniqueName": "Nickel.UpdateChecks",
 			"Version": "{{ModVersion}}"
+		},
+		{
+			"UniqueName": "Nickel.UpdateChecks.UI",
+			"Version": "{{ModVersion}}",
+			"IsRequired": false
 		}
 	]
 }

@@ -1,18 +1,13 @@
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using Microsoft.Xna.Framework.Graphics;
 using Nanoray.PluginManager;
-using Nanoray.Shrike;
-using Nanoray.Shrike.Harmony;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -46,31 +41,21 @@ public sealed class ModEntry : SimpleMod
 	};
 
 	internal static ModEntry Instance { get; private set; } = null!;
-	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
 	internal readonly Dictionary<string, IUpdateSource> UpdateSources = [];
-	internal readonly Dictionary<IModManifest, UpdateDescriptor?> UpdatesAvailable = [];
+	internal readonly Dictionary<IModManifest, List<UpdateDescriptor>> UpdatesAvailable = [];
 	internal readonly ConcurrentQueue<Action> ToRunInGameLoop = [];
 	internal readonly List<Action> AwaitingUpdateInfo = [];
 	internal readonly Settings Settings;
-	
-	private Content Content = null!;
+
 	private (Task Task, CancellationTokenSource Token)? CurrentUpdateCheckTask;
 
-	private IWritableFileInfo SettingsFile
+	internal IWritableFileInfo SettingsFile
 		=> this.Helper.Storage.GetMainStorageFile("json");
 
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
 		Instance = this;
-		this.Localizations = new MissingPlaceholderLocalizationProvider<IReadOnlyList<string>>(
-			new CurrentLocaleOrEnglishLocalizationProvider<IReadOnlyList<string>>(
-				new JsonLocalizationProvider(
-					tokenExtractor: new SimpleLocalizationTokenExtractor(),
-					localeStreamFunction: locale => package.PackageRoot.GetRelativeFile($"i18n/{locale}.json").OpenRead()
-				)
-			)
-		);
 		this.Settings = helper.Storage.LoadJson<Settings>(this.SettingsFile);
 
 		helper.Events.OnGameClosing += (_, _) =>
@@ -102,7 +87,6 @@ public sealed class ModEntry : SimpleMod
 					this.SetupAfterGameAssembly();
 					break;
 				case ModLoadPhase.AfterDbInit:
-					this.SetupAfterDbInit();
 					break;
 			}
 			
@@ -121,14 +105,6 @@ public sealed class ModEntry : SimpleMod
 
 	private void SetupAfterGameAssembly()
 	{
-		this.Content = new()
-		{
-			UpdateAvailableOverlayIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/UpdateAvailableOverlayIcon.png")),
-			WarningMessageOverlayIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/WarningMessageOverlayIcon.png")),
-			ErrorMessageOverlayIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/ErrorMessageOverlayIcon.png")),
-			UpdateAvailableTooltipIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/UpdateAvailableTooltipIcon.png"))
-		};
-
 		var harmony = this.Helper.Utilities.Harmony;
 		
 		harmony.Patch(
@@ -136,37 +112,6 @@ public sealed class ModEntry : SimpleMod
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(G)}.{nameof(G.Render)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(G_Render_Postfix))
 		);
-		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(CornerMenu), nameof(CornerMenu.Render))
-				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(CornerMenu)}.{nameof(CornerMenu.Render)}`"),
-			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(CornerMenu_Render_Transpiler))
-		);
-	}
-
-	private void SetupAfterDbInit()
-	{
-		if (this.Helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
-			settingsApi.RegisterModSettings(
-				settingsApi.MakeButton(
-					title: () => this.Localizations.Localize(["settings", "ignoredUpdates"]),
-					onClick: (g, route) => route.OpenSubroute(g, this.MakeIgnoredUpdatesModSettingsRoute())
-				).SetValueText(() =>
-				{
-					var entries = Instance.UpdatesAvailable
-						.Where(kvp => kvp.Value is not null)
-						.Select(kvp => new KeyValuePair<IModManifest, UpdateDescriptor>(kvp.Key, kvp.Value!.Value))
-						.Where(kvp => kvp.Value.Version > kvp.Key.Version)
-						.ToList();
-
-					if (entries.Count == 0)
-						return this.Localizations.Localize(["settings", "ignoredUpdatesNone"]);
-
-					var ignored = entries.Count(kvp => this.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) && ignoredUpdate == kvp.Value.Version);
-					return $"{ignored}/{entries.Count}";
-				}).SubscribeToOnMenuClose(
-					_ => this.Helper.Storage.SaveJson(this.SettingsFile, this.Settings)
-				)
-			);
 	}
 
 	public override object GetApi(IModManifest requestingMod)
@@ -186,9 +131,6 @@ public sealed class ModEntry : SimpleMod
 		return mod.DisplayName ?? mod.UniqueName;
 	}
 
-	internal static string GetModNameWithVersionForUpdatePurposes(IModManifest mod)
-		=> $"{GetModNameForUpdatePurposes(mod)} {mod.Version}";
-
 	internal void ParseManifestsAndRequestUpdateInfo(IUpdateSource? sourceToUpdate = null)
 	{
 		Dictionary<IUpdateSource, List<(IModManifest Mod, object? ManifestEntry)>> updateSourceToMod = [];
@@ -204,25 +146,25 @@ public sealed class ModEntry : SimpleMod
 			}
 			else if (HardcodedUpdateCheckData.TryGetValue(mod.UniqueName, out var hardcodedUpdateCheckData))
 			{
-				this.Logger.LogDebug("Checking hardcoded update info for mod {ModName}: `UpdateChecks` structure not defined.", GetModNameWithVersionForUpdatePurposes(mod));
-				updateChecks = hardcodedUpdateCheckData.ToDictionary(kvp => kvp.Key, kvp => (JToken)JObject.Parse(kvp.Value));
+				this.Logger.LogDebug("Checking hardcoded update info for mod {ModName}: `UpdateChecks` structure not defined.", GetModNameForUpdatePurposes(mod));
+				updateChecks = hardcodedUpdateCheckData.ToDictionary(kvp => kvp.Key, JToken (kvp) => JObject.Parse(kvp.Value));
 			}
 			else
 			{
-				this.UpdatesAvailable[mod] = null;
-				this.Logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure not defined.", GetModNameWithVersionForUpdatePurposes(mod));
+				this.UpdatesAvailable[mod] = [];
+				this.Logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure not defined.", GetModNameForUpdatePurposes(mod));
 				continue;
 			}
 
 			if (updateChecks is null)
 			{
-				this.UpdatesAvailable[mod] = null;
-				this.Logger.LogError("Cannot check updates for mod {ModName}: invalid `UpdateChecks` structure.", GetModNameWithVersionForUpdatePurposes(mod));
+				this.UpdatesAvailable[mod] = [];
+				this.Logger.LogError("Cannot check updates for mod {ModName}: invalid `UpdateChecks` structure.", GetModNameForUpdatePurposes(mod));
 				continue;
 			}
 			if (updateChecks.Count == 0)
 			{
-				this.UpdatesAvailable[mod] = null;
+				this.UpdatesAvailable[mod] = [];
 				continue;
 			}
 
@@ -249,8 +191,8 @@ public sealed class ModEntry : SimpleMod
 
 			if (!hasValidSources)
 			{
-				this.UpdatesAvailable[mod] = null;
-				this.Logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure is defined, but there are no installed compatible update sources.", GetModNameWithVersionForUpdatePurposes(mod));
+				this.UpdatesAvailable[mod] = [];
+				this.Logger.LogDebug("Cannot check updates for mod {ModName}: `UpdateChecks` structure is defined, but there are no installed compatible update sources.", GetModNameForUpdatePurposes(mod));
 			}
 		}
 
@@ -285,16 +227,19 @@ public sealed class ModEntry : SimpleMod
 							.ToList();
 
 						if (versions.Count == 0)
-							return (Mod: m, Descriptor: (UpdateDescriptor?)null);
+							return (Mod: m, Descriptors: []);
 
 						var maxVersion = versions.Select(e => e.Version).Max();
-						var maxVersionUrls = versions
-							.Where(e => e.Version == maxVersion)
-							.SelectMany(e => e.Urls);
-						return (Mod: m, Descriptor: new UpdateDescriptor(maxVersion, maxVersionUrls.ToList()));
+
+						return (
+							Mod: m,
+							Descriptors: versions
+								.Where(e => e.Version == maxVersion)
+								.ToList()
+						);
 					})
-					.Where(e => e.Descriptor is not null)
-					.ToDictionary(e => e.Mod, e => e.Descriptor!.Value);
+					.Where(e => e.Descriptors.Count != 0)
+					.ToDictionary(e => e.Mod, e => e.Descriptors);
 
 				this.ToRunInGameLoop.Enqueue(() => this.ReportUpdates(modToVersion));
 			}, token.Token),
@@ -302,24 +247,26 @@ public sealed class ModEntry : SimpleMod
 		);
 	}
 
-	private void ReportUpdates(Dictionary<IModManifest, UpdateDescriptor> updates)
+	private void ReportUpdates(Dictionary<IModManifest, List<UpdateDescriptor>> updates)
 	{
 		var hasOutdatedMods = false;
-		foreach (var (mod, result) in updates)
+		foreach (var (mod, descriptors) in updates)
 		{
-			this.UpdatesAvailable[mod] = result;
-			if (mod.Version >= result.Version)
-				continue;
-			if (result.Urls.Count == 0)
+			this.UpdatesAvailable[mod] = descriptors;
+			if (descriptors.Count == 0)
 				continue;
 
-			if (this.Settings.IgnoredUpdates.TryGetValue(mod.UniqueName, out var ignoredUpdate) && ignoredUpdate == result.Version)
+			var descriptorVersion = descriptors[0].Version;
+			if (mod.Version >= descriptorVersion)
+				continue;
+
+			if (this.Settings.IgnoredUpdates.TryGetValue(mod.UniqueName, out var ignoredUpdate) && ignoredUpdate == descriptorVersion)
 			{
-				this.Logger.LogDebug("Mod {ModName} has an update {Version} available, but it's being ignored:\n{Urls}", GetModNameWithVersionForUpdatePurposes(mod), result.Version, string.Join("\n", result.Urls.Select(url => $"\t{url}")));
+				this.Logger.LogDebug("Mod {ModName} {OldVersion} has an update {NewVersion} available, but it's being ignored:\n{Urls}", GetModNameForUpdatePurposes(mod), mod.Version, descriptorVersion, string.Join("\n", descriptors.Select(d => $"\t{d.Url}")));
 			}
 			else
 			{
-				this.Logger.LogWarning("Mod {ModName} has an update {Version} available:\n{Urls}", GetModNameWithVersionForUpdatePurposes(mod), result.Version, string.Join("\n", result.Urls.Select(url => $"\t{url}")));
+				this.Logger.LogWarning("Mod {ModName} {OldVersion} has an update {NewVersion} available:\n{Urls}", GetModNameForUpdatePurposes(mod), mod.Version, descriptorVersion, string.Join("\n", descriptors.Select(d => $"\t{d.Url}")));
 				hasOutdatedMods = true;
 			}
 		}
@@ -333,180 +280,6 @@ public sealed class ModEntry : SimpleMod
 			callback();
 	}
 
-	private Route MakeIgnoredUpdatesModSettingsRoute()
-	{
-		var api = this.Helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") ?? throw new InvalidOperationException();
-
-		return api.MakeModSettingsRoute(
-			api.MakeList([
-				api.MakeHeader(
-					() => this.Package.Manifest.DisplayName ?? this.Package.Manifest.UniqueName,
-					() => this.Localizations.Localize(["settings", "ignoredUpdates"])
-				),
-				api.MakeList([
-					.. Instance.UpdatesAvailable
-						.Where(kvp => kvp.Value is not null)
-						.Select(kvp => new KeyValuePair<IModManifest, UpdateDescriptor>(kvp.Key, kvp.Value!.Value))
-						.Where(kvp => kvp.Value.Version > kvp.Key.Version)
-						.Select(
-							kvp => api.MakeCheckbox(
-								title: () => GetModNameForUpdatePurposes(kvp.Key),
-								getter: () => this.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) && ignoredUpdate == kvp.Value.Version,
-								setter: (_, _, value) =>
-								{
-									if (value)
-										this.Settings.IgnoredUpdates[kvp.Key.UniqueName] = kvp.Value.Version;
-									else
-										this.Settings.IgnoredUpdates.Remove(kvp.Key.UniqueName);
-								}
-							)
-						)
-				]).SetEmptySetting(api.MakeText(() => this.Localizations.Localize(["settings", "upToDate"]))),
-				api.MakeBackButton()
-			])
-			.SetSpacing(8)
-		);
-	}
-
 	private static void G_Render_Postfix()
 		=> Instance.ProcessActionsToRunInGameLoop();
-
-	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-	private static IEnumerable<CodeInstruction> CornerMenu_Render_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
-	{
-		try
-		{
-			return new SequenceBlockMatcher<CodeInstruction>(instructions)
-				.Find(ILMatches.LdcI4((int)StableSpr.buttons_menu))
-				.Find(ILMatches.Call("Sprite"))
-				.Replace(new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(CornerMenu_Render_Transpiler_HijackDraw))))
-				.AllElements();
-		}
-		catch (Exception ex)
-		{
-			Instance.Logger.LogError("Could not patch method {Method} - {Mod} probably won't work.\nReason: {Exception}", originalMethod, Instance.Package.Manifest.UniqueName, ex);
-			return instructions;
-		}
-	}
-
-	private static void CornerMenu_Render_Transpiler_HijackDraw(Spr? id, double x, double y, bool flipX, bool flipY, double rotation, Vec? originPx, Vec? originRel, Vec? scale, Rect? pixelRect, Color? color, BlendState? blend, SamplerState? samplerState, Effect? effect)
-	{
-		Draw.Sprite(id, x, y, flipX, flipY, rotation, originPx, originRel, scale, pixelRect, color, blend, samplerState, effect);
-
-		var updateSourceMessages = Instance.UpdateSources
-			.OrderBy(kvp => kvp.Key)
-			.Select(kvp => kvp.Value)
-			.SelectMany(s => s.Messages)
-			.GroupBy(m => m.Level)
-			.ToDictionary(g => g.Key, g => g.ToList());
-
-		var updatesAvailable = Instance.UpdatesAvailable
-			.Where(kvp => kvp.Value is not null)
-			.Select(kvp => new KeyValuePair<IModManifest, UpdateDescriptor>(kvp.Key, kvp.Value!.Value))
-			.Where(kvp => kvp.Value.Version > kvp.Key.Version)
-			.Where(kvp => !Instance.Settings.IgnoredUpdates.TryGetValue(kvp.Key.UniqueName, out var ignoredUpdate) || ignoredUpdate != kvp.Value.Version)
-			.ToList();
-
-		List<ISpriteEntry> overlaysToShow = [];
-		var addedTooltips = false;
-
-		if (updatesAvailable.Count > 0)
-			overlaysToShow.Add(Instance.Content.UpdateAvailableOverlayIcon);
-
-		if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Error, out var messages) && messages.Count > 0)
-			overlaysToShow.Add(Instance.Content.ErrorMessageOverlayIcon);
-		else if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Warning, out messages) && messages.Count > 0)
-			overlaysToShow.Add(Instance.Content.WarningMessageOverlayIcon);
-
-		if (overlaysToShow.Count > 0)
-		{
-			var overlayToShow = overlaysToShow[(int)MG.inst.g.time % overlaysToShow.Count];
-			Draw.Sprite(overlayToShow.Sprite, x, y);
-		}
-
-		if (MG.inst.g.boxes.FirstOrDefault(b => b.key is { } key && key.k == StableUK.corner_mainmenu) is not { } box)
-			return;
-		if (!box.IsHover())
-			return;
-
-		if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Error, out messages) && messages.Count > 0)
-		{
-			if (!addedTooltips)
-			{
-				addedTooltips = true;
-				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new TTDivider());
-			}
-
-			var i = 0;
-			foreach (var error in messages)
-			{
-				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new GlossaryTooltip($"ui.{Instance.Package.Manifest.UniqueName}::Error{i++}")
-				{
-					Icon = StableSpr.icons_hurt,
-					TitleColor = Colors.textBold,
-					Title = Instance.Localizations.Localize(["settingsTooltip", "error"]),
-					Description = error.Message,
-				});
-			}
-		}
-
-		if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Warning, out messages) && messages.Count > 0)
-		{
-			if (!addedTooltips)
-			{
-				addedTooltips = true;
-				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new TTDivider());
-			}
-
-			var i = 0;
-			foreach (var error in messages)
-			{
-				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new GlossaryTooltip($"ui.{Instance.Package.Manifest.UniqueName}::Warning{i++}")
-				{
-					Icon = StableSpr.icons_hurtBlockable,
-					TitleColor = Colors.textBold,
-					Title = Instance.Localizations.Localize(["settingsTooltip", "warning"]),
-					Description = error.Message,
-				});
-			}
-		}
-
-		if (updateSourceMessages.TryGetValue(UpdateSourceMessageLevel.Info, out messages) && messages.Count > 0)
-		{
-			if (!addedTooltips)
-			{
-				addedTooltips = true;
-				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new TTDivider());
-			}
-
-			var i = 0;
-			foreach (var error in messages)
-			{
-				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new GlossaryTooltip($"ui.{Instance.Package.Manifest.UniqueName}::Info{i++}")
-				{
-					Icon = StableSpr.icons_hurtBlockable,
-					TitleColor = Colors.textBold,
-					Title = Instance.Localizations.Localize(["settingsTooltip", "info"]),
-					Description = error.Message,
-				});
-			}
-		}
-
-		if (updatesAvailable.Count > 0)
-		{
-			if (!addedTooltips)
-			{
-				// addedTooltips = true;
-				MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new TTDivider());
-			}
-
-			MG.inst.g.tooltips.Add(box.rect.xy + new Vec(15, 15), new GlossaryTooltip($"ui.{Instance.Package.Manifest.UniqueName}::UpdatesAvailable")
-			{
-				Icon = Instance.Content.UpdateAvailableTooltipIcon.Sprite,
-				TitleColor = Colors.textBold,
-				Title = Instance.Localizations.Localize(["settingsTooltip", "updatesAvailableTooltip"]),
-				Description = string.Join("\n", updatesAvailable.Select(kvp => $"<c=textFaint>{GetModNameWithVersionForUpdatePurposes(kvp.Key)}</c> -> <c=boldPink>{kvp.Value.Version}</c>"))
-			});
-		}
-	}
 }

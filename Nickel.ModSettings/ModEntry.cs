@@ -13,6 +13,7 @@ public sealed class ModEntry : SimpleMod
 	internal static ModEntry Instance { get; private set; } = null!;
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
+	internal readonly Dictionary<string, string> ModTitleOverrides = [];
 	internal readonly Dictionary<string, IModSettingsApi.IModSetting> ModSettings = [];
 	internal readonly ApiImplementation Api;
 	

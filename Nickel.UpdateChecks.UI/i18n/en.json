@@ -1,0 +1,28 @@
+{
+	"settingsTooltip": {
+		"updatesAvailableTooltip": "Updates",
+		"error": "Update Error",
+		"warning": "Update Warning",
+		"info": "Update Info"
+	},
+	"settings": {
+		"paste": "PASTE",
+		"clear": "CLEAR",
+		"setup": "SETUP",
+		"ignoredUpdates": "Ignored updates",
+		"ignoredUpdatesNone": "None",
+		"upToDate": "All installed mods are up to date.",
+		"ignoreMod": {
+			"title": "Ignore update",
+			"description": "Whether to ignore this mod update."
+		},
+		"visitWebsite": {
+			"title": "Open website",
+			"description": "Open the website to download the mod update."
+		},
+		"openAll": {
+			"title": "Open all {{SourceName}} links",
+			"description": "Open all {{SourceName}} links to download the mod updates."
+		}
+	}
+}

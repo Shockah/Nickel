@@ -1,8 +1,11 @@
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Nickel.Common;
+using Nickel.ModSettings;
+using Nickel.UpdateChecks.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,9 +19,9 @@ namespace Nickel.UpdateChecks.NexusMods;
 
 public sealed class ModEntry : SimpleMod, IUpdateSource
 {
+	private const string SourceKey = "NexusMods";
 	private const long UpdateCheckThrottleDuration = 60 * 5;
 
-	internal static ModEntry Instance { get; private set; } = null!;
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
 	private IWritableFileInfo DatabaseFile
@@ -30,9 +33,11 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 	private readonly SemaphoreSlim Semaphore = new(1, 1);
 	private readonly Database Database;
 
+	private object IconSpriteEntry = null!;
+	private object IconOnSpriteEntry = null!;
+
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
-		Instance = this;
 		this.Localizations = new MissingPlaceholderLocalizationProvider<IReadOnlyList<string>>(
 			new CurrentLocaleOrEnglishLocalizationProvider<IReadOnlyList<string>>(
 				new JsonLocalizationProvider(
@@ -45,7 +50,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		this.Database = helper.Storage.LoadJson<Database>(this.DatabaseFile);
 		this.Client = this.MakeHttpClient();
 		
-		helper.ModRegistry.GetApi<IUpdateChecksTrimmedApi>("Nickel.UpdateChecks")!.RegisterUpdateSource("NexusMods", this);
+		helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!.RegisterUpdateSource(SourceKey, this);
 
 		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
 		{
@@ -57,6 +62,9 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 	private void SetupAfterDbInit()
 	{
+		this.IconSpriteEntry = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/ProviderIcon.png"));
+		this.IconOnSpriteEntry = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/ProviderIconOn.png"));
+		
 		var updateChecksApi = this.Helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!;
 		if (this.Helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
 			settingsApi.RegisterModSettings(
@@ -126,6 +134,25 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				yield return new(UpdateSourceMessageLevel.Error, this.Localizations.Localize(["message", "unauthorized"]));
 		}
 	}
+	
+	[UsedImplicitly]
+	public string Name
+		=> "NexusMods";
+
+	[UsedImplicitly]
+	public Spr? GetIcon(IModManifest mod, UpdateDescriptor descriptor, bool hover)
+		=> ((ISpriteEntry)(hover ? this.IconOnSpriteEntry : this.IconSpriteEntry)).Sprite;
+
+	[UsedImplicitly]
+	public IEnumerable<Tooltip> GetVisitWebsiteTooltips(IModManifest mod, UpdateDescriptor descriptor)
+		=> [
+			new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::VisitWebsite::NexusMods")
+			{
+				TitleColor = Colors.textBold,
+				Title = this.Localizations.Localize(["visitWebsite", "title"]),
+				Description = this.Localizations.Localize(["visitWebsite", "description"])
+			}
+		];
 
 	public bool TryParseManifestEntry(IModManifest mod, JObject rawManifestEntry, out object? manifestEntry)
 	{
@@ -161,7 +188,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 			foreach (var modEntry in remainingMods)
 				if (this.Database.ModIdToVersion.TryGetValue(modEntry.Entry.Id, out var version))
-					results[modEntry.Mod] = new(version, [$"https://www.nexusmods.com/cobaltcore/mods/{modEntry.Entry.Id}"]);
+					results[modEntry.Mod] = new(SourceKey, version, $"https://www.nexusmods.com/cobaltcore/mods/{modEntry.Entry.Id}");
 
 			if (now - this.Database.LastUpdate < UpdateCheckThrottleDuration)
 			{
@@ -232,7 +259,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 							continue;
 
 						remainingMods.Remove(modEntry);
-						results[modEntry.Mod] = new(version, [$"https://www.nexusmods.com/cobaltcore/mods/{model.Id}"]);
+						results[modEntry.Mod] = new(SourceKey, version, $"https://www.nexusmods.com/cobaltcore/mods/{model.Id}");
 					}
 
 					if (remainingMods.Count == 0)
@@ -269,7 +296,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 					continue;
 
 				remainingMods.Remove(entry.ModEntry);
-				results[entry.ModEntry.Mod] = new(version, [$"https://www.nexusmods.com/cobaltcore/mods/{entry.Model.Id}"]);
+				results[entry.ModEntry.Mod] = new(SourceKey, version, $"https://www.nexusmods.com/cobaltcore/mods/{entry.Model.Id}");
 				this.Database.ModIdToVersion[entry.Model.Id] = version;
 			}
 

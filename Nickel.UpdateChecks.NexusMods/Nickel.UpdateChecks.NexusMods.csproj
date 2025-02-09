@@ -4,9 +4,11 @@
 		<RootNamespace>Nickel.UpdateChecks.NexusMods</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
+		<ModFiles Include="assets/**" />
 		<ModFiles Include="i18n/**" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Nickel.UpdateChecks\Nickel.UpdateChecks.csproj" Private="False" />
+		<ProjectReference Include="..\Nickel.UpdateChecks.UI\Nickel.UpdateChecks.UI.csproj" Private="False" />
 	</ItemGroup>
 </Project>

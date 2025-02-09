@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace Nickel;
+namespace Nickel.ModSettings;
 
 /// <summary>
 /// Provides access to <c>Nickel.ModSettings</c> APIs.

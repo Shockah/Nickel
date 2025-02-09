@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\Configuration.InternalMod.props" />
 	<PropertyGroup>
-		<RootNamespace>Nickel.UpdateChecks.GitHub</RootNamespace>
+		<RootNamespace>Nickel.UpdateChecks.UI</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
 		<ModFiles Include="assets/**" />
@@ -9,6 +9,5 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Nickel.UpdateChecks\Nickel.UpdateChecks.csproj" Private="False" />
-		<ProjectReference Include="..\Nickel.UpdateChecks.UI\Nickel.UpdateChecks.UI.csproj" Private="False" />
 	</ItemGroup>
 </Project>

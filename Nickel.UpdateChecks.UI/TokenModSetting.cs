@@ -1,11 +1,12 @@
 using FSPRO;
+using Nickel.ModSettings;
 using System;
 using System.Collections.Generic;
 using TextCopy;
 
-namespace Nickel.UpdateChecks;
+namespace Nickel.UpdateChecks.UI;
 
-public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
+public sealed class TokenModSetting : IUpdateChecksUiApi.ITokenModSetting
 {
 	public UIKey Key { get; private set; }
 	public event IModSettingsApi.OnMenuOpen? OnMenuOpen;
@@ -52,43 +53,43 @@ public sealed class TokenModSetting : IUpdateChecksApi.ITokenModSetting
 			ModEntry.Instance.Helper.Utilities.FreeEnumCase(this.CheckboxKey.k);
 	}
 
-	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetTitle(Func<string> value)
+	IUpdateChecksUiApi.ITokenModSetting IUpdateChecksUiApi.ITokenModSetting.SetTitle(Func<string> value)
 	{
 		this.Title = value;
 		return this;
 	}
 
-	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetHasValue(Func<bool> value)
+	IUpdateChecksUiApi.ITokenModSetting IUpdateChecksUiApi.ITokenModSetting.SetHasValue(Func<bool> value)
 	{
 		this.HasValue = value;
 		return this;
 	}
 
-	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetPasteAction(Action<G, IModSettingsApi.IModSettingsRoute, string?>? value)
+	IUpdateChecksUiApi.ITokenModSetting IUpdateChecksUiApi.ITokenModSetting.SetPasteAction(Action<G, IModSettingsApi.IModSettingsRoute, string?>? value)
 	{
 		this.PasteAction = value;
 		return this;
 	}
 
-	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetSetupAction(Action<G, IModSettingsApi.IModSettingsRoute> value)
+	IUpdateChecksUiApi.ITokenModSetting IUpdateChecksUiApi.ITokenModSetting.SetSetupAction(Action<G, IModSettingsApi.IModSettingsRoute> value)
 	{
 		this.SetupAction = value;
 		return this;
 	}
 
-	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetBaseTooltips(Func<IEnumerable<Tooltip>>? value)
+	IUpdateChecksUiApi.ITokenModSetting IUpdateChecksUiApi.ITokenModSetting.SetBaseTooltips(Func<IEnumerable<Tooltip>>? value)
 	{
 		this.BaseTooltips = value;
 		return this;
 	}
 
-	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetPasteTooltips(Func<IEnumerable<Tooltip>>? value)
+	IUpdateChecksUiApi.ITokenModSetting IUpdateChecksUiApi.ITokenModSetting.SetPasteTooltips(Func<IEnumerable<Tooltip>>? value)
 	{
 		this.PasteTooltips = value;
 		return this;
 	}
 
-	IUpdateChecksApi.ITokenModSetting IUpdateChecksApi.ITokenModSetting.SetSetupTooltips(Func<IEnumerable<Tooltip>>? value)
+	IUpdateChecksUiApi.ITokenModSetting IUpdateChecksUiApi.ITokenModSetting.SetSetupTooltips(Func<IEnumerable<Tooltip>>? value)
 	{
 		this.SetupTooltips = value;
 		return this;

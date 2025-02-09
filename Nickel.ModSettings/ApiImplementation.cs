@@ -15,6 +15,14 @@ public sealed class ApiImplementation : IModSettingsApi
 		this.ModManifest = modManifest;
 	}
 
+	public void OverrideModSettingsTitle(string? title)
+	{
+		if (string.IsNullOrEmpty(title))
+			ModEntry.Instance.ModTitleOverrides.Remove(this.ModManifest.UniqueName);
+		else
+			ModEntry.Instance.ModTitleOverrides[this.ModManifest.UniqueName] = title;
+	}
+
 	public void RegisterModSettings(IModSettingsApi.IModSetting settings)
 		=> ModEntry.Instance.ModSettings[this.ModManifest.UniqueName] = settings;
 
@@ -41,7 +49,7 @@ public sealed class ApiImplementation : IModSettingsApi
 								.OrderBy(e => e.Mod.DisplayName ?? e.Mod.UniqueName)
 								.Select(e => new ButtonModSetting
 								{
-									Title = () => e.Mod.DisplayName ?? e.Mod.UniqueName,
+									Title = () => ModEntry.Instance.ModTitleOverrides.GetValueOrDefault(e.Mod.UniqueName) ?? e.Mod.DisplayName ?? e.Mod.UniqueName,
 									OnClick = (g, route) => route.OpenSubroute(g, this.MakeModSettingsRouteForMod(e.Mod)!)
 								})
 						],
@@ -66,7 +74,7 @@ public sealed class ApiImplementation : IModSettingsApi
 			{
 				Spacing = 8,
 				Settings = [
-					this.MakeHeader(() => modManifest.DisplayName ?? modManifest.UniqueName),
+					this.MakeHeader(() => ModEntry.Instance.ModTitleOverrides.GetValueOrDefault(modManifest.UniqueName) ?? modManifest.DisplayName ?? modManifest.UniqueName),
 					settings,
 					this.MakeBackButton(),
 				]

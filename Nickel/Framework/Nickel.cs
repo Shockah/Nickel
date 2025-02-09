@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Mono.Cecil;
 using Nanoray.PluginManager.Cecil;
 using Nickel.Common;
+using Nickel.ModSettings;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;

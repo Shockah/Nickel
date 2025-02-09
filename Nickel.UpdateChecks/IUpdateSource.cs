@@ -10,12 +10,6 @@ namespace Nickel.UpdateChecks;
 public interface IUpdateSource
 {
 	/// <summary>
-	/// Messages that should be presented to the user.
-	/// </summary>
-	IEnumerable<UpdateSourceMessage> Messages
-		=> [];
-
-	/// <summary>
 	/// Attempt to deserialize a given JSON object to data specific to this update source.
 	/// </summary>
 	/// <param name="mod">The mod the data is being deserialized for.</param>

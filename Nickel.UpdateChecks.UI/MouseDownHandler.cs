@@ -1,6 +1,6 @@
 using System;
 
-namespace Nickel.UpdateChecks;
+namespace Nickel.UpdateChecks.UI;
 
 internal sealed record MouseDownHandler(Action Delegate) : OnMouseDown, OnMouseDownRight
 {

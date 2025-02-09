@@ -2,6 +2,14 @@
 
 # Release notes
 
+## Upcoming release
+
+### For everyone:
+* Improved the update checks mod settings menu by including the current/latest version numbers, a button to quickly open the website with each update, and another button to open all updates at once.
+
+### For developers:
+* Mods can now override their title used in the mod settings screen.
+
 ## 1.11.1
 Released 21 January 2025.
 
