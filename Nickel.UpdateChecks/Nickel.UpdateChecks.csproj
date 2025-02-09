@@ -4,10 +4,6 @@
 		<RootNamespace>Nickel.UpdateChecks</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
-		<ModFiles Include="i18n/**" />
-		<ModFiles Include="assets/**" />
-	</ItemGroup>
-	<ItemGroup>
 		<PackageReference Include="TextCopy" Version="6.2.1" />
 	</ItemGroup>
 </Project>

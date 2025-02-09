@@ -1,5 +1,4 @@
-﻿using FSPRO;
-using HarmonyLib;
+﻿using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
 using Nanoray.Pintail;
@@ -92,13 +91,14 @@ public sealed class ModEntry : SimpleMod
 			.Where(e => e.Source is not null)
 			.Select(e => (Key: e.Key, Source: this.AsUiUpdateSource(e.Source!), Descriptors: e.Descriptors))
 			.Where(e => e.Source is not null)
-			.Select(e => (Key: e.Key, Source: e.Source!, Descriptors: e.Descriptors));
+			.Select(e => (Key: e.Key, Source: e.Source!, Name: e.Source!.Name, Descriptors: e.Descriptors))
+			.OrderBy(e => e.Name);
 
 		return new DynamicModSetting(() => api.MakeList([
 			.. updateSources
 				.Select(
 					e => api.MakeButton(
-						() => this.Localizations.Localize(["settings", "openAll", "title"], new { SourceName = e.Source.Name }),
+						() => this.Localizations.Localize(["settings", "openAll", "title"], new { SourceName = e.Name }),
 						(_, _) =>
 						{
 							foreach (var descriptor in e.Descriptors)
@@ -108,8 +108,8 @@ public sealed class ModEntry : SimpleMod
 						new GlossaryTooltip($"settings.{this.Package.Manifest.UniqueName}::OpenAll")
 						{
 							TitleColor = Colors.textBold,
-							Title = this.Localizations.Localize(["settings", "openAll", "title"], new { SourceName = e.Source.Name }),
-							Description = this.Localizations.Localize(["settings", "openAll", "description"], new { SourceName = e.Source.Name })
+							Title = this.Localizations.Localize(["settings", "openAll", "title"], new { SourceName = e.Name }),
+							Description = this.Localizations.Localize(["settings", "openAll", "description"], new { SourceName = e.Name })
 						}
 					])
 				),
