@@ -4,18 +4,14 @@ using System.Collections.Generic;
 
 namespace Nickel;
 
-internal sealed class ModificatingContractResolver : IContractResolver
+internal sealed class ModificatingContractResolver(
+	Action<Type, JsonContract> contractModificator,
+	IContractResolver? wrapped = null
+) : IContractResolver
 {
-	private readonly Action<Type, JsonContract> ContractModificator;
-	private readonly IContractResolver Wrapped;
+	private readonly IContractResolver Wrapped = wrapped ?? new DefaultContractResolver();
 
 	private readonly Dictionary<Type, JsonContract> ContractCache = [];
-
-	public ModificatingContractResolver(Action<Type, JsonContract> contractModificator, IContractResolver? wrapped = null)
-	{
-		this.ContractModificator = contractModificator;
-		this.Wrapped = wrapped ?? new DefaultContractResolver();
-	}
 
 	public JsonContract ResolveContract(Type type)
 	{
@@ -23,7 +19,7 @@ internal sealed class ModificatingContractResolver : IContractResolver
 			return contract;
 
 		contract = this.Wrapped.ResolveContract(type);
-		this.ContractModificator(type, contract);
+		contractModificator(type, contract);
 
 		this.ContractCache[type] = contract;
 		return contract;

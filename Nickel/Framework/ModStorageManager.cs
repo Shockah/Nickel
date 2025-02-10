@@ -1,22 +1,28 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 
 namespace Nickel;
 
-internal sealed class ModStorageManager
+internal sealed class ModStorageManager(Func<IContractResolver?, IContractResolver>? contractResolverFactory = null)
 {
 	private readonly OrderedList<Action<JsonSerializerSettings>, double> GlobalSettingsFunctions = new(ascending: false);
 	private readonly Dictionary<string, OrderedList<Action<JsonSerializerSettings>, double>> PerModSettingsFunctions = [];
 	private readonly Dictionary<string, JsonSerializerSettings> CachedSerializerSettings = [];
 	private readonly Dictionary<string, JsonSerializer> CachedSerializers = [];
 
+	internal void ClearCache()
+	{
+		this.CachedSerializerSettings.Clear();
+		this.CachedSerializers.Clear();
+	}
+
 	public void ApplyGlobalJsonSerializerSettings(Action<JsonSerializerSettings> function, double priority)
 	{
 		this.GlobalSettingsFunctions.Add(function, priority);
-		this.CachedSerializerSettings.Clear();
-		this.CachedSerializers.Clear();
+		this.ClearCache();
 	}
 
 	public void ApplyJsonSerializerSettingsForMod(IModManifest modManifest, Action<JsonSerializerSettings> function, double priority)
@@ -36,12 +42,12 @@ internal sealed class ModStorageManager
 	{
 		if (!this.CachedSerializerSettings.TryGetValue(modManifest.UniqueName, out var settings))
 		{
-			settings = new JsonSerializerSettings
-			{
-				Formatting = Formatting.Indented,
-			};
+			settings = new JsonSerializerSettings { Formatting = Formatting.Indented };
 			settings.Converters.Add(new StringEnumConverter());
 			settings.Converters.Add(new SemanticVersionConverter());
+			
+			if (contractResolverFactory is not null)
+				settings.ContractResolver = contractResolverFactory(settings.ContractResolver);
 
 			var functions = new OrderedList<Action<JsonSerializerSettings>, double>(this.GlobalSettingsFunctions);
 

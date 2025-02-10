@@ -6,6 +6,7 @@
 
 ### For everyone:
 * Improved the update checks mod settings menu by including the current/latest version numbers, a button to quickly open the website with each update, and another button to open all updates at once.
+* Fixed an issue when serializing some types via the mod storage system (for example used for mod settings). This fixes an issue with blacklisting modded EXE cars.
 
 ### For developers:
 * Mods can now override their title used in the mod settings screen.

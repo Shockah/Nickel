@@ -83,7 +83,7 @@ internal sealed class ModManager
 			this.ModLoaderPackage.Manifest
 		);
 		this.ModDataManager = new();
-		this.ModStorageManager = new();
+		this.ModStorageManager = new(this.CreateContractResolver);
 		this.EnumCasePool = new();
 		this.DelayedHarmonyManager = new();
 
@@ -567,27 +567,24 @@ internal sealed class ModManager
 		var proxyContractResolver = new ProxyContractResolver(this.ProxyManager);
 
 		JSONSettings.indented.Converters.Add(proxyContractResolver);
-		JSONSettings.indented.ContractResolver = new ConditionalWeakTableExtensionDataContractResolver(
-			new ModificatingContractResolver(
-				contractModificator: this.ModifyJsonContract,
-				wrapped: JSONSettings.indented.ContractResolver
-			),
-			this.Logger,
-			ModDataManager.ModDataJsonKey,
-			this.ModDataManager.ModDataStorage
-		);
+		JSONSettings.indented.ContractResolver = this.CreateContractResolver(JSONSettings.indented.ContractResolver);
 
 		JSONSettings.serializer.Converters.Add(proxyContractResolver);
-		JSONSettings.serializer.ContractResolver = new ConditionalWeakTableExtensionDataContractResolver(
+		JSONSettings.serializer.ContractResolver = this.CreateContractResolver(JSONSettings.serializer.ContractResolver);
+		
+		this.ModStorageManager.ClearCache();
+	}
+
+	private IContractResolver CreateContractResolver(IContractResolver? wrappedResolver = null)
+		=> new ConditionalWeakTableExtensionDataContractResolver(
 			new ModificatingContractResolver(
 				contractModificator: this.ModifyJsonContract,
-				wrapped: JSONSettings.serializer.ContractResolver
+				wrapped: wrappedResolver
 			),
 			this.Logger,
 			ModDataManager.ModDataJsonKey,
 			this.ModDataManager.ModDataStorage
 		);
-	}
 
 	private void ModifyJsonContract(Type type, JsonContract contract)
 	{
@@ -596,7 +593,7 @@ internal sealed class ModManager
 			contract.Converter = new ProxyContractResolver(this.ProxyManager);
 			return;
 		}
-		this.ContentManager!.ModifyJsonContract(type, contract);
+		this.ContentManager?.ModifyJsonContract(type, contract);
 	}
 
 	private ILogger ObtainLogger(IModManifest manifest)
