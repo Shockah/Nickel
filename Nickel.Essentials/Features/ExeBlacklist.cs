@@ -28,6 +28,7 @@ internal static class ExeBlacklist
 
 	private static State? LastState;
 	private static double CannotBlacklistWarning;
+	private static readonly Dictionary<Deck, Card> ExeCache = [];
 
 	public static void ApplyPatches(IHarmony harmony)
 	{
@@ -83,7 +84,8 @@ internal static class ExeBlacklist
 						ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeStarters.Remove(deck);
 					else
 						ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeStarters.Add(deck);
-				}
+				},
+				CharacterTooltips = GetExeCardTooltipsForCharacter,
 			},
 			new CharactersModSetting
 			{
@@ -96,9 +98,27 @@ internal static class ExeBlacklist
 						ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeOfferings.Remove(deck);
 					else
 						ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeOfferings.Add(deck);
-				}
+				},
+				CharacterTooltips = GetExeCardTooltipsForCharacter,
 			},
 		]);
+
+	private static IEnumerable<Tooltip> GetExeCardTooltipsForCharacter(Deck deck)
+	{
+		if (!ExeCache.TryGetValue(deck, out var card))
+		{
+			if (ModEntry.Instance.Api.GetExeCardTypeForDeck(deck) is not { } cardType)
+				return [];
+			
+			card = (Card)Activator.CreateInstance(cardType)!;
+			ExeCache[deck] = card;
+		}
+		
+		return [
+			new TTDivider(),
+			new TTCard { card = card },
+		];
+	}
 
 	private static IEnumerable<Deck> GetAllExeCharacters()
 		=> NewRunOptions.allChars.Where(d => d != Deck.colorless && ModEntry.Instance.Api.GetExeCardTypeForDeck(d) is not null);

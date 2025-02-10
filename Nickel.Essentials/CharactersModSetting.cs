@@ -17,6 +17,7 @@ public sealed class CharactersModSetting : IModSettingsApi.IModSetting
 	public required Func<Deck, bool> IsSelected { get; set; }
 	public required Action<IModSettingsApi.IModSettingsRoute, Deck, bool> SetSelected { get; set; }
 	public Func<IEnumerable<Tooltip>>? Tooltips { get; set; }
+	public Func<Deck, IEnumerable<Tooltip>>? CharacterTooltips { get; set; }
 
 	private UIKey BaseCharacterKey;
 
@@ -48,14 +49,18 @@ public sealed class CharactersModSetting : IModSettingsApi.IModSetting
 
 	public Vec? Render(G g, Box box, bool dontDraw)
 	{
-		var width = 35;
-		var height = 33;
+		const int width = 35;
+		const int height = 33;
+		
 		var perRow = (int)((box.rect.w - 20) / width);
 		var rows = this.AllCharacters().Chunk(perRow).ToList();
 
 		if (!dontDraw)
 		{
 			Draw.Text(this.Title(), box.rect.x + 10, box.rect.y + 5, DB.thicket, Colors.textMain);
+
+			if (this.Tooltips is { } tooltips && box.key is not null && box.IsHover())
+				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
 
 			for (var y = 0; y < rows.Count; y++)
 			{
@@ -64,16 +69,18 @@ public sealed class CharactersModSetting : IModSettingsApi.IModSetting
 				{
 					var deck = row[x];
 					var character = new Character { type = deck.Key(), deckType = deck };
+					var characterUiKey = new UIKey(this.BaseCharacterKey.k, (int)deck, character.type);
+					
 					character.Render(g, 10 + x * width, 20 + y * height, mini: true, isSelected: this.IsSelected(deck), onMouseDown: new MouseDownHandler(() =>
 					{
 						Audio.Play(Event.Click);
 						this.SetSelected(this.CurrentRoute, deck, !this.IsSelected(deck));
-					}), overrideKey: new UIKey(this.BaseCharacterKey.k, (int)deck, character.type));
+					}), overrideKey: characterUiKey);
+
+					if (this.CharacterTooltips is { } characterTooltips && g.boxes.FirstOrDefault(b => b.key == characterUiKey) is { } characterBox && characterBox.IsHover())
+						g.tooltips.Add(g.tooltips.pos, characterTooltips(deck));
 				}
 			}
-
-			if (this.Tooltips is { } tooltips && box.key is not null && box.IsHover())
-				g.tooltips.Add(new Vec(box.rect.x2 - Tooltip.WIDTH, box.rect.y2), tooltips());
 		}
 
 		return new(box.rect.w, 20 + rows.Count * height);
