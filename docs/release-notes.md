@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.12.0
+Released 12 February 2025.
 
 ### For everyone:
 * Improved the update checks mod settings menu by including the current/latest version numbers, a button to quickly open the website with each update, and another button to open all updates at once.
