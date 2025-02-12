@@ -52,11 +52,11 @@ internal sealed class V1_2_CardReward_GetUpgrade_DefinitionEditor : IAssemblyDef
 	{
 		var didAnything = false;
 		foreach (var module in definition.Modules)
-			didAnything |= this.HandleModule(module, logger);
+			didAnything |= HandleModule(module, logger);
 		return didAnything;
 	}
 
-	private bool HandleModule(ModuleDefinition module, Action<AssemblyEditorResult.Message> logger)
+	private static bool HandleModule(ModuleDefinition module, Action<AssemblyEditorResult.Message> logger)
 	{
 		if (module.AssemblyReferences.FirstOrDefault(r => r.Name == "CobaltCore") is not { } cobaltCoreAssemblyNameReference)
 			return false;
@@ -97,21 +97,21 @@ internal sealed class V1_2_CardReward_GetUpgrade_DefinitionEditor : IAssemblyDef
 		
 		var didAnything = false;
 		foreach (var type in module.Types)
-			didAnything |= this.HandleType(type, upgradeType, randType, mapBaseType, cardType, logger);
+			didAnything |= HandleType(type, upgradeType, randType, mapBaseType, cardType, logger);
 		return didAnything;
 	}
 
-	private bool HandleType(TypeDefinition type, TypeReference upgradeType, TypeReference randType, TypeReference mapBaseType, TypeReference cardType, Action<AssemblyEditorResult.Message> logger)
+	private static bool HandleType(TypeDefinition type, TypeReference upgradeType, TypeReference randType, TypeReference mapBaseType, TypeReference cardType, Action<AssemblyEditorResult.Message> logger)
 	{
 		var didAnything = false;
 		foreach (var method in type.Methods)
-			didAnything |= this.HandleMethod(method, upgradeType, randType, mapBaseType, cardType, logger);
+			didAnything |= HandleMethod(method, upgradeType, randType, mapBaseType, cardType, logger);
 		foreach (var nestedType in type.NestedTypes)
-			didAnything |= this.HandleType(nestedType, upgradeType, randType, mapBaseType, cardType, logger);
+			didAnything |= HandleType(nestedType, upgradeType, randType, mapBaseType, cardType, logger);
 		return didAnything;
 	}
 
-	private bool HandleMethod(MethodDefinition method, TypeReference upgradeType, TypeReference randType, TypeReference mapBaseType, TypeReference cardType, Action<AssemblyEditorResult.Message> logger)
+	private static bool HandleMethod(MethodDefinition method, TypeReference upgradeType, TypeReference randType, TypeReference mapBaseType, TypeReference cardType, Action<AssemblyEditorResult.Message> logger)
 	{
 		if (!method.HasBody)
 			return false;
@@ -125,7 +125,7 @@ internal sealed class V1_2_CardReward_GetUpgrade_DefinitionEditor : IAssemblyDef
 				continue;
 			if (instruction.Operand is not MethodReference methodReference)
 				continue;
-			if (!methodReference.DeclaringType.Scope.Name.StartsWith("CobaltCore"))
+			if (methodReference.DeclaringType.Scope.Name != "CobaltCore")
 				continue;
 			if (methodReference.DeclaringType.Name != nameof(CardReward))
 				continue;

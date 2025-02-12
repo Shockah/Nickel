@@ -48,11 +48,11 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 	{
 		var didAnything = false;
 		foreach (var module in definition.Modules)
-			didAnything |= this.HandleModule(module, logger);
+			didAnything |= HandleModule(module, logger);
 		return didAnything;
 	}
 
-	private bool HandleModule(ModuleDefinition module, Action<AssemblyEditorResult.Message> logger)
+	private static bool HandleModule(ModuleDefinition module, Action<AssemblyEditorResult.Message> logger)
 	{
 		if (module.AssemblyReferences.FirstOrDefault(r => r.Name == "CobaltCore") is not { } cobaltCoreAssemblyNameReference)
 			return false;
@@ -81,11 +81,11 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 		
 		var didAnything = false;
 		foreach (var type in module.Types)
-			didAnything |= this.HandleType(type, routeTypeReference, stateTypeReference, vecTypeReference, logger);
+			didAnything |= HandleType(type, routeTypeReference, stateTypeReference, vecTypeReference, logger);
 		return didAnything;
 	}
 
-	private bool HandleType(TypeDefinition type, TypeReference routeTypeReference, TypeReference stateTypeReference, TypeReference vecTypeReference, Action<AssemblyEditorResult.Message> logger)
+	private static bool HandleType(TypeDefinition type, TypeReference routeTypeReference, TypeReference stateTypeReference, TypeReference vecTypeReference, Action<AssemblyEditorResult.Message> logger)
 	{
 		var didAnything = false;
 		
@@ -93,7 +93,7 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 		RewriteCalls();
 
 		foreach (var nestedType in type.NestedTypes)
-			didAnything |= this.HandleType(nestedType, routeTypeReference, stateTypeReference, vecTypeReference, logger);
+			didAnything |= HandleType(nestedType, routeTypeReference, stateTypeReference, vecTypeReference, logger);
 		
 		return didAnything;
 
@@ -135,11 +135,11 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 		void RewriteCalls()
 		{
 			foreach (var method in type.Methods)
-				didAnything |= this.HandleMethod(method, routeTypeReference, stateTypeReference, logger);
+				didAnything |= HandleMethod(method, routeTypeReference, stateTypeReference, logger);
 		}
 	}
 
-	private bool HandleMethod(MethodDefinition method, TypeReference routeTypeReference, TypeReference stateTypeReference, Action<AssemblyEditorResult.Message> logger)
+	private static bool HandleMethod(MethodDefinition method, TypeReference routeTypeReference, TypeReference stateTypeReference, Action<AssemblyEditorResult.Message> logger)
 	{
 		if (!method.HasBody)
 			return false;
@@ -153,7 +153,7 @@ internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssembl
 				continue;
 			if (instruction.Operand is not MethodReference methodReference)
 				continue;
-			if (!methodReference.DeclaringType.Scope.Name.StartsWith("CobaltCore"))
+			if (methodReference.DeclaringType.Scope.Name != "CobaltCore")
 				continue;
 			if (methodReference.DeclaringType.Name != nameof(MapNodeContents))
 				continue;

@@ -16,20 +16,21 @@ internal sealed class NoInliningDefinitionEditor : IAssemblyDefinitionEditor
 	{
 		var methodImplAttributeCtor = definition.MainModule.ImportReference(typeof(MethodImplAttribute).GetConstructor([typeof(MethodImplOptions)]));
 		var methodImplOptionsTypeReference = definition.MainModule.ImportReference(typeof(MethodImplOptions));
-
-		AddAttribute(definition.MainModule.GetType("Log").Methods.Single(m => m.Name == "Line"));
-		AddAttribute(definition.MainModule.GetType("Card").Methods.Single(m => m.Name == "Key"));
-		AddAttribute(definition.MainModule.GetType("Card").Methods.Single(m => m.Name == "GetMeta"));
-		AddAttribute(definition.MainModule.GetType("Artifact").Methods.Single(m => m.Name == "Key"));
-		AddAttribute(definition.MainModule.GetType("Artifact").Methods.Single(m => m.Name == "GetMeta"));
-		AddAttribute(definition.MainModule.GetType("CardAction").Methods.Single(m => m.Name == "Key"));
-		AddAttribute(definition.MainModule.GetType("FightModifier").Methods.Single(m => m.Name == "Key"));
-		AddAttribute(definition.MainModule.GetType("MapBase").Methods.Single(m => m.Name == "Key"));
+		
+		AddAttribute(nameof(Artifact), nameof(Artifact.Key));
+		AddAttribute(nameof(Artifact), nameof(Artifact.GetMeta));
+		AddAttribute(nameof(Card), nameof(Card.Key));
+		AddAttribute(nameof(Card), nameof(Card.GetMeta));
+		AddAttribute(nameof(CardAction), nameof(CardAction.Key));
+		AddAttribute(nameof(FightModifier), nameof(FightModifier.Key));
+		AddAttribute(nameof(Log), nameof(Log.Line));
+		AddAttribute(nameof(MapBase), nameof(MapBase.Key));
 
 		return true;
 
-		void AddAttribute(MethodDefinition methodDefinition)
+		void AddAttribute(string typeName, string methodName)
 		{
+			var methodDefinition = definition.MainModule.GetType(typeName).Methods.Single(m => m.Name == methodName);
 			if (!methodDefinition.IsStatic)
 				methodDefinition.IsVirtual = true;
 			var attribute = new CustomAttribute(methodImplAttributeCtor);

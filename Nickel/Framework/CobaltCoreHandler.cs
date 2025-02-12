@@ -7,30 +7,21 @@ using System.Runtime.Loader;
 
 namespace Nickel;
 
-internal sealed class CobaltCoreHandler
+internal sealed class CobaltCoreHandler(ILogger logger, IAssemblyEditor? assemblyEditor)
 {
-	private readonly ILogger Logger;
-	private readonly IAssemblyEditor? AssemblyEditor;
-
-	public CobaltCoreHandler(ILogger logger, IAssemblyEditor? assemblyEditor)
-	{
-		this.Logger = logger;
-		this.AssemblyEditor = assemblyEditor;
-	}
-
 	public OneOf<CobaltCoreHandlerResult, Error<string>> SetupGame(CobaltCoreResolveResult resolveResult)
 	{
-		this.Logger.LogInformation("Loading game assembly...");
+		logger.LogInformation("Loading game assembly...");
 		this.ResolveAssembly(
 			name: "CobaltCore.dll",
 			assemblyStream: resolveResult.GameAssemblyDataStreamProvider(),
 			symbolsStream: resolveResult.GameSymbolsDataStreamProvider?.Invoke()
 		);
 
-		this.Logger.LogInformation("Loading other assemblies...");
+		logger.LogInformation("Loading other assemblies...");
 		foreach (var (name, streamProvider) in resolveResult.OtherDllDataStreamProviders)
 		{
-			this.Logger.LogDebug("Trying to load (potential) assembly {AssemblyName}...", name);
+			logger.LogDebug("Trying to load (potential) assembly {AssemblyName}...", name);
 			this.ResolveAssembly(name, streamProvider());
 		}
 
@@ -53,9 +44,9 @@ internal sealed class CobaltCoreHandler
 
 	private void ResolveAssembly(string name, Stream assemblyStream, Stream? symbolsStream = null)
 	{
-		if (this.AssemblyEditor?.EditAssemblyStream(name, ref assemblyStream, ref symbolsStream) is { } editorResult)
+		if (assemblyEditor?.EditAssemblyStream(name, ref assemblyStream, ref symbolsStream) is { } editorResult)
 			foreach (var message in editorResult.Messages)
-				this.Logger.Log(message.Level switch
+				logger.Log(message.Level switch
 				{
 					AssemblyEditorResult.MessageLevel.Error => LogLevel.Error,
 					AssemblyEditorResult.MessageLevel.Warning => LogLevel.Warning,

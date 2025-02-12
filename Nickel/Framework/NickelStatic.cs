@@ -13,6 +13,7 @@ namespace Nickel;
 internal static class NickelStatic
 {
 	private static readonly HashSet<Type> ErroredOutTypes = [];
+	private static readonly Lazy<JsonCloneEngine> JsonCloneEngine = new(() => new JsonCloneEngine(JSONSettings.serializer));
 	
 	private static readonly Lazy<DefaultCloneEngine> CloneEngine = new(() =>
 	{
@@ -65,8 +66,6 @@ internal static class NickelStatic
 		});
 		return engine;
 	});
-	
-	private static readonly Lazy<JsonCloneEngine> JsonCloneEngine = new(() => new JsonCloneEngine(JSONSettings.serializer));
 
 	[UsedImplicitly]
 	public static T? DeepCopy<T>(T? original) where T : class
@@ -81,7 +80,7 @@ internal static class NickelStatic
 		catch (Exception ex)
 		{
 			if (ErroredOutTypes.Add(original.GetType()))
-				Nickel.Instance.ModManager.Logger.LogError("Could not clone `{Value}` of type `{Type}` via Mitosis; falling back to JSON-based method: {Exception}", original, original.GetType(), ex);
+				Nickel.Instance.ModManager.Logger.LogError("Could not clone `{Value}` of type `{Type}` via Mitosis; falling back to JSON-based method. Reason: {Exception}", original, original.GetType(), ex);
 			return JsonCloneEngine.Value.Clone(original);
 		}
 	}

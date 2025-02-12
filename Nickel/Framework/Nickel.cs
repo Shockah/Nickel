@@ -389,7 +389,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		GenericKeyPatches.Apply<MapBase>(harmony);
 	}
 
-	internal static void ApplyLateHarmonyPatches(Harmony harmony)
+	private static void ApplyLateHarmonyPatches(Harmony harmony)
 		=> MapBasePatches.ApplyLate(harmony);
 
 	[EventPriority(double.PositiveInfinity)]
@@ -499,7 +499,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		if (MG.inst?.g is not { } g)
 			return;
 
-		if (g.e is null)
+		if (FeatureFlags.Debug && g.e is null)
 		{
 			g.e = new Editor();
 			g.e.IMGUI_Setup(MG.inst);
