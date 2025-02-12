@@ -66,7 +66,7 @@
 		<Reference Include="CobaltCore" HintPath="$(IntermediateOutputPath)/CobaltCore.dll" Private="False" />
 
 		<!-- mod management -->
-		<PackageReference Include="Lib.Harmony.Thin" Version="2.3.3" />
+		<PackageReference Include="Lib.Harmony.Thin" Version="2.3.5" />
 		<PackageReference Include="Pintail" Version="2.8.0" />
 
 		<!-- mod utilities -->
