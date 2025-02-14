@@ -82,7 +82,7 @@ internal sealed class CharacterManager
 		var starters = StarterDeck.starterSets[deck];
 		var neutralAnimationFrames = DB.charAnimations[alias]["neutral"];
 		var miniAnimationFrames = DB.charAnimations[alias]["mini"];
-		var startLocked = deck is Deck.goat or Deck.eunice or Deck.hacker or Deck.shard;
+		var startLocked = deck is Deck.goat or Deck.eunice or Deck.hacker or Deck.shard or Deck.colorless;
 		var missingStatusColor = DB.statuses[StatusMeta.deckToMissingStatus[deck]].color;
 		var missingStatusSprite = DB.statuses[StatusMeta.deckToMissingStatus[deck]].icon;
 		var exeCardType = deck switch
