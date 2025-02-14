@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.12.1
+Released 14 February 2025.
 
 * Fixed vanilla character 8 being unlocked right away.
 
