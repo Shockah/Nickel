@@ -142,4 +142,13 @@ public interface IModCards
 	/// An event fired whenever a card's card trait is being overridden.
 	/// </summary>
 	event EventHandler<SetCardTraitOverrideEventArgs> OnSetCardTraitOverride;
+
+	/// <summary>
+	/// Retrieves whether the mod loader is currently creating card trait states for the given card.
+	/// This can be used to stop some expensive operations from running in <see cref="Card.GetData"/> overrides.
+	/// </summary>
+	/// <param name="state">The current state of the game.</param>
+	/// <param name="card">The card to check.</param>
+	/// <returns>Whether the mod loader is currently creating card trait states for the given card.</returns>
+	bool IsCurrentlyCreatingCardTraitStates(State state, Card card);
 }

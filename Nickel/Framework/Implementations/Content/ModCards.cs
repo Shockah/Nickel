@@ -116,4 +116,7 @@ internal sealed class ModCards(
 		add => cardTraitManagerProvider().OnSetCardTraitOverrideEvent.Add(value, modManifest);
 		remove => cardTraitManagerProvider().OnSetCardTraitOverrideEvent.Remove(value, modManifest);
 	}
+
+	public bool IsCurrentlyCreatingCardTraitStates(State state, Card card)
+		=> cardTraitManagerProvider().IsCurrentlyCreatingCardTraitStates(card);
 }

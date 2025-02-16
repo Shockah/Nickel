@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For developers:
+* Added a way to check if Nickel is currently creating card trait states for a card. This can be used to stop some expensive operations from running in `Card.GetData` overrides.
+
 ## 1.12.1
 Released 14 February 2025.
 

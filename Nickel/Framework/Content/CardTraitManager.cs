@@ -571,6 +571,9 @@ internal class CardTraitManager
 		});
 	}
 
+	public bool IsCurrentlyCreatingCardTraitStates(Card card)
+		=> this.CurrentlyCreatingCardTraitStates.Contains(card);
+
 	private void UpdateModDataFromFieldsIfNeeded(Card card, OverridesModData? overrides = null)
 	{
 		var nonNullOverrides = overrides ?? this.ModDataManager.ObtainModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides");
