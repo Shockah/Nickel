@@ -100,20 +100,14 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				{
 					this.Helper.Storage.SaveJson(this.DatabaseFile, this.Database);
 					this.Client = this.MakeHttpClient();
-
-					if (this.Database.IsEnabled)
-						updateChecksApi.RequestUpdateInfo(this);
+					updateChecksApi.RequestUpdateInfo(this);
 				})
 			);
 	}
 
 	private HttpClient MakeHttpClient()
 	{
-		var client = new HttpClient
-		{
-			Timeout = TimeSpan.FromSeconds(15)
-		};
-
+		var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
 		client.DefaultRequestHeaders.Add("User-Agent", $"{this.Package.Manifest.UniqueName}/{this.Package.Manifest.Version}");
 		client.DefaultRequestHeaders.Add("Application-Name", this.Package.Manifest.UniqueName);
 		client.DefaultRequestHeaders.Add("Application-Version", this.Package.Manifest.Version.ToString());
@@ -124,10 +118,13 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		return client;
 	}
 
+	[UsedImplicitly]
 	public IEnumerable<UpdateSourceMessage> Messages
 	{
 		get
 		{
+			if (!this.Database.IsEnabled)
+				yield break;
 			if (string.IsNullOrEmpty(this.Database.ApiKey))
 				yield return new(UpdateSourceMessageLevel.Error, this.Localizations.Localize(["message", "missingApiKey"]));
 			if (this.GotUnauthorized)
@@ -180,6 +177,15 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		try
 		{
 			var results = new Dictionary<IModManifest, UpdateDescriptor>();
+			if (!this.Database.IsEnabled)
+				return results;
+			
+			if (this.Client is not { } client || this.Database.ApiKey is null)
+			{
+				this.Logger.LogWarning("Requested NexusMods update checks, but no API key is provided in the `{File}` file.", this.DatabaseFile.FullName);
+				return results;
+			}
+			
 			var now = DateTimeOffset.Now.ToUnixTimeSeconds();
 			var remainingMods = mods
 				.Where(e => e.ManifestEntry is ManifestEntry)
@@ -193,11 +199,6 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			if (now - this.Database.LastUpdate < UpdateCheckThrottleDuration)
 			{
 				this.Logger.LogDebug("Throttling NexusMods update checks.");
-				return results;
-			}
-			if (this.Client is not { } client || this.Database.ApiKey is null)
-			{
-				this.Logger.LogWarning("Requested NexusMods update checks, but no API key is provided in the `{File}` file.", this.DatabaseFile.FullName);
 				return results;
 			}
 

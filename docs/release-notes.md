@@ -6,6 +6,7 @@
 
 ### For everyone:
 * Added a temporary hidden invulnerability period until game state stabilizes to any ships that trigger the Survive status. This mostly fixes issues with various modded damage sources being able to skip a phase of the Rail Cannon enemy.
+* Fixed update check sources partially not respecting whether they were enabled or not if they already had cached data.
 
 ### For developers:
 * Added a way to check if Nickel is currently creating card trait states for a card. This can be used to stop some expensive operations from running in `Card.GetData` overrides.

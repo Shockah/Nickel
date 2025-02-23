@@ -30,13 +30,16 @@ public sealed class ApiImplementation : IUpdateChecksApi
 		=> ModEntry.Instance.ParseManifestsAndRequestUpdateInfo();
 
 	public IEnumerable<KeyValuePair<string, IUpdateSource>> UpdateSources
-		=> ModEntry.Instance.UpdateSources;
+		=> ModEntry.Instance.UpdateSourceKeyToSource;
 
 	public IUpdateSource? LookupUpdateSourceByKey(string sourceKey)
-		=> ModEntry.Instance.UpdateSources.GetValueOrDefault(sourceKey);
+		=> ModEntry.Instance.UpdateSourceKeyToSource.GetValueOrDefault(sourceKey);
 
 	public void RegisterUpdateSource(string sourceKey, IUpdateSource source)
-		=> ModEntry.Instance.UpdateSources.Add(sourceKey, source);
+	{
+		ModEntry.Instance.UpdateSourceKeyToSource.Add(sourceKey, source);
+		ModEntry.Instance.UpdateSourceToKey.Add(source, sourceKey);
+	}
 
 	public SemanticVersion? GetIgnoredUpdateForMod(IModManifest mod)
 		=> ModEntry.Instance.Settings.IgnoredUpdates.GetValueOrDefault(mod.UniqueName);

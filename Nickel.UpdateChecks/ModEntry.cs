@@ -42,7 +42,8 @@ public sealed class ModEntry : SimpleMod
 
 	internal static ModEntry Instance { get; private set; } = null!;
 
-	internal readonly Dictionary<string, IUpdateSource> UpdateSources = [];
+	internal readonly Dictionary<string, IUpdateSource> UpdateSourceKeyToSource = [];
+	internal readonly Dictionary<IUpdateSource, string> UpdateSourceToKey = [];
 	internal readonly Dictionary<IModManifest, List<UpdateDescriptor>> UpdatesAvailable = [];
 	internal readonly ConcurrentQueue<Action> ToRunInGameLoop = [];
 	internal readonly List<Action> AwaitingUpdateInfo = [];
@@ -174,7 +175,7 @@ public sealed class ModEntry : SimpleMod
 				if (rawTokenSourceManifestEntry is not JObject rawSourceManifestEntry)
 					continue;
 				
-				if (!this.UpdateSources.TryGetValue(sourceName, out var source))
+				if (!this.UpdateSourceKeyToSource.TryGetValue(sourceName, out var source))
 					continue;
 				if (!source.TryParseManifestEntry(mod, rawSourceManifestEntry, out var sourceManifestEntry))
 					continue;
@@ -205,6 +206,13 @@ public sealed class ModEntry : SimpleMod
 	private void CheckUpdates(Dictionary<IUpdateSource, List<(IModManifest Mod, object? ManifestEntry)>> updateSourceToMod)
 	{
 		this.CurrentUpdateCheckTask?.Token.Cancel();
+
+		foreach (var availableUpdate in this.UpdatesAvailable)
+		{
+			availableUpdate.Value.RemoveAll(d => updateSourceToMod.Keys.Select(s => this.UpdateSourceToKey.GetValueOrDefault(s)).Contains(d.SourceKey));
+			if (availableUpdate.Value.Count == 0)
+				this.UpdatesAvailable.Remove(availableUpdate.Key);
+		}
 
 		var token = new CancellationTokenSource();
 		this.CurrentUpdateCheckTask = (

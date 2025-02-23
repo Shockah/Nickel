@@ -120,20 +120,14 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				{
 					this.Helper.Storage.SaveJson(this.DatabaseFile, this.Database);
 					this.Client = this.MakeHttpClient();
-
-					if (this.Database.IsEnabled)
-						updateChecksApi.RequestUpdateInfo(this);
+					updateChecksApi.RequestUpdateInfo(this);
 				})
 			);
 	}
 
 	private HttpClient MakeHttpClient()
 	{
-		var client = new HttpClient
-		{
-			Timeout = TimeSpan.FromSeconds(15)
-		};
-
+		var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
 		client.DefaultRequestHeaders.Add("User-Agent", $"{this.Package.Manifest.UniqueName}/{this.Package.Manifest.Version}");
 		client.DefaultRequestHeaders.Add("Application-Name", this.Package.Manifest.UniqueName);
 		client.DefaultRequestHeaders.Add("Application-Version", this.Package.Manifest.Version.ToString());
@@ -189,7 +183,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				{
 					if (match.Groups.Count >= 2 && ParseVersionOrNull(match.Groups[1].Value) is { } group1Version)
 						return group1Version;
-					else if (ParseVersionOrNull(match.Value) is { } group0Version)
+					if (ParseVersionOrNull(match.Value) is { } group0Version)
 						return group0Version;
 				}
 			}
@@ -208,7 +202,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				{
 					if (match.Groups.Count >= 2 && ParseVersionOrNull(match.Groups[1].Value) is { } group1Version)
 						return group1Version;
-					else if (ParseVersionOrNull(match.Value) is { } group0Version)
+					if (ParseVersionOrNull(match.Value) is { } group0Version)
 						return group0Version;
 				}
 			}
@@ -221,10 +215,13 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		return ParseVersionOrNull(model.TagName) ?? ParseVersionOrNull(model.Name);
 	}
 
+	[UsedImplicitly]
 	public IEnumerable<UpdateSourceMessage> Messages
 	{
 		get
 		{
+			if (!this.Database.IsEnabled)
+				yield break;
 			if (string.IsNullOrEmpty(this.Database.Token))
 				yield return new(UpdateSourceMessageLevel.Warning, this.Localizations.Localize(["message", "missingToken"]));
 			if (this.GotUnauthorized)
@@ -257,6 +254,18 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		try
 		{
 			var results = new Dictionary<IModManifest, UpdateDescriptor>();
+			if (!this.Database.IsEnabled)
+				return results;
+			
+			if (this.Client is not { } client)
+			{
+				this.Logger.LogError("Requested GitHub update checks, but HTTP client is not set up.");
+				return results;
+			}
+
+			if (string.IsNullOrEmpty(this.Database.Token))
+				this.Logger.LogWarning("Requested GitHub update checks, but no API key is provided in the `{File}` file - this can cause rate limit problems.", this.DatabaseFile.FullName);
+			
 			var now = DateTimeOffset.Now.ToUnixTimeSeconds();
 			var remainingMods = mods
 				.Where(e => e.ManifestEntry is ManifestEntry)
@@ -272,14 +281,6 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 				this.Logger.LogDebug("Throttling GitHub update checks.");
 				return results;
 			}
-			if (this.Client is not { } client)
-			{
-				this.Logger.LogError("Requested GitHub update checks, but HTTP client is not set up.");
-				return results;
-			}
-
-			if (string.IsNullOrEmpty(this.Database.Token))
-				this.Logger.LogWarning("Requested GitHub update checks, but no API key is provided in the `{File}` file - this can cause rate limit problems.", this.DatabaseFile.FullName);
 
 			var repositoryReleases = await Task.WhenAll(
 				remainingMods
