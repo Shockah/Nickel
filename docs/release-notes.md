@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.13.0
+Released 23 February 2025.
 
 ### For everyone:
 * Added a temporary hidden invulnerability period until game state stabilizes to any ships that trigger the Survive status. This mostly fixes issues with various modded damage sources being able to skip a phase of the Rail Cannon enemy.
