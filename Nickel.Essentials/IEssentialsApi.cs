@@ -42,6 +42,20 @@ public interface IEssentialsApi
 	/// <returns>Whether the given type represents an EXE card type.</returns>
 	bool IsExeCardType(Type type);
 
+	/// <summary>
+	/// Checks whether an EXE card for the given deck is currently blacklisted from being chosen as a starter card.
+	/// </summary>
+	/// <param name="deck">The deck to check for.</param>
+	/// <returns>Whether an EXE card for the given deck is currently blacklisted.</returns>
+	bool IsBlacklistedExeStarter(Deck deck);
+
+	/// <summary>
+	/// Checks whether an EXE card for the given deck is currently blacklisted from being offered during a run.
+	/// </summary>
+	/// <param name="deck">The deck to check for.</param>
+	/// <returns>Whether an EXE card for the given deck is currently blacklisted.</returns>
+	bool IsBlacklistedExeOffering(Deck deck);
+
 	/// <summary>The <see cref="UK"/> part of a <see cref="UIKey"/> used by the button that toggles between showing a list of ships on the <see cref="NewRunOptions"/> screen.</summary>
 	UK ShipSelectionToggleUiKey { get; }
 

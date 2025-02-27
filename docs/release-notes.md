@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For developers:
+* Added an API to `Nickel.Essentials` to check whether EXE cards are blacklisted.
+
 ## 1.13.0
 Released 23 February 2025.
 

@@ -19,6 +19,12 @@ public sealed class ApiImplementation : IEssentialsApi
 	public bool IsExeCardType(Type type)
 		=> this.GetDeckForExeCardType(type) is not null;
 
+	public bool IsBlacklistedExeStarter(Deck deck)
+		=> ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeStarters.Contains(deck);
+
+	public bool IsBlacklistedExeOffering(Deck deck)
+		=> ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeOfferings.Contains(deck);
+
 	public UK ShipSelectionToggleUiKey
 		=> ShipSelection.ShipSelectionToggleUiKey;
 	
