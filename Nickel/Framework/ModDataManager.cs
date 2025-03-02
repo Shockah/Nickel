@@ -1,9 +1,7 @@
 using Nanoray.Mitosis;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace Nickel;
@@ -14,9 +12,8 @@ internal sealed class ModDataManager : IReferenceCloneListener
 
 	internal readonly ConditionalWeakTable<object, Dictionary<string, Dictionary<string, object?>>> ModDataStorage = [];
 
-	private static T ConvertExtensionData<T>(object? o, out bool reserialized)
+	private static T ConvertExtensionData<T>(object? o)
 	{
-		reserialized = false;
 		if (o is T t)
 			return t;
 		if (typeof(T) == typeof(int))
@@ -44,32 +41,9 @@ internal sealed class ModDataManager : IReferenceCloneListener
 		if (o is null && (!typeof(T).IsValueType || (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))))
 			return default!;
 
-		var stringWriter = new StringWriter();
-		JSONSettings.serializer.Serialize(new JsonTextWriter(stringWriter), o);
-		if (JSONSettings.serializer.Deserialize<T>(new JsonTextReader(new StringReader(stringWriter.ToString()))) is { } deserialized)
-		{
-			reserialized = true;
-			return deserialized;
-		}
-
-		throw new ArgumentException($"Cannot convert {o} to extension data type {typeof(T)}", nameof(T));
-	}
-
-	private static object? DeepCopy(object? o)
-	{
 		if (o is null)
-			return null;
-
-		var type = o.GetType();
-		if (type.IsValueType)
-			return o;
-		
-		var stringWriter = new StringWriter();
-		JSONSettings.serializer.Serialize(new JsonTextWriter(stringWriter), o);
-		if (JSONSettings.serializer.Deserialize(new JsonTextReader(new StringReader(stringWriter.ToString()))) is { } deserialized)
-			return deserialized;
-		
-		throw new ArgumentException($"Cannot deep copy {o}", nameof(o));
+			throw new ArgumentException($"Cannot convert <null> to extension data type {typeof(T)}", nameof(T));
+		throw new ArgumentException($"Cannot convert {o} of type {o.GetType()} to extension data type {typeof(T)}", nameof(T));
 	}
 
 	public T GetModData<T>(IModManifest manifest, object o, string key)
@@ -82,11 +56,7 @@ internal sealed class ModDataManager : IReferenceCloneListener
 			throw new KeyNotFoundException($"Object {o} does not contain extension data with key `{key}`");
 		if (!modObjectData.TryGetValue(key, out var data))
 			throw new KeyNotFoundException($"Object {o} does not contain extension data with key `{key}`");
-		
-		var result = ConvertExtensionData<T>(data, out var reserialized);
-		if (reserialized)
-			modObjectData[key] = data;
-		return result;
+		return ConvertExtensionData<T>(data);
 	}
 
 	public bool TryGetModData<T>(IModManifest manifest, object o, string key, [MaybeNullWhen(false)] out T data)
@@ -109,9 +79,7 @@ internal sealed class ModDataManager : IReferenceCloneListener
 			return false;
 		}
 		
-		data = ConvertExtensionData<T>(rawData, out var reserialized);
-		if (reserialized)
-			modObjectData[key] = data;
+		data = ConvertExtensionData<T>(rawData);
 		return true;
 	}
 
@@ -206,7 +174,7 @@ internal sealed class ModDataManager : IReferenceCloneListener
 		}
 
 		foreach (var (key, value) in sourceModObjectData)
-			targetModObjectData[key] = DeepCopy(value);
+			targetModObjectData[key] = NickelStatic.DeepCopyObject(value);
 	}
 
 	public void CopyAllModData(object from, object to)
@@ -234,7 +202,7 @@ internal sealed class ModDataManager : IReferenceCloneListener
 			}
 			
 			foreach (var (key, value) in sourceModObjectData)
-				targetModObjectData[key] = DeepCopy(value);
+				targetModObjectData[key] = NickelStatic.DeepCopyObject(value);
 		}
 	}
 

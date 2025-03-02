@@ -16,7 +16,7 @@ internal sealed class DeepCopyViaMitosisDefinitionEditor : IAssemblyDefinitionEd
 	{
 		var mutilType = definition.MainModule.GetType("Mutil");
 		var mutilDeepCopyMethod = mutilType.Methods.First(m => m.Name == "DeepCopy");
-		var nickelStaticDeepCopyMethod = definition.MainModule.ImportReference(typeof(NickelStatic).GetMethod("DeepCopy"));
+		var nickelStaticDeepCopyMethod = definition.MainModule.ImportReference(typeof(NickelStatic).GetMethod("DeepCopyGenericObject"));
 		
 		var genericNickelStaticDeepCopyMethod = new GenericInstanceMethod(nickelStaticDeepCopyMethod);
 		genericNickelStaticDeepCopyMethod.GenericArguments.Add(mutilDeepCopyMethod.GenericParameters.First());

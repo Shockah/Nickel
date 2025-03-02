@@ -68,7 +68,10 @@ internal static class NickelStatic
 	});
 
 	[UsedImplicitly]
-	public static T? DeepCopy<T>(T? original) where T : class
+	public static T? DeepCopyGenericObject<T>(T? original) where T : class
+		=> (T?)DeepCopyObject(original);
+
+	internal static object? DeepCopyObject(object? original)
 	{
 		if (original is null)
 			return null;
