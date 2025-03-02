@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.14.1
+Released 2 March 2025.
 
 * Fixed various issues related to storing additional mod data and cloning objects via the Mitosis library.
 
