@@ -4,6 +4,9 @@
 
 ## Upcoming release
 
+### For everyone:
+* Implemented sprite culling globally - this should improve performance all around.
+
 ### For developers:
 * Added an API to `Nickel.Essentials` to check whether EXE cards are blacklisted.
 

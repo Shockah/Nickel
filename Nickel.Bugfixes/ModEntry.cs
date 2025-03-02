@@ -12,6 +12,7 @@ public sealed class ModEntry : SimpleMod
 		Instance = this;
 
 		var harmony = helper.Utilities.Harmony;
+		
 		ArtifactCodexFixes.ApplyPatches(harmony);
 		CardActionRenderingFixes.ApplyPatches(harmony);
 		CardBrowseOrderFixes.ApplyPatches(harmony);
@@ -23,5 +24,7 @@ public sealed class ModEntry : SimpleMod
 		RunSummaryCardOrderFixes.ApplyPatches(harmony);
 		SecondOpinionsFixes.ApplyPatches(harmony);
 		SurviveVulnerabilityFixes.ApplyPatches(harmony);
+		
+		SpriteCulling.ApplyPatches(harmony);
 	}
 }
