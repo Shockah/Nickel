@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.14.0
+Released 2 March 2025.
 
 ### For everyone:
 * Implemented sprite culling globally - this should improve performance all around.
