@@ -63,7 +63,7 @@ internal static class CardCodexCacheFixes
 
 	private static bool Card_GetDataWithOverrides_Prefix(Card __instance, ref CardData __result)
 	{
-		if (RenderedCardBrowse is not { browseSource: CardBrowse.Source.Codex })
+		if (RenderedCardBrowse is not { browseSource: CardBrowse.Source.Codex, subRoute: null })
 			return true;
 		
 		__result = CardDataCache.GetValueOrDefault(__instance);
@@ -72,7 +72,7 @@ internal static class CardCodexCacheFixes
 
 	private static bool Nickel_CardTraitManager_ObtainCardTraitStates_Prefix(Card card, ref IReadOnlyDictionary<ICardTraitEntry, CardTraitState> __result)
 	{
-		if (RenderedCardBrowse is not { browseSource: CardBrowse.Source.Codex })
+		if (RenderedCardBrowse is not { browseSource: CardBrowse.Source.Codex, subRoute: null })
 			return true;
 		
 		__result = CardTraitStateCache.GetValueOrDefault(card) ?? new Dictionary<ICardTraitEntry, CardTraitState>();
