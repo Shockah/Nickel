@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* "Fixed" an issue with rendering half-transparent sprites over a non-fully-opaque background. This doesn't affect anything the game normally does, but can help with mods doing various off-screen rendering effects.
+
 ## 1.14.1
 Released 2 March 2025.
 
