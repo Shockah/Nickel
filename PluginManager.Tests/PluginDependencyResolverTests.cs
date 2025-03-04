@@ -231,6 +231,30 @@ internal sealed class PluginDependencyResolverTests
 		Assert.AreEqual(0, resolveResult.Unresolvable.Count);
 	}
 
+	[Test]
+	public void TestMisversionedOptionalDependency()
+	{
+		List<Manifest> packages = [
+			new Manifest("ModA", 1, [new("ModB", Version: 2, IsRequired: false)]),
+			new Manifest("ModB", 1, [])
+		];
+
+		var resolver = CreateResolver();
+		var resolveResult = resolver.ResolveDependencies(packages);
+		Assert.AreEqual(1, resolveResult.LoadSteps.Count);
+		Assert.AreEqual(1, resolveResult.Unresolvable.Count);
+		Assert.IsTrue(resolveResult.Unresolvable.Any(kvp =>
+		{
+			if (kvp.Key.UniqueName != "ModA")
+				return false;
+			return kvp.Value.Match(
+				missingDependencies => missingDependencies.Misversioned.Count == 1 && missingDependencies.Misversioned.First().UniqueName == "ModB",
+				_ => false,
+				_ => false
+			);
+		}));
+	}
+
 	private sealed record Manifest(
 		string UniqueName,
 		int Version,

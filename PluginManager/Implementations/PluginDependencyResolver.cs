@@ -37,39 +37,66 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 		List<IReadOnlySet<TPluginManifest>> loadSteps = [];
 		Dictionary<TPluginManifest, PluginDependencyUnresolvableResult<TPluginManifest, TVersion>> unresolvable = [];
 
-		bool MatchesDependency(TPluginManifest manifest, PluginDependency<TVersion> dependency, bool ignoreVersion = false)
+		DependencyMatchStatus GetDependencyMatchStatus(TPluginManifest manifest, PluginDependency<TVersion> dependency)
 		{
 			if (!manifestEntries.TryGetValue(manifest, out var entry))
-				return false;
-			return entry.Data.UniqueName == dependency.UniqueName && (ignoreVersion || dependency.Version is null || dependency.Version.Value.CompareTo(entry.Data.Version) <= 0);
+				return DependencyMatchStatus.NotMatching;
+			if (entry.Data.UniqueName != dependency.UniqueName)
+				return DependencyMatchStatus.NotMatching;
+			if (dependency.Version is null)
+				return DependencyMatchStatus.OK;
+			if (dependency.Version.Value.CompareTo(entry.Data.Version) <= 0)
+				return DependencyMatchStatus.OK;
+			return DependencyMatchStatus.Misversioned;
 		}
 
-		bool ContainsDependency(IEnumerable<TPluginManifest> enumerable, PluginDependency<TVersion> dependency, bool ignoreVersion = false)
-			=> enumerable.Any(m => MatchesDependency(m, dependency, ignoreVersion));
+		DependencyResolveStatus GetDependencyResolveStatus(IEnumerable<TPluginManifest> enumerable, PluginDependency<TVersion> dependency)
+		{
+			foreach (var manifestEntry in enumerable)
+			{
+				switch (GetDependencyMatchStatus(manifestEntry, dependency))
+				{
+					case DependencyMatchStatus.OK:
+						return DependencyResolveStatus.OK;
+					case DependencyMatchStatus.Misversioned:
+						return DependencyResolveStatus.Misversioned;
+					case DependencyMatchStatus.NotMatching:
+					default:
+						continue;
+				}
+			}
+			return DependencyResolveStatus.NotResolved;
+		}
 
-		bool CanDependencyBeResolved(PluginDependency<TVersion> dependency)
-			=> ContainsDependency(allResolved, dependency);
-
-		bool CanManifestBeResolved(TPluginManifest manifest, bool onlyRequiredDependencies)
+		bool CanManifestBeResolved(TPluginManifest manifest, bool requireOptional)
 		{
 			if (!manifestEntries.TryGetValue(manifest, out var entry))
 				return false;
-			return entry.Data.Dependencies.Where(d => !onlyRequiredDependencies || d.IsRequired).All(CanDependencyBeResolved);
+			foreach (var dependency in entry.Data.Dependencies)
+			{
+				var dependencyResolveStatus = GetDependencyResolveStatus(allResolved, dependency);
+				if (dependencyResolveStatus == DependencyResolveStatus.OK)
+					continue;
+				if (!requireOptional && !dependency.IsRequired && dependencyResolveStatus == DependencyResolveStatus.NotResolved)
+					continue;
+				return false;
+			}
+			return true;
 		}
 
 		while (toResolveLeft.Count > 0)
 		{
 			var oldCount = toResolveLeft.Count;
-			Loop(onlyRequiredDependencies: false);
-			Loop(onlyRequiredDependencies: true);
+			Loop(true);
+			Loop(false);
 			if (toResolveLeft.Count == oldCount)
 				break;
 
-			void Loop(bool onlyRequiredDependencies)
+			void Loop(bool requireOptional)
 			{
 				while (toResolveLeft.Count > 0)
 				{
-					var loadStep = toResolveLeft.Where(m => CanManifestBeResolved(m, onlyRequiredDependencies: onlyRequiredDependencies)).ToHashSet();
+					var loadStep = toResolveLeft.Where(m => CanManifestBeResolved(m, requireOptional)).ToHashSet();
 					if (loadStep.Count == 0)
 						break;
 
@@ -90,7 +117,7 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 			if (!manifestEntries.TryGetValue(manifest, out var entry))
 				return [];
 			return entry.Data.Dependencies
-				.Where(d => !ContainsDependency(allResolved, d) && !ContainsDependency(toResolveLeft, d))
+				.Where(d => GetDependencyResolveStatus(allResolved, d) != DependencyResolveStatus.OK && GetDependencyResolveStatus(toResolveLeft, d) != DependencyResolveStatus.OK)
 				.ToHashSet();
 		}
 
@@ -106,7 +133,7 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 			foreach (var kvp in missingDependencyManifests)
 			{
 				var misverionedDependencies = kvp.Value
-					.Where(d => d.Version is not null && (ContainsDependency(allResolved, d, ignoreVersion: true) || ContainsDependency(toResolveLeft, d, ignoreVersion: true)))
+					.Where(d => GetDependencyResolveStatus(allResolved, d) == DependencyResolveStatus.Misversioned || GetDependencyResolveStatus(toResolveLeft, d) == DependencyResolveStatus.Misversioned)
 					.ToHashSet();
 				
 				unresolvable[kvp.Key] = new PluginDependencyUnresolvableResult<TPluginManifest, TVersion>.MissingDependencies
@@ -134,7 +161,7 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 				return null;
 			foreach (var dependency in entry.Data.Dependencies)
 			{
-				var matchingManifest = toResolveLeft.FirstOrDefault(m => MatchesDependency(m, dependency));
+				var matchingManifest = toResolveLeft.FirstOrDefault(m => GetDependencyMatchStatus(m, dependency) == DependencyMatchStatus.OK);
 				if (matchingManifest is null)
 					continue;
 				var newCycle = currentCycle.Append(matchingManifest).ToList();
@@ -190,5 +217,15 @@ public sealed class PluginDependencyResolver<TPluginManifest, TVersion> : IPlugi
 	{
 		public TPluginManifest Manifest { get; init; }
 		public RequiredManifestData Data { get; init; }
+	}
+
+	private enum DependencyMatchStatus
+	{
+		NotMatching, Misversioned, OK
+	}
+
+	private enum DependencyResolveStatus
+	{
+		NotResolved, Misversioned, OK
 	}
 }
