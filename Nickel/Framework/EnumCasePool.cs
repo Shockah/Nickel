@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace Nickel;
 
@@ -37,12 +38,10 @@ internal sealed class EnumCasePool
 				nextCaseValue = GetInitialNextCase(maxDefinedCase);
 			}
 
-			if (!this.ObtainedCases.TryGetValue(typeof(TEnum), out var obtainedCases))
-			{
+			ref var obtainedCases = ref CollectionsMarshal.GetValueRefOrAddDefault(this.ObtainedCases, typeof(TEnum), out var obtainedCasesExists);
+			if (!obtainedCasesExists)
 				obtainedCases = [];
-				this.ObtainedCases[typeof(TEnum)] = obtainedCases;
-			}
-			obtainedCases.Add(nextCaseValue);
+			obtainedCases!.Add(nextCaseValue);
 			
 			this.NextCaseValue[typeof(TEnum)] = nextCaseValue + TRaw.One;
 			return (TEnum)(object)nextCaseValue;
@@ -56,13 +55,11 @@ internal sealed class EnumCasePool
 			var raw = (TRaw)(object)@case;
 			if (!obtainedCases.Remove(raw))
 				return;
-			
-			if (!this.FreedCases.TryGetValue(typeof(TEnum), out var freedCases))
-			{
+
+			ref var freedCases = ref CollectionsMarshal.GetValueRefOrAddDefault(this.FreedCases, typeof(TEnum), out var freedCasesExists);
+			if (!freedCasesExists)
 				freedCases = [];
-				this.FreedCases[typeof(TEnum)] = freedCases;
-			}
-			freedCases.Add(raw);
+			freedCases!.Add(raw);
 		}
 	}
 

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 
 namespace Nickel;
 
@@ -109,16 +110,13 @@ internal sealed class DelayedHarmonyManager
 		if (prefix is null && postfix is null && transpiler is null && finalizer is null)
 			return;
 
-		if (!this.Patches.TryGetValue(original, out var allPatches))
-		{
-			allPatches = new();
-			this.Patches[original] = allPatches;
-		}
-		if (!allPatches.TryGetValue(id, out var patches))
-		{
+		ref var allPatches = ref CollectionsMarshal.GetValueRefOrAddDefault(this.Patches, original, out var allPatchesExists);
+		if (!allPatchesExists)
+			allPatches = [];
+
+		ref var patches = ref CollectionsMarshal.GetValueRefOrAddDefault(allPatches!, id, out var patchesExists);
+		if (!patchesExists)
 			patches = new();
-			allPatches[id] = patches;
-		}
 
 		if (prefix is not null)
 			patches.Prefixes.Add(prefix);

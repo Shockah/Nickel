@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 
 namespace Nickel;
@@ -92,13 +93,13 @@ internal sealed class ModManager
 			proxyInfo =>
 			{
 				var key = new UnorderedPair<string>(proxyInfo.Target.Context, proxyInfo.Proxy.Context);
-				if (!moduleBuilders.TryGetValue(key, out var moduleBuilder))
+				ref var moduleBuilder = ref CollectionsMarshal.GetValueRefOrAddDefault(moduleBuilders, key, out var exists);
+				if (!exists)
 				{
 					var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName($"{this.GetType().Namespace}.Proxies{moduleBuilders.Count}, Version={this.GetType().Assembly.GetName().Version}, Culture=neutral"), AssemblyBuilderAccess.Run);
 					moduleBuilder = assemblyBuilder.DefineDynamicModule($"{this.GetType().Namespace}.Proxies");
-					moduleBuilders[key] = moduleBuilder;
 				}
-				return moduleBuilder;
+				return moduleBuilder!;
 			},
 			new()
 			{
@@ -598,12 +599,10 @@ internal sealed class ModManager
 
 	private ILogger ObtainLogger(IModManifest manifest)
 	{
-		if (!this.UniqueNameToLogger.TryGetValue(manifest.UniqueName, out var logger))
-		{
+		ref var logger = ref CollectionsMarshal.GetValueRefOrAddDefault(this.UniqueNameToLogger, manifest.UniqueName, out var exists);
+		if (!exists)
 			logger = this.LoggerFactory.CreateLogger(manifest.UniqueName);
-			this.UniqueNameToLogger[manifest.UniqueName] = logger;
-		}
-		return logger;
+		return logger!;
 	}
 
 	private IModHelper ObtainModHelper(IModManifest manifest)
@@ -617,7 +616,8 @@ internal sealed class ModManager
 
 	internal IModHelper ObtainModHelper(IPluginPackage<IModManifest> package)
 	{
-		if (!this.UniqueNameToHelper.TryGetValue(package.Manifest.UniqueName, out var helper))
+		ref var helper = ref CollectionsMarshal.GetValueRefOrAddDefault(this.UniqueNameToHelper, package.Manifest.UniqueName, out var exists);
+		if (!exists)
 		{
 			var modEvents = new ModEvents(package.Manifest, this.EventManager);
 			
@@ -662,10 +662,8 @@ internal sealed class ModManager
 				),
 				() => this.CurrentModLoadPhase
 			);
-			this.UniqueNameToHelper[package.Manifest.UniqueName] = helper;
 		}
-
-		return helper;
+		return helper!;
 	}
 
 	private sealed class FakePluginPackage(IModManifest manifest, IDirectoryInfo packageRoot) : IPluginPackage<IModManifest>

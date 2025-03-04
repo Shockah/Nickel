@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace Nanoray.PluginManager.Implementations;
 
@@ -46,15 +47,14 @@ public sealed class PrioritizingPluginPackageResolver<TPluginManifest, TPriority
 			
 			var key = this.KeyFunction(success.Package);
 
-			if (!keyToSuccesses.TryGetValue(key, out var successes))
-			{
+			ref var successes = ref CollectionsMarshal.GetValueRefOrAddDefault(keyToSuccesses, key, out var successesExists);
+			if (!successesExists)
 				successes = [];
-				keyToSuccesses[key] = successes;
-			}
-			successes.Add(success);
+			successes!.Add(success);
 
-			if (!keyToHighestPriority.TryGetValue(key, out var highestPriority) || success.Package.Manifest.Priority > highestPriority)
-				keyToHighestPriority[key] = success.Package.Manifest.Priority;
+			ref var highestPriority = ref CollectionsMarshal.GetValueRefOrAddDefault(keyToHighestPriority, key, out var highestPriorityExists);
+			if (!highestPriorityExists || success.Package.Manifest.Priority > highestPriority)
+				highestPriority = success.Package.Manifest.Priority;
 		}
 
 		foreach (var (key, highestPriority) in keyToHighestPriority)

@@ -3,6 +3,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Nickel;
 
@@ -27,13 +28,11 @@ internal sealed class ModStorageManager(Func<IContractResolver?, IContractResolv
 
 	public void ApplyJsonSerializerSettingsForMod(IModManifest modManifest, Action<JsonSerializerSettings> function, double priority)
 	{
-		if (!this.PerModSettingsFunctions.TryGetValue(modManifest.UniqueName, out var perModFunctions))
-		{
+		ref var perModFunctions = ref CollectionsMarshal.GetValueRefOrAddDefault(this.PerModSettingsFunctions, modManifest.UniqueName, out var exists);
+		if (!exists)
 			perModFunctions = new(ascending: false);
-			this.PerModSettingsFunctions[modManifest.UniqueName] = perModFunctions;
-		}
 
-		perModFunctions.Add(function, priority);
+		perModFunctions!.Add(function, priority);
 		this.CachedSerializerSettings.Remove(modManifest.UniqueName);
 		this.CachedSerializers.Remove(modManifest.UniqueName);
 	}
@@ -65,11 +64,9 @@ internal sealed class ModStorageManager(Func<IContractResolver?, IContractResolv
 
 	public JsonSerializer GetSerializerForMod(IModManifest modManifest)
 	{
-		if (!this.CachedSerializers.TryGetValue(modManifest.UniqueName, out var serializer))
-		{
+		ref var serializer = ref CollectionsMarshal.GetValueRefOrAddDefault(this.CachedSerializers, modManifest.UniqueName, out var exists);
+		if (!exists)
 			serializer = JsonSerializer.Create(this.GetSerializerSettingsForMod(modManifest));
-			this.CachedSerializers[modManifest.UniqueName] = serializer;
-		}
-		return serializer;
+		return serializer!;
 	}
 }

@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Nickel;
 
@@ -478,19 +479,16 @@ file sealed class HookSubclassGlue(HookSubclassStaticGlue staticGlue)
 		var compiledDelegate = staticGlue.ByParameterDelegateMapper.Map<THookDelegate, TMethodDelegate>(hookDelegate, method.GetParameters());
 		var objectifiedDelegate = staticGlue.ObjectifiedDelegateMapper.Map(compiledDelegate);
 
-		if (!this.OriginalToCompiledDelegates.TryGetValue(method, out var originalToCompiledDelegates))
-		{
+		ref var originalToCompiledDelegates = ref CollectionsMarshal.GetValueRefOrAddDefault(this.OriginalToCompiledDelegates, method, out var originalToCompiledDelegatesExists);
+		if (!originalToCompiledDelegatesExists)
 			originalToCompiledDelegates = [];
-			this.OriginalToCompiledDelegates[method] = originalToCompiledDelegates;
-		}
-		if (!this.CompiledDelegates.TryGetValue(method, out var compiledDelegates))
-		{
-			compiledDelegates = [];
-			this.CompiledDelegates[method] = compiledDelegates;
-		}
 
-		originalToCompiledDelegates[hookDelegate] = compiledDelegate;
-		compiledDelegates.Add(objectifiedDelegate, -priority);
+		ref var compiledDelegates = ref CollectionsMarshal.GetValueRefOrAddDefault(this.CompiledDelegates, method, out var compiledDelegatesExists);
+		if (!compiledDelegatesExists)
+			compiledDelegates = [];
+
+		originalToCompiledDelegates![hookDelegate] = compiledDelegate;
+		compiledDelegates!.Add(objectifiedDelegate, -priority);
 	}
 
 	public void RegisterMethodHook<THookDelegate>(MethodInfo method, THookDelegate hookDelegate, double priority)

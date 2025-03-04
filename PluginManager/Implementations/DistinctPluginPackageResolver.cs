@@ -2,6 +2,7 @@ using OneOf.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Nanoray.PluginManager.Implementations;
 
@@ -40,12 +41,10 @@ public sealed class DistinctPluginPackageResolver<TPluginManifest, TKey> : IPlug
 				continue;
 
 			var key = this.KeyFunction(success.Package);
-			if (!keyToPackages.TryGetValue(key, out var packagesForKey))
-			{
+			ref var packagesForKey = ref CollectionsMarshal.GetValueRefOrAddDefault(keyToPackages, key, out var packagesForKeyExists);
+			if (!packagesForKeyExists)
 				packagesForKey = [];
-				keyToPackages[key] = packagesForKey;
-			}
-			packagesForKey.Add(success.Package);
+			packagesForKey!.Add(success.Package);
 		}
 
 		foreach (var packagesForKey in keyToPackages.Values)

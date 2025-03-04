@@ -5,6 +5,7 @@ using Nanoray.PluginManager.Cecil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Nickel;
 
@@ -71,8 +72,9 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 			return false;
 		if (fieldReference.DeclaringType.Scope.Name != "CobaltCore")
 			return false;
-
-		if (!cache.TryGetValue(fieldReference.FullName, out var getterReference))
+		
+		ref var getterReference = ref CollectionsMarshal.GetValueRefOrAddDefault(cache, fieldReference.FullName, out var getterReferenceExists);
+		if (!getterReferenceExists)
 		{
 			if (fieldReference.DeclaringType.Resolve() is not { } containingType)
 			{
@@ -91,7 +93,6 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 			}
 			
 			getterReference = method.Module.ImportReference(propertyDefinition.GetMethod);
-			cache[fieldReference.FullName] = getterReference;
 			logger(new() { Level = AssemblyEditorResult.MessageLevel.Debug, Content = $"Rewriting field `{fieldReference.FullName}` read in {method.FullName} to {getterReference.FullName}." });
 		}
 		
@@ -109,8 +110,9 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 			return false;
 		if (fieldReference.DeclaringType.Scope.Name != "CobaltCore")
 			return false;
-
-		if (!cache.TryGetValue(fieldReference.FullName, out var setterReference))
+		
+		ref var setterReference = ref CollectionsMarshal.GetValueRefOrAddDefault(cache, fieldReference.FullName, out var setterReferenceExists);
+		if (!setterReferenceExists)
 		{
 			if (fieldReference.DeclaringType.Resolve() is not { } containingType)
 			{
@@ -129,7 +131,6 @@ internal sealed class GameFieldToPropertyDefinitionEditor : IAssemblyDefinitionE
 			}
 			
 			setterReference = method.Module.ImportReference(propertyDefinition.SetMethod);
-			cache[fieldReference.FullName] = setterReference;
 			logger(new() { Level = AssemblyEditorResult.MessageLevel.Debug, Content = $"Rewriting field `{fieldReference.FullName}` write in `{method.FullName}` to {setterReference.FullName}." });
 		}
 

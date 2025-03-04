@@ -170,8 +170,7 @@ internal static class CrewSelection
 	{
 		if (ModEntry.Instance.Settings.ProfileBased.Current.DetailedCrewInfo)
 			return new();
-		else
-			return Draw.Text(str, x, y, font, color, colorForce, progress, maxWidth, align, dontDraw, lineHeight, outline, blend, samplerState, effect, dontSubstituteLocFont, letterSpacing, extraScale);
+		return Draw.Text(str, x, y, font, color, colorForce, progress, maxWidth, align, dontDraw, lineHeight, outline, blend, samplerState, effect, dontSubstituteLocFont, letterSpacing, extraScale);
 	}
 
 	private static List<Deck> NewRunOptions_CharSelect_Transpiler_ModifyAllChars(List<Deck> allChars)

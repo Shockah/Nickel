@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.InteropServices;
 using MGColor = Microsoft.Xna.Framework.Color;
 
 namespace Nickel;
@@ -470,12 +471,10 @@ internal sealed class CharacterManager
 
 	private static void Inject(AnimationEntry entry)
 	{
-		if (!DB.charAnimations.TryGetValue(entry.V2.CharacterType, out var characterAnimations))
-		{
+		ref var characterAnimations = ref CollectionsMarshal.GetValueRefOrAddDefault(DB.charAnimations, entry.V2.CharacterType, out var characterAnimationsExists);
+		if (!characterAnimationsExists)
 			characterAnimations = [];
-			DB.charAnimations[entry.V2.CharacterType] = characterAnimations;
-		}
-		characterAnimations[entry.V2.LoopTag] = entry.V2.Frames.ToList();
+		characterAnimations![entry.V2.LoopTag] = entry.V2.Frames.ToList();
 	}
 
 	private void Inject(PlayableCharacterEntry entry)
@@ -503,17 +502,17 @@ internal sealed class CharacterManager
 		{
 			if (!DB.charAnimations.TryGetValue(entry.CharacterType, out var charAnimations))
 			{
-				this.LoggerProvider(entry.ModOwner).LogError($"Could not inject character {{Character}}: the `neutral` and `mini` animations are not registered.", entry.UniqueName);
+				this.LoggerProvider(entry.ModOwner).LogError("Could not inject character {Character}: the `neutral` and `mini` animations are not registered.", entry.UniqueName);
 				return;
 			}
 			if (!charAnimations.ContainsKey("neutral"))
 			{
-				this.LoggerProvider(entry.ModOwner).LogError($"Could not inject character {{Character}}: the `neutral` animation is not registered.", entry.UniqueName);
+				this.LoggerProvider(entry.ModOwner).LogError("Could not inject character {Character}: the `neutral` animation is not registered.", entry.UniqueName);
 				return;
 			}
 			if (!charAnimations.ContainsKey("mini"))
 			{
-				this.LoggerProvider(entry.ModOwner).LogError($"Could not inject character {{Character}}: the `mini` animation is not registered.", entry.UniqueName);
+				this.LoggerProvider(entry.ModOwner).LogError("Could not inject character {Character}: the `mini` animation is not registered.", entry.UniqueName);
 				return;
 			}
 		}
@@ -555,17 +554,17 @@ internal sealed class CharacterManager
 		{
 			if (!DB.charAnimations.TryGetValue(entry.CharacterType, out var charAnimations))
 			{
-				this.LoggerProvider(entry.ModOwner).LogError($"Could not inject character {{Character}}: the `neutral` and `mini` animations are not registered.", entry.UniqueName);
+				this.LoggerProvider(entry.ModOwner).LogError("Could not inject character {Character}: the `neutral` and `mini` animations are not registered.", entry.UniqueName);
 				return;
 			}
 			if (!charAnimations.ContainsKey("neutral"))
 			{
-				this.LoggerProvider(entry.ModOwner).LogError($"Could not inject character {{Character}}: the `neutral` animation is not registered.", entry.UniqueName);
+				this.LoggerProvider(entry.ModOwner).LogError("Could not inject character {Character}: the `neutral` animation is not registered.", entry.UniqueName);
 				return;
 			}
 			if (!charAnimations.ContainsKey("mini"))
 			{
-				this.LoggerProvider(entry.ModOwner).LogError($"Could not inject character {{Character}}: the `mini` animation is not registered.", entry.UniqueName);
+				this.LoggerProvider(entry.ModOwner).LogError("Could not inject character {Character}: the `mini` animation is not registered.", entry.UniqueName);
 				return;
 			}
 		}

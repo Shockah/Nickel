@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Nickel;
 
@@ -45,11 +46,9 @@ public sealed class MultiPool
 
 	private Pool<T> GetPool<T>() where T : class, new()
 	{
-		if (!this.Pools.TryGetValue(typeof(T), out var rawPool))
-		{
+		ref var rawPool = ref CollectionsMarshal.GetValueRefOrAddDefault(this.Pools, typeof(T), out var exists);
+		if (!exists)
 			rawPool = new Pool<T>(() => new T());
-			this.Pools[typeof(T)] = rawPool;
-		}
-		return (Pool<T>)rawPool;
+		return (Pool<T>)rawPool!;
 	}
 }

@@ -32,7 +32,7 @@ internal sealed class HookManager<THook>(
 			.Select(hook => (Hook: hook, Priority: this.Hooks.TryGetOrderingValue(hook, out var priority) ? priority : 0))
 			.Concat(
 				objects
-					.Where(o => !this.HookTypes.TryGetValue(o.GetType(), out var isHookType) || isHookType)
+					.Where(o => this.HookTypes.GetValueOrDefault(o.GetType(), true))
 					.Select<object, (THook? Hook, double Priority)>(o =>
 					{
 						while (o is IProxyObject.IWithProxyTargetInstanceProperty proxyObject)

@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 
 namespace Nickel;
@@ -39,7 +40,9 @@ internal sealed class ProxyContractResolver(IProxyManager<string> proxyManager) 
 				return null;
 
 			var proxyType = GetTypeFromInfo(serializableProxy.TypeInfo) ?? throw new InvalidDataException($"Cannot deserialize {serializableProxy}");
-			if (!this.ObtainProxyDelegates.TryGetValue(proxyType, out var obtainProxyDelegate))
+
+			ref var obtainProxyDelegate = ref CollectionsMarshal.GetValueRefOrAddDefault(this.ObtainProxyDelegates, proxyType, out var obtainProxyDelegateExists);
+			if (!obtainProxyDelegateExists)
 			{
 				var obtainProxyMethod = typeof(IProxyManagerExtensions)
 					.GetMethods()
@@ -56,9 +59,8 @@ internal sealed class ProxyContractResolver(IProxyManager<string> proxyManager) 
 				il.Emit(OpCodes.Ret);
 				
 				obtainProxyDelegate = method.CreateDelegate<Func<IProxyManager<string>, object, string, string, object>>();
-				this.ObtainProxyDelegates[proxyType] = obtainProxyDelegate;
 			}
-			return obtainProxyDelegate(proxyManager, serializableProxy.Target, serializableProxy.TargetContext ?? "!Serialization!", serializableProxy.ProxyContext ?? "!Serialization!");
+			return obtainProxyDelegate!(proxyManager, serializableProxy.Target, serializableProxy.TargetContext ?? "!Serialization!", serializableProxy.ProxyContext ?? "!Serialization!");
 
 			Type? GetTypeFromInfo(SerializableTypeInfo typeInfo)
 			{

@@ -4,6 +4,7 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace Nickel.Essentials;
@@ -33,8 +34,11 @@ internal static partial class CardCodexFiltering
 
 	private static string ObtainDeckNiceName(Deck deck)
 	{
-		if (!DeckNiceNames.TryGetValue(deck, out var niceName))
+		ref var niceName = ref CollectionsMarshal.GetValueRefOrAddDefault(DeckNiceNames, deck, out var niceNameExists);
+		if (!niceNameExists)
 		{
+			niceName = GetNiceName(deck);
+			
 			static string GetNiceName(Deck deck)
 			{
 				var locKey = $"char.{deck.Key()}";
@@ -52,11 +56,8 @@ internal static partial class CardCodexFiltering
 
 				return ((int)deck).ToString();
 			}
-
-			niceName = GetNiceName(deck);
-			DeckNiceNames[deck] = niceName;
 		}
-		return niceName;
+		return niceName!;
 	}
 
 	private static void CardBrowse_GetCardList_Postfix(CardBrowse __instance, ref List<Card> __result)

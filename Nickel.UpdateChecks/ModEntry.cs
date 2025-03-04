@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -182,12 +183,10 @@ public sealed class ModEntry : SimpleMod
 
 				hasValidSources = true;
 
-				if (!updateSourceToMod.TryGetValue(source, out var allSourceMods))
-				{
+				ref var allSourceMods = ref CollectionsMarshal.GetValueRefOrAddDefault(updateSourceToMod, source, out var allSourceModsExists);
+				if (!allSourceModsExists)
 					allSourceMods = [];
-					updateSourceToMod[source] = allSourceMods;
-				}
-				allSourceMods.Add((mod, sourceManifestEntry));
+				allSourceMods!.Add((mod, sourceManifestEntry));
 			}
 
 			if (!hasValidSources)

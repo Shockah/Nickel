@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 
 namespace Nickel.Bugfixes;
 
@@ -35,12 +36,10 @@ internal static class RunSummaryCardOrderFixes
 			.Where(e => e.Type is not null && e.Meta is not null)
 			.Select(e =>
 			{
-				if (!__instance.cardCache.TryGetValue(e.Summary.type, out var card))
-				{
+				ref var card = ref CollectionsMarshal.GetValueRefOrAddDefault(__instance.cardCache, e.Summary.type, out var cardExists);
+				if (!cardExists)
 					card = (Card)Activator.CreateInstance(e.Type!)!;
-					__instance.cardCache[e.Summary.type] = card;
-				}
-				return (Summary: e.Summary, Card: card, Meta: e.Meta!);
+				return (Summary: e.Summary, Card: card!, Meta: e.Meta!);
 			})
 			.OrderByDescending(e => e.Meta.deck == Deck.colorless || runSummary.decks.Contains(e.Meta.deck))
 			.ThenBy(e =>

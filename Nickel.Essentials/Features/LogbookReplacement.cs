@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Nickel.Essentials;
 
@@ -93,32 +94,28 @@ internal static class LogbookReplacement
 
 		int ObtainRunCount(Deck deck)
 		{
-			if (!runCounts.TryGetValue(deck, out var value))
-			{
+			ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(runCounts, deck, out var valueExists);
+			if (!valueExists)
 				value = g.state.bigStats.combos
 					.Where(kvp => BigStats.ParseComboKey(kvp.Key)?.decks.Contains(deck) == true)
 					.Sum(kvp => kvp.Value.runs);
-				runCounts[deck] = value;
-			}
 			return value;
 		}
 
 		int ObtainWinCount(Deck deck)
 		{
-			if (!winCounts.TryGetValue(deck, out var value))
-			{
+			ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(winCounts, deck, out var valueExists);
+			if (!valueExists)
 				value = g.state.bigStats.combos
 					.Where(kvp => BigStats.ParseComboKey(kvp.Key)?.decks.Contains(deck) == true)
 					.Sum(kvp => kvp.Value.wins);
-				winCounts[deck] = value;
-			}
 			return value;
 		}
 
 		int? ObtainHighestWin(Deck first, Deck second, Deck third)
 		{
-			if (!highestWins.TryGetValue((first, second, third), out var value))
-			{
+			ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(highestWins, (first, second, third), out var valueExists);
+			if (!valueExists)
 				value = g.state.bigStats.combos
 					.Where(kvp => kvp.Value.maxDifficultyWin is not null)
 					.OrderByDescending(kvp => kvp.Value.maxDifficultyWin!.Value)
@@ -128,18 +125,14 @@ internal static class LogbookReplacement
 							return false;
 						return parsedKey.decks.Contains(first) && parsedKey.decks.Contains(second) && parsedKey.decks.Contains(third);
 					})?.Value.maxDifficultyWin;
-				highestWins[(first, second, third)] = value;
-			}
 			return value;
 		}
 
 		Card? ObtainCard(string key)
 		{
-			if (!CardKeyToInstance.TryGetValue(key, out var card))
-			{
+			ref var card = ref CollectionsMarshal.GetValueRefOrAddDefault(CardKeyToInstance, key, out var cardExists);
+			if (!cardExists)
 				card = DB.cards.TryGetValue(key, out var cardType) ? (Card?)Activator.CreateInstance(cardType) : null;
-				CardKeyToInstance[key] = card;
-			}
 			return card;
 		}
 

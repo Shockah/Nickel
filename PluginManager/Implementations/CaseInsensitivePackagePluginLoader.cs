@@ -2,6 +2,7 @@ using Nanoray.PluginManager.CaseInsensitive;
 using OneOf;
 using OneOf.Types;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Nanoray.PluginManager;
 
@@ -34,11 +35,9 @@ public sealed class CaseInsensitivePluginLoader<TPluginManifest, TPlugin> : IPlu
 	
 	private IPluginPackage<TPluginManifest> ObtainWrappedPackage(IPluginPackage<TPluginManifest> package)
 	{
-		if (!this.WrappedPackages.TryGetValue(package, out var wrappedPackage))
-		{
+		ref var wrappedPackage = ref CollectionsMarshal.GetValueRefOrAddDefault(this.WrappedPackages, package, out var wrappedPackageExists);
+		if (!wrappedPackageExists)
 			wrappedPackage = new DirectoryPluginPackage<TPluginManifest>(package.Manifest, new CaseInsensitiveDirectoryInfo(package.PackageRoot));
-			this.WrappedPackages[package] = wrappedPackage;
-		}
-		return wrappedPackage;
+		return wrappedPackage!;
 	}
 }

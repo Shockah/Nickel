@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Nickel;
 
@@ -110,9 +111,7 @@ internal sealed class ModDataManager : IReferenceCloneListener
 			return false;
 		if (!allObjectData.TryGetValue(manifest.UniqueName, out var modObjectData))
 			return false;
-		if (!modObjectData.TryGetValue(key, out _))
-			return false;
-		return true;
+		return modObjectData.ContainsKey(key);
 	}
 
 	public void SetModData<T>(IModManifest manifest, object o, string key, T data)
@@ -124,12 +123,11 @@ internal sealed class ModDataManager : IReferenceCloneListener
 			allObjectData = new();
 			this.ModDataStorage.AddOrUpdate(o, allObjectData);
 		}
-		if (!allObjectData.TryGetValue(manifest.UniqueName, out var modObjectData))
-		{
-			modObjectData = new();
-			allObjectData[manifest.UniqueName] = modObjectData;
-		}
-		modObjectData[key] = data;
+		
+		ref var modObjectData = ref CollectionsMarshal.GetValueRefOrAddDefault(allObjectData, manifest.UniqueName, out var modObjectDataExists);
+		if (!modObjectDataExists)
+			modObjectData = [];
+		modObjectData![key] = data;
 	}
 
 	public void RemoveModData(IModManifest manifest, object o, string key)
@@ -167,14 +165,13 @@ internal sealed class ModDataManager : IReferenceCloneListener
 			allTargetObjectData = [];
 			this.ModDataStorage.AddOrUpdate(to, allTargetObjectData);
 		}
-		if (!allTargetObjectData.TryGetValue(manifest.UniqueName, out var targetModObjectData))
-		{
+
+		ref var targetModObjectData = ref CollectionsMarshal.GetValueRefOrAddDefault(allTargetObjectData, manifest.UniqueName, out var targetModObjectDataExists);
+		if (!targetModObjectDataExists)
 			targetModObjectData = [];
-			allTargetObjectData[manifest.UniqueName] = targetModObjectData;
-		}
 
 		foreach (var (key, value) in sourceModObjectData)
-			targetModObjectData[key] = NickelStatic.DeepCopyObject(value);
+			targetModObjectData![key] = NickelStatic.DeepCopyObject(value);
 	}
 
 	public void CopyAllModData(object from, object to)
@@ -195,14 +192,12 @@ internal sealed class ModDataManager : IReferenceCloneListener
 
 		foreach (var (modUniqueName, sourceModObjectData) in allSourceObjectData)
 		{
-			if (!allTargetObjectData.TryGetValue(modUniqueName, out var targetModObjectData))
-			{
+			ref var targetModObjectData = ref CollectionsMarshal.GetValueRefOrAddDefault(allTargetObjectData, modUniqueName, out var targetModObjectDataExists);
+			if (!targetModObjectDataExists)
 				targetModObjectData = [];
-				allTargetObjectData[modUniqueName] = targetModObjectData;
-			}
 			
 			foreach (var (key, value) in sourceModObjectData)
-				targetModObjectData[key] = NickelStatic.DeepCopyObject(value);
+				targetModObjectData![key] = NickelStatic.DeepCopyObject(value);
 		}
 	}
 

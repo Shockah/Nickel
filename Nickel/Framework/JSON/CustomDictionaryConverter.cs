@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Nickel;
 
@@ -25,12 +26,10 @@ internal sealed class CustomDictionaryConverter<TKey> : JsonConverter
 
 	private JsonConverter ObtainConverter(Type type)
 	{
-		if (!this.Cache.TryGetValue(type, out var converter))
-		{
-			converter = (JsonConverter)Activator.CreateInstance(typeof(CustomDictionaryConverter<,>).MakeGenericType([typeof(TKey), type]))!;
-			this.Cache[type] = converter;
-		}
-		return converter;
+		ref var converter = ref CollectionsMarshal.GetValueRefOrAddDefault(this.Cache, type, out var converterExists);
+		if (!converterExists)
+			converter = (JsonConverter)Activator.CreateInstance(typeof(CustomDictionaryConverter<,>).MakeGenericType(typeof(TKey), type))!;
+		return converter!;
 	}
 
 	public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)

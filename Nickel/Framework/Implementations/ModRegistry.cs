@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Nickel;
 
@@ -64,11 +65,9 @@ internal sealed class ModRegistry(
 		if (minimumVersion is not null && minimumVersion > package.Manifest.Version)
 			return null;
 
-		if (!this.ApiCache.TryGetValue(uniqueName, out var apiObject))
-		{
+		ref var apiObject = ref CollectionsMarshal.GetValueRefOrAddDefault(this.ApiCache, uniqueName, out var apiObjectExists);
+		if (!apiObjectExists)
 			apiObject = mod.GetApi(modManifest);
-			this.ApiCache[uniqueName] = apiObject;
-		}
 		if (apiObject is null)
 			throw new ArgumentException($"The mod {uniqueName} does not expose an API.");
 
