@@ -9,18 +9,18 @@ namespace Nickel.Bugfixes;
 
 internal static class CardCodexCacheFixes
 {
-	private static CardBrowse? LastCardBrowse;
-	private static CardBrowse? CardBrowseGettingCardList;
+	private static WeakReference<CardBrowse>? LastCardBrowse;
+	private static CardBrowse? RenderedCardBrowse;
 	private static readonly Dictionary<Card, CardData> CardDataCache = new();
 	private static readonly Dictionary<Card, IReadOnlyDictionary<ICardTraitEntry, CardTraitState>> CardTraitStateCache = new();
 
 	public static void ApplyPatches(IHarmony harmony)
 	{
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(CardBrowse), nameof(CardBrowse.GetCardList))
-			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(CardBrowse)}.{nameof(CardBrowse.GetCardList)}`"),
-			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(CardBrowse_GetCardList_Prefix)),
-			finalizer: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(CardBrowse_GetCardList_Finalizer))
+			original: AccessTools.DeclaredMethod(typeof(CardBrowse), nameof(CardBrowse.Render))
+			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(CardBrowse)}.{nameof(CardBrowse.Render)}`"),
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(CardBrowse_Render_Prefix)),
+			finalizer: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(CardBrowse_Render_Finalizer))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Card), nameof(Card.GetDataWithOverrides))
@@ -34,18 +34,18 @@ internal static class CardCodexCacheFixes
 		);
 	}
 
-	private static void CardBrowse_GetCardList_Prefix(CardBrowse __instance, G g)
+	private static void CardBrowse_Render_Prefix(CardBrowse __instance, G g)
 	{
 		if (__instance.browseSource != CardBrowse.Source.Codex)
 			return;
 
-		if (LastCardBrowse == __instance)
+		if (LastCardBrowse is not null && LastCardBrowse.TryGetTarget(out var lastCardBrowse) && lastCardBrowse == __instance)
 		{
-			CardBrowseGettingCardList = __instance;
+			RenderedCardBrowse = __instance;
 			return;
 		}
 
-		LastCardBrowse = __instance;
+		LastCardBrowse = new(__instance);
 		CardDataCache.Clear();
 		CardTraitStateCache.Clear();
 		
@@ -55,15 +55,15 @@ internal static class CardCodexCacheFixes
 			CardTraitStateCache[card] = ModEntry.Instance.Helper.Content.Cards.GetAllCardTraits(g.state, card).ToDictionary();
 		}
 		
-		CardBrowseGettingCardList = __instance;
+		RenderedCardBrowse = __instance;
 	}
 
-	private static void CardBrowse_GetCardList_Finalizer()
-		=> CardBrowseGettingCardList = null;
+	private static void CardBrowse_Render_Finalizer()
+		=> RenderedCardBrowse = null;
 
 	private static bool Card_GetDataWithOverrides_Prefix(Card __instance, ref CardData __result)
 	{
-		if (CardBrowseGettingCardList is not { browseSource: CardBrowse.Source.Codex })
+		if (RenderedCardBrowse is not { browseSource: CardBrowse.Source.Codex })
 			return true;
 		
 		__result = CardDataCache.GetValueOrDefault(__instance);
@@ -72,7 +72,7 @@ internal static class CardCodexCacheFixes
 
 	private static bool Nickel_CardTraitManager_ObtainCardTraitStates_Prefix(Card card, ref IReadOnlyDictionary<ICardTraitEntry, CardTraitState> __result)
 	{
-		if (CardBrowseGettingCardList is not { browseSource: CardBrowse.Source.Codex })
+		if (RenderedCardBrowse is not { browseSource: CardBrowse.Source.Codex })
 			return true;
 		
 		__result = CardTraitStateCache.GetValueOrDefault(card) ?? new Dictionary<ICardTraitEntry, CardTraitState>();

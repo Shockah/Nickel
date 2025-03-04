@@ -4,6 +4,7 @@
 
 ## Upcoming release
 
+* Fixed card caching in the Codex not working - this improves the performance of the card Codex.
 * "Fixed" an issue with rendering half-transparent sprites over a non-fully-opaque background. This doesn't affect anything the game normally does, but can help with mods doing various off-screen rendering effects.
 
 ## 1.14.1
