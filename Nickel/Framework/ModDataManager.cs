@@ -1,7 +1,9 @@
 using Nanoray.Mitosis;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -13,8 +15,9 @@ internal sealed class ModDataManager : IReferenceCloneListener
 
 	internal readonly ConditionalWeakTable<object, Dictionary<string, Dictionary<string, object?>>> ModDataStorage = [];
 
-	private static T ConvertExtensionData<T>(object? o)
+	private static T ConvertExtensionData<T>(object? o, out bool reserialized)
 	{
+		reserialized = false;
 		if (o is T t)
 			return t;
 		if (typeof(T) == typeof(int))
@@ -44,6 +47,15 @@ internal sealed class ModDataManager : IReferenceCloneListener
 
 		if (o is null)
 			throw new ArgumentException($"Cannot convert <null> to extension data type {typeof(T)}", nameof(T));
+		
+		var stringWriter = new StringWriter();
+		JSONSettings.serializer.Serialize(new JsonTextWriter(stringWriter), o);
+		if (JSONSettings.serializer.Deserialize<T>(new JsonTextReader(new StringReader(stringWriter.ToString()))) is { } deserialized)
+		{
+			reserialized = true;
+			return deserialized;
+		}
+		
 		throw new ArgumentException($"Cannot convert {o} of type {o.GetType()} to extension data type {typeof(T)}", nameof(T));
 	}
 
@@ -57,7 +69,11 @@ internal sealed class ModDataManager : IReferenceCloneListener
 			throw new KeyNotFoundException($"Object {o} does not contain extension data with key `{key}`");
 		if (!modObjectData.TryGetValue(key, out var data))
 			throw new KeyNotFoundException($"Object {o} does not contain extension data with key `{key}`");
-		return ConvertExtensionData<T>(data);
+		
+		var result = ConvertExtensionData<T>(data, out var reserialized);
+		if (reserialized)
+			modObjectData[key] = data;
+		return result;
 	}
 
 	public bool TryGetModData<T>(IModManifest manifest, object o, string key, [MaybeNullWhen(false)] out T data)
@@ -80,7 +96,9 @@ internal sealed class ModDataManager : IReferenceCloneListener
 			return false;
 		}
 		
-		data = ConvertExtensionData<T>(rawData);
+		data = ConvertExtensionData<T>(rawData, out var reserialized);
+		if (reserialized)
+			modObjectData[key] = data;
 		return true;
 	}
 
