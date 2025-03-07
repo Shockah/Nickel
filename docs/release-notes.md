@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.14.3
+Released 7 March 2025.
 
 * Fixed crashes when deserializing mod data which use custom JSON converters.
 
