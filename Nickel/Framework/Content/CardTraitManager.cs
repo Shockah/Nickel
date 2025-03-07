@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace Nickel;
 
@@ -593,10 +592,12 @@ internal class CardTraitManager
 
 	private IReadOnlyDictionary<ICardTraitEntry, CardTraitState> ObtainCardTraitStates(State state, Card card)
 	{
-		ref var states = ref CollectionsMarshal.GetValueRefOrAddDefault(this.CardTraitStateCache, card, out var statesExists);
-		if (!statesExists)
+		if (!this.CardTraitStateCache.TryGetValue(card, out var states))
+		{
 			states = this.CreateCardTraitStates(state, card);
-		return states!;
+			this.CardTraitStateCache[card] = states;
+		}
+		return states;
 	}
 
 	private IReadOnlyDictionary<ICardTraitEntry, CardTraitState> CreateCardTraitStates(State state, Card card)

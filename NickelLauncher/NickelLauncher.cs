@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace Nickel.Launcher;
 
@@ -70,10 +69,12 @@ internal class NickelLauncher
 
 		using var logNamedPipeServer = string.IsNullOrEmpty(pipeName) ? null : new LogNamedPipeServer(pipeName, logger, e =>
 		{
-			ref var categoryLogger = ref CollectionsMarshal.GetValueRefOrAddDefault(categoryLoggers, e.CategoryName, out var categoryLoggerExists);
-			if (!categoryLoggerExists)
+			if (!categoryLoggers.TryGetValue(e.CategoryName, out var categoryLogger))
+			{
 				categoryLogger = loggerFactory.CreateLogger(e.CategoryName);
-			categoryLogger!.Log(e.LogLevel, "{Message}", e.Message);
+				categoryLoggers[e.CategoryName] = categoryLogger;
+			}
+			categoryLogger.Log(e.LogLevel, "{Message}", e.Message);
 		});
 
 		var psi = new ProcessStartInfo
