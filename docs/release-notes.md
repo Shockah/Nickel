@@ -4,7 +4,8 @@
 
 ## Upcoming release
 
-* Partially reverted optimizations added by 1.14.2, as they were causing some stability issues.
+* Replaced one optimization added by 1.14.2 with a more stable and more performant one.
+* Reverted another optimization added by 1.14.2 for stability reasons.
 
 ## 1.14.3
 Released 7 March 2025.
