@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.14.5
+Released 8 March 2025.
 
 ### For everyone:
 * Fixed yet another issue with the card trait system causing invalid states.
