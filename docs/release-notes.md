@@ -5,6 +5,7 @@
 ## Upcoming release
 
 * Fixed yet another issue with the card trait system causing invalid states.
+* Fixed sprite culling (introduced in 1.14.0) being a bit too aggressive (and wrong) under some circumstances.
 
 ## 1.14.4
 Released 7 March 2025.
