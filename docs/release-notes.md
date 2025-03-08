@@ -4,9 +4,13 @@
 
 ## Upcoming release
 
+### For everyone:
 * Fixed yet another issue with the card trait system causing invalid states.
 * Fixed sprite culling (introduced in 1.14.0) being a bit too aggressive (and wrong) under some circumstances.
 * Potentially fixed an issue with loading mods from ZIP files when they used partially incorrect file paths.
+
+### For developers:
+* Added additional validation whether registered sprite, sound and sound bank files exist.
 
 ## 1.14.4
 Released 7 March 2025.

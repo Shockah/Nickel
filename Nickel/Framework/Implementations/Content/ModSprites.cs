@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
 using Nanoray.PluginManager;
 using System;
@@ -7,7 +8,8 @@ namespace Nickel;
 
 internal sealed class ModSprites(
 	IPluginPackage<IModManifest> package,
-	Func<SpriteManager> spriteManagerProvider
+	Func<SpriteManager> spriteManagerProvider,
+	ILogger logger
 ) : IModSprites
 {
 	public ISpriteEntry RegisterSprite(IFileInfo file)
@@ -23,6 +25,9 @@ internal sealed class ModSprites(
 		{
 			spriteName = file.FullName;
 		}
+		
+		if (!file.Exists)
+			logger.LogWarning("Registering a sprite `{Name}` from path `{Path}` that does not exist.", spriteName, file.FullName);
 		return spriteManagerProvider().RegisterSprite(package.Manifest, spriteName, file.OpenRead);
 	}
 
@@ -33,7 +38,11 @@ internal sealed class ModSprites(
 		=> spriteManagerProvider().LookupByUniqueName(uniqueName);
 
 	public ISpriteEntry RegisterSprite(string name, IFileInfo file)
-		=> spriteManagerProvider().RegisterSprite(package.Manifest, name, file.OpenRead);
+	{
+		if (!file.Exists)
+			logger.LogWarning("Registering a sprite `{Name}` from path `{Path}` that does not exist.", name, file.FullName);
+		return spriteManagerProvider().RegisterSprite(package.Manifest, name, file.OpenRead);
+	}
 
 	public ISpriteEntry RegisterSprite(Func<Stream> streamProvider)
 		=> spriteManagerProvider().RegisterSprite(package.Manifest, Guid.NewGuid().ToString(), streamProvider);

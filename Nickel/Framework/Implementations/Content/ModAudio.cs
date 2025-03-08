@@ -1,4 +1,5 @@
 ﻿using FMOD;
+using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using System;
 using System.IO;
@@ -7,7 +8,8 @@ namespace Nickel;
 
 internal sealed class ModAudio(
 	IPluginPackage<IModManifest> package,
-	Func<AudioManager> audioManagerProvider
+	Func<AudioManager> audioManagerProvider,
+	ILogger logger
 ) : IModAudio
 {
 	public IEventSoundEntry? LookupSoundByEventId(GUID eventId)
@@ -29,11 +31,18 @@ internal sealed class ModAudio(
 		{
 			soundName = file.FullName;
 		}
+		
+		if (!file.Exists)
+			logger.LogWarning("Registering a sound `{Name}` from path `{Path}` that does not exist.", soundName, file.FullName);
 		return audioManagerProvider().RegisterSound(package.Manifest, soundName, file.OpenRead);
 	}
 
 	public IModSoundEntry RegisterSound(string name, IFileInfo file)
-		=> audioManagerProvider().RegisterSound(package.Manifest, name, file.OpenRead);
+	{
+		if (!file.Exists)
+			logger.LogWarning("Registering a sound `{Name}` from path `{Path}` that does not exist.", name, file.FullName);
+		return audioManagerProvider().RegisterSound(package.Manifest, name, file.OpenRead);
+	}
 
 	public IModSoundEntry RegisterSound(Func<Stream> streamProvider)
 		=> audioManagerProvider().RegisterSound(package.Manifest, Guid.NewGuid().ToString(), streamProvider);
@@ -58,7 +67,11 @@ internal sealed class ModAudio(
 		=> audioManagerProvider().RegisterSound(TArgs.DefaultFactory, package.Manifest, name, args);
 
 	public void RegisterBank(IFileInfo file)
-		=> audioManagerProvider().RegisterBank(package.Manifest, file.OpenRead);
+	{
+		if (!file.Exists)
+			logger.LogWarning("Registering a sound bank from path `{Path}` that does not exist.", file.FullName);
+		audioManagerProvider().RegisterBank(package.Manifest, file.OpenRead);
+	}
 
 	public void RegisterBank(Func<Stream> streamProvider)
 		=> audioManagerProvider().RegisterBank(package.Manifest, streamProvider);

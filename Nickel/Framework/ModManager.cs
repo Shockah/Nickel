@@ -620,6 +620,7 @@ internal sealed class ModManager
 		if (!exists)
 		{
 			var modEvents = new ModEvents(package.Manifest, this.EventManager);
+			var logger = this.ObtainLogger(package.Manifest);
 			
 			helper = new ModHelper(
 				new ModRegistry(
@@ -636,8 +637,8 @@ internal sealed class ModManager
 				),
 				modEvents,
 				() => new ModContent(
-					new ModSprites(package, () => this.ContentManager!.Sprites),
-					new ModAudio(package, () => this.ContentManager!.Audio),
+					new ModSprites(package, () => this.ContentManager!.Sprites, logger),
+					new ModAudio(package, () => this.ContentManager!.Audio, logger),
 					new ModDecks(package.Manifest, () => this.ContentManager!.Decks),
 					new ModStatuses(package.Manifest, () => this.ContentManager!.Statuses),
 					new ModCards(package.Manifest, () => this.ContentManager!.Cards, () => this.ContentManager!.CardTraits),
