@@ -4,7 +4,6 @@ using Nickel.Models.Content;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Nickel;
@@ -339,7 +338,7 @@ internal class CardTraitManager
 
 	private readonly Dictionary<string, ModdedEntry> UniqueNameToEntry = [];
 	private readonly HashSet<Card> CardsWithCardTraitStateCache = [];
-	private readonly HashSet<Card> CurrentlyCreatingCardTraitStates = [];
+	private readonly HashSet<Card> CurrentlyPopulatingCardTraitStates = [];
 	private readonly Dictionary<string, ICardTraitEntry> SynthesizedVanillaEntries;
 	private readonly IModManifest ModLoaderModManifest;
 	private readonly ModDataManager ModDataManager;
@@ -584,7 +583,7 @@ internal class CardTraitManager
 	}
 
 	public bool IsCurrentlyCreatingCardTraitStates(Card card)
-		=> this.CurrentlyCreatingCardTraitStates.Contains(card);
+		=> this.CurrentlyPopulatingCardTraitStates.Contains(card);
 
 	private void UpdateModDataFromFieldsIfNeeded(Card card, OverridesModData? overrides = null)
 	{
@@ -604,37 +603,38 @@ internal class CardTraitManager
 
 	private IReadOnlyDictionary<ICardTraitEntry, CardTraitState> ObtainCardTraitStates(State state, Card card)
 	{
-		if (CardTraitStateCacheGetter.Value(card) is not { } states)
+		var states = CardTraitStateCacheGetter.Value(card);
+		if (states is null || CardTraitStateCacheVersionGetter.Value(card) != this.CardTraitStateCacheVersion)
 		{
-			Dictionary<ICardTraitEntry, CardTraitState> newStates = null!;
-			this.PopulateCardTraitStates(state, card, ref newStates);
-			CardTraitStateCacheSetter.Value(card, newStates);
+			states ??= new(this.SynthesizedVanillaEntries.Count + this.UniqueNameToEntry.Count);
+			CardTraitStateCacheSetter.Value(card, states);
 			CardTraitStateCacheVersionSetter.Value(card, this.CardTraitStateCacheVersion);
+
+			if (this.CurrentlyPopulatingCardTraitStates.Add(card))
+			{
+				try
+				{
+					this.PopulateCardTraitStates(state, card, states);
+				}
+				finally
+				{
+					this.CurrentlyPopulatingCardTraitStates.Remove(card);
+				}
+			}
+			
 			this.CardsWithCardTraitStateCache.Add(card);
-			return newStates;
-		}
-		if (CardTraitStateCacheVersionGetter.Value(card) != this.CardTraitStateCacheVersion)
-		{
-			this.PopulateCardTraitStates(state, card, ref states);
-			CardTraitStateCacheVersionSetter.Value(card, this.CardTraitStateCacheVersion);
-			this.CardsWithCardTraitStateCache.Add(card);
-			return states;
 		}
 		return states;
 	}
 
-	private void PopulateCardTraitStates(State state, Card card, [NotNull] ref Dictionary<ICardTraitEntry, CardTraitState>? results)
+	private void PopulateCardTraitStates(State state, Card card, Dictionary<ICardTraitEntry, CardTraitState> results)
 	{
-		results ??= new(this.SynthesizedVanillaEntries.Count + this.UniqueNameToEntry.Count);
 		HashSet<ICardTraitEntry> innateTraits = [];
 		var overrides = this.ModDataManager.ObtainModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides");
 		this.UpdateModDataFromFieldsIfNeeded(card, overrides);
 
-		var wasCurrentlyCreatingCardTraitStates = this.CurrentlyCreatingCardTraitStates.Contains(card);
-		this.CurrentlyCreatingCardTraitStates.Add(card);
-
-		var data = wasCurrentlyCreatingCardTraitStates ? new() : card.GetData(state);
-		var innateCustomTraits = wasCurrentlyCreatingCardTraitStates ? [] : ((card as IHasCustomCardTraits)?.GetInnateTraits(state).ToHashSet() ?? []);
+		var data = card.GetData(state);
+		var innateCustomTraits = ((card as IHasCustomCardTraits)?.GetInnateTraits(state).ToHashSet() ?? []);
 
 		var refResults = results;
 		foreach (var trait in this.SynthesizedVanillaEntries.Values)
@@ -642,9 +642,6 @@ internal class CardTraitManager
 		foreach (var trait in this.UniqueNameToEntry.Values)
 			HandleTrait(trait);
 		results = refResults;
-
-		if (wasCurrentlyCreatingCardTraitStates)
-			return;
 
 		List<(ICardTraitEntry Trait, bool? OverrideValue)> argsOverrides = [];
 
@@ -669,9 +666,6 @@ internal class CardTraitManager
 			TraitStates = results,
 			Overrides = argsOverrides
 		});
-
-		if (!wasCurrentlyCreatingCardTraitStates)
-			this.CurrentlyCreatingCardTraitStates.Remove(card);
 
 		foreach (var (trait, traitState) in finalDynamicOverridesEventArgs.TraitStates)
 			((IReadWriteCardTraitEntry)trait).UpdateFieldsFromCardTraitStateIfNeeded(card, overrides, traitState, realOverrides: false);
