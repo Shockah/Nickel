@@ -41,11 +41,7 @@ public sealed class ValidatingPluginLoader<TPluginManifest, TPlugin> : IPluginLo
 
 		var validation = this.Validator(package, loadSuccess.Plugin);
 		return validation.Match<PluginLoadResult<TPlugin>>(
-			validationSuccess => new PluginLoadResult<TPlugin>.Success
-			{
-				Plugin = loadSuccess.Plugin,
-				Warnings = loadSuccess.Warnings.Concat(validationSuccess.Warnings).ToList()
-			},
+			validationSuccess => loadSuccess with { Warnings = loadSuccess.Warnings.Concat(validationSuccess.Warnings).ToList() },
 			error => error
 		);
 	}

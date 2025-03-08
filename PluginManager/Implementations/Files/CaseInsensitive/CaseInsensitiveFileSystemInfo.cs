@@ -26,7 +26,7 @@ public class CaseInsensitiveFileSystemInfo(IFileSystemInfo wrapped) : IFileSyste
 				return info;
 
 			var current = root;
-			var splitRelativePath = root.GetRelativePathTo(info).Split('/', '\\');
+			var splitRelativePath = root.GetRelativePathTo(info).Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
 			for (var i = 0; i < splitRelativePath.Length; i++)
 			{
 				if (splitRelativePath[i] == ".")

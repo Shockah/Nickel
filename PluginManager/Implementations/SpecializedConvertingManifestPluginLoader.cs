@@ -50,20 +50,14 @@ public sealed class SpecializedConvertingManifestPluginLoader<TSpecializedPlugin
 		return this.Loader.LoadPlugin(specializedPackage);
 	}
 
-	private sealed class SpecializedPluginPackage : IPluginPackage<TSpecializedPluginManifest>
+	private sealed class SpecializedPluginPackage(IPluginPackage<TPluginManifest> package, TSpecializedPluginManifest manifest) : IPluginPackage<TSpecializedPluginManifest>
 	{
-		public TSpecializedPluginManifest Manifest { get; }
+		public TSpecializedPluginManifest Manifest { get; } = manifest;
 
 		public IDirectoryInfo PackageRoot
 			=> this.Package.PackageRoot;
 
-		private IPluginPackage<TPluginManifest> Package { get; }
-
-		public SpecializedPluginPackage(IPluginPackage<TPluginManifest> package, TSpecializedPluginManifest manifest)
-		{
-			this.Package = package;
-			this.Manifest = manifest;
-		}
+		private IPluginPackage<TPluginManifest> Package { get; } = package;
 
 		public override string ToString()
 			=> $"SpecializedPluginPackage {{ {this.Package} }}";

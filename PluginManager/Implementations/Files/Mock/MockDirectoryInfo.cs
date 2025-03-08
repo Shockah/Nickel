@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -38,7 +39,7 @@ public sealed class MockDirectoryInfo : MockFileSystemInfo, IDirectoryInfo<MockF
 	/// <inheritdoc/>
 	public IFileSystemInfo<MockFileInfo, MockDirectoryInfo> GetRelative(string relativePath)
 	{
-		var split = relativePath.Replace("\\", "/").Split("/");
+		var split = relativePath.Replace("\\", "/").Split("/", StringSplitOptions.RemoveEmptyEntries);
 		var current = this;
 
 		for (var i = 0; i < split.Length - 1; i++)
@@ -48,7 +49,7 @@ public sealed class MockDirectoryInfo : MockFileSystemInfo, IDirectoryInfo<MockF
 
 			if (split[i] == "..")
 			{
-				current = current.Parent ?? new MockDirectoryInfo($"{current.Name}{(current.Name.EndsWith("/") ? "" : "/")}..", exists: false)
+				current = current.Parent ?? new MockDirectoryInfo($"{current.Name}{(current.Name.EndsWith('/') ? "" : "/")}..", exists: false)
 				{
 					Parent = current
 				};
@@ -65,7 +66,7 @@ public sealed class MockDirectoryInfo : MockFileSystemInfo, IDirectoryInfo<MockF
 			return current;
 
 		if (split[^1] == "..")
-			return current.Parent ?? new MockDirectoryInfo($"{current.Name}{(current.Name.EndsWith("/") ? "" : "/")}..", exists: false)
+			return current.Parent ?? new MockDirectoryInfo($"{current.Name}{(current.Name.EndsWith('/') ? "" : "/")}..", exists: false)
 			{
 				Parent = current
 			};

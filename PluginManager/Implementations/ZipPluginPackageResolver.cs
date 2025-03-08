@@ -40,11 +40,7 @@ public sealed class ZipPluginPackageResolver<TPluginManifest> : IPluginPackageRe
 		var archive = new ZipArchive(this.ZipFile.OpenRead(), ZipArchiveMode.Read, leaveOpen: true);
 		foreach (var resolveResult in this.ResolverFactory(ZipDirectoryInfo.From(archive)).ResolvePluginPackages())
 			yield return resolveResult.Match<PluginPackageResolveResult<TPluginManifest>>(
-				success => new PluginPackageResolveResult<TPluginManifest>.Success
-				{
-					Package = new InnerPluginPackage<TPluginManifest>(success.Package, success.Package.Manifest, disposesOuterPackage: false),
-					Warnings = success.Warnings
-				},
+				success => success with { Package = new InnerPluginPackage<TPluginManifest>(success.Package, success.Package.Manifest, disposesOuterPackage: false) },
 				error => error
 			);
 	}

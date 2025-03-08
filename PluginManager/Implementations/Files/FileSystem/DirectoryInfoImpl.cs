@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -32,7 +33,7 @@ public sealed class DirectoryInfoImpl : FileSystemInfoImpl<DirectoryInfo>, IWrit
 
 	/// <inheritdoc/>
 	public IFileSystemInfo<FileInfoImpl, DirectoryInfoImpl> GetRelative(string relativePath)
-		=> new LazyFileSystemInfoImpl(relativePath.Replace("\\", "/").Split("/").Last(), Path.Combine(this.FullName, relativePath));
+		=> new LazyFileSystemInfoImpl(relativePath.Replace("\\", "/").Split("/", StringSplitOptions.RemoveEmptyEntries).Last(), Path.Combine(this.FullName, relativePath));
 
 	/// <inheritdoc cref="IWritableDirectoryInfo.GetRelativeFile"/>
 	public FileInfoImpl GetRelativeFile(string relativePath)

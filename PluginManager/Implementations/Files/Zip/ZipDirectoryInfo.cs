@@ -36,7 +36,7 @@ public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFile
 			thisPath = thisPath[1..];
 		if (thisPath.EndsWith('/'))
 			thisPath = thisPath[..^1];
-		var thisPathComponents = thisPath == "" ? [] : thisPath.Split("/");
+		var thisPathComponents = thisPath == "" ? [] : thisPath.Split("/", StringSplitOptions.RemoveEmptyEntries);
 
 		HashSet<string> yieldedDirectoryNames = [];
 
@@ -47,7 +47,7 @@ public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFile
 				entryPath = entryPath[1..];
 			if (entryPath.EndsWith('/'))
 				entryPath = entryPath[..^1];
-			var entryPathComponents = entryPath == "" ? [] : entryPath.Split("/");
+			var entryPathComponents = entryPath == "" ? [] : entryPath.Split("/", StringSplitOptions.RemoveEmptyEntries);
 
 			if (entryPathComponents.Length <= thisPathComponents.Length)
 				continue;
@@ -75,7 +75,7 @@ public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFile
 	/// <inheritdoc/>
 	public IFileSystemInfo<ZipFileInfo, ZipDirectoryInfo> GetRelative(string relativePath)
 	{
-		var split = relativePath.Replace("\\", "/").Split("/");
+		var split = relativePath.Replace("\\", "/").Split("/", StringSplitOptions.RemoveEmptyEntries);
 		var current = this;
 
 		for (var i = 0; i < split.Length - 1; i++)
@@ -85,7 +85,7 @@ public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFile
 
 			if (split[i] == "..")
 			{
-				current = current.Parent ?? new ZipDirectoryInfo(this.Archive, $"{current.Name}{(current.Name.EndsWith("/") ? "" : "/")}..", current, exists: false);
+				current = current.Parent ?? new ZipDirectoryInfo(this.Archive, $"{current.Name}{(current.Name.EndsWith('/') ? "" : "/")}..", current, exists: false);
 				continue;
 			}
 
@@ -96,7 +96,7 @@ public sealed class ZipDirectoryInfo : ZipFileSystemInfo, IDirectoryInfo<ZipFile
 			return current;
 
 		if (split[^1] == "..")
-			return current.Parent ?? new ZipDirectoryInfo(this.Archive, $"{current.Name}{(current.Name.EndsWith("/") ? "" : "/")}..", current, exists: false);
+			return current.Parent ?? new ZipDirectoryInfo(this.Archive, $"{current.Name}{(current.Name.EndsWith('/') ? "" : "/")}..", current, exists: false);
 
 		return current.Children.FirstOrDefault(c => c.Name == split[^1])
 			?? new NonExistentZipFileSystemInfo(this.Archive, split[^1], current);
