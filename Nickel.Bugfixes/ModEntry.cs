@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
+using Nanoray.PluginManager.Cecil;
 
 namespace Nickel.Bugfixes;
 
@@ -7,11 +8,23 @@ public sealed class ModEntry : SimpleMod
 {
 	internal static ModEntry Instance { get; private set; } = null!;
 
-	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
+	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger, ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor) : base(package, helper, logger)
 	{
 		Instance = this;
+		
+		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new ReboundReagentDefinitionEditor());
 
-		var harmony = helper.Utilities.Harmony;
+		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
+		{
+			if (phase != ModLoadPhase.AfterGameAssembly)
+				return;
+			this.ProceedAfterGameAssemblyLoaded();
+		};
+	}
+
+	private void ProceedAfterGameAssemblyLoaded()
+	{
+		var harmony = this.Helper.Utilities.Harmony;
 		
 		ArtifactCodexFixes.ApplyPatches(harmony);
 		BlendStateFixes.ApplyPatches(harmony);

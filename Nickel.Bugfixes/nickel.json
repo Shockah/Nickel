@@ -5,5 +5,6 @@
 	"Description": "Provides bugfixes essential for playing the modded game.",
 	"Author": "Nickel",
 	"RequiredApiVersion": "{{ModVersion}}",
-	"EntryPointAssembly": "Nickel.Bugfixes.dll"
+	"EntryPointAssembly": "Nickel.Bugfixes.dll",
+	"LoadPhase": "BeforeGameAssembly"
 }

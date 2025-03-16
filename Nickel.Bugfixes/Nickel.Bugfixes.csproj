@@ -9,4 +9,7 @@
 <!--		<ModFiles Include="i18n/**" ModPath="i18n/%(RecursiveDir)%(Filename)%(Extension)" />-->
 <!--		<ModFiles Include="assets/**" ModPath="assets/%(RecursiveDir)%(Filename)%(Extension)" />-->
 	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Mono.Cecil" Version="0.11.5" PrivateAssets="All" ExcludeAssets="runtime" />
+	</ItemGroup>
 </Project>

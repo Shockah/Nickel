@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed a vanilla bug with Rebound Reagent not saving its state properly.
+
 ## 1.14.5
 Released 8 March 2025.
 
