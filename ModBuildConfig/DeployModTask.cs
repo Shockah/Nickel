@@ -21,9 +21,6 @@ public sealed class DeployModTask : Task
 	public string ModVersion { get; set; } = null!;
 
 	[Required]
-	public bool IsLegacyMod { get; set; }
-
-	[Required]
 	public string ProjectDir { get; set; } = null!;
 
 	[Required]
@@ -91,7 +88,7 @@ public sealed class DeployModTask : Task
 		this.IncludedModProjectPaths = this.IncludedModProjectPaths.Trim();
 		if (this.IncludedModProjectPaths != "")
 		{
-			this.Log.LogWarning($"The `IncludedModProjectPaths` property is deprecated: use `ModFiles` instead.");
+			this.Log.LogWarning("The `IncludedModProjectPaths` property is deprecated: use `ModFiles` instead.");
 			
 			foreach (var includedProjectPath in this.IncludedModProjectPaths.Split(';'))
 			{
@@ -113,7 +110,7 @@ public sealed class DeployModTask : Task
 		foreach (var includedProjectFile in this.ModFiles)
 		{
 			var path = includedProjectFile.GetMetadata("FullPath");
-			var modPath = includedProjectFile.MetadataNames.OfType<string>().Contains("ModPath") ? includedProjectFile.GetMetadata("ModPath") : projectDirUri.MakeRelativeUri(new Uri(path)).OriginalString;
+			var modPath = includedProjectFile.MetadataNames.OfType<string>().Contains("ModPath") ? includedProjectFile.GetMetadata("ModPath") : Uri.UnescapeDataString(projectDirUri.MakeRelativeUri(new Uri(path)).OriginalString);
 			yield return (new FileInfo(path), modPath);
 		}
 
@@ -123,7 +120,7 @@ public sealed class DeployModTask : Task
 			foreach (var file in dirInfo.EnumerateFiles("*", SearchOption.AllDirectories))
 			{
 				var fileUri = new Uri(file.FullName);
-				var relativeName = dirUri.MakeRelativeUri(fileUri).OriginalString;
+				var relativeName = Uri.UnescapeDataString(dirUri.MakeRelativeUri(fileUri).OriginalString);
 				yield return (Info: file, RelativeName: relativeName);
 			}
 		}

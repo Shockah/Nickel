@@ -125,7 +125,6 @@
 		<Nickel.ModBuildConfig.DeployModTask
 				ModName="$(ModName)"
 				ModVersion="$(ModVersion)"
-				IsLegacyMod="$(IsLegacyMod)"
 				ProjectDir="$(ProjectDir)"
 				TargetDir="$(TargetDir)"
 				EnableModDeploy="$(EnableModDeploy)"

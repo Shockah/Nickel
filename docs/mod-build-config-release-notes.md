@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed included mod file names being escaped (for example, containing `%20` instead of spaces).
+
 ## 2.0.1
 Released 17 December 2024.
 
