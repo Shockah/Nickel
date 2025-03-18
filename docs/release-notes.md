@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.14.6
+Released 18 March 2025.
 
 * Updated the Pintail library, fixing an issue with cross-mod interactions.
 * Fixed a vanilla bug with Rebound Reagent not saving its state properly.
