@@ -4,6 +4,7 @@
 
 ## Upcoming release
 
+* Updated the Pintail library, fixing an issue with cross-mod interactions.
 * Fixed a vanilla bug with Rebound Reagent not saving its state properly.
 
 ## 1.14.5
