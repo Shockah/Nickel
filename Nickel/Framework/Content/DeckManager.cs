@@ -24,7 +24,7 @@ internal sealed class DeckManager
 
 	public DeckManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest)
 	{
-		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		this.Manager = new(currentModLoadPhaseProvider, this.Inject);
 		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
 
@@ -97,7 +97,7 @@ internal sealed class DeckManager
 	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		foreach (var entry in this.UniqueNameToEntry.Values)
-			InjectLocalization(locale, localizations, entry);
+			this.InjectLocalization(locale, localizations, entry);
 	}
 
 	public IDeckEntry RegisterDeck(IModManifest owner, string name, DeckConfiguration configuration)
@@ -159,7 +159,7 @@ internal sealed class DeckManager
 			}
 		);
 
-	private static void Inject(Entry entry)
+	private void Inject(Entry entry)
 	{
 		DB.decks[entry.Deck] = entry.Configuration.Definition;
 		DB.cardArtDeckDefault[entry.Deck] = entry.Configuration.DefaultCardArt;
@@ -169,11 +169,13 @@ internal sealed class DeckManager
 		Colors.colorDict[entry.Deck.Key()] = entry.Configuration.Definition.color.ToInt();
 		Colors.colorDict[entry.Deck.ToString()] = entry.Configuration.Definition.color.ToInt();
 
-		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 	}
 
-	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
+	private void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
 	{
+		if (entry.ModOwner == this.VanillaModManifest)
+			return;
 		if (entry.Configuration.Name.Localize(locale) is not { } name)
 			return;
 		var key = entry.Deck.Key();

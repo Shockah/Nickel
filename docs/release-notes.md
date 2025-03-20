@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed injecting localizations for vanilla entries Nickel does not own.
+
 ## 1.14.6
 Released 18 March 2025.
 

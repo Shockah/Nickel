@@ -17,7 +17,7 @@ internal sealed class EnemyManager
 
 	public EnemyManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
 	{
-		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		this.Manager = new(currentModLoadPhaseProvider, this.Inject);
 		this.LoggerProvider = loggerProvider;
 		this.VanillaModManifest = vanillaModManifest;
 
@@ -31,7 +31,7 @@ internal sealed class EnemyManager
 	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		foreach (var entry in this.UniqueNameToEntry.Values)
-			InjectLocalization(locale, localizations, entry);
+			this.InjectLocalization(locale, localizations, entry);
 	}
 
 	private Entry GetMatchingExistingOrCreateNewEntry(IModManifest owner, string name, EnemyConfiguration configuration)
@@ -108,14 +108,17 @@ internal sealed class EnemyManager
 	public IEnemyEntry? LookupByUniqueName(string uniqueName)
 		=> this.UniqueNameToEntry.GetValueOrDefault(uniqueName);
 
-	private static void Inject(Entry entry)
+	private void Inject(Entry entry)
 	{
 		DB.enemies[entry.UniqueName] = entry.Configuration.EnemyType;
-		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 	}
 
-	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
+	private void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
 	{
+		
+		if (entry.ModOwner == this.VanillaModManifest)
+			return;
 		if (entry.Configuration.Name.Localize(locale) is { } name)
 			localizations[$"enemy.{entry.UniqueName}.name"] = name;
 	}

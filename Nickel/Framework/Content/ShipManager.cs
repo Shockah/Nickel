@@ -49,7 +49,7 @@ internal sealed class ShipManager
 	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		foreach (var entry in this.UniqueNameToEntry.Values)
-			InjectLocalization(locale, localizations, entry);
+			this.InjectLocalization(locale, localizations, entry);
 	}
 
 	public IShipEntry RegisterShip(IModManifest owner, string name, ShipConfiguration configuration)
@@ -127,11 +127,13 @@ internal sealed class ShipManager
 			.Select(e => new KeyValuePair<string, StarterShip>(e.UniqueName, e.Configuration.Ship));
 		StarterShip.ships = vanillaShips.Concat(moddedShips).ToDictionary();
 
-		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 	}
 
-	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
+	private void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
 	{
+		if (entry.ModOwner == this.VanillaModManifest)
+			return;
 		if (entry.Configuration.Name.Localize(locale) is { } name)
 			localizations[$"ship.{entry.UniqueName}.name"] = name;
 		if (entry.Configuration.Description.Localize(locale) is { } description)

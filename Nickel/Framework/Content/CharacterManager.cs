@@ -572,11 +572,13 @@ internal sealed class CharacterManager
 		if (entry.V2.BorderSprite is { } borderSprite)
 			DB.charPanels[entry.CharacterType] = borderSprite;
 
-		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 	}
 
 	private void InjectLocalization(string locale, Dictionary<string, string> localizations, PlayableCharacterEntry entry)
 	{
+		if (entry.ModOwner == this.VanillaModManifest)
+			return;
 		if (entry.V2.Description.Localize(locale) is { } description)
 		{
 			localizations[$"char.{entry.V2.Deck.Key()}.desc"] = description;
@@ -589,8 +591,10 @@ internal sealed class CharacterManager
 		}
 	}
 
-	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, NonPlayableCharacterEntry entry)
+	private void InjectLocalization(string locale, Dictionary<string, string> localizations, NonPlayableCharacterEntry entry)
 	{
+		if (entry.ModOwner == this.VanillaModManifest)
+			return;
 		if (entry.V2.Name.Localize(locale) is not { } name)
 			return;
 		localizations[$"char.{entry.CharacterType}"] = name;

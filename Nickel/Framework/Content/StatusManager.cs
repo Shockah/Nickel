@@ -18,7 +18,7 @@ internal sealed class StatusManager
 
 	public StatusManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest)
 	{
-		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		this.Manager = new(currentModLoadPhaseProvider, this.Inject);
 		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
 		
@@ -112,7 +112,7 @@ internal sealed class StatusManager
 	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		foreach (var entry in this.UniqueNameToEntry.Values)
-			InjectLocalization(locale, localizations, entry);
+			this.InjectLocalization(locale, localizations, entry);
 	}
 
 	public IStatusEntry RegisterStatus(IModManifest owner, string name, StatusConfiguration configuration)
@@ -170,14 +170,17 @@ internal sealed class StatusManager
 			}
 		);
 
-	private static void Inject(Entry entry)
+	private void Inject(Entry entry)
 	{
 		DB.statuses[entry.Status] = entry.Configuration.Definition;
-		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 	}
 
-	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
+	private void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
 	{
+		if (entry.ModOwner == this.VanillaModManifest)
+			return;
+		
 		var key = entry.Status.Key();
 		if (entry.Configuration.Name.Localize(locale) is { } name)
 			localizations[$"status.{key}.name"] = name;

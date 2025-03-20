@@ -14,7 +14,7 @@ internal sealed class CardManager
 
 	public CardManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest)
 	{
-		this.Manager = new(currentModLoadPhaseProvider, Inject);
+		this.Manager = new(currentModLoadPhaseProvider, this.Inject);
 		this.LoggerProvider = loggerProvider;
 		this.VanillaModManifest = vanillaModManifest;
 
@@ -27,7 +27,7 @@ internal sealed class CardManager
 	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		foreach (var entry in this.UniqueNameToEntry.Values)
-			InjectLocalization(locale, localizations, entry);
+			this.InjectLocalization(locale, localizations, entry);
 	}
 
 	private Entry GetMatchingExistingOrCreateNewEntry(IModManifest owner, string name, CardConfiguration configuration)
@@ -96,7 +96,7 @@ internal sealed class CardManager
 			}
 		);
 
-	private static void Inject(Entry entry)
+	private void Inject(Entry entry)
 	{
 		DB.cards[entry.UniqueName] = entry.Configuration.CardType;
 		DB.cardMetas[entry.UniqueName] = entry.Configuration.Meta;
@@ -110,11 +110,13 @@ internal sealed class CardManager
 		if (!entry.Configuration.Meta.unreleased)
 			DB.releasedCards.Add((Card)Activator.CreateInstance(entry.Configuration.CardType)!);
 
-		InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 	}
 
-	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
+	private void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
 	{
+		if (entry.ModOwner == this.VanillaModManifest)
+			return;
 		if (entry.Configuration.Name.Localize(locale) is { } name)
 			localizations[$"card.{entry.UniqueName}.name"] = name;
 	}
