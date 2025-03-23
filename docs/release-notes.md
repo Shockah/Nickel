@@ -4,6 +4,7 @@
 
 ## Upcoming release
 
+* Fixed a memory leak regarding cards in any non-gameplay menus.
 * Fixed injecting localizations for vanilla entries Nickel does not own.
 
 ## 1.14.6

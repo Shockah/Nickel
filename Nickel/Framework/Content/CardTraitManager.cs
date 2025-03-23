@@ -440,8 +440,8 @@ internal class CardTraitManager
 		CardPatches.OnMidGetDataWithOverrides += this.OnMidGetDataWithOverrides;
 		CardPatches.OnCopyingWithNewId += this.OnCopyingWithNewId;
 		CombatPatches.OnReturnCardsToDeck += this.OnReturnCardsToDeck;
-		StatePatches.OnUpdating += this.OnStateUpdating;
 		StatePatches.OnUpdate += this.OnStateUpdate;
+		GPatches.OnAfterFrame += this.OnAfterFrame;
 	}
 
 	private void OnRenderTraits(object? sender, ref CardPatches.TraitRenderEventArgs e)
@@ -505,9 +505,6 @@ internal class CardTraitManager
 		}
 	}
 
-	private void OnStateUpdating(object? sender, State state)
-		=> this.CardTraitStateCacheVersion++;
-
 	private void OnStateUpdate(object? sender, State state)
 	{
 		foreach (var card in this.CardsWithCardTraitStateCache)
@@ -524,6 +521,12 @@ internal class CardTraitManager
 				rwTrait.UpdateFieldsFromCardTraitStateIfNeeded(card, overrides, cardTraitState, realOverrides: false);
 			}
 		}
+	}
+
+	private void OnAfterFrame(object? sender, G g)
+	{
+		this.CardTraitStateCacheVersion++;
+		this.CardsWithCardTraitStateCache.Clear();
 	}
 
 	public ICardTraitEntry? LookupByUniqueName(string uniqueName)
