@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.14.7
+Released 23 March 2025.
 
 * Updated hardcoded update check information for mods missing it.
 * Fixed a memory leak regarding cards in any non-gameplay menus.
