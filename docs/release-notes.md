@@ -4,6 +4,7 @@
 
 ## Upcoming release
 
+* Updated hardcoded update check information for mods missing it.
 * Fixed a memory leak regarding cards in any non-gameplay menus.
 * Fixed injecting localizations for vanilla entries Nickel does not own.
 
