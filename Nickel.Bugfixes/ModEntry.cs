@@ -1,17 +1,27 @@
 ﻿using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
+using System.Collections.Generic;
 
 namespace Nickel.Bugfixes;
 
 public sealed class ModEntry : SimpleMod
 {
 	internal static ModEntry Instance { get; private set; } = null!;
+	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger, ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor) : base(package, helper, logger)
 	{
 		Instance = this;
-		
+		this.Localizations = new MissingPlaceholderLocalizationProvider<IReadOnlyList<string>>(
+			new CurrentLocaleOrEnglishLocalizationProvider<IReadOnlyList<string>>(
+				new JsonLocalizationProvider(
+					tokenExtractor: new SimpleLocalizationTokenExtractor(),
+					localeStreamFunction: locale => package.PackageRoot.GetRelativeFile($"i18n/{locale}.json").OpenRead()
+				)
+			)
+		);
+
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new ReboundReagentDefinitionEditor());
 
 		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
@@ -38,6 +48,7 @@ public sealed class ModEntry : SimpleMod
 		RunSummaryCardOrderFixes.ApplyPatches(harmony);
 		SecondOpinionsFixes.ApplyPatches(harmony);
 		SurviveVulnerabilityFixes.ApplyPatches(harmony);
+		UnimplementedActionFeaturesFixes.ApplyPatches(harmony);
 		
 		SpriteCulling.ApplyPatches(harmony);
 	}
