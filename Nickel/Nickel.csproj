@@ -70,8 +70,8 @@
 		<PackageReference Include="Pintail" Version="2.8.1" />
 
 		<!-- mod utilities -->
-		<PackageReference Include="Shrike" Version="3.1.0" />
-		<PackageReference Include="Shrike.Harmony" Version="3.1.1" />
+		<PackageReference Include="Shrike" Version="3.2.0" />
+		<PackageReference Include="Shrike.Harmony" Version="3.2.0" />
 		
 		<!-- utilities -->
 		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />

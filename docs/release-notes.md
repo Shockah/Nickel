@@ -10,6 +10,7 @@
 * Fixed Energy Fragments only being able to give a single energy each time.
 
 ### For developers:
+* Updated the Shrike and Shrike.Harmony libraries to version 3.2.0.
 * Added `ArtifactConfiguration.CanBeOffered`.
 * Added a way to disable converting all characters of a `GlossaryTooltip` title to uppercase.
 
