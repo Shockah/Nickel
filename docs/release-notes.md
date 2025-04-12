@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.15.0
+Released 12 April 2025.
 
 ### For everyone:
 * Improved rendering and tooltips of some vanilla actions affecting the enemy instead of the player.
