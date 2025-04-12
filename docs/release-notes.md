@@ -7,6 +7,7 @@
 ### For everyone:
 * Improved rendering and tooltips of some vanilla actions affecting the enemy instead of the player.
 * Fixed how the game renders some disabled (flipped/dual) actions.
+* Fixed Energy Fragments only being able to give a single energy each time.
 
 ### For developers:
 * Added `ArtifactConfiguration.CanBeOffered`.
