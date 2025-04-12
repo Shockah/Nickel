@@ -7,64 +7,71 @@ namespace Nickel.Bugfixes;
 
 internal static class UnimplementedActionFeaturesFixes
 {
-
 	private static ISpriteEntry EnemyMoveRandomIcon = null!;
 	private static ISpriteEntry EnemyMoveRandomLeftIcon = null!;
 	private static ISpriteEntry BlockableHurtIcon = null!;
+	
+	private static bool ApplyPrefix = true;
 
 	public static void ApplyPatches(IHarmony harmony)
 	{
 		EnemyMoveRandomIcon = ModEntry.Instance.Helper.Content.Sprites.RegisterSprite(ModEntry.Instance.Package.PackageRoot.GetRelativeFile("assets/Icons/moveEnemyRandom.png"));
 		EnemyMoveRandomLeftIcon = ModEntry.Instance.Helper.Content.Sprites.RegisterSprite(ModEntry.Instance.Package.PackageRoot.GetRelativeFile("assets/Icons/moveEnemyRandomLeft.png"));
 		BlockableHurtIcon = ModEntry.Instance.Helper.Content.Sprites.RegisterSprite(ModEntry.Instance.Package.PackageRoot.GetRelativeFile("assets/Icons/hurtBlockable.png"));
-		
+
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(AMove), nameof(AMove.GetTooltips))
-			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AMove)}.{nameof(AMove.GetTooltips)}`"),
+					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AMove)}.{nameof(AMove.GetTooltips)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(AMove_GetTooltips_Postfix))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(AHurt), nameof(AHurt.GetTooltips))
-			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AHurt)}.{nameof(AHurt.GetTooltips)}`"),
+					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AHurt)}.{nameof(AHurt.GetTooltips)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(AHurt_GetTooltips_Postfix))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(AMove), nameof(AMove.GetIcon))
-			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AMove)}.{nameof(AMove.GetIcon)}`"),
+					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AMove)}.{nameof(AMove.GetIcon)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(AMove_GetIcon_Postfix))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(AHurt), nameof(AHurt.GetIcon))
-			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AHurt)}.{nameof(AMove.GetIcon)}`"),
+					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AHurt)}.{nameof(AMove.GetIcon)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(AHurt_GetIcon_Postfix))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(AHullMax), nameof(AHullMax.GetIcon))
-			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AHullMax)}.{nameof(AHullMax.GetIcon)}`"),
+					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AHullMax)}.{nameof(AHullMax.GetIcon)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(AHullMax_GetIcon_Postfix))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(AShieldMax), nameof(AShieldMax.GetIcon))
-			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AShieldMax)}.{nameof(AShieldMax.GetIcon)}`"),
+					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AShieldMax)}.{nameof(AShieldMax.GetIcon)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(AShieldMax_GetIcon_Postfix))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Card), nameof(Card.RenderAction))
-			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Card)}.{nameof(Card.RenderAction)}`"),
+					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Card)}.{nameof(Card.RenderAction)}`"),
 			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Card_RenderAction_Prefix))
 		);
 	}
 
-	private static bool applyPrefix = true;
-    private static bool Card_RenderAction_Prefix(ref int __result, G g, State state, CardAction action, bool dontDraw = false, int shardAvailable = 0, int stunChargeAvailable = 0, int bubbleJuiceAvailable = 0)
-    {
-		if (!applyPrefix)
+
+	private static bool Card_RenderAction_Prefix(ref int __result, G g, State state, CardAction action, bool dontDraw, int shardAvailable, int stunChargeAvailable, int bubbleJuiceAvailable)
+	{
+		if (!ApplyPrefix)
 			return true;
-        if ((action is not AHurt hurt || hurt.targetPlayer)
-			&& (action is not AHeal heal || heal.targetPlayer)
-			&& (action is not AHullMax hull || hull.targetPlayer)
-			&& (action is not AShieldMax shield || shield.targetPlayer))
-			return true;
+		
+		switch (action)
+		{
+			case AHurt { targetPlayer: true }:
+			case AHeal { targetPlayer: true }:
+			case AHullMax { targetPlayer: true }:
+			case AShieldMax { targetPlayer: true }:
+				break;
+			default:
+				return true;
+		}
 
 		var position = g.Push(rect: new()).rect.xy;
 		var initialX = (int)position.x;
@@ -75,9 +82,9 @@ internal static class UnimplementedActionFeaturesFixes
 
 		g.Push(rect: new(position.x - initialX, 0));
 
-		applyPrefix = false;
+		ApplyPrefix = false;
 		position.x += Card.RenderAction(g, state, action, dontDraw, shardAvailable, stunChargeAvailable, bubbleJuiceAvailable);
-		applyPrefix = true;
+		ApplyPrefix = true;
 
 		g.Pop();
 
@@ -85,15 +92,19 @@ internal static class UnimplementedActionFeaturesFixes
 		g.Pop();
 
 		return false;
-    }
+	}
 
-	private static void AHurt_GetIcon_Postfix(AHurt __instance, ref Icon? __result) => __result = new Icon(__instance.hurtShieldsFirst ? BlockableHurtIcon.Sprite : StableSpr.icons_hurt, __instance.hurtAmount, Colors.hurt);
+	private static void AHurt_GetIcon_Postfix(AHurt __instance, out Icon? __result)
+		=> __result = new Icon(__instance.hurtShieldsFirst ? BlockableHurtIcon.Sprite : StableSpr.icons_hurt, __instance.hurtAmount, Colors.hurt);
 
-	private static void AHullMax_GetIcon_Postfix(AHullMax __instance, ref Icon? __result) => __result = new Icon((__instance.amount >= 0) ? StableSpr.icons_hullMax : StableSpr.icons_hullMaxNegative, Math.Abs(__instance.amount), Colors.healthBarHealth);
+	private static void AHullMax_GetIcon_Postfix(AHullMax __instance, out Icon? __result)
+		=> __result = new Icon((__instance.amount >= 0) ? StableSpr.icons_hullMax : StableSpr.icons_hullMaxNegative, Math.Abs(__instance.amount), Colors.healthBarHealth);
 
-	private static void AShieldMax_GetIcon_Postfix(AHullMax __instance, ref Icon? __result) => __result = new Icon((__instance.amount >= 0) ? StableSpr.icons_shieldMax : StableSpr.icons_shieldMaxNegative, Math.Abs(__instance.amount), Colors.healthBarShield);
+	private static void AShieldMax_GetIcon_Postfix(AHullMax __instance, out Icon? __result)
+		=> __result = new Icon((__instance.amount >= 0) ? StableSpr.icons_shieldMax : StableSpr.icons_shieldMaxNegative, Math.Abs(__instance.amount), Colors.healthBarShield);
 
-	private static void AMove_GetIcon_Postfix(AMove __instance, ref Icon? __result, State s) {
+	private static void AMove_GetIcon_Postfix(AMove __instance, out Icon? __result, State s)
+	{
 		var dir = __instance.dir;
 		var isRandom = __instance.isRandom;
 		var right = dir == 0 ? __instance.preferRightWhenZero : dir > 0;
@@ -104,13 +115,26 @@ internal static class UnimplementedActionFeaturesFixes
 		var amount = Math.Abs(dir);
 		if (!__instance.targetPlayer)
 		{
-			__result = new Icon(!isRandom ? (right ? StableSpr.icons_moveRightEnemy : StableSpr.icons_moveLeftEnemy) : (__instance.RandomMeansLeft(s) ? EnemyMoveRandomLeftIcon.Sprite : EnemyMoveRandomIcon.Sprite), amount, Colors.textMain);
+			__result = new Icon(
+				isRandom
+					? (__instance.RandomMeansLeft(s) ? EnemyMoveRandomLeftIcon.Sprite : EnemyMoveRandomIcon.Sprite)
+					: (right ? StableSpr.icons_moveRightEnemy : StableSpr.icons_moveLeftEnemy)
+				, amount,
+				Colors.textMain
+			);
 			return;
 		}
-		__result = new Icon(!isRandom ? (right ? StableSpr.icons_moveRight : StableSpr.icons_moveLeft) : (__instance.RandomMeansLeft(s) ? StableSpr.icons_moveRandomLeft : StableSpr.icons_moveRandom), amount, Colors.textMain);
+
+		__result = new Icon(
+			isRandom
+				? (__instance.RandomMeansLeft(s) ? StableSpr.icons_moveRandomLeft : StableSpr.icons_moveRandom)
+				: (right ? StableSpr.icons_moveRight : StableSpr.icons_moveLeft),
+			amount,
+			Colors.textMain
+		);
 	}
 
-	private static void AMove_GetTooltips_Postfix(AMove __instance, ref List<Tooltip> __result, State s)
+	private static void AMove_GetTooltips_Postfix(AMove __instance, out List<Tooltip> __result, State s)
 	{
 		var dir = __instance.dir;
 		var isRandom = __instance.isRandom;
@@ -120,7 +144,7 @@ internal static class UnimplementedActionFeaturesFixes
 		if (!__instance.ignoreHermes)
 			dir += right ? hermes : -hermes;
 		var amount = Math.Abs(dir);
-		
+
 		if (__instance.targetPlayer)
 		{
 			if (isRandom)
@@ -128,23 +152,28 @@ internal static class UnimplementedActionFeaturesFixes
 				__result = [new TTGlossary("action.moveRandom", amount)];
 				return;
 			}
+
 			if (amount == 0)
 			{
 				__result = [new TTGlossary("action.moveZero", amount)];
 				return;
 			}
+
 			if (dir > 0)
 			{
 				__result = [new TTGlossary("action.moveRight", amount)];
 				return;
 			}
+
 			__result = [new TTGlossary("action.moveLeft", amount)];
 			return;
 		}
+
 		if (__instance.isRandom)
 		{
 			__result = [
-				new GlossaryTooltip("action.enemyMoveRandom") {
+				new GlossaryTooltip("action.enemyMoveRandom")
+				{
 					Icon = EnemyMoveRandomIcon.Sprite,
 					TitleColor = Colors.action,
 					Title = ModEntry.Instance.Localizations.Localize(["action", "enemyMoveRandom", "name"]),
@@ -153,10 +182,12 @@ internal static class UnimplementedActionFeaturesFixes
 			];
 			return;
 		}
+
 		if (amount == 0)
 		{
 			__result = [
-				new GlossaryTooltip("action.enemyMoveZero") {
+				new GlossaryTooltip("action.enemyMoveZero")
+				{
 					Icon = null,
 					TitleColor = Colors.action,
 					Title = ModEntry.Instance.Localizations.Localize(["action", "enemyMoveZero", "name"]),
@@ -165,10 +196,12 @@ internal static class UnimplementedActionFeaturesFixes
 			];
 			return;
 		}
+
 		if (right)
 		{
 			__result = [
-				new GlossaryTooltip("action.enemyMoveRight") {
+				new GlossaryTooltip("action.enemyMoveRight")
+				{
 					Icon = StableSpr.icons_moveRightEnemy,
 					TitleColor = Colors.action,
 					Title = ModEntry.Instance.Localizations.Localize(["action", "enemyMoveRight", "name"]),
@@ -177,17 +210,17 @@ internal static class UnimplementedActionFeaturesFixes
 			];
 			return;
 		}
-		else
+
 		{
 			__result = [
-				new GlossaryTooltip("action.enemyMoveLeft") {
+				new GlossaryTooltip("action.enemyMoveLeft")
+				{
 					Icon = StableSpr.icons_moveLeftEnemy,
 					TitleColor = Colors.action,
 					Title = ModEntry.Instance.Localizations.Localize(["action", "enemyMoveLeft", "name"]),
 					Description = ModEntry.Instance.Localizations.Localize(["action", "enemyMoveLeft", "description"], new { Amount = amount }),
 				}
 			];
-			return;
 		}
 	}
 
@@ -197,13 +230,15 @@ internal static class UnimplementedActionFeaturesFixes
 		{
 			__result.Clear();
 			if (!__instance.targetPlayer)
-				__result.Add(new GlossaryTooltip("action.outgoingAlt") {
+				__result.Add(new GlossaryTooltip("action.outgoingAlt")
+				{
 					Icon = StableSpr.icons_outgoing,
 					TitleColor = Colors.keyword,
 					Title = ModEntry.Instance.Localizations.Localize(["action", "outgoingAlt", "name"]),
 					Description = ModEntry.Instance.Localizations.Localize(["action", "outgoingAlt", "description"]),
 				});
-			__result.Add(new GlossaryTooltip("action.hurtBlockable") {
+			__result.Add(new GlossaryTooltip("action.hurtBlockable")
+			{
 				Icon = BlockableHurtIcon.Sprite,
 				TitleColor = Colors.action,
 				Title = ModEntry.Instance.Localizations.Localize(["action", "hurtBlockable", "name"]),
@@ -211,19 +246,19 @@ internal static class UnimplementedActionFeaturesFixes
 			});
 			return;
 		}
-		else
+		
 		{
 			if (!__instance.targetPlayer)
 				__result = [
-				new GlossaryTooltip("action.outgoingAlt") {
-					Icon = StableSpr.icons_outgoing,
-					TitleColor = Colors.keyword,
-					Title = ModEntry.Instance.Localizations.Localize(["action", "outgoingAlt", "name"]),
-					Description = ModEntry.Instance.Localizations.Localize(["action", "outgoingAlt", "description"]),
-				},
-				new TTGlossary("action.hurt", __instance.hurtAmount),
-			];
-			return;
+					new GlossaryTooltip("action.outgoingAlt")
+					{
+						Icon = StableSpr.icons_outgoing,
+						TitleColor = Colors.keyword,
+						Title = ModEntry.Instance.Localizations.Localize(["action", "outgoingAlt", "name"]),
+						Description = ModEntry.Instance.Localizations.Localize(["action", "outgoingAlt", "description"]),
+					},
+					new TTGlossary("action.hurt", __instance.hurtAmount),
+				];
 		}
 	}
 }

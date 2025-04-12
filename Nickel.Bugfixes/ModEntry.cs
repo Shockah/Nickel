@@ -35,7 +35,7 @@ public sealed class ModEntry : SimpleMod
 	private void ProceedAfterGameAssemblyLoaded()
 	{
 		var harmony = this.Helper.Utilities.Harmony;
-		
+
 		ArtifactCodexFixes.ApplyPatches(harmony);
 		BlendStateFixes.ApplyPatches(harmony);
 		CardActionRenderingFixes.ApplyPatches(harmony);
@@ -50,7 +50,7 @@ public sealed class ModEntry : SimpleMod
 		SecondOpinionsFixes.ApplyPatches(harmony);
 		SurviveVulnerabilityFixes.ApplyPatches(harmony);
 		UnimplementedActionFeaturesFixes.ApplyPatches(harmony);
-		
+
 		SpriteCulling.ApplyPatches(harmony);
 	}
 }
