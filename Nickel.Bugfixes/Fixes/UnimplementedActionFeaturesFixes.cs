@@ -30,6 +30,11 @@ internal static class UnimplementedActionFeaturesFixes
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(AHurt_GetTooltips_Postfix))
 		);
 		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(AHeal), nameof(AHeal.GetTooltips))
+					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AHeal)}.{nameof(AHeal.GetTooltips)}`"),
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(AHeal_GetTooltips_Postfix))
+		);
+		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(AMove), nameof(AMove.GetIcon))
 					?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(AMove)}.{nameof(AMove.GetIcon)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(AMove_GetIcon_Postfix))
@@ -247,18 +252,26 @@ internal static class UnimplementedActionFeaturesFixes
 			return;
 		}
 		
+		if (!__instance.targetPlayer)
+			__result.Insert(0, new GlossaryTooltip("action.outgoingAlt")
+			{
+				Icon = StableSpr.icons_outgoing,
+				TitleColor = Colors.keyword,
+				Title = ModEntry.Instance.Localizations.Localize(["action", "outgoingAlt", "name"]),
+				Description = ModEntry.Instance.Localizations.Localize(["action", "outgoingAlt", "description"]),
+			});
+	}
+
+	private static void AHeal_GetTooltips_Postfix(AHeal __instance, ref List<Tooltip> __result)
+	{
+		if (__instance.targetPlayer)
+			return;
+		__result.Insert(0, new GlossaryTooltip("action.outgoingAlt")
 		{
-			if (!__instance.targetPlayer)
-				__result = [
-					new GlossaryTooltip("action.outgoingAlt")
-					{
-						Icon = StableSpr.icons_outgoing,
-						TitleColor = Colors.keyword,
-						Title = ModEntry.Instance.Localizations.Localize(["action", "outgoingAlt", "name"]),
-						Description = ModEntry.Instance.Localizations.Localize(["action", "outgoingAlt", "description"]),
-					},
-					new TTGlossary("action.hurt", __instance.hurtAmount),
-				];
-		}
+			Icon = StableSpr.icons_outgoing,
+			TitleColor = Colors.keyword,
+			Title = ModEntry.Instance.Localizations.Localize(["action", "outgoingAlt", "name"]),
+			Description = ModEntry.Instance.Localizations.Localize(["action", "outgoingAlt", "description"]),
+		});
 	}
 }
