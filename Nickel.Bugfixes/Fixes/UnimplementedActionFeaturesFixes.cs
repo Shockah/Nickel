@@ -64,10 +64,10 @@ internal static class UnimplementedActionFeaturesFixes
 		
 		switch (action)
 		{
-			case AHurt { targetPlayer: true }:
-			case AHeal { targetPlayer: true }:
-			case AHullMax { targetPlayer: true }:
-			case AShieldMax { targetPlayer: true }:
+			case AHurt { targetPlayer: false }:
+			case AHeal { targetPlayer: false }:
+			case AHullMax { targetPlayer: false }:
+			case AShieldMax { targetPlayer: false }:
 				break;
 			default:
 				return true;
