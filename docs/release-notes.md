@@ -6,8 +6,8 @@
 Released 12 April 2025.
 
 ### For everyone:
-* Improved rendering and tooltips of some vanilla actions affecting the enemy instead of the player.
-* Fixed how the game renders some disabled (flipped/dual) actions.
+* Improved rendering and tooltips of some vanilla actions affecting the enemy instead of the player (thanks to [@TheJazMaster](https://github.com/TheJazMaster)!).
+* Fixed how the game renders some disabled (flipped/dual) actions (thanks to [@TheJazMaster](https://github.com/TheJazMaster)!).
 * Fixed Energy Fragments only being able to give a single energy each time.
 
 ### For developers:
