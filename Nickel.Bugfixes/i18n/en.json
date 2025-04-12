@@ -1,0 +1,28 @@
+{
+	"action": {
+		"enemyMoveRandom": {
+			"name": "move enemy random",
+			"description": "Instantly move the enemy <c=keyword>{{Amount}}</c> spaces in a random direction."
+		},
+		"enemyMoveZero": {
+			"name": "move enemy",
+			"description": "Instantly move the enemy <c=keyword>{{Amount}}</c> spaces."
+		},
+		"enemyMoveLeft": {
+			"name": "move enemy left",
+			"description": "Instantly move the enemy <c=keyword>{{Amount}}</c> spaces to the <c=keyword>LEFT</c>."
+		},
+		"enemyMoveRight": {
+			"name": "move enemy right",
+			"description": "Instantly move the enemy <c=keyword>{{Amount}}</c> spaces to the <c=keyword>RIGHT</c>."
+		},
+		"hurtBlockable": {
+			"name": "blockable hurt",
+			"description": "Take <c=keyword>{{Amount}}</c> <c=downside>damage</c>, shields first."
+		},
+		"outgoingAlt": {
+			"name": "outgoing",
+			"description": "This effect will be applied to the enemy, wherever they are."
+		}
+	}
+}

@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+* Improved rendering and tooltips of some vanilla actions affecting the enemy instead of the player.
+* Fixed how the game renders some disabled (flipped/dual) actions.
+
 ## 1.14.7
 Released 23 March 2025.
 
