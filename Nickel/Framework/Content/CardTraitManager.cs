@@ -447,8 +447,20 @@ internal class CardTraitManager
 	private void OnRenderTraits(object? sender, ref CardPatches.TraitRenderEventArgs e)
 	{
 		foreach (var trait in this.GetActiveCardTraits(e.State, e.Card).Where(t => t is not VanillaEntry))
+		{
+			var position = new Vec(e.Position.x, e.Position.y - 8 * e.CardTraitIndex);
+			
+			if (trait.Configuration.Renderer is { } renderer && renderer(e.State, e.Card, position))
+			{
+				e.CardTraitIndex++;
+				continue;
+			}
 			if (trait.Configuration.Icon(e.State, e.Card) is { } icon)
-				Draw.Sprite(icon, e.Position.x, e.Position.y - 8 * e.CardTraitIndex++);
+			{
+				Draw.Sprite(icon, position.x, position.y);
+				e.CardTraitIndex++;
+			}
+		}
 	}
 
 	private void OnGetCardTooltips(object? sender, ref CardPatches.TooltipsEventArgs e)

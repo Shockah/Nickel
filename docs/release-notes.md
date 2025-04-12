@@ -12,7 +12,8 @@
 ### For developers:
 * Updated the Shrike and Shrike.Harmony libraries to version 3.2.0.
 * Added `ArtifactConfiguration.CanBeOffered`.
-* Added a way to disable converting all characters of a `GlossaryTooltip` title to uppercase.
+* Added `CardTraitConfiguration.Renderer`.
+* Added `GlossaryTooltip.UppercaseTitle`.
 
 ## 1.14.7
 Released 23 March 2025.

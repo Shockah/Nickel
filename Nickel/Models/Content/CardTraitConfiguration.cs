@@ -11,6 +11,9 @@ public readonly struct CardTraitConfiguration
 	/// <summary>An icon provider for the card trait.</summary>
 	public required Func<State, Card?, Spr?> Icon { get; init; }
 	
+	/// <summary>A custom renderer delegate for the card trait icon.</summary>
+	public Func<State, Card?, Vec, bool>? Renderer { get; init; }
+	
 	/// <summary>A localization provider for the name of the card trait.</summary>
 	public SingleLocalizationProvider? Name { get; init; }
 	
