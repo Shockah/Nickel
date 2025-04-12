@@ -9,6 +9,7 @@
 * Fixed how the game renders some disabled (flipped/dual) actions.
 
 ### For developers:
+* Added `ArtifactConfiguration.CanBeOffered`.
 * Added a way to disable converting all characters of a `GlossaryTooltip` title to uppercase.
 
 ## 1.14.7

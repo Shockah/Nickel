@@ -20,6 +20,7 @@ internal sealed class ArtifactManager
 		this.VanillaModManifest = vanillaModManifest;
 
 		ArtifactPatches.OnKey += this.OnKey;
+		ArtifactRewardPatches.OnGetBlockedArtifacts += this.OnGetBlockedArtifacts;
 	}
 
 	internal void InjectQueuedEntries()
@@ -129,6 +130,20 @@ internal sealed class ArtifactManager
 		if (this.LookupByArtifactType(e.Artifact.GetType()) is not { } entry)
 			return;
 		e.Key = entry.UniqueName;
+	}
+
+	private void OnGetBlockedArtifacts(object? _, ArtifactRewardPatches.GetBlockedArtifactsEventArgs e)
+	{
+		foreach (var (type, entry) in this.ArtifactTypeToEntry)
+		{
+			if (e.BlockedArtifacts.Contains(type))
+				continue;
+			if (entry.Configuration.CanBeOffered is not { } canBeOfferedDelegate)
+				continue;
+			if (canBeOfferedDelegate(e.State))
+				continue;
+			e.BlockedArtifacts.Add(type);
+		}
 	}
 
 	private sealed class Entry(IModManifest modOwner, string uniqueName, ArtifactConfiguration configuration)

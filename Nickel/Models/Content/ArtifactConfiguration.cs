@@ -21,4 +21,11 @@ public readonly struct ArtifactConfiguration
 	
 	/// <summary>A localization provider for the description of the <see cref="Artifact"/>.</summary>
 	public SingleLocalizationProvider? Description { get; init; }
+	
+	/// <summary>
+	/// A function controlling whether the artifact can be currently offered. For example, this can be used to create mutually exclusive artifacts.
+	/// This function cannot override artifacts that cannot be offered for other reasons.
+	/// Defaults to <c>null</c>, which is the equivalent of a function that always returns <c>true</c>.
+	/// </summary>
+	public Func<State, bool>? CanBeOffered { get; init; }
 }
