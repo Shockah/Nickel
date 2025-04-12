@@ -4,8 +4,12 @@
 
 ## Upcoming release
 
+### For everyone:
 * Improved rendering and tooltips of some vanilla actions affecting the enemy instead of the player.
 * Fixed how the game renders some disabled (flipped/dual) actions.
+
+### For developers:
+* Added a way to disable converting all characters of a `GlossaryTooltip` title to uppercase.
 
 ## 1.14.7
 Released 23 March 2025.

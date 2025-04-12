@@ -32,6 +32,10 @@ public sealed class GlossaryTooltip(string key) : TTGlossary(key)
 	/// <summary>Whether the icon should be flipped vertically.</summary>
 	public bool FlipIconY = false;
 
+	/// <summary>Whether the title should be converted to all uppercase characters. Defaults to <c>true</c>.</summary>
+	/// <remarks>When this is <c>true</c>, color tags will not work, as these need to be lowercase.</remarks>
+	public bool UppercaseTitle = true;
+
 	/// <inheritdoc/>
 	public override Rect Render(G g, bool dontDraw)
 	{
@@ -47,7 +51,7 @@ public sealed class GlossaryTooltip(string key) : TTGlossary(key)
 
 			if (this.TitleColor is not null)
 				sb.Append($"<c={this.TitleColor.Value.ToString()}>");
-			sb.Append(this.Title.ToUpper());
+			sb.Append(this.UppercaseTitle ? this.Title.ToUpper() : this.Title);
 			if (this.TitleColor is not null)
 				sb.Append("</c>");
 		}
