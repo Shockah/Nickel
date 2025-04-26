@@ -1,5 +1,6 @@
 using Nanoray.Pintail;
 using Nanoray.PluginManager;
+using Nanoray.Shrike;
 using Nickel.Common;
 using System;
 using System.Collections.Generic;
@@ -88,13 +89,32 @@ internal sealed class ModRegistry(
 		if (currentModLoadPhaseProvider() is { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
 			return;
 
-		modEvents.OnModLoadPhaseFinished += OnModLoadPhaseFinished;
+		var onModLoadedDelegate = new NullableObjectRef<EventHandler<IModManifest>>();
+		var onModLoadPhaseFinishedDelegate = new NullableObjectRef<EventHandler<ModLoadPhase>>();
 
-		void OnModLoadPhaseFinished(object? sender, ModLoadPhase phase)
+		onModLoadedDelegate.Value = (_, mod) =>
 		{
-			modEvents.OnModLoadPhaseFinished -= OnModLoadPhaseFinished;
-			this.AwaitApi(uniqueName, minimumVersion, callback);
-		}
+			if (mod.UniqueName != uniqueName)
+				return;
+
+			onModLoadedDelegate -= onModLoadedDelegate.Value;
+			onModLoadPhaseFinishedDelegate -= onModLoadPhaseFinishedDelegate.Value;
+
+			if (this.GetApi<TApi>(uniqueName, minimumVersion) is { } api)
+				callback(api);
+		};
+		
+		onModLoadPhaseFinishedDelegate.Value = (_, _) =>
+		{
+			if (currentModLoadPhaseProvider() is not { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
+				return;
+
+			onModLoadedDelegate -= onModLoadedDelegate.Value;
+			onModLoadPhaseFinishedDelegate -= onModLoadPhaseFinishedDelegate.Value;
+		};
+
+		modEvents.OnModLoaded += onModLoadedDelegate.Value;
+		modEvents.OnModLoadPhaseFinished += onModLoadPhaseFinishedDelegate.Value;
 	}
 
 	public void AwaitApiOrNull<TApi>(string uniqueName, Action<TApi?> callback) where TApi : class
@@ -109,17 +129,32 @@ internal sealed class ModRegistry(
 		}
 
 		if (currentModLoadPhaseProvider() is { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
-		{
-			callback(null);
 			return;
-		}
 
-		modEvents.OnModLoadPhaseFinished += OnModLoadPhaseFinished;
+		var onModLoadedDelegate = new NullableObjectRef<EventHandler<IModManifest>>();
+		var onModLoadPhaseFinishedDelegate = new NullableObjectRef<EventHandler<ModLoadPhase>>();
 
-		void OnModLoadPhaseFinished(object? sender, ModLoadPhase phase)
+		onModLoadedDelegate.Value = (_, mod) =>
 		{
-			modEvents.OnModLoadPhaseFinished -= OnModLoadPhaseFinished;
-			this.AwaitApiOrNull(uniqueName, minimumVersion, callback);
-		}
+			if (mod.UniqueName != uniqueName)
+				return;
+
+			onModLoadedDelegate -= onModLoadedDelegate.Value;
+			onModLoadPhaseFinishedDelegate -= onModLoadPhaseFinishedDelegate.Value;
+			callback(this.GetApi<TApi>(uniqueName, minimumVersion));
+		};
+		
+		onModLoadPhaseFinishedDelegate.Value = (_, _) =>
+		{
+			if (currentModLoadPhaseProvider() is not { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
+				return;
+
+			onModLoadedDelegate -= onModLoadedDelegate.Value;
+			onModLoadPhaseFinishedDelegate -= onModLoadPhaseFinishedDelegate.Value;
+			callback(null);
+		};
+
+		modEvents.OnModLoaded += onModLoadedDelegate.Value;
+		modEvents.OnModLoadPhaseFinished += onModLoadPhaseFinishedDelegate.Value;
 	}
 }
