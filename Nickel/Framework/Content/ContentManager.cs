@@ -53,7 +53,7 @@ internal sealed class ContentManager
 		EnumCasePool enumCasePool,
 		IModManifest vanillaModManifest,
 		IModManifest modLoaderModManifest,
-		ModDataManager modDataManager
+		IModDataHandler<object> modDataHandler
 	)
 	{
 		var sprites = new SpriteManager(loggerProvider, enumCasePool, vanillaModManifest);
@@ -65,7 +65,7 @@ internal sealed class ContentManager
 		var characters = new CharacterManager(currentModLoadPhaseProvider, loggerProvider, eventManager, sprites, audio, decks, statuses, cards, vanillaModManifest, modLoaderModManifest);
 		var parts = new PartManager(enumCasePool, currentModLoadPhaseProvider);
 		var ships = new ShipManager(currentModLoadPhaseProvider, vanillaModManifest);
-		var cardTraits = new CardTraitManager(loggerProvider, vanillaModManifest, modLoaderModManifest, modDataManager);
+		var cardTraits = new CardTraitManager(loggerProvider, vanillaModManifest, modLoaderModManifest, modDataHandler);
 		var enemies = new EnemyManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
 		return new(sprites, audio, decks, statuses, cards, artifacts, characters, parts, ships, cardTraits, enemies);
 	}

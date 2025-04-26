@@ -341,7 +341,7 @@ internal class CardTraitManager
 	private readonly HashSet<Card> CurrentlyPopulatingCardTraitStates = [];
 	private readonly Dictionary<string, ICardTraitEntry> SynthesizedVanillaEntries;
 	private readonly IModManifest ModLoaderModManifest;
-	private readonly ModDataManager ModDataManager;
+	private readonly IModDataHandler<object> ModDataHandler;
 
 	internal readonly ManagedEvent<GetDynamicInnateCardTraitOverridesEventArgs> OnGetDynamicInnateCardTraitOverridesEvent;
 	internal readonly ManagedEvent<GetFinalDynamicCardTraitOverridesEventArgs> OnGetFinalDynamicCardTraitOverridesEvent;
@@ -358,10 +358,10 @@ internal class CardTraitManager
 
 	private int CardTraitStateCacheVersion;
 
-	public CardTraitManager(Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest, IModManifest modLoaderModManifest, ModDataManager modDataManager)
+	public CardTraitManager(Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest, IModManifest modLoaderModManifest, IModDataHandler<object> modDataHandler)
 	{
 		this.ModLoaderModManifest = modLoaderModManifest;
-		this.ModDataManager = modDataManager;
+		this.ModDataHandler = modDataHandler;
 		
 		this.OnGetDynamicInnateCardTraitOverridesEvent = new((_, mod, exception) =>
 		{
@@ -504,7 +504,7 @@ internal class CardTraitManager
 	{
 		foreach (var card in state.deck)
 		{
-			if (!this.ModDataManager.TryGetModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides", out var overrides))
+			if (!this.ModDataHandler.TryGetModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides", out var overrides))
 				continue;
 
 			foreach (var temporaryTraitName in overrides.Temporary.Keys.ToList())
@@ -524,7 +524,7 @@ internal class CardTraitManager
 			if (CardTraitStateCacheVersionGetter.Value(card) != this.CardTraitStateCacheVersion || CardTraitStateCacheGetter.Value(card) is not { } cardTraitStates)
 				continue;
 			
-			var overrides = this.ModDataManager.ObtainModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides");
+			var overrides = this.ModDataHandler.ObtainModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides");
 			foreach (var (trait, cardTraitState) in cardTraitStates)
 			{
 				if (trait is not IReadWriteCardTraitEntry rwTrait)
@@ -578,7 +578,7 @@ internal class CardTraitManager
 		if (trait is not IReadWriteCardTraitEntry rwTrait)
 			throw new NotImplementedException($"Internal error: trait {trait.UniqueName} is supposed to implement the private interface {nameof(IReadWriteCardTraitEntry)}");
 
-		var overrides = this.ModDataManager.ObtainModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides");
+		var overrides = this.ModDataHandler.ObtainModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides");
 		if (permanent)
 			rwTrait.SetPermanentOverride(card, overrides, overrideValue);
 		else
@@ -602,7 +602,7 @@ internal class CardTraitManager
 
 	private void UpdateModDataFromFieldsIfNeeded(Card card, OverridesModData? overrides = null)
 	{
-		var nonNullOverrides = overrides ?? this.ModDataManager.ObtainModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides");
+		var nonNullOverrides = overrides ?? this.ModDataHandler.ObtainModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides");
 		foreach (var trait in this.SynthesizedVanillaEntries.Values)
 			this.UpdateModDataFromFieldsIfNeeded(card, trait, nonNullOverrides);
 	}
@@ -612,7 +612,7 @@ internal class CardTraitManager
 		if (trait is not IReadWriteCardTraitEntry rwTrait)
 			throw new NotImplementedException($"Internal error: trait {trait.UniqueName} is supposed to implement the private interface {nameof(IReadWriteCardTraitEntry)}");
 
-		var nonNullOverrides = overrides ?? this.ModDataManager.ObtainModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides");
+		var nonNullOverrides = overrides ?? this.ModDataHandler.ObtainModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides");
 		rwTrait.UpdateOverridesModDataFromFieldsIfNeeded(card, nonNullOverrides);
 	}
 
@@ -645,7 +645,7 @@ internal class CardTraitManager
 	private void PopulateCardTraitStates(State state, Card card, Dictionary<ICardTraitEntry, CardTraitState> results)
 	{
 		HashSet<ICardTraitEntry> innateTraits = [];
-		var overrides = this.ModDataManager.ObtainModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides");
+		var overrides = this.ModDataHandler.ObtainModData<OverridesModData>(this.ModLoaderModManifest, card, "CustomTraitOverrides");
 		this.UpdateModDataFromFieldsIfNeeded(card, overrides);
 
 		var data = card.GetData(state);

@@ -20,7 +20,7 @@ internal static class NickelStatic
 		var pintailAssembly = typeof(IProxyManager<>).Assembly;
 		
 		var engine = new DefaultCloneEngine();
-		engine.RegisterCloneListener(Nickel.Instance.ModManager.ModDataManager);
+		engine.RegisterCloneListener(new ModDataCloneListener(Nickel.Instance.ModManager.ModDataHandler));
 		engine.RegisterSpecializedEngine(new HashSetCloneEngine(engine));
 		engine.RegisterFieldFilter(f =>
 		{
@@ -86,5 +86,11 @@ internal static class NickelStatic
 				Nickel.Instance.ModManager.Logger.LogError("Could not clone `{Value}` of type `{Type}` via Mitosis; falling back to JSON-based method. Reason: {Exception}", original, original.GetType(), ex);
 			return JsonCloneEngine.Value.Clone(original);
 		}
+	}
+
+	private sealed class ModDataCloneListener(IModDataHandler<object> modDataHandler) : IReferenceCloneListener
+	{
+		public void OnClone<T>(ICloneEngine engine, T source, T destination) where T : class
+			=> modDataHandler.CopyAllModData(source, destination);
 	}
 }

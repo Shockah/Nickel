@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 
@@ -27,7 +28,7 @@ internal sealed class ModManager
 	private readonly ILoggerFactory LoggerFactory;
 	internal readonly ILogger Logger;
 	internal readonly ModEventManager EventManager;
-	internal readonly ModDataManager ModDataManager;
+	internal readonly IModDataHandler<object> ModDataHandler;
 	private readonly ModStorageManager ModStorageManager;
 	private readonly EnumCasePool EnumCasePool;
 	private readonly DelayedHarmonyManager DelayedHarmonyManager;
@@ -39,6 +40,7 @@ internal sealed class ModManager
 
 	internal readonly List<IPluginPackage<IModManifest>> ResolvedMods = [];
 
+	private readonly ConditionalWeakTable<object, Dictionary<string, Dictionary<string, object?>>> ConditionalWeakTableModDataStorage = new();
 	private readonly ExtendablePluginLoader<IModManifest, Mod> ExtendablePluginLoader = new();
 	private readonly IProxyManager<string> ProxyManager;
 	private readonly List<IModManifest> FailedMods = [];
@@ -83,7 +85,9 @@ internal sealed class ModManager
 			this.ObtainLogger,
 			this.ModLoaderPackage.Manifest
 		);
-		this.ModDataManager = new();
+		this.ModDataHandler = new CompoundModDataHandler<object>([
+			new ConditionalWeakTableModDataHandler(this.ConditionalWeakTableModDataStorage)
+		]);
 		this.ModStorageManager = new(this.CreateContractResolver);
 		this.EnumCasePool = new();
 		this.DelayedHarmonyManager = new();
@@ -559,7 +563,7 @@ internal sealed class ModManager
 			this.EnumCasePool,
 			this.VanillaModManifest,
 			this.ModLoaderPackage.Manifest,
-			this.ModDataManager
+			this.ModDataHandler
 		);
 		this.PrepareJsonSerialization();
 	}
@@ -585,7 +589,7 @@ internal sealed class ModManager
 			),
 			this.Logger,
 			ModDataManager.ModDataJsonKey,
-			this.ModDataManager.ModDataStorage
+			this.ConditionalWeakTableModDataStorage
 		);
 
 	private void ModifyJsonContract(Type type, JsonContract contract)
@@ -648,7 +652,7 @@ internal sealed class ModManager
 					new ModShips(package.Manifest, () => this.ContentManager!.Ships, () => this.ContentManager!.Parts),
 					new ModEnemies(package.Manifest, () => this.ContentManager!.Enemies)
 				),
-				new ModData(package.Manifest, this.ModDataManager),
+				new ModData(package.Manifest, this.ModDataHandler),
 				new ModStorage(
 					package.Manifest,
 					() => this.ObtainLogger(package.Manifest),
