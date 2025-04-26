@@ -111,7 +111,7 @@ internal sealed class DeckManager
 
 		EnumExtensions.deckStrs[deck] = uniqueName;
 
-		Entry entry = new(owner, $"{owner.UniqueName}::{name}", deck, configuration, this.Amend);
+		var entry = new Entry(owner, $"{owner.UniqueName}::{name}", deck, configuration, this.Amend);
 		this.DeckToEntry[entry.Deck] = entry;
 		this.UniqueNameToEntry[entry.UniqueName] = entry;
 		this.Manager.QueueOrInject(entry);

@@ -12,6 +12,7 @@
     * Playable characters: `ExeCardType`, `SoloStarters` and `Babble`.
     * Artifacts: `CanBeOffered`.
     * Decks: `ShineColorOverride`.
+    * Statuses: `ShouldFlash`.
 
 ## 1.15.0
 Released 12 April 2025.

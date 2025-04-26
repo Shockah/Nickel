@@ -18,4 +18,13 @@ public readonly struct StatusConfiguration
 
 	/// <summary>A function controlling whether this status should flash when rendered, like <see cref="Status.heat"/> or <see cref="Status.payback"/>.</summary>
 	public Func<State, Combat, Ship, Status, bool>? ShouldFlash { get; init; }
+
+	/// <summary>
+	/// Describes amends to a <see cref="Status"/>' <see cref="StatusConfiguration">configuration</see>.
+	/// </summary>
+	public struct Amends
+	{
+		/// <inheritdoc cref="StatusConfiguration.ShouldFlash" />
+		public ContentConfigurationValueAmend<Func<State, Combat, Ship, Status, bool>?>? ShouldFlash { get; set; }
+	}
 }

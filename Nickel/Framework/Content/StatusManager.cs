@@ -124,7 +124,7 @@ internal sealed class StatusManager
 		this.ReservedNameToStatus.Remove(uniqueName);
 		this.ReservedStatusToName.Remove(status);
 
-		Entry entry = new(owner, $"{owner.UniqueName}::{name}", status, configuration);
+		var entry = new Entry(owner, $"{owner.UniqueName}::{name}", status, configuration, this.Amend);
 		this.StatusToEntry[entry.Status] = entry;
 		this.UniqueNameToEntry[entry.UniqueName] = entry;
 		this.Manager.QueueOrInject(entry);
@@ -167,13 +167,23 @@ internal sealed class StatusManager
 				Definition = DB.statuses[status],
 				Name = _ => Loc.T($"status.{status}.name"),
 				Description = _ => Loc.T($"status.{status}.desc"),
-			}
+			},
+			amendDelegate: (_, _) => throw new InvalidOperationException("Vanilla entries cannot be amended")
 		);
 
 	private void Inject(Entry entry)
 	{
 		DB.statuses[entry.Status] = entry.Configuration.Definition;
 		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+	}
+	
+	private void Amend(Entry entry, StatusConfiguration.Amends amends)
+	{
+		if (!this.UniqueNameToEntry.ContainsKey(entry.UniqueName))
+			throw new ArgumentException($"A status with the unique name `{entry.UniqueName}` is not registered");
+
+		if (amends.ShouldFlash is { } shouldFlash)
+			entry.Configuration = entry.Configuration with { ShouldFlash = shouldFlash.Value };
 	}
 
 	private void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
@@ -188,18 +198,26 @@ internal sealed class StatusManager
 			localizations[$"status.{key}.desc"] = description;
 	}
 
-	private sealed class Entry(IModManifest modOwner, string uniqueName, Status status, StatusConfiguration configuration)
-		: IStatusEntry
+	private sealed class Entry(
+		IModManifest modOwner,
+		string uniqueName,
+		Status status,
+		StatusConfiguration configuration,
+		Action<Entry, StatusConfiguration.Amends> amendDelegate
+	) : IStatusEntry
 	{
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
 		public Status Status { get; } = status;
-		public StatusConfiguration Configuration { get; } = configuration;
+		public StatusConfiguration Configuration { get; internal set; } = configuration;
 
 		public override string ToString()
 			=> this.UniqueName;
 
 		public override int GetHashCode()
 			=> this.UniqueName.GetHashCode();
+		
+		public void Amend(StatusConfiguration.Amends amends)
+			=> amendDelegate(this, amends);
 	}
 }
