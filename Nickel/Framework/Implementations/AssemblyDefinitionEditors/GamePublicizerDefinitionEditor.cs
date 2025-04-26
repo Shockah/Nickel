@@ -3,11 +3,15 @@ using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using Newtonsoft.Json;
 using System;
+using System.Text;
 
 namespace Nickel;
 
 internal sealed class GamePublicizerDefinitionEditor : IAssemblyDefinitionEditor
 {
+	public byte[] AssemblyEditorDescriptor
+		=> Encoding.UTF8.GetBytes($"{this.GetType().FullName}, {NickelConstants.Name} {NickelConstants.Version}");
+	
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName == "CobaltCore.dll";
 

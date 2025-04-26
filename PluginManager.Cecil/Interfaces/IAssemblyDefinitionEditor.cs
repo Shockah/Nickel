@@ -9,6 +9,11 @@ namespace Nanoray.PluginManager.Cecil;
 public interface IAssemblyDefinitionEditor
 {
 	/// <summary>
+	/// Describes the assembly editor in a unique way. This can be used to cache the resulting assemblies for future sessions.
+	/// </summary>
+	byte[] AssemblyEditorDescriptor { get; }
+	
+	/// <summary>
 	/// Allows controlling whether this editor is interested in editing the given assembly.
 	/// </summary>
 	/// <param name="fileBaseName">The base file name of the assembly.</param>

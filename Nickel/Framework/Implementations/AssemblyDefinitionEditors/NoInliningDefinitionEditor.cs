@@ -4,11 +4,15 @@ using Nanoray.PluginManager.Cecil;
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Nickel;
 
 internal sealed class NoInliningDefinitionEditor : IAssemblyDefinitionEditor
 {
+	public byte[] AssemblyEditorDescriptor
+		=> Encoding.UTF8.GetBytes($"{this.GetType().FullName}, {NickelConstants.Name} {NickelConstants.Version}");
+	
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName == "CobaltCore.dll";
 

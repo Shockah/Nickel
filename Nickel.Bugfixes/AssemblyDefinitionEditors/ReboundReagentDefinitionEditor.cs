@@ -5,11 +5,15 @@ using Nanoray.PluginManager.Cecil;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
+using System.Text;
 
 namespace Nickel.Bugfixes;
 
 internal sealed class ReboundReagentDefinitionEditor : IAssemblyDefinitionEditor
 {
+	public byte[] AssemblyEditorDescriptor
+		=> Encoding.UTF8.GetBytes($"{this.GetType().FullName}, {ModEntry.Instance.Package.Manifest.UniqueName} {ModEntry.Instance.Package.Manifest.Version}");
+	
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName == "CobaltCore.dll";
 

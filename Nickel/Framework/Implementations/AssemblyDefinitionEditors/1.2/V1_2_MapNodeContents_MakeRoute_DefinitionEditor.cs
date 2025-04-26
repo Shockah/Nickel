@@ -6,6 +6,7 @@ using Nanoray.PluginManager.Cecil;
 using System;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Text;
 using SOpCodes = System.Reflection.Emit.OpCodes;
 using COpCodes = Mono.Cecil.Cil.OpCodes;
 
@@ -41,6 +42,9 @@ public static partial class RewriteFacades
 
 internal sealed class V1_2_MapNodeContents_MakeRoute_DefinitionEditor : IAssemblyDefinitionEditor
 {
+	public byte[] AssemblyEditorDescriptor
+		=> Encoding.UTF8.GetBytes($"{this.GetType().FullName}, {NickelConstants.Name} {NickelConstants.Version}");
+	
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName != "CobaltCore.dll";
 	

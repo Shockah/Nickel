@@ -16,6 +16,27 @@ public sealed class ExtendableAssemblyDefinitionEditor(Func<IAssemblyResolver> c
 	private readonly List<IAssemblyDefinitionEditor> DefinitionEditors = [];
 
 	/// <inheritdoc/>
+	public byte[] AssemblyEditorDescriptor
+	{
+		get
+		{
+			using var stream = new MemoryStream();
+			using var writer = new BinaryWriter(stream);
+			
+			writer.Write(this.DefinitionEditors.Count);
+			foreach (var editor in this.DefinitionEditors)
+			{
+				var editorDescriptor = editor.AssemblyEditorDescriptor;
+				writer.Write(editorDescriptor.Length);
+				writer.Write(editorDescriptor);
+			}
+			
+			writer.Flush();
+			return stream.GetBuffer();
+		}
+	}
+
+	/// <inheritdoc/>
 	public AssemblyEditorResult EditAssemblyStream(string name, ref Stream assemblyStream, ref Stream? symbolsStream)
 	{
 		var messages = new List<AssemblyEditorResult.Message>();

@@ -4,6 +4,7 @@ using Nanoray.PluginManager.Cecil;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Nickel;
 
@@ -20,6 +21,9 @@ internal sealed class ModDataFieldDefinitionEditor : IAssemblyDefinitionEditor
 		nameof(Artifact),
 		nameof(State),
 	];
+	
+	public byte[] AssemblyEditorDescriptor
+		=> Encoding.UTF8.GetBytes($"{this.GetType().FullName}, {NickelConstants.Name} {NickelConstants.Version}");
 	
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName == "CobaltCore.dll";

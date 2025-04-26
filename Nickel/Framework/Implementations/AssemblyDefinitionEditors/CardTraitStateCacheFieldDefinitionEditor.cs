@@ -4,6 +4,7 @@ using Nanoray.PluginManager.Cecil;
 using Nickel.Models.Content;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Nickel;
 
@@ -11,7 +12,10 @@ internal sealed class CardTraitStateCacheFieldDefinitionEditor : IAssemblyDefini
 {
 	internal const string CacheFieldName = "__Nickel__CardTraitStateCache";
 	internal const string CacheVersionFieldName = "__Nickel__CardTraitStateCacheVersion";
-	
+
+	public byte[] AssemblyEditorDescriptor
+		=> Encoding.UTF8.GetBytes($"{this.GetType().FullName}, {NickelConstants.Name} {NickelConstants.Version}");
+
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName == "CobaltCore.dll";
 

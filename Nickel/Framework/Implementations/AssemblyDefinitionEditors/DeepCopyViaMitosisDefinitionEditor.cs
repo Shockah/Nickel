@@ -4,11 +4,15 @@ using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using System;
 using System.Linq;
+using System.Text;
 
 namespace Nickel;
 
 internal sealed class DeepCopyViaMitosisDefinitionEditor : IAssemblyDefinitionEditor
 {
+	public byte[] AssemblyEditorDescriptor
+		=> Encoding.UTF8.GetBytes($"{this.GetType().FullName}, {NickelConstants.Name} {NickelConstants.Version}");
+
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName == "CobaltCore.dll";
 

@@ -8,6 +8,11 @@ namespace Nanoray.PluginManager;
 public interface IAssemblyEditor
 {
 	/// <summary>
+	/// Describes the assembly editor in a unique way. This can be used to cache the resulting assemblies for future sessions.
+	/// </summary>
+	byte[] AssemblyEditorDescriptor { get; }
+	
+	/// <summary>
 	/// Edit the stream.
 	/// </summary>
 	/// <param name="name">The name of the assembly.</param>
