@@ -28,4 +28,13 @@ public readonly struct ArtifactConfiguration
 	/// Defaults to <c>null</c>, which is the equivalent of a function that always returns <c>true</c>.
 	/// </summary>
 	public Func<State, bool>? CanBeOffered { get; init; }
+
+	/// <summary>
+	/// Describes amends to an <see cref="Artifact"/>'s <see cref="ArtifactConfiguration">configuration</see>.
+	/// </summary>
+	public struct Amends
+	{
+		/// <inheritdoc cref="ArtifactConfiguration.CanBeOffered" />
+		public ContentConfigurationValueAmend<Func<State, bool>?>? CanBeOffered { get; set; }
+	}
 }

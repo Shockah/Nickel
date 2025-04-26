@@ -39,7 +39,7 @@ internal sealed class ArtifactManager
 		{
 			if (this.ArtifactTypeToEntry.ContainsKey(configuration.ArtifactType))
 				throw new ArgumentException($"An artifact with the type `{configuration.ArtifactType.FullName ?? configuration.ArtifactType.Name}` is already registered", nameof(configuration));
-			return new(owner, uniqueName, configuration);
+			return new(owner, uniqueName, configuration, this.Amend);
 		}
 		if (existing.Configuration.ArtifactType == configuration.ArtifactType)
 		{
@@ -96,7 +96,8 @@ internal sealed class ArtifactManager
 				Sprite = DB.artifactSprites[type.Name],
 				Name = _ => Loc.T($"artifact.{type.Name}.name"),
 				Description = _ => Loc.T($"artifact.{type.Name}.desc"),
-			}
+			},
+			amendDelegate: (_, _) => throw new InvalidOperationException("Vanilla entries cannot be amended")
 		);
 
 	private void Inject(Entry entry)
@@ -111,6 +112,15 @@ internal sealed class ArtifactManager
 			DB.releasedArtifacts.Remove(entry.UniqueName);
 
 		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+	}
+	
+	private void Amend(Entry entry, ArtifactConfiguration.Amends amends)
+	{
+		if (!this.UniqueNameToEntry.ContainsKey(entry.UniqueName))
+			throw new ArgumentException($"A character with the unique name `{entry.UniqueName}` is not registered");
+
+		if (amends.CanBeOffered is { } canBeOffered)
+			entry.Configuration = entry.Configuration with { CanBeOffered = canBeOffered.Value };
 	}
 
 	private void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
@@ -146,8 +156,12 @@ internal sealed class ArtifactManager
 		}
 	}
 
-	private sealed class Entry(IModManifest modOwner, string uniqueName, ArtifactConfiguration configuration)
-		: IArtifactEntry
+	private sealed class Entry(
+		IModManifest modOwner,
+		string uniqueName,
+		ArtifactConfiguration configuration,
+		Action<Entry, ArtifactConfiguration.Amends> amendDelegate
+	) : IArtifactEntry
 	{
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
@@ -158,5 +172,8 @@ internal sealed class ArtifactManager
 
 		public override int GetHashCode()
 			=> this.UniqueName.GetHashCode();
+		
+		public void Amend(ArtifactConfiguration.Amends amends)
+			=> amendDelegate(this, amends);
 	}
 }
