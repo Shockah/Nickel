@@ -8,6 +8,7 @@
 * Changed the default solo starter cards behavior for modded characters from up to 6 random commons to 4 + Basic Shot + Basic Dodge.
 
 ### For developers:
+* Added `IModEvents.OnModLoaded`.
 * Added an API to amend some parts of content configuration:
     * Playable characters: `ExeCardType`, `SoloStarters` and `Babble`.
     * Non-playable characters: `Babble`.

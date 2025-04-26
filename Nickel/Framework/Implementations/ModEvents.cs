@@ -11,6 +11,12 @@ internal sealed class ModEvents(IModManifest modManifest, ModEventManager eventM
 		add => eventManager.OnModLoadPhaseFinishedEvent.Add(value, modManifest);
 		remove => eventManager.OnModLoadPhaseFinishedEvent.Remove(value, modManifest);
 	}
+	
+	public event EventHandler<IModManifest> OnModLoaded
+	{
+		add => eventManager.OnModLoadedEvent.Add(value, modManifest);
+		remove => eventManager.OnModLoadedEvent.Remove(value, modManifest);
+	}
 
 	public event EventHandler<State> OnSaveLoaded
 	{

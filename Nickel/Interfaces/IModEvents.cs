@@ -11,6 +11,9 @@ public interface IModEvents
 {
 	/// <summary>An event fired whenever any mod load phase finishes.</summary>
 	event EventHandler<ModLoadPhase> OnModLoadPhaseFinished;
+	
+	/// <summary>An event fired whenever any mod gets loaded.</summary>
+	event EventHandler<IModManifest> OnModLoaded;
 
 	/// <summary>An event fired whenever the save state gets loaded/changed.</summary>
 	event EventHandler<State> OnSaveLoaded;

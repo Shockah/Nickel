@@ -8,6 +8,7 @@ internal sealed class ModEventManager
 {
 	private readonly IModManifest ModLoaderModManifest;
 	public readonly ManagedEvent<ModLoadPhase> OnModLoadPhaseFinishedEvent;
+	public readonly ManagedEvent<IModManifest> OnModLoadedEvent;
 	public readonly ManagedEvent<LoadStringsForLocaleEventArgs> OnLoadStringsForLocaleEvent;
 	public readonly ManagedEvent<Exception?> OnGameClosingEvent;
 
@@ -70,6 +71,11 @@ internal sealed class ModEventManager
 		{
 			var logger = loggerProvider(mod);
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnModLoadPhaseFinishedEvent), exception);
+		});
+		this.OnModLoadedEvent = new((_, mod, exception) =>
+		{
+			var logger = loggerProvider(mod);
+			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnModLoadedEvent), exception);
 		});
 		this.OnLoadStringsForLocaleEvent = new((_, mod, exception) =>
 		{

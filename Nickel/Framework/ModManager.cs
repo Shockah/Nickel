@@ -433,6 +433,7 @@ internal sealed class ModManager
 								this.UniqueNameToInstance[manifest.UniqueName] = success.Plugin;
 								this.Logger.LogInformation("Loaded mod {DisplayName}", manifest.GetDisplayName(@long: true));
 								result = success.Plugin;
+								this.EventManager.OnModLoadedEvent.Raise(null, manifest);
 							},
 							error =>
 							{
