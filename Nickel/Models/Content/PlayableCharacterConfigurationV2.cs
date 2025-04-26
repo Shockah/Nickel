@@ -54,4 +54,19 @@ public readonly struct PlayableCharacterConfigurationV2
 		/// <inheritdoc cref="StatusDef.icon"/>
 		public Spr? Sprite { get; init; }
 	}
+
+	/// <summary>
+	/// Describes amends to a playable <see cref="Character"/>'s <see cref="PlayableCharacterConfigurationV2">configuration</see>.
+	/// </summary>
+	public struct Amends
+	{
+		/// <inheritdoc cref="PlayableCharacterConfigurationV2.SoloStarters" />
+		public ContentConfigurationValueAmend<StarterDeck?>? SoloStarters { get; set; }
+		
+		/// <inheritdoc cref="PlayableCharacterConfigurationV2.ExeCardType" />
+		public ContentConfigurationValueAmend<Type?>? ExeCardType { get; set; }
+		
+		/// <inheritdoc cref="PlayableCharacterConfigurationV2.Babble" />
+		public ContentConfigurationValueAmend<CharacterBabbleConfiguration?>? Babble { get; set; }
+	}
 }

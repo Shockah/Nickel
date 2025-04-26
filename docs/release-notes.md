@@ -7,6 +7,9 @@
 ### For everyone:
 * Changed the default solo starter cards behavior for modded characters from up to 6 random commons to 4 + Basic Shot + Basic Dodge.
 
+### For developers:
+* Added an API to amend some parts of a playable character's configuration (`ExeCardType`, `SoloStarters` and `Babble`).
+
 ## 1.15.0
 Released 12 April 2025.
 

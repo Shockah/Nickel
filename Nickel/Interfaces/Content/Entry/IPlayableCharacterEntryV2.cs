@@ -10,4 +10,13 @@ public interface IPlayableCharacterEntryV2 : ICharacterEntryV2
 	
 	/// <summary>An entry for the <c>Character Is Missing</c> status specifically for this character.</summary>
 	IStatusEntry MissingStatus { get; }
+
+	/// <summary>
+	/// Amends a playable <see cref="Character"/>'s <see cref="PlayableCharacterConfigurationV2">configuration</see>.
+	/// </summary>
+	/// <param name="amends">The amends to make.</param>
+	/// <remarks>
+	/// This method is only valid for modded entries.
+	/// </remarks>
+	void Amend(PlayableCharacterConfigurationV2.Amends amends);
 }

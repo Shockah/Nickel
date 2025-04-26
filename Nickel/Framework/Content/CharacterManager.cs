@@ -160,7 +160,8 @@ internal sealed class CharacterManager
 					Period = Shout.BABBLE_INTERVAL_LETTERS,
 				},
 			},
-			missingStatus: this.Statuses.LookupByStatus(StatusMeta.deckToMissingStatus[deck])!
+			missingStatus: this.Statuses.LookupByStatus(StatusMeta.deckToMissingStatus[deck])!,
+			amendDelegate: (_, _) => throw new InvalidOperationException("Vanilla entries cannot be amended")
 		);
 		this.UniqueNameToPlayableCharacterEntry[key] = result;
 		this.CharacterTypeToCharacterEntry[result.CharacterType] = result;
@@ -419,7 +420,7 @@ internal sealed class CharacterManager
 		};
 		
 		var missingStatus = this.RegisterMissingStatus(owner, $"{localName}::MissingStatus", deckEntry, v2.MissingStatus.Color, v2.MissingStatus.Sprite);
-		var entry = new PlayableCharacterEntry(owner, uniqueName, v1, v2, missingStatus);
+		var entry = new PlayableCharacterEntry(owner, uniqueName, v1, v2, missingStatus, this.Amend);
 		this.UniqueNameToPlayableCharacterEntry[entry.UniqueName] = entry;
 		this.DeckToCharacterEntry[entry.V2.Deck] = entry;
 		this.CharacterTypeToCharacterEntry[entry.CharacterType] = entry;
@@ -517,8 +518,7 @@ internal sealed class CharacterManager
 			}
 		}
 
-		if (entry.V2.BorderSprite is { } borderSprite)
-			DB.charPanels[entry.CharacterType] = borderSprite;
+		DB.charPanels[entry.CharacterType] = entry.V2.BorderSprite;
 		
 		NewRunOptions.allChars = NewRunOptions.allChars
 			.Append(entry.V2.Deck)
@@ -536,6 +536,51 @@ internal sealed class CharacterManager
 			SoloStarterDeck.soloStarterSets[entry.V2.Deck] = soloStarters;
 
 		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+
+		entry.IsInjected = true;
+	}
+	
+	private void Amend(PlayableCharacterEntry entry, PlayableCharacterConfigurationV2.Amends amends)
+	{
+		if (!this.UniqueNameToPlayableCharacterEntry.ContainsKey(entry.UniqueName))
+			throw new ArgumentException($"A character with the unique name `{entry.UniqueName}` is not registered");
+
+		if (!entry.IsInjected)
+		{
+			Finish();
+			return;
+		}
+
+		if (amends.SoloStarters is { } soloStarters)
+		{
+			if (soloStarters.Value is null)
+			{
+				if (SoloStarterDeck.soloStarterSets.ContainsKey(entry.V2.Deck))
+					SoloStarterDeck.soloStarterSets[entry.V2.Deck] = CreateDefaultSoloStarters(entry);
+				else
+					SoloStarterDeck.soloStarterSets.Remove(entry.V2.Deck);
+			}
+			else
+			{
+				SoloStarterDeck.soloStarterSets[entry.V2.Deck] = soloStarters.Value;
+			}
+		}
+
+		Finish();
+
+		void Finish()
+		{
+			if (amends.SoloStarters is { } soloStarters)
+				entry.V2 = entry.V2 with { SoloStarters = soloStarters.Value };
+			if (amends.Babble is { } babble)
+				entry.V2 = entry.V2 with { Babble = babble.Value };
+			
+			if (amends.ExeCardType is { } exeCardType)
+			{
+				entry.V2 = entry.V2 with { ExeCardType = exeCardType.Value };
+				entry.V1 = entry.V1 with { ExeCardType = exeCardType.Value };
+			}
+		}
 	}
 	
 	private void Inject(NonPlayableCharacterEntry entry)
@@ -609,53 +654,55 @@ internal sealed class CharacterManager
 		this.SetupAfterDbInit();
 	}
 
+	private static StarterDeck CreateDefaultSoloStarters(PlayableCharacterEntry entry)
+	{
+		var random = new Rand((uint)GetStableHashCode(entry.UniqueName));
+
+		return new()
+		{
+			artifacts = entry.V2.Starters.artifacts.ToList(),
+			cards =
+			[
+				.. entry.V2.Starters.cards,
+				.. DB.cardMetas
+					.Where(kvp => kvp.Value.deck == entry.V2.Deck && kvp.Value is { unreleased: false, dontOffer: false, rarity: Rarity.common })
+					.Where(kvp => entry.V2.Starters.cards.All(card => card.Key() != kvp.Key))
+					.OrderBy(kvp => kvp.Key)
+					// ReSharper disable once MultipleOrderBy
+					.OrderBy(_ => random.NextInt())
+					.Select(kvp => kvp.Key)
+					.Select(key => DB.cards.GetValueOrDefault(key))
+					.OfType<Type>()
+					.Take(4 - entry.V2.Starters.cards.Count)
+					.Select(cardType => (Card)Activator.CreateInstance(cardType)!),
+				new CannonColorless(),
+				new DodgeColorless(),
+			]
+		};
+		
+		// source: https://stackoverflow.com/a/36845864
+		static int GetStableHashCode(string str)
+		{
+			var hash1 = 5381;
+			var hash2 = hash1;
+
+			for (var i = 0; i < str.Length && str[i] != '\0'; i += 2)
+			{
+				hash1 = ((hash1 << 5) + hash1) ^ str[i];
+				if (i == str.Length - 1 || str[i + 1] == '\0')
+					break;
+				hash2 = ((hash2 << 5) + hash2) ^ str[i + 1];
+			}
+
+			return hash1 + hash2 * 1566083941;
+		}
+	}
+
 	private void SetupAfterDbInit()
 	{
 		foreach (var entry in this.UniqueNameToPlayableCharacterEntry.Values)
-		{
-			if (SoloStarterDeck.soloStarterSets.ContainsKey(entry.V2.Deck))
-				continue;
-
-			var random = new Rand((uint)GetStableHashCode(entry.UniqueName));
-
-			SoloStarterDeck.soloStarterSets[entry.V2.Deck] = new()
-			{
-				artifacts = entry.V2.Starters.artifacts.ToList(),
-				cards = [
-					.. entry.V2.Starters.cards,
-					.. DB.cardMetas
-						.Where(kvp => kvp.Value.deck == entry.V2.Deck && kvp.Value is { unreleased: false, dontOffer: false, rarity: Rarity.common })
-						.Where(kvp => entry.V2.Starters.cards.All(card => card.Key() != kvp.Key))
-						.OrderBy(kvp => kvp.Key)
-						// ReSharper disable once MultipleOrderBy
-						.OrderBy(_ => random.NextInt())
-						.Select(kvp => kvp.Key)
-						.Select(key => DB.cards.GetValueOrDefault(key))
-						.OfType<Type>()
-						.Take(4 - entry.V2.Starters.cards.Count)
-						.Select(cardType => (Card)Activator.CreateInstance(cardType)!),
-					new CannonColorless(),
-					new DodgeColorless(),
-				]
-			};
-			
-			// source: https://stackoverflow.com/a/36845864
-			static int GetStableHashCode(string str)
-			{
-				var hash1 = 5381;
-				var hash2 = hash1;
-
-				for (var i = 0; i < str.Length && str[i] != '\0'; i += 2)
-				{
-					hash1 = ((hash1 << 5) + hash1) ^ str[i];
-					if (i == str.Length - 1 || str[i + 1] == '\0')
-						break;
-					hash2 = ((hash2 << 5) + hash2) ^ str[i + 1];
-				}
-
-				return hash1 + hash2 * 1566083941;
-			}
-		}
+			if (!SoloStarterDeck.soloStarterSets.ContainsKey(entry.V2.Deck))
+				SoloStarterDeck.soloStarterSets[entry.V2.Deck] = CreateDefaultSoloStarters(entry);
 	}
 
 	private static void OnCrystallizedFriendEvent(object? _, List<Choice> choices)
@@ -775,15 +822,18 @@ internal sealed class CharacterManager
 		string uniqueName,
 		CharacterConfiguration v1,
 		PlayableCharacterConfigurationV2 v2,
-		IStatusEntry missingStatus
+		IStatusEntry missingStatus,
+		Action<PlayableCharacterEntry, PlayableCharacterConfigurationV2.Amends> amendDelegate
 	) : ICharacterEntry, IPlayableCharacterEntryV2
 	{
-		internal CharacterConfiguration V1 { get; } = v1;
-		internal PlayableCharacterConfigurationV2 V2 { get; } = v2;
+		internal CharacterConfiguration V1 { get; set; } = v1;
+		internal PlayableCharacterConfigurationV2 V2 { get; set; } = v2;
+		internal bool IsInjected;
 		
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
 		public IStatusEntry MissingStatus { get; } = missingStatus;
+
 		public string CharacterType => this.V2.Deck == Deck.colorless ? "comp" : this.V2.Deck.Key();
 		public CharacterBabbleConfiguration? Babble => this.V2.Babble;
 
@@ -797,6 +847,9 @@ internal sealed class CharacterManager
 
 		public override int GetHashCode()
 			=> this.UniqueName.GetHashCode();
+		
+		public void Amend(PlayableCharacterConfigurationV2.Amends amends)
+			=> amendDelegate(this, amends);
 	}
 
 	private sealed class NonPlayableCharacterEntry(
