@@ -37,4 +37,13 @@ public readonly struct DeckConfiguration
 		/// <summary>The default color of the rarity shine for this card.</summary>
 		public required Color DefaultShineColor { get; init; }
 	}
+
+	/// <summary>
+	/// Describes amends to a <see cref="Deck"/>'s <see cref="DeckConfiguration">configuration</see>.
+	/// </summary>
+	public struct Amends
+	{
+		/// <inheritdoc cref="DeckConfiguration.ShineColorOverride" />
+		public ContentConfigurationValueAmend<Func<ShineColorOverrideArgs, Color>?>? ShineColorOverride { get; set; }
+	}
 }

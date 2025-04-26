@@ -11,6 +11,7 @@
 * Added an API to amend some parts of content configuration:
     * Playable characters: `ExeCardType`, `SoloStarters` and `Babble`.
     * Artifacts: `CanBeOffered`.
+    * Decks: `ShineColorOverride`.
 
 ## 1.15.0
 Released 12 April 2025.

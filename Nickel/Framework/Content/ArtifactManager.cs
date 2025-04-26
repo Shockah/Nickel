@@ -117,7 +117,7 @@ internal sealed class ArtifactManager
 	private void Amend(Entry entry, ArtifactConfiguration.Amends amends)
 	{
 		if (!this.UniqueNameToEntry.ContainsKey(entry.UniqueName))
-			throw new ArgumentException($"A character with the unique name `{entry.UniqueName}` is not registered");
+			throw new ArgumentException($"An artifact with the unique name `{entry.UniqueName}` is not registered");
 
 		if (amends.CanBeOffered is { } canBeOffered)
 			entry.Configuration = entry.Configuration with { CanBeOffered = canBeOffered.Value };

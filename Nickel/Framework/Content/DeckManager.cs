@@ -111,7 +111,7 @@ internal sealed class DeckManager
 
 		EnumExtensions.deckStrs[deck] = uniqueName;
 
-		Entry entry = new(owner, $"{owner.UniqueName}::{name}", deck, configuration);
+		Entry entry = new(owner, $"{owner.UniqueName}::{name}", deck, configuration, this.Amend);
 		this.DeckToEntry[entry.Deck] = entry;
 		this.UniqueNameToEntry[entry.UniqueName] = entry;
 		this.Manager.QueueOrInject(entry);
@@ -156,7 +156,8 @@ internal sealed class DeckManager
 				BorderSprite = DB.deckBorders.TryGetValue(deck, out var borderSprite) ? borderSprite : Enum.Parse<Spr>("cardShared_border_colorless"),
 				OverBordersSprite = DB.deckBordersOver.TryGetValue(deck, out var overBordersSprite) ? overBordersSprite : null,
 				Name = _ => Loc.T($"char.{deck}"),
-			}
+			},
+			amendDelegate: (_, _) => throw new InvalidOperationException("Vanilla entries cannot be amended")
 		);
 
 	private void Inject(Entry entry)
@@ -170,6 +171,15 @@ internal sealed class DeckManager
 		Colors.colorDict[entry.Deck.ToString()] = entry.Configuration.Definition.color.ToInt();
 
 		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+	}
+	
+	private void Amend(Entry entry, DeckConfiguration.Amends amends)
+	{
+		if (!this.UniqueNameToEntry.ContainsKey(entry.UniqueName))
+			throw new ArgumentException($"A deck with the unique name `{entry.UniqueName}` is not registered");
+
+		if (amends.ShineColorOverride is { } shineColorOverride)
+			entry.Configuration = entry.Configuration with { ShineColorOverride = shineColorOverride.Value };
 	}
 
 	private void InjectLocalization(string locale, Dictionary<string, string> localizations, Entry entry)
@@ -198,18 +208,26 @@ internal sealed class DeckManager
 		});
 	}
 
-	private sealed class Entry(IModManifest modOwner, string uniqueName, Deck deck, DeckConfiguration configuration)
-		: IDeckEntry
+	private sealed class Entry(
+		IModManifest modOwner,
+		string uniqueName,
+		Deck deck,
+		DeckConfiguration configuration,
+		Action<Entry, DeckConfiguration.Amends> amendDelegate
+	) : IDeckEntry
 	{
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
 		public Deck Deck { get; } = deck;
-		public DeckConfiguration Configuration { get; } = configuration;
+		public DeckConfiguration Configuration { get; internal set; } = configuration;
 
 		public override string ToString()
 			=> this.UniqueName;
 
 		public override int GetHashCode()
 			=> this.UniqueName.GetHashCode();
+		
+		public void Amend(DeckConfiguration.Amends amends)
+			=> amendDelegate(this, amends);
 	}
 }
