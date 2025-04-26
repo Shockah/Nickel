@@ -9,6 +9,9 @@ namespace Nickel;
 
 internal sealed class CardTraitStateCacheFieldDefinitionEditor : IAssemblyDefinitionEditor
 {
+	internal const string CacheFieldName = "__Nickel__CardTraitStateCache";
+	internal const string CacheVersionFieldName = "__Nickel__CardTraitStateCacheVersion";
+	
 	public bool WillEditAssembly(string fileBaseName)
 		=> fileBaseName == "CobaltCore.dll";
 
@@ -19,8 +22,8 @@ internal sealed class CardTraitStateCacheFieldDefinitionEditor : IAssemblyDefini
 		var cardTraitEntryToCardTraitStateDictionaryTypeReference = definition.MainModule.ImportReference(typeof(Dictionary<ICardTraitEntry, CardTraitState>));
 		var intTypeReference = definition.MainModule.ImportReference(typeof(int));
 		
-		var cardTraitStateCacheField = new FieldDefinition("__Nickel__CardTraitStateCache", FieldAttributes.Private, cardTraitEntryToCardTraitStateDictionaryTypeReference);
-		var cardTraitStateCacheVersionField = new FieldDefinition("__Nickel__CardTraitStateCacheVersion", FieldAttributes.Private, intTypeReference);
+		var cardTraitStateCacheField = new FieldDefinition(CacheFieldName, FieldAttributes.Private, cardTraitEntryToCardTraitStateDictionaryTypeReference);
+		var cardTraitStateCacheVersionField = new FieldDefinition(CacheVersionFieldName, FieldAttributes.Private, intTypeReference);
 		
 		cardType.Fields.Add(cardTraitStateCacheField);
 		cardType.Fields.Add(cardTraitStateCacheVersionField);

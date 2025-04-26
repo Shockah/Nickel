@@ -8,7 +8,7 @@ namespace Nickel;
 
 internal sealed class ConditionalWeakTableModDataHandler(
 	ConditionalWeakTable<object, Dictionary<string, Dictionary<string, object?>>> storage
-) : IModDataHandler<object>
+) : IModDataHandler
 {
 	public bool CanHandleType(Type type)
 		=> !type.IsValueType;

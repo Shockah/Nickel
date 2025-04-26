@@ -3,26 +3,25 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Nickel;
 
-internal interface IModDataHandler<in TRoot> where TRoot : notnull
+internal interface IModDataHandler
 {
-	bool CanHandleType(Type type)
-		=> type.IsAssignableTo(typeof(TRoot));
+	bool CanHandleType(Type type);
 	
-	T GetModData<T>(IModManifest manifest, TRoot o, string key);
+	T GetModData<T>(IModManifest manifest, object o, string key);
 	
-	bool TryGetModData<T>(IModManifest manifest, TRoot o, string key, [MaybeNullWhen(false)] out T data);
+	bool TryGetModData<T>(IModManifest manifest, object o, string key, [MaybeNullWhen(false)] out T data);
 
-	bool ContainsModData(IModManifest manifest, TRoot o, string key);
+	bool ContainsModData(IModManifest manifest, object o, string key);
 
-	void SetModData<T>(IModManifest manifest, TRoot o, string key, T data);
+	void SetModData<T>(IModManifest manifest, object o, string key, T data);
 
-	void RemoveModData(IModManifest manifest, TRoot o, string key);
+	void RemoveModData(IModManifest manifest, object o, string key);
 
-	void CopyOwnedModData(IModManifest manifest, TRoot from, TRoot to);
+	void CopyOwnedModData(IModManifest manifest, object from, object to);
 
-	void CopyAllModData(TRoot from, TRoot to);
+	void CopyAllModData(object from, object to);
 	
-	T ObtainModData<T>(IModManifest manifest, TRoot o, string key, Func<T> factory)
+	T ObtainModData<T>(IModManifest manifest, object o, string key, Func<T> factory)
 	{
 		if (!this.TryGetModData<T>(manifest, o, key, out var data))
 		{
@@ -32,12 +31,12 @@ internal interface IModDataHandler<in TRoot> where TRoot : notnull
 		return data;
 	}
 	
-	T ObtainModData<T>(IModManifest manifest, TRoot o, string key) where T : new()
+	T ObtainModData<T>(IModManifest manifest, object o, string key) where T : new()
 		=> this.ObtainModData(manifest, o, key, () => new T());
 	
-	T GetModDataOrDefault<T>(IModManifest manifest, TRoot o, string key, T defaultValue)
+	T GetModDataOrDefault<T>(IModManifest manifest, object o, string key, T defaultValue)
 		=> this.TryGetModData<T>(manifest, o, key, out var value) ? value : defaultValue;
 	
-	T GetModDataOrDefault<T>(IModManifest manifest, TRoot o, string key) where T : new()
+	T GetModDataOrDefault<T>(IModManifest manifest, object o, string key) where T : new()
 		=> this.TryGetModData<T>(manifest, o, key, out var value) ? value : new();
 }

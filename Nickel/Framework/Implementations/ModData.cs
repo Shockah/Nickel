@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Nickel;
 
-internal sealed class ModData(IModManifest modManifest, IModDataHandler<object> modDataHandler) : IModData
+internal sealed class ModData(IModManifest modManifest, IModDataHandler modDataHandler) : IModData
 {
 	public T GetModData<T>(object o, string key)
 		=> modDataHandler.GetModData<T>(modManifest, o, key);

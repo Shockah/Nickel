@@ -8,6 +8,7 @@
 * Changed the default solo starter cards behavior for modded characters from up to 6 random commons to 4 + Basic Shot + Basic Dodge.
 
 ### For developers:
+* Changed where mod data is stored for most classes, making it easier to debug.
 * `IModRegistry.AwaitApi` delegate now gets called right after a mod gets loaded, not after the whole load phase is finished.
 * Added `IModEvents.OnModLoaded`.
 * Added an API to amend some parts of content configuration:

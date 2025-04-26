@@ -8,11 +8,16 @@ namespace Nickel;
 internal sealed class DictionaryModDataHandler<TRoot>(
 	Func<TRoot, Dictionary<string, Dictionary<string, object?>>?> dictionaryGetter,
 	Action<TRoot, Dictionary<string, Dictionary<string, object?>>?> dictionarySetter
-) : IModDataHandler<TRoot> where TRoot : notnull
+) : IModDataHandler where TRoot : notnull
 {
-	public T GetModData<T>(IModManifest manifest, TRoot o, string key)
+	public bool CanHandleType(Type type)
+		=> type.IsAssignableTo(typeof(TRoot));
+
+	public T GetModData<T>(IModManifest manifest, object o, string key)
 	{
-		if (dictionaryGetter(o) is not { } allObjectData)
+		if (!this.CanHandleType(o.GetType()))
+			throw new ArgumentException($"Invalid type {o.GetType()} of object {o}");
+		if (dictionaryGetter((TRoot)o) is not { } allObjectData)
 			throw new KeyNotFoundException($"Object {o} does not contain extension data with key `{key}`");
 		if (!allObjectData.TryGetValue(manifest.UniqueName, out var modObjectData))
 			throw new KeyNotFoundException($"Object {o} does not contain extension data with key `{key}`");
@@ -25,9 +30,11 @@ internal sealed class DictionaryModDataHandler<TRoot>(
 		return result;
 	}
 
-	public bool TryGetModData<T>(IModManifest manifest, TRoot o, string key, [MaybeNullWhen(false)] out T data)
+	public bool TryGetModData<T>(IModManifest manifest, object o, string key, [MaybeNullWhen(false)] out T data)
 	{
-		if (dictionaryGetter(o) is not { } allObjectData)
+		if (!this.CanHandleType(o.GetType()))
+			throw new ArgumentException($"Invalid type {o.GetType()} of object {o}");
+		if (dictionaryGetter((TRoot)o) is not { } allObjectData)
 		{
 			data = default;
 			return false;
@@ -49,21 +56,25 @@ internal sealed class DictionaryModDataHandler<TRoot>(
 		return true;
 	}
 
-	public bool ContainsModData(IModManifest manifest, TRoot o, string key)
+	public bool ContainsModData(IModManifest manifest, object o, string key)
 	{
-		if (dictionaryGetter(o) is not { } allObjectData)
+		if (!this.CanHandleType(o.GetType()))
+			throw new ArgumentException($"Invalid type {o.GetType()} of object {o}");
+		if (dictionaryGetter((TRoot)o) is not { } allObjectData)
 			return false;
 		if (!allObjectData.TryGetValue(manifest.UniqueName, out var modObjectData))
 			return false;
 		return modObjectData.ContainsKey(key);
 	}
 
-	public void SetModData<T>(IModManifest manifest, TRoot o, string key, T data)
+	public void SetModData<T>(IModManifest manifest, object o, string key, T data)
 	{
-		if (dictionaryGetter(o) is not { } allObjectData)
+		if (!this.CanHandleType(o.GetType()))
+			throw new ArgumentException($"Invalid type {o.GetType()} of object {o}");
+		if (dictionaryGetter((TRoot)o) is not { } allObjectData)
 		{
 			allObjectData = new();
-			dictionarySetter(o, allObjectData);
+			dictionarySetter((TRoot)o, allObjectData);
 		}
 		
 		ref var modObjectData = ref CollectionsMarshal.GetValueRefOrAddDefault(allObjectData, manifest.UniqueName, out var modObjectDataExists);
@@ -72,9 +83,11 @@ internal sealed class DictionaryModDataHandler<TRoot>(
 		modObjectData![key] = data;
 	}
 
-	public void RemoveModData(IModManifest manifest, TRoot o, string key)
+	public void RemoveModData(IModManifest manifest, object o, string key)
 	{
-		if (dictionaryGetter(o) is not { } allObjectData)
+		if (!this.CanHandleType(o.GetType()))
+			throw new ArgumentException($"Invalid type {o.GetType()} of object {o}");
+		if (dictionaryGetter((TRoot)o) is not { } allObjectData)
 			return;
 		
 		if (allObjectData.TryGetValue(manifest.UniqueName, out var modObjectData))
@@ -84,20 +97,24 @@ internal sealed class DictionaryModDataHandler<TRoot>(
 				allObjectData.Remove(manifest.UniqueName);
 		}
 		if (allObjectData.Count == 0)
-			dictionarySetter(o, null);
+			dictionarySetter((TRoot)o, null);
 	}
 
-	public void CopyOwnedModData(IModManifest manifest, TRoot from, TRoot to)
+	public void CopyOwnedModData(IModManifest manifest, object from, object to)
 	{
-		if (dictionaryGetter(from) is not { } allSourceObjectData)
+		if (!this.CanHandleType(from.GetType()))
+			throw new ArgumentException($"Invalid type {from.GetType()} of object {from}");
+		if (!this.CanHandleType(to.GetType()))
+			throw new ArgumentException($"Invalid type {to.GetType()} of object {to}");
+		if (dictionaryGetter((TRoot)from) is not { } allSourceObjectData)
 			return;
 		if (!allSourceObjectData.TryGetValue(manifest.UniqueName, out var sourceModObjectData))
 			return;
 
-		if (dictionaryGetter(to) is not { } allTargetObjectData)
+		if (dictionaryGetter((TRoot)to) is not { } allTargetObjectData)
 		{
 			allTargetObjectData = [];
-			dictionarySetter(to, allTargetObjectData);
+			dictionarySetter((TRoot)to, allTargetObjectData);
 		}
 
 		ref var targetModObjectData = ref CollectionsMarshal.GetValueRefOrAddDefault(allTargetObjectData, manifest.UniqueName, out var targetModObjectDataExists);
@@ -108,15 +125,19 @@ internal sealed class DictionaryModDataHandler<TRoot>(
 			targetModObjectData![key] = NickelStatic.DeepCopyObject(value);
 	}
 
-	public void CopyAllModData(TRoot from, TRoot to)
+	public void CopyAllModData(object from, object to)
 	{
-		if (dictionaryGetter(from) is not { } allSourceObjectData)
+		if (!this.CanHandleType(from.GetType()))
+			throw new ArgumentException($"Invalid type {from.GetType()} of object {from}");
+		if (!this.CanHandleType(to.GetType()))
+			throw new ArgumentException($"Invalid type {to.GetType()} of object {to}");
+		if (dictionaryGetter((TRoot)from) is not { } allSourceObjectData)
 			return;
 		
-		if (dictionaryGetter(to) is not { } allTargetObjectData)
+		if (dictionaryGetter((TRoot)to) is not { } allTargetObjectData)
 		{
 			allTargetObjectData = [];
-			dictionarySetter(to, allTargetObjectData);
+			dictionarySetter((TRoot)to, allTargetObjectData);
 		}
 
 		foreach (var (modUniqueName, sourceModObjectData) in allSourceObjectData)

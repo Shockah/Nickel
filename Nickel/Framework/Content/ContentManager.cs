@@ -53,7 +53,7 @@ internal sealed class ContentManager
 		EnumCasePool enumCasePool,
 		IModManifest vanillaModManifest,
 		IModManifest modLoaderModManifest,
-		IModDataHandler<object> modDataHandler
+		IModDataHandler modDataHandler
 	)
 	{
 		var sprites = new SpriteManager(loggerProvider, enumCasePool, vanillaModManifest);

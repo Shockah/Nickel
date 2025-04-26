@@ -28,7 +28,7 @@ internal sealed class ModManager
 	private readonly ILoggerFactory LoggerFactory;
 	internal readonly ILogger Logger;
 	internal readonly ModEventManager EventManager;
-	internal readonly IModDataHandler<object> ModDataHandler;
+	internal readonly IModDataHandler ModDataHandler;
 	private readonly ModStorageManager ModStorageManager;
 	private readonly EnumCasePool EnumCasePool;
 	private readonly DelayedHarmonyManager DelayedHarmonyManager;
@@ -85,7 +85,8 @@ internal sealed class ModManager
 			this.ObtainLogger,
 			this.ModLoaderPackage.Manifest
 		);
-		this.ModDataHandler = new CompoundModDataHandler<object>([
+		this.ModDataHandler = new CompoundModDataHandler([
+			.. ModDataFieldDefinitionEditor.TypeNamesToAddFieldTo.Select(typeName => new GameTypeDictionaryFieldModDataHandler(typeName, () => this.CurrentModLoadPhase)),
 			new ConditionalWeakTableModDataHandler(this.ConditionalWeakTableModDataStorage)
 		]);
 		this.ModStorageManager = new(this.CreateContractResolver);
@@ -588,7 +589,7 @@ internal sealed class ModManager
 				wrapped: wrappedResolver
 			),
 			this.Logger,
-			ModDataManager.ModDataJsonKey,
+			ModDataFieldDefinitionEditor.JsonPropertyName,
 			this.ConditionalWeakTableModDataStorage
 		);
 

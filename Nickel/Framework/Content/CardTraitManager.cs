@@ -331,17 +331,17 @@ internal class CardTraitManager
 		public readonly Dictionary<string, bool> LastOverridePermanent = [];
 	}
 
-	private static readonly Lazy<Func<Card, Dictionary<ICardTraitEntry, CardTraitState>?>> CardTraitStateCacheGetter = new(() => AccessTools.DeclaredField(typeof(Card), "__Nickel__CardTraitStateCache").EmitInstanceGetter<Card, Dictionary<ICardTraitEntry, CardTraitState>?>());
-	private static readonly Lazy<Action<Card, Dictionary<ICardTraitEntry, CardTraitState>?>> CardTraitStateCacheSetter = new(() => AccessTools.DeclaredField(typeof(Card), "__Nickel__CardTraitStateCache").EmitInstanceSetter<Card, Dictionary<ICardTraitEntry, CardTraitState>?>());
-	private static readonly Lazy<Func<Card, int>> CardTraitStateCacheVersionGetter = new(() => AccessTools.DeclaredField(typeof(Card), "__Nickel__CardTraitStateCacheVersion").EmitInstanceGetter<Card, int>());
-	private static readonly Lazy<Action<Card, int>> CardTraitStateCacheVersionSetter = new(() => AccessTools.DeclaredField(typeof(Card), "__Nickel__CardTraitStateCacheVersion").EmitInstanceSetter<Card, int>());
+	private static readonly Lazy<Func<Card, Dictionary<ICardTraitEntry, CardTraitState>?>> CardTraitStateCacheGetter = new(() => AccessTools.DeclaredField(typeof(Card), CardTraitStateCacheFieldDefinitionEditor.CacheFieldName).EmitInstanceGetter<Card, Dictionary<ICardTraitEntry, CardTraitState>?>());
+	private static readonly Lazy<Action<Card, Dictionary<ICardTraitEntry, CardTraitState>?>> CardTraitStateCacheSetter = new(() => AccessTools.DeclaredField(typeof(Card), CardTraitStateCacheFieldDefinitionEditor.CacheFieldName).EmitInstanceSetter<Card, Dictionary<ICardTraitEntry, CardTraitState>?>());
+	private static readonly Lazy<Func<Card, int>> CardTraitStateCacheVersionGetter = new(() => AccessTools.DeclaredField(typeof(Card), CardTraitStateCacheFieldDefinitionEditor.CacheVersionFieldName).EmitInstanceGetter<Card, int>());
+	private static readonly Lazy<Action<Card, int>> CardTraitStateCacheVersionSetter = new(() => AccessTools.DeclaredField(typeof(Card), CardTraitStateCacheFieldDefinitionEditor.CacheVersionFieldName).EmitInstanceSetter<Card, int>());
 
 	private readonly Dictionary<string, ModdedEntry> UniqueNameToEntry = [];
 	private readonly HashSet<Card> CardsWithCardTraitStateCache = [];
 	private readonly HashSet<Card> CurrentlyPopulatingCardTraitStates = [];
 	private readonly Dictionary<string, ICardTraitEntry> SynthesizedVanillaEntries;
 	private readonly IModManifest ModLoaderModManifest;
-	private readonly IModDataHandler<object> ModDataHandler;
+	private readonly IModDataHandler ModDataHandler;
 
 	internal readonly ManagedEvent<GetDynamicInnateCardTraitOverridesEventArgs> OnGetDynamicInnateCardTraitOverridesEvent;
 	internal readonly ManagedEvent<GetFinalDynamicCardTraitOverridesEventArgs> OnGetFinalDynamicCardTraitOverridesEvent;
@@ -358,7 +358,7 @@ internal class CardTraitManager
 
 	private int CardTraitStateCacheVersion;
 
-	public CardTraitManager(Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest, IModManifest modLoaderModManifest, IModDataHandler<object> modDataHandler)
+	public CardTraitManager(Func<IModManifest, ILogger> loggerProvider, IModManifest vanillaModManifest, IModManifest modLoaderModManifest, IModDataHandler modDataHandler)
 	{
 		this.ModLoaderModManifest = modLoaderModManifest;
 		this.ModDataHandler = modDataHandler;

@@ -88,7 +88,7 @@ internal static class NickelStatic
 		}
 	}
 
-	private sealed class ModDataCloneListener(IModDataHandler<object> modDataHandler) : IReferenceCloneListener
+	private sealed class ModDataCloneListener(IModDataHandler modDataHandler) : IReferenceCloneListener
 	{
 		public void OnClone<T>(ICloneEngine engine, T source, T destination) where T : class
 			=> modDataHandler.CopyAllModData(source, destination);
