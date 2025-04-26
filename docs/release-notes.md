@@ -10,6 +10,7 @@
 ### For developers:
 * Added an API to amend some parts of content configuration:
     * Playable characters: `ExeCardType`, `SoloStarters` and `Babble`.
+    * Non-playable characters: `Babble`.
     * Artifacts: `CanBeOffered`.
     * Decks: `ShineColorOverride`.
     * Statuses: `ShouldFlash`.

@@ -23,4 +23,13 @@ public readonly struct NonPlayableCharacterConfigurationV2
 	
 	/// <summary>Describes all aspects of a non-playable character's dialogue babble.</summary>
 	public CharacterBabbleConfiguration? Babble { get; init; }
+
+	/// <summary>
+	/// Describes amends to a non-playable <see cref="Character"/>'s <see cref="NonPlayableCharacterConfigurationV2">configuration</see>.
+	/// </summary>
+	public struct Amends
+	{
+		/// <inheritdoc cref="NonPlayableCharacterConfigurationV2.Babble" />
+		public ContentConfigurationValueAmend<CharacterBabbleConfiguration?>? Babble { get; set; }
+	}
 }

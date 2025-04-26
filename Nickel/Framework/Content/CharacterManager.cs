@@ -356,7 +356,8 @@ internal sealed class CharacterManager
 							Frames = DB.charAnimations[Character.GetSpriteAliasIfExists(characterType)]["neutral"]
 						},
 						Name = _ => Loc.T($"char.{characterType}")
-					}
+					},
+					amendDelegate: (_, _) => throw new InvalidOperationException("Vanilla entries cannot be amended")
 				);
 		}
 	}
@@ -434,7 +435,7 @@ internal sealed class CharacterManager
 		if (this.UniqueNameToPlayableCharacterEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A character with the unique name `{uniqueName}` is already registered", nameof(name));
 		
-		var entry = new NonPlayableCharacterEntry(owner, uniqueName, v2);
+		var entry = new NonPlayableCharacterEntry(owner, uniqueName, v2, this.Amend);
 		this.UniqueNameToNonPlayableCharacterEntry[entry.UniqueName] = entry;
 		this.CharacterTypeToCharacterEntry[entry.CharacterType] = entry;
 		this.NonPlayableCharacterManager.QueueOrInject(entry);
@@ -618,6 +619,15 @@ internal sealed class CharacterManager
 			DB.charPanels[entry.CharacterType] = borderSprite;
 
 		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+	}
+	
+	private void Amend(NonPlayableCharacterEntry entry, NonPlayableCharacterConfigurationV2.Amends amends)
+	{
+		if (!this.UniqueNameToNonPlayableCharacterEntry.ContainsKey(entry.UniqueName))
+			throw new ArgumentException($"A character with the unique name `{entry.UniqueName}` is not registered");
+
+		if (amends.Babble is { } babble)
+			entry.V2 = entry.V2 with { Babble = babble.Value };
 	}
 
 	private void InjectLocalization(string locale, Dictionary<string, string> localizations, PlayableCharacterEntry entry)
@@ -855,10 +865,11 @@ internal sealed class CharacterManager
 	private sealed class NonPlayableCharacterEntry(
 		IModManifest modOwner,
 		string uniqueName,
-		NonPlayableCharacterConfigurationV2 v2
+		NonPlayableCharacterConfigurationV2 v2,
+		Action<NonPlayableCharacterEntry, NonPlayableCharacterConfigurationV2.Amends> amendDelegate
 	) : INonPlayableCharacterEntryV2
 	{
-		internal NonPlayableCharacterConfigurationV2 V2 { get; } = v2;
+		internal NonPlayableCharacterConfigurationV2 V2 { get; set; } = v2;
 		
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
@@ -873,5 +884,8 @@ internal sealed class CharacterManager
 
 		public override int GetHashCode()
 			=> this.UniqueName.GetHashCode();
+		
+		public void Amend(NonPlayableCharacterConfigurationV2.Amends amends)
+			=> amendDelegate(this, amends);
 	}
 }
