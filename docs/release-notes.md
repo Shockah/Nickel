@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For everyone:
+* Changed the default solo starter cards behavior for modded characters from up to 6 random commons to 4 + Basic Shot + Basic Dodge.
+
 ## 1.15.0
 Released 12 April 2025.
 

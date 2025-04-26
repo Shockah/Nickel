@@ -632,8 +632,10 @@ internal sealed class CharacterManager
 						.Select(kvp => kvp.Key)
 						.Select(key => DB.cards.GetValueOrDefault(key))
 						.OfType<Type>()
-						.Take(6 - entry.V2.Starters.cards.Count)
-						.Select(cardType => (Card)Activator.CreateInstance(cardType)!)
+						.Take(4 - entry.V2.Starters.cards.Count)
+						.Select(cardType => (Card)Activator.CreateInstance(cardType)!),
+					new CannonColorless(),
+					new DodgeColorless(),
 				]
 			};
 			
