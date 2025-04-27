@@ -27,13 +27,13 @@ internal sealed class SingleFileApplicationCobaltCoreResolver(FileInfo exePath, 
 			return new Error<string>($"The single-file application at `{exePath.FullName}` does not contain a `{CobaltCoreResource}` resource.");
 
 		var otherDlls = reader.Bundle.Files.Where(e => e.RelativePath.EndsWith(".dll") && e.RelativePath != CobaltCoreResource).ToHashSet();
-		var gameAssemblyData = cobaltCoreEntry.AsStream().ToMemoryStream().GetBuffer();
-		var gameSymbolsData = pdbPath?.Exists == true ? pdbPath.OpenRead().ToMemoryStream().GetBuffer() : null;
+		var gameAssemblyData = cobaltCoreEntry.AsStream().ToMemoryStream().ToArray();
+		var gameSymbolsData = pdbPath?.Exists == true ? pdbPath.OpenRead().ToMemoryStream().ToArray() : null;
 		var otherDllDataStreamProviders = otherDlls.ToDictionary(
 			e => e.RelativePath,
 			Func<Stream> (e) =>
 			{
-				var data = e.AsStream().ToMemoryStream().GetBuffer();
+				var data = e.AsStream().ToMemoryStream().ToArray();
 				return () => new MemoryStream(data);
 			}
 		);

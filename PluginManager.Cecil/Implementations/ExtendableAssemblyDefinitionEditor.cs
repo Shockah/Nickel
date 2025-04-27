@@ -32,7 +32,7 @@ public sealed class ExtendableAssemblyDefinitionEditor(Func<IAssemblyResolver> c
 			}
 			
 			writer.Flush();
-			return stream.GetBuffer();
+			return stream.ToArray();
 		}
 	}
 

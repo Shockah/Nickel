@@ -8,6 +8,7 @@ using Nickel.ModSettings;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -29,6 +30,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	internal static int Main(string[] args)
 	{
+		var stopwatch = Stopwatch.StartNew();
+		
 		Option<bool> vanillaOption = new(
 			name: "--vanilla",
 			description: "Whether to run the vanilla game instead.",
@@ -120,12 +123,12 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 				LogPipeName = context.ParseResult.GetValueForOption(logPipeNameOption),
 				UnmatchedArguments = context.ParseResult.UnmatchedTokens
 			};
-			context.ExitCode = CreateAndStartInstance(launchArguments);
+			context.ExitCode = CreateAndStartInstance(launchArguments, stopwatch);
 		});
 		return rootCommand.Invoke(args);
 	}
 
-	private static int CreateAndStartInstance(LaunchArguments launchArguments)
+	private static int CreateAndStartInstance(LaunchArguments launchArguments, Stopwatch stopwatch)
 	{
 		var realOut = Console.Out;
 		var loggerFactory = LoggerFactory.Create(builder =>
@@ -153,7 +156,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		{
 			var instance = new Nickel(launchArguments);
 			Instance = instance;
-			return StartInstance(instance, launchArguments, loggerFactory, logger);
+			return StartInstance(instance, launchArguments, loggerFactory, logger, stopwatch);
 		}
 		catch (Exception ex)
 		{
@@ -163,7 +166,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		}
 	}
 
-	private static int StartInstance(Nickel instance, LaunchArguments launchArguments, ILoggerFactory loggerFactory, ILogger logger)
+	private static int StartInstance(Nickel instance, LaunchArguments launchArguments, ILoggerFactory loggerFactory, ILogger logger, Stopwatch stopwatch)
 	{
 		var steamCompatDataPath = Environment.GetEnvironmentVariable("STEAM_COMPAT_DATA_PATH");
 		if (!string.IsNullOrEmpty(steamCompatDataPath))
@@ -218,7 +221,8 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 				privateModStorageDirectory,
 				loggerFactory,
 				logger,
-				extendableAssemblyDefinitionEditor
+				extendableAssemblyDefinitionEditor,
+				stopwatch
 			);
 
 			var helper = instance.ModManager.ObtainModHelper(instance.ModManager.ModLoaderPackage);

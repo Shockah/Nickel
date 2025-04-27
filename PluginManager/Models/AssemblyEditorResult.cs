@@ -1,11 +1,14 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Nanoray.PluginManager;
 
 /// <summary>
 /// The result of <see cref="IAssemblyEditor.EditAssemblyStream"/>.
 /// </summary>
-public readonly struct AssemblyEditorResult
+public readonly struct AssemblyEditorResult : IEquatable<AssemblyEditorResult>
 {
 	/// <summary>The level of a message the editor has reported.</summary>
 	public enum MessageLevel
@@ -35,4 +38,21 @@ public readonly struct AssemblyEditorResult
 	
 	/// <summary>Any messages the editor has reported.</summary>
 	public required IReadOnlyList<Message> Messages { get; init; }
+
+	/// <inheritdoc/>
+	public override bool Equals([NotNullWhen(true)] object? obj)
+		=> obj is AssemblyEditorResult other && this.Messages.SequenceEqual(other.Messages);
+
+	/// <inheritdoc/>
+	public bool Equals(AssemblyEditorResult other)
+		=> this.Messages.Equals(other.Messages);
+
+	/// <inheritdoc/>
+	public override int GetHashCode()
+	{
+		var hashcode = new HashCode();
+		foreach (var message in this.Messages)
+			hashcode.Add(message);
+		return hashcode.ToHashCode();
+	}
 }

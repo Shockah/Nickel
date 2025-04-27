@@ -9,6 +9,7 @@ using Nickel.Common;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -32,6 +33,7 @@ internal sealed class ModManager
 	private readonly ModStorageManager ModStorageManager;
 	private readonly EnumCasePool EnumCasePool;
 	private readonly DelayedHarmonyManager DelayedHarmonyManager;
+	private readonly Stopwatch Stopwatch;
 
 	internal readonly IPluginPackage<IModManifest> ModLoaderPackage;
 	private ModLoadPhaseState CurrentModLoadPhase = new(ModLoadPhase.BeforeGameAssembly, IsDone: false);
@@ -59,7 +61,8 @@ internal sealed class ModManager
 		DirectoryInfo privateModStorageDirectory,
 		ILoggerFactory loggerFactory,
 		ILogger logger,
-		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor
+		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor,
+		Stopwatch stopwatch
 	)
 	{
 		this.InternalModsDirectory = internalModsDirectory;
@@ -68,6 +71,7 @@ internal sealed class ModManager
 		this.PrivateModStorageDirectory = privateModStorageDirectory;
 		this.LoggerFactory = loggerFactory;
 		this.Logger = logger;
+		this.Stopwatch = stopwatch;
 
 		this.ModLoaderPackage = new FakePluginPackage(
 			manifest: new ModManifest
@@ -481,12 +485,7 @@ internal sealed class ModManager
 				this.CurrentModLoadPhase = new(this.CurrentModLoadPhase.Phase, IsDone: true);
 				this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
 				this.EventManager.OnModLoadPhaseFinishedEvent.Raise(null, phase);
-
-				if (phase == ModLoadPhase.AfterDbInit)
-				{
-					this.DelayedHarmonyManager.ApplyDelayedPatches();
-					this.LogHarmonyPatchesOnce();
-				}
+				this.AfterModLoadPhaseFinished(phase);
 			})
 		];
 	}
@@ -500,12 +499,18 @@ internal sealed class ModManager
 		this.CurrentModLoadPhase = new(this.CurrentModLoadPhase.Phase, IsDone: true);
 		this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
 		this.EventManager.OnModLoadPhaseFinishedEvent.Raise(null, phase);
+		this.AfterModLoadPhaseFinished(phase);
+	}
 
-		if (phase == ModLoadPhase.AfterDbInit)
-		{
-			this.DelayedHarmonyManager.ApplyDelayedPatches();
-			this.LogHarmonyPatchesOnce();
-		}
+	private void AfterModLoadPhaseFinished(ModLoadPhase phase)
+	{
+		if (phase != ModLoadPhase.AfterDbInit)
+			return;
+		
+		this.DelayedHarmonyManager.ApplyDelayedPatches();
+		this.LogHarmonyPatchesOnce();
+		
+		this.Logger.LogInformation("Finished loading in {Seconds:#.##}s.", this.Stopwatch.Elapsed.TotalSeconds);
 	}
 
 	public void LogHarmonyPatchesOnce()
