@@ -6,6 +6,7 @@
 
 ### For everyone:
 * Changed the default solo starter cards behavior for modded characters from up to 6 random commons to 4 + Basic Shot + Basic Dodge.
+* Fixed temporary single use card trait overrides not working.
 
 ### For developers:
 * The debug menu is now resizable.

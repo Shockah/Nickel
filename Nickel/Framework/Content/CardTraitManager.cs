@@ -42,7 +42,7 @@ internal class CardTraitManager
 
 		public bool IsInnatelyActive(Card card, CardData data, HashSet<ICardTraitEntry> innateCustomTraits)
 			=> innateCustomTraits.Contains(this);
-
+		
 		public void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
 		{
 			if (overrideValue is { } newOverrideValue)
@@ -110,7 +110,7 @@ internal class CardTraitManager
 		public abstract bool UpdateFieldsFromCardTraitStateIfNeeded(Card card, OverridesModData overrides, CardTraitState cardTraitState, bool realOverrides);
 	}
 
-	private class VariablePermanenceVanillaEntry(
+	private sealed class VariablePermanenceVanillaEntry(
 		IModManifest modOwner,
 		string dataFieldName,
 		string cardOverrideValueFieldName,
@@ -124,26 +124,6 @@ internal class CardTraitManager
 
 		public override int GetHashCode()
 			=> this.UniqueName.GetHashCode();
-
-		public override void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
-		{
-			base.SetPermanentOverride(card, overrides, overrideValue);
-
-			if (overrideValue is null)
-				overrides.Permanent.Remove(this.UniqueName);
-			else
-				overrides.Permanent[this.UniqueName] = overrideValue.Value;
-		}
-
-		public override void SetTemporaryOverride(Card card, OverridesModData overrides, bool? overrideValue)
-		{
-			base.SetTemporaryOverride(card, overrides, overrideValue);
-			
-			if (overrideValue is null)
-				overrides.Temporary.Remove(this.UniqueName);
-			else
-				overrides.Temporary[this.UniqueName] = overrideValue.Value;
-		}
 
 		public override bool UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides)
 		{
@@ -191,7 +171,7 @@ internal class CardTraitManager
 		}
 	}
 
-	private class TemporaryVanillaEntry(
+	private sealed class TemporaryVanillaEntry(
 		IModManifest modOwner
 	) : VanillaEntry(modOwner, nameof(CardData.temporary))
 	{
@@ -200,16 +180,6 @@ internal class CardTraitManager
 
 		public override int GetHashCode()
 			=> this.UniqueName.GetHashCode();
-
-		public override void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
-		{
-			base.SetPermanentOverride(card, overrides, overrideValue);
-			
-			if (overrideValue is null)
-				overrides.Permanent.Remove(this.UniqueName);
-			else
-				overrides.Permanent[this.UniqueName] = overrideValue.Value;
-		}
 
 		public override void SetTemporaryOverride(Card card, OverridesModData overrides, bool? overrideValue)
 			=> this.SetPermanentOverride(card, overrides, overrideValue);
@@ -243,7 +213,7 @@ internal class CardTraitManager
 		}
 	}
 
-	private class ModDataBasedPermanenceVanillaEntry(
+	private sealed class ModDataBasedPermanenceVanillaEntry(
 		IModManifest modOwner,
 		string dataFieldName,
 		string? cardOverrideValueFieldName = null,
@@ -255,26 +225,6 @@ internal class CardTraitManager
 
 		public override int GetHashCode()
 			=> this.UniqueName.GetHashCode();
-
-		public override void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
-		{
-			base.SetPermanentOverride(card, overrides, overrideValue);
-			
-			if (overrideValue is null)
-				overrides.Permanent.Remove(this.UniqueName);
-			else
-				overrides.Permanent[this.UniqueName] = overrideValue.Value;
-		}
-
-		public override void SetTemporaryOverride(Card card, OverridesModData overrides, bool? overrideValue)
-		{
-			base.SetTemporaryOverride(card, overrides, overrideValue);
-			
-			if (overrideValue is null)
-				overrides.Temporary.Remove(this.UniqueName);
-			else
-				overrides.Temporary[this.UniqueName] = overrideValue.Value;
-		}
 
 		public override bool UpdateOverridesModDataFromFieldsIfNeeded(Card card, OverridesModData overrides)
 		{
@@ -318,7 +268,7 @@ internal class CardTraitManager
 				return false;
 			
 			this.SetOverrideValue.Value(card, overrideValue);
-			overrides.LastOverrideValue[nameof(Card.temporaryOverride)] = overrideValue;
+			overrides.LastOverrideValue[cardOverrideValueFieldName] = overrideValue;
 			return true;
 		}
 	}
@@ -577,12 +527,18 @@ internal class CardTraitManager
 	{
 		if (trait is not IReadWriteCardTraitEntry rwTrait)
 			throw new NotImplementedException($"Internal error: trait {trait.UniqueName} is supposed to implement the private interface {nameof(IReadWriteCardTraitEntry)}");
-
+		
 		var overrides = this.ModDataHandler.ObtainModData<OverridesModData>(this.ModLoaderModManifest.UniqueName, card, "CustomTraitOverrides");
 		if (permanent)
 			rwTrait.SetPermanentOverride(card, overrides, overrideValue);
 		else
 			rwTrait.SetTemporaryOverride(card, overrides, overrideValue);
+
+		CardTraitStateCacheSetter.Value(card, null);
+		this.CardsWithCardTraitStateCache.Remove(card);
+		
+		var cardTraitState = this.GetCardTraitState(state, card, trait);
+		rwTrait.UpdateFieldsFromCardTraitStateIfNeeded(card, overrides, cardTraitState, false);
 
 		CardTraitStateCacheSetter.Value(card, null);
 		this.CardsWithCardTraitStateCache.Remove(card);
