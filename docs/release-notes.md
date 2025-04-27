@@ -9,6 +9,7 @@
 
 ### For developers:
 * The debug menu is now resizable.
+* Added a card trait tab to the debug menu.
 * Assembly editors now need to provide a descriptor, which can be used for caching the resulting assemblies.
 * Changed where mod data is stored for most classes, making it easier to debug.
 * `IModRegistry.AwaitApi` delegate now gets called right after a mod gets loaded, not after the whole load phase is finished.
