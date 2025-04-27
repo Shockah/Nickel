@@ -88,8 +88,12 @@ internal static class DebugMenuImprovements
 	{
 		if (g.state.IsOutsideRun())
 			return;
+
 		if (!ImGui.BeginTabItem("Traits"))
+		{
+			LastHighlightedCardId = null;
 			return;
+		}
 		
 		ImGui.SetNextWindowSizeConstraints(new Vector2(250, 400), new Vector2(5000, 5000));
 
@@ -126,12 +130,14 @@ internal static class DebugMenuImprovements
 			}
 		}
 
-		var highlightedCardId = g.boxes.FirstOrDefault(b => b.key is not null && b.key.Value.k == StableUK.card && b.IsHover())?.key?.v ?? LastHighlightedCardId;
+		var highlightedCardId = g.state.route is Combat { routeOverride: null }
+			? g.boxes.FirstOrDefault(b => b.key is not null && b.key.Value.k == StableUK.card && b.IsHover())?.key?.v ?? LastHighlightedCardId
+			: null;
 		var highlightedCard = highlightedCardId is null ? null : g.state.FindCard(highlightedCardId.Value);
 		LastHighlightedCardId = highlightedCardId;
 		
-		if (highlightedCard is not null && g.state.route is Combat combat)
-			combat.hilightedCards.Add(highlightedCard.uuid);
+		if (highlightedCard is not null && g.state.route is Combat combat2)
+			combat2.hilightedCards.Add(highlightedCard.uuid);
 
 		var size = ImGui.GetContentRegionAvail();
 		size.Y -= 40;
