@@ -644,7 +644,10 @@ internal sealed class ModManager
 					this.ResolvedMods,
 					this.ProxyManager,
 					() => this.CurrentModLoadPhase,
-					modEvents
+					modEvents,
+					this.ObtainModHelper,
+					this.ObtainLogger,
+					mod => this.UniqueNameToPackage[mod.UniqueName]
 				),
 				modEvents,
 				() => new ModContent(

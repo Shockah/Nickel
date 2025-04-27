@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Nanoray.PluginManager;
 using Nickel.Common;
 using System;
 using System.Collections.Generic;
@@ -97,4 +99,25 @@ public interface IModRegistry
 	/// If the API is already available, it gets called right away.
 	/// </param>
 	void AwaitApiOrNull<TApi>(string uniqueName, SemanticVersion? minimumVersion, Action<TApi?> callback) where TApi : class;
+
+	/// <summary>
+	/// Retrieves the mod helper for the given mod. 
+	/// </summary>
+	/// <param name="mod">The mod to retrieve the mod helper for.</param>
+	/// <returns>The mod helper for the given mod.</returns>
+	IModHelper GetModHelper(IModManifest mod);
+
+	/// <summary>
+	/// Retrieves the logger for the given mod. 
+	/// </summary>
+	/// <param name="mod">The mod to retrieve the logger for.</param>
+	/// <returns>The logger for the given mod.</returns>
+	ILogger GetLogger(IModManifest mod);
+
+	/// <summary>
+	/// Retrieves the package for the given mod. 
+	/// </summary>
+	/// <param name="mod">The mod to retrieve the package for.</param>
+	/// <returns>The package for the given mod.</returns>
+	IPluginPackage<IModManifest> GetPackage(IModManifest mod);
 }

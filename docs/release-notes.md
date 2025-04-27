@@ -13,6 +13,7 @@
 * Changed where mod data is stored for most classes, making it easier to debug.
 * `IModRegistry.AwaitApi` delegate now gets called right after a mod gets loaded, not after the whole load phase is finished.
 * Added `IModEvents.OnModLoaded`.
+* Added APIs to retrieve another mod's helper, logger and package.
 * Added APIs to retrieve all registered content for the helper/mod.
 * Added an API to amend some parts of content configuration:
     * Playable characters: `ExeCardType`, `SoloStarters` and `Babble`.

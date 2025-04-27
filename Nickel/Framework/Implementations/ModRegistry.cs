@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Nanoray.Pintail;
 using Nanoray.PluginManager;
 using Nanoray.Shrike;
@@ -21,7 +22,10 @@ internal sealed class ModRegistry(
 	IReadOnlyList<IPluginPackage<IModManifest>> resolvedModPackages,
 	IProxyManager<string> proxyManager,
 	Func<ModLoadPhaseState> currentModLoadPhaseProvider,
-	IModEvents modEvents
+	IModEvents modEvents,
+	Func<IModManifest, IModHelper> helperProvider,
+	Func<IModManifest, ILogger> loggerProvider,
+	Func<IModManifest, IPluginPackage<IModManifest>> packageProvider
 ) : IModRegistry
 {
 	public DirectoryInfo ModsDirectory { get; } = modsDirectory;
@@ -157,4 +161,13 @@ internal sealed class ModRegistry(
 		modEvents.OnModLoaded += onModLoadedDelegate.Value;
 		modEvents.OnModLoadPhaseFinished += onModLoadPhaseFinishedDelegate.Value;
 	}
+
+	public IModHelper GetModHelper(IModManifest mod)
+		=> helperProvider(mod);
+
+	public ILogger GetLogger(IModManifest mod)
+		=> loggerProvider(mod);
+
+	public IPluginPackage<IModManifest> GetPackage(IModManifest mod)
+		=> packageProvider(mod);
 }
