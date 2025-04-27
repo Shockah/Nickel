@@ -13,13 +13,16 @@ internal sealed class DictionaryModDataHandler<TRoot>(
 	public bool CanHandleType(Type type)
 		=> type.IsAssignableTo(typeof(TRoot));
 
-	public T GetModData<T>(IModManifest manifest, object o, string key)
+	public IModDataHandler GetUnderlyingHandler(object o)
+		=> this;
+
+	public T GetModData<T>(string modUniqueName, object o, string key)
 	{
 		if (!this.CanHandleType(o.GetType()))
 			throw new ArgumentException($"Invalid type {o.GetType()} of object {o}");
 		if (dictionaryGetter((TRoot)o) is not { } allObjectData)
 			throw new KeyNotFoundException($"Object {o} does not contain extension data with key `{key}`");
-		if (!allObjectData.TryGetValue(manifest.UniqueName, out var modObjectData))
+		if (!allObjectData.TryGetValue(modUniqueName, out var modObjectData))
 			throw new KeyNotFoundException($"Object {o} does not contain extension data with key `{key}`");
 		if (!modObjectData.TryGetValue(key, out var data))
 			throw new KeyNotFoundException($"Object {o} does not contain extension data with key `{key}`");
@@ -30,7 +33,7 @@ internal sealed class DictionaryModDataHandler<TRoot>(
 		return result;
 	}
 
-	public bool TryGetModData<T>(IModManifest manifest, object o, string key, [MaybeNullWhen(false)] out T data)
+	public bool TryGetModData<T>(string modUniqueName, object o, string key, [MaybeNullWhen(false)] out T data)
 	{
 		if (!this.CanHandleType(o.GetType()))
 			throw new ArgumentException($"Invalid type {o.GetType()} of object {o}");
@@ -39,7 +42,7 @@ internal sealed class DictionaryModDataHandler<TRoot>(
 			data = default;
 			return false;
 		}
-		if (!allObjectData.TryGetValue(manifest.UniqueName, out var modObjectData))
+		if (!allObjectData.TryGetValue(modUniqueName, out var modObjectData))
 		{
 			data = default;
 			return false;
@@ -56,18 +59,18 @@ internal sealed class DictionaryModDataHandler<TRoot>(
 		return true;
 	}
 
-	public bool ContainsModData(IModManifest manifest, object o, string key)
+	public bool ContainsModData(string modUniqueName, object o, string key)
 	{
 		if (!this.CanHandleType(o.GetType()))
 			throw new ArgumentException($"Invalid type {o.GetType()} of object {o}");
 		if (dictionaryGetter((TRoot)o) is not { } allObjectData)
 			return false;
-		if (!allObjectData.TryGetValue(manifest.UniqueName, out var modObjectData))
+		if (!allObjectData.TryGetValue(modUniqueName, out var modObjectData))
 			return false;
 		return modObjectData.ContainsKey(key);
 	}
 
-	public void SetModData<T>(IModManifest manifest, object o, string key, T data)
+	public void SetModData<T>(string modUniqueName, object o, string key, T data)
 	{
 		if (!this.CanHandleType(o.GetType()))
 			throw new ArgumentException($"Invalid type {o.GetType()} of object {o}");
@@ -77,39 +80,39 @@ internal sealed class DictionaryModDataHandler<TRoot>(
 			dictionarySetter((TRoot)o, allObjectData);
 		}
 		
-		ref var modObjectData = ref CollectionsMarshal.GetValueRefOrAddDefault(allObjectData, manifest.UniqueName, out var modObjectDataExists);
+		ref var modObjectData = ref CollectionsMarshal.GetValueRefOrAddDefault(allObjectData, modUniqueName, out var modObjectDataExists);
 		if (!modObjectDataExists)
 			modObjectData = [];
 		modObjectData![key] = data;
 	}
 
-	public void RemoveModData(IModManifest manifest, object o, string key)
+	public void RemoveModData(string modUniqueName, object o, string key)
 	{
 		if (!this.CanHandleType(o.GetType()))
 			throw new ArgumentException($"Invalid type {o.GetType()} of object {o}");
 		if (dictionaryGetter((TRoot)o) is not { } allObjectData)
 			return;
 		
-		if (allObjectData.TryGetValue(manifest.UniqueName, out var modObjectData))
+		if (allObjectData.TryGetValue(modUniqueName, out var modObjectData))
 		{
 			modObjectData.Remove(key);
 			if (modObjectData.Count == 0)
-				allObjectData.Remove(manifest.UniqueName);
+				allObjectData.Remove(modUniqueName);
 		}
 		if (allObjectData.Count == 0)
 			dictionarySetter((TRoot)o, null);
 	}
 
-	public void CopyOwnedModData(IModManifest manifest, object from, object to)
+	public bool TryCopyOwnedModDataDirectly(string modUniqueName, object from, object to)
 	{
 		if (!this.CanHandleType(from.GetType()))
-			throw new ArgumentException($"Invalid type {from.GetType()} of object {from}");
+			return false;
 		if (!this.CanHandleType(to.GetType()))
-			throw new ArgumentException($"Invalid type {to.GetType()} of object {to}");
+			return false;
 		if (dictionaryGetter((TRoot)from) is not { } allSourceObjectData)
-			return;
-		if (!allSourceObjectData.TryGetValue(manifest.UniqueName, out var sourceModObjectData))
-			return;
+			return true;
+		if (!allSourceObjectData.TryGetValue(modUniqueName, out var sourceModObjectData))
+			return true;
 
 		if (dictionaryGetter((TRoot)to) is not { } allTargetObjectData)
 		{
@@ -117,22 +120,23 @@ internal sealed class DictionaryModDataHandler<TRoot>(
 			dictionarySetter((TRoot)to, allTargetObjectData);
 		}
 
-		ref var targetModObjectData = ref CollectionsMarshal.GetValueRefOrAddDefault(allTargetObjectData, manifest.UniqueName, out var targetModObjectDataExists);
+		ref var targetModObjectData = ref CollectionsMarshal.GetValueRefOrAddDefault(allTargetObjectData, modUniqueName, out var targetModObjectDataExists);
 		if (!targetModObjectDataExists)
 			targetModObjectData = [];
 
 		foreach (var (key, value) in sourceModObjectData)
 			targetModObjectData![key] = NickelStatic.DeepCopyObject(value);
+		return true;
 	}
 
-	public void CopyAllModData(object from, object to)
+	public bool TryCopyAllModDataDirectly(object from, object to)
 	{
 		if (!this.CanHandleType(from.GetType()))
-			throw new ArgumentException($"Invalid type {from.GetType()} of object {from}");
+			return false;
 		if (!this.CanHandleType(to.GetType()))
-			throw new ArgumentException($"Invalid type {to.GetType()} of object {to}");
+			return false;
 		if (dictionaryGetter((TRoot)from) is not { } allSourceObjectData)
-			return;
+			return true;
 		
 		if (dictionaryGetter((TRoot)to) is not { } allTargetObjectData)
 		{
@@ -149,5 +153,28 @@ internal sealed class DictionaryModDataHandler<TRoot>(
 			foreach (var (key, value) in sourceModObjectData)
 				targetModObjectData![key] = NickelStatic.DeepCopyObject(value);
 		}
+		return true;
+	}
+
+	public IEnumerable<KeyValuePair<string, object?>> GetAllOwnedModData(string modUniqueName, object o)
+	{
+		if (!this.CanHandleType(o.GetType()))
+			throw new ArgumentException($"Invalid type {o.GetType()} of object {o}");
+		if (dictionaryGetter((TRoot)o) is not { } allObjectData)
+			yield break;
+		if (!allObjectData.TryGetValue(modUniqueName, out var modObjectData))
+			yield break;
+		foreach (var kvp in modObjectData)
+			yield return kvp;
+	}
+
+	public IEnumerable<KeyValuePair<string, IEnumerable<KeyValuePair<string, object?>>>> GetAllModData(object o)
+	{
+		if (!this.CanHandleType(o.GetType()))
+			throw new ArgumentException($"Invalid type {o.GetType()} of object {o}");
+		if (dictionaryGetter((TRoot)o) is not { } allObjectData)
+			yield break;
+		foreach (var (key, value) in allObjectData)
+			yield return new KeyValuePair<string, IEnumerable<KeyValuePair<string, object?>>>(key, value);
 	}
 }

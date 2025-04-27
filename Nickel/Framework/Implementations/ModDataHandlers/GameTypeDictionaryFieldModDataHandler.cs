@@ -57,27 +57,36 @@ internal sealed class GameTypeDictionaryFieldModDataHandler : IModDataHandler
 		return this.Handler.Value.CanHandleType(type);
 	}
 
-	public T GetModData<T>(IModManifest manifest, object o, string key)
-		=> this.GetHandlerOrThrow().GetModData<T>(manifest, o, key);
+	public IModDataHandler GetUnderlyingHandler(object o)
+		=> this.GetHandlerOrThrow();
 
-	public bool TryGetModData<T>(IModManifest manifest, object o, string key, [MaybeNullWhen(false)] out T data)
-		=> this.GetHandlerOrThrow().TryGetModData(manifest, o, key, out data);
+	public T GetModData<T>(string modUniqueName, object o, string key)
+		=> this.GetHandlerOrThrow().GetModData<T>(modUniqueName, o, key);
 
-	public bool ContainsModData(IModManifest manifest, object o, string key)
-		=> this.GetHandlerOrThrow().ContainsModData(manifest, o, key);
+	public bool TryGetModData<T>(string modUniqueName, object o, string key, [MaybeNullWhen(false)] out T data)
+		=> this.GetHandlerOrThrow().TryGetModData(modUniqueName, o, key, out data);
 
-	public void SetModData<T>(IModManifest manifest, object o, string key, T data)
-		=> this.GetHandlerOrThrow().SetModData(manifest, o, key, data);
+	public bool ContainsModData(string modUniqueName, object o, string key)
+		=> this.GetHandlerOrThrow().ContainsModData(modUniqueName, o, key);
 
-	public void RemoveModData(IModManifest manifest, object o, string key)
-		=> this.GetHandlerOrThrow().RemoveModData(manifest, o, key);
+	public void SetModData<T>(string modUniqueName, object o, string key, T data)
+		=> this.GetHandlerOrThrow().SetModData(modUniqueName, o, key, data);
 
-	public void CopyOwnedModData(IModManifest manifest, object from, object to)
-		=> this.GetHandlerOrThrow().CopyOwnedModData(manifest, from, to);
+	public void RemoveModData(string modUniqueName, object o, string key)
+		=> this.GetHandlerOrThrow().RemoveModData(modUniqueName, o, key);
 
-	public void CopyAllModData(object from, object to)
-		=> this.GetHandlerOrThrow().CopyAllModData(from, to);
-	
-	public T ObtainModData<T>(IModManifest manifest, object o, string key, Func<T> factory)
-		=> this.GetHandlerOrThrow().ObtainModData(manifest, o, key, factory);
+	public bool TryCopyOwnedModDataDirectly(string modUniqueName, object from, object to)
+		=> this.GetHandlerOrThrow().TryCopyOwnedModDataDirectly(modUniqueName, from, to);
+
+	public bool TryCopyAllModDataDirectly(object from, object to)
+		=> this.GetHandlerOrThrow().TryCopyAllModDataDirectly(from, to);
+
+	public IEnumerable<KeyValuePair<string, object?>> GetAllOwnedModData(string modUniqueName, object o)
+		=> this.GetHandlerOrThrow().GetAllOwnedModData(modUniqueName, o);
+
+	public IEnumerable<KeyValuePair<string, IEnumerable<KeyValuePair<string, object?>>>> GetAllModData(object o)
+		=> this.GetHandlerOrThrow().GetAllModData(o);
+
+	public T ObtainModData<T>(string modUniqueName, object o, string key, Func<T> factory)
+		=> this.GetHandlerOrThrow().ObtainModData(modUniqueName, o, key, factory);
 }
