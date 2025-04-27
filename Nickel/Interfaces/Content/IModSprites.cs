@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Nanoray.PluginManager;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Nickel;
@@ -11,6 +12,11 @@ namespace Nickel;
 /// </summary>
 public interface IModSprites
 {
+	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, ISpriteEntry> RegisteredSprites { get; }
+	
 	/// <summary>
 	/// Retrieves an <see cref="ISpriteEntry"/> for a given <see cref="Spr"/>.
 	/// </summary>

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Nickel;
 
@@ -8,6 +9,11 @@ namespace Nickel;
 /// </summary>
 public interface IModEnemies
 {
+	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, IEnemyEntry> RegisteredEnemies { get; }
+	
 	/// <summary>
 	/// Lookup an enemy <see cref="AI"/> entry by its class type.
 	/// </summary>

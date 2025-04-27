@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Nickel;
 
 /// <summary>
@@ -6,6 +8,11 @@ namespace Nickel;
 /// </summary>
 public interface IModStatuses
 {
+	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, IStatusEntry> RegisteredStatuses { get; }
+	
 	/// <summary>
 	/// Lookup a <see cref="Status"/> entry by its enum constant.
 	/// </summary>

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Nickel;
 
@@ -8,6 +9,11 @@ namespace Nickel;
 /// </summary>
 public interface IModArtifacts
 {
+	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, IArtifactEntry> RegisteredArtifacts { get; }
+	
 	/// <summary>
 	/// Lookup an <see cref="Artifact"/> entry by its class type.
 	/// </summary>

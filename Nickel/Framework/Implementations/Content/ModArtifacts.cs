@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Nickel;
 
@@ -7,6 +8,11 @@ internal sealed class ModArtifacts(
 	Func<ArtifactManager> artifactManagerProvider
 ) : IModArtifacts
 {
+	public IReadOnlyDictionary<string, IArtifactEntry> RegisteredArtifacts
+		=> this.RegisteredArtifactStorage;
+	
+	private readonly Dictionary<string, IArtifactEntry> RegisteredArtifactStorage = [];
+
 	public IArtifactEntry? LookupByArtifactType(Type artifactType)
 		=> artifactManagerProvider().LookupByArtifactType(artifactType);
 
@@ -14,8 +20,16 @@ internal sealed class ModArtifacts(
 		=> artifactManagerProvider().LookupByUniqueName(uniqueName);
 
 	public IArtifactEntry RegisterArtifact(ArtifactConfiguration configuration)
-		=> artifactManagerProvider().RegisterArtifact(modManifest, configuration.ArtifactType.Name, configuration);
+	{
+		var entry = artifactManagerProvider().RegisterArtifact(modManifest, configuration.ArtifactType.Name, configuration);
+		this.RegisteredArtifactStorage[configuration.ArtifactType.Name] = entry;
+		return entry;
+	}
 
 	public IArtifactEntry RegisterArtifact(string name, ArtifactConfiguration configuration)
-		=> artifactManagerProvider().RegisterArtifact(modManifest, name, configuration);
+	{
+		var entry = artifactManagerProvider().RegisterArtifact(modManifest, name, configuration);
+		this.RegisteredArtifactStorage[name] = entry;
+		return entry;
+	}
 }

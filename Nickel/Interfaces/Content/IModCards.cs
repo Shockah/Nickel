@@ -11,6 +11,16 @@ namespace Nickel;
 public interface IModCards
 {
 	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, ICardEntry> RegisteredCards { get; }
+	
+	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, ICardTraitEntry> RegisteredTraits { get; }
+	
+	/// <summary>
 	/// Lookup a <see cref="Card"/> entry by its class type.
 	/// </summary>
 	/// <param name="cardType">The type to retrieve an entry for.</param>

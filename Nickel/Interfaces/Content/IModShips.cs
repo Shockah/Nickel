@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Nickel;
 
 /// <summary>
@@ -6,6 +8,21 @@ namespace Nickel;
 /// </summary>
 public interface IModShips
 {
+	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, IShipEntry> RegisteredShips { get; }
+	
+	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, IPartTypeEntry> RegisteredPartTypes { get; }
+	
+	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, IPartEntry> RegisteredParts { get; }
+	
 	/// <summary>
 	/// Lookup a <see cref="StarterShip"/> entry by its full <see cref="IModOwned.UniqueName"/>.
 	/// </summary>

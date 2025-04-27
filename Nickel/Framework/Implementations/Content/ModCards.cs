@@ -10,6 +10,14 @@ internal sealed class ModCards(
 	Func<CardTraitManager> cardTraitManagerProvider
 ) : IModCards
 {
+	public IReadOnlyDictionary<string, ICardEntry> RegisteredCards
+		=> this.RegisteredCardStorage;
+	
+	public IReadOnlyDictionary<string, ICardTraitEntry> RegisteredTraits
+		=> this.RegisteredTraitStorage;
+	
+	private readonly Dictionary<string, ICardEntry> RegisteredCardStorage = [];
+	private readonly Dictionary<string, ICardTraitEntry> RegisteredTraitStorage = [];
 	private readonly Dictionary<EventHandler<GetVolatileCardTraitOverridesEventArgs>, EventHandler<GetFinalDynamicCardTraitOverridesEventArgs>> ObsoleteVolatileToFinalEventHandlers = [];
 
 	public ICardEntry? LookupByCardType(Type cardType)
@@ -19,10 +27,18 @@ internal sealed class ModCards(
 		=> cardManagerProvider().LookupByUniqueName(uniqueName);
 
 	public ICardEntry RegisterCard(CardConfiguration configuration)
-		=> cardManagerProvider().RegisterCard(modManifest, configuration.CardType.Name, configuration);
+	{
+		var entry = cardManagerProvider().RegisterCard(modManifest, configuration.CardType.Name, configuration);
+		this.RegisteredCardStorage[configuration.CardType.Name] = entry;
+		return entry;
+	}
 
 	public ICardEntry RegisterCard(string name, CardConfiguration configuration)
-		=> cardManagerProvider().RegisterCard(modManifest, name, configuration);
+	{
+		var entry = cardManagerProvider().RegisterCard(modManifest, name, configuration);
+		this.RegisteredCardStorage[name] = entry;
+		return entry;
+	}
 
 	public ICardTraitEntry ExhaustCardTrait
 		=> cardTraitManagerProvider().ExhaustCardTrait;
@@ -52,7 +68,11 @@ internal sealed class ModCards(
 		=> cardTraitManagerProvider().LookupByUniqueName(uniqueName);
 
 	public ICardTraitEntry RegisterTrait(string name, CardTraitConfiguration configuration)
-		=> cardTraitManagerProvider().RegisterTrait(modManifest, name, configuration);
+	{
+		var entry = cardTraitManagerProvider().RegisterTrait(modManifest, name, configuration);
+		this.RegisteredTraitStorage[name] = entry;
+		return entry;
+	}
 
 	public IReadOnlySet<ICardTraitEntry> GetActiveCardTraits(State state, Card card)
 		=> cardTraitManagerProvider().GetActiveCardTraits(state, card);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Nickel;
 
@@ -7,6 +8,11 @@ internal sealed class ModEnemies(
 	Func<EnemyManager> enemyManagerProvider
 ) : IModEnemies
 {
+	public IReadOnlyDictionary<string, IEnemyEntry> RegisteredEnemies
+		=> this.RegisteredEnemyStorage;
+	
+	private readonly Dictionary<string, IEnemyEntry> RegisteredEnemyStorage = [];
+	
 	public IEnemyEntry? LookupByEnemyType(Type enemyType)
 		=> enemyManagerProvider().LookupByEnemyType(enemyType);
 
@@ -14,8 +20,16 @@ internal sealed class ModEnemies(
 		=> enemyManagerProvider().LookupByUniqueName(uniqueName);
 
 	public IEnemyEntry RegisterEnemy(EnemyConfiguration configuration)
-		=> enemyManagerProvider().RegisterEnemy(modManifest, configuration.EnemyType.Name, configuration);
+	{
+		var entry = enemyManagerProvider().RegisterEnemy(modManifest, configuration.EnemyType.Name, configuration);
+		this.RegisteredEnemyStorage[configuration.EnemyType.Name] = entry;
+		return entry;
+	}
 
 	public IEnemyEntry RegisterEnemy(string name, EnemyConfiguration configuration)
-		=> enemyManagerProvider().RegisterEnemy(modManifest, name, configuration);
+	{
+		var entry = enemyManagerProvider().RegisterEnemy(modManifest, name, configuration);
+		this.RegisteredEnemyStorage[name] = entry;
+		return entry;
+	}
 }

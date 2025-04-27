@@ -1,6 +1,7 @@
 ﻿using FMOD;
 using Nanoray.PluginManager;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Nickel;
@@ -11,6 +12,11 @@ namespace Nickel;
 /// </summary>
 public interface IModAudio
 {
+	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, IModSoundEntry> RegisteredSounds { get; }
+	
 	/// <summary>
 	/// Retrieves an <see cref="ISoundEntry"/> for a given FMOD bank event ID.
 	/// </summary>

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Nickel;
 
 /// <summary>
@@ -6,6 +8,21 @@ namespace Nickel;
 /// </summary>
 public interface IModCharactersV2
 {
+	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, IPlayableCharacterEntryV2> RegisteredPlayableCharacters { get; }
+	
+	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, INonPlayableCharacterEntryV2> RegisteredNonPlayableCharacters { get; }
+	
+	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, ICharacterAnimationEntryV2> RegisteredCharacterAnimations { get; }
+	
 	/// <summary>
 	/// Registers an animation for a <see cref="Character"/>.
 	/// </summary>

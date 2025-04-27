@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Nickel;
 
@@ -7,6 +8,11 @@ internal sealed class ModDecks(
 	Func<DeckManager> deckManagerProvider
 ) : IModDecks
 {
+	public IReadOnlyDictionary<string, IDeckEntry> RegisteredDecks
+		=> this.RegisteredDeckStorage;
+	
+	private readonly Dictionary<string, IDeckEntry> RegisteredDeckStorage = [];
+	
 	public IDeckEntry? LookupByDeck(Deck deck)
 		=> deckManagerProvider().LookupByDeck(deck);
 
@@ -14,5 +20,9 @@ internal sealed class ModDecks(
 		=> deckManagerProvider().LookupByUniqueName(uniqueName);
 
 	public IDeckEntry RegisterDeck(string name, DeckConfiguration configuration)
-		=> deckManagerProvider().RegisterDeck(modManifest, name, configuration);
+	{
+		var entry = deckManagerProvider().RegisterDeck(modManifest, name, configuration);
+		this.RegisteredDeckStorage[name] = entry;
+		return entry;
+	}
 }

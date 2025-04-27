@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Nickel;
 
 /// <summary>
@@ -6,6 +8,11 @@ namespace Nickel;
 /// </summary>
 public interface IModDecks
 {
+	/// <summary>
+	/// A dictionary containing all entries registered by the owner of this helper.
+	/// </summary>
+	IReadOnlyDictionary<string, IDeckEntry> RegisteredDecks { get; }
+	
 	/// <summary>
 	/// Lookup a <see cref="Deck"/> entry by its enum constant.
 	/// </summary>

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Nickel;
@@ -12,6 +13,11 @@ internal sealed class ModAudio(
 	ILogger logger
 ) : IModAudio
 {
+	public IReadOnlyDictionary<string, IModSoundEntry> RegisteredSounds
+		=> this.RegisteredSoundStorage;
+	
+	private readonly Dictionary<string, IModSoundEntry> RegisteredSoundStorage = [];
+	
 	public IEventSoundEntry? LookupSoundByEventId(GUID eventId)
 		=> audioManagerProvider().LookupSoundByEventId(eventId);
 
@@ -34,21 +40,36 @@ internal sealed class ModAudio(
 		
 		if (!file.Exists)
 			logger.LogWarning("Registering a sound `{Name}` from path `{Path}` that does not exist.", soundName, file.FullName);
-		return audioManagerProvider().RegisterSound(package.Manifest, soundName, file.OpenRead);
+		
+		var entry = audioManagerProvider().RegisterSound(package.Manifest, soundName, file.OpenRead);
+		this.RegisteredSoundStorage[soundName] = entry;
+		return entry;
 	}
 
 	public IModSoundEntry RegisterSound(string name, IFileInfo file)
 	{
 		if (!file.Exists)
 			logger.LogWarning("Registering a sound `{Name}` from path `{Path}` that does not exist.", name, file.FullName);
-		return audioManagerProvider().RegisterSound(package.Manifest, name, file.OpenRead);
+		
+		var entry = audioManagerProvider().RegisterSound(package.Manifest, name, file.OpenRead);
+		this.RegisteredSoundStorage[name] = entry;
+		return entry;
 	}
 
 	public IModSoundEntry RegisterSound(Func<Stream> streamProvider)
-		=> audioManagerProvider().RegisterSound(package.Manifest, Guid.NewGuid().ToString(), streamProvider);
+	{
+		var name = Guid.NewGuid().ToString();
+		var entry = audioManagerProvider().RegisterSound(package.Manifest, name, streamProvider);
+		this.RegisteredSoundStorage[name] = entry;
+		return entry;
+	}
 
 	public IModSoundEntry RegisterSound(string name, Func<Stream> streamProvider)
-		=> audioManagerProvider().RegisterSound(package.Manifest, name, streamProvider);
+	{
+		var entry = audioManagerProvider().RegisterSound(package.Manifest, name, streamProvider);
+		this.RegisteredSoundStorage[name] = entry;
+		return entry;
+	}
 	
 	public TEntry RegisterSound<TEntry, TArgs>(ICustomSoundEntryFactory<TEntry, TArgs> factory, TArgs args) where TEntry : ICustomSoundEntry
 		=> audioManagerProvider().RegisterSound(factory, package.Manifest, factory.GetDefaultName(package.Manifest, args), args);
