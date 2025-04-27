@@ -8,6 +8,7 @@
 * Changed the default solo starter cards behavior for modded characters from up to 6 random commons to 4 + Basic Shot + Basic Dodge.
 
 ### For developers:
+* The debug menu is now resizable.
 * Assembly editors now need to provide a descriptor, which can be used for caching the resulting assemblies.
 * Changed where mod data is stored for most classes, making it easier to debug.
 * `IModRegistry.AwaitApi` delegate now gets called right after a mod gets loaded, not after the whole load phase is finished.

@@ -81,6 +81,7 @@ public sealed class ModEntry : SimpleMod
 		CardCodexFiltering.ApplyPatches(harmony);
 		CrewAndShipSorting.ApplyPatches(harmony);
 		CrewSelection.ApplyPatches(harmony);
+		DebugMenuImprovements.ApplyPatches(harmony);
 		ExeBlacklist.ApplyPatches(harmony);
 		LogbookReplacement.ApplyPatches(harmony);
 		MemorySelection.ApplyPatches(harmony);
