@@ -345,6 +345,7 @@ internal sealed class CharacterManager
 				return new NonPlayableCharacterEntry(
 					this.VanillaModManifest,
 					characterType,
+					characterType,
 					new()
 					{
 						CharacterType = characterType,
@@ -435,7 +436,8 @@ internal sealed class CharacterManager
 		if (this.UniqueNameToPlayableCharacterEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A character with the unique name `{uniqueName}` is already registered", nameof(name));
 		
-		var entry = new NonPlayableCharacterEntry(owner, uniqueName, v2, this.Amend);
+		var characterType = $"{owner.UniqueName}::{v2.CharacterType}";
+		var entry = new NonPlayableCharacterEntry(owner, uniqueName, characterType, v2, this.Amend);
 		this.UniqueNameToNonPlayableCharacterEntry[entry.UniqueName] = entry;
 		this.CharacterTypeToCharacterEntry[entry.CharacterType] = entry;
 		this.NonPlayableCharacterManager.QueueOrInject(entry);
@@ -865,6 +867,7 @@ internal sealed class CharacterManager
 	private sealed class NonPlayableCharacterEntry(
 		IModManifest modOwner,
 		string uniqueName,
+		string characterType,
 		NonPlayableCharacterConfigurationV2 v2,
 		Action<NonPlayableCharacterEntry, NonPlayableCharacterConfigurationV2.Amends> amendDelegate
 	) : INonPlayableCharacterEntryV2
@@ -873,7 +876,7 @@ internal sealed class CharacterManager
 		
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
-		public string CharacterType => this.V2.CharacterType;
+		public string CharacterType { get; } = characterType;
 		public CharacterBabbleConfiguration? Babble => this.V2.Babble;
 		
 		NonPlayableCharacterConfigurationV2 INonPlayableCharacterEntryV2.Configuration => this.V2;
