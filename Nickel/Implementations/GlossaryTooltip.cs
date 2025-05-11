@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 
 namespace Nickel;
@@ -59,7 +60,9 @@ public sealed class GlossaryTooltip(string key) : TTGlossary(key)
 		{
 			if (this.Icon is not null || !string.IsNullOrEmpty(this.Title))
 				sb.Append('\n');
-			sb.Append(this.Description);
+			
+			var args = this.vals?.Select(object (v) => "<c=boldPink>{0}</c>".FF(v.ToString() ?? "")).ToArray() ?? [];
+			sb.Append(string.Format(this.Description, args));
 		}
 
 		var rect = Draw.Text(sb.ToString(), 0, 0, color: Colors.textMain, maxWidth: 100, dontDraw: true);
