@@ -95,7 +95,7 @@ internal static class DebugMenuImprovements
 			return;
 		}
 		
-		ImGui.SetNextWindowSizeConstraints(new Vector2(250, 400), new Vector2(5000, 5000));
+		ImGui.SetNextWindowSizeConstraints(new Vector2(250, 200), new Vector2(5000, 5000));
 
 		var items = AllTraits.Value
 			.Select(e =>
@@ -139,11 +139,12 @@ internal static class DebugMenuImprovements
 		if (highlightedCard is not null && g.state.route is Combat combat2)
 			combat2.hilightedCards.Add(highlightedCard.uuid);
 
-		var size = ImGui.GetContentRegionAvail();
-		size.Y -= 40;
+		var style = ImGui.GetStyle();
+		var windowSize = ImGui.GetWindowSize();
+		var winX = windowSize.X - style.WindowPadding.X * 2;
 		
 		ImGui.PushItemWidth(-1);
-		if (ImGui.BeginListBox("## Traits"))
+		if (ImGui.BeginListBox("## Traits", new Vector2(winX, 270)))
 		{
 			for (var i = 0; i < items.Count; i++) {
 				var item = items[i];
@@ -172,11 +173,15 @@ internal static class DebugMenuImprovements
 			}
 			ImGui.EndListBox();
 		}
-		
+
 		ImGui.BeginGroup();
 		ImGui.Text("Highlighted card overrides (Right Click to remove)");
 		ImGui.PushItemWidth(-1);
-		if (ImGui.BeginListBox("## Highlighted card overrides"))
+		
+		var winY = Math.Max(60, windowSize.Y - (windowSize.Y - ImGui.GetContentRegionAvail().Y));
+
+		var highlightedCardBoxSize = new Vector2(winX, winY);
+		if (ImGui.BeginListBox("## Highlighted card overrides", highlightedCardBoxSize))
 		{
 			if (highlightedCard is not null)
 			{
