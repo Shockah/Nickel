@@ -4,6 +4,7 @@
 
 ## Upcoming release
 
+* Fixed non-playable character types not having their name localizations injected.
 * Fixed non-playable character types not prefixing their internal `CharacterType` with the mod ID. This may break mods adding non-playable (enemy, story) characters.
 
 ## 1.16.0

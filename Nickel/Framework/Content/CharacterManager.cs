@@ -73,6 +73,8 @@ internal sealed class CharacterManager
 	{
 		foreach (var entry in this.UniqueNameToPlayableCharacterEntry.Values)
 			this.InjectLocalization(locale, localizations, entry);
+		foreach (var entry in this.UniqueNameToNonPlayableCharacterEntry.Values)
+			this.InjectLocalization(locale, localizations, entry);
 	}
 	
 	private PlayableCharacterEntry CreateForVanilla(Deck deck)
