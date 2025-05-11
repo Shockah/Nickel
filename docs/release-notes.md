@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.16.1
+Released 11 May 2025.
 
 * Moved game path detection to before any mod loading, making any errors related to that more obvious.
 * Fixed non-playable character types not having their name localizations injected.
