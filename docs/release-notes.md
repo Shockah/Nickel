@@ -4,9 +4,10 @@
 
 ## Upcoming release
 
+* Moved game path detection to before any mod loading, making any errors related to that more obvious.
 * Fixed non-playable character types not having their name localizations injected.
 * Fixed non-playable character types not prefixing their internal `CharacterType` with the mod ID. This may break mods adding non-playable (enemy, story) characters.
-* Moved game path detection to before any mod loading, making any errors related to that more obvious.
+* Fixed rendering of `[Status] = X` kind of actions (thanks to [@urufu765](https://github.com/urufu765)!).
 
 ## 1.16.0
 Released 27 April 2025.
