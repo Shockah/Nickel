@@ -11,6 +11,7 @@
 * Fixed modded tooltips using `GlossaryTooltip` not utilizing the provided `vals`, causing text formatting issues.
 * Fixed mod descriptions not quite obeying the keybind chosen for displaying them.
 * Fixed Nickel's sprite culling optimization being a bit too eager for rotated sprites, causing some sprites to blink into existence.
+* Fixed dialogue handling, causing some dialogue to go missing after restarting the session.
 
 ## 1.16.0
 Released 27 April 2025.

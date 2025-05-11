@@ -23,6 +23,7 @@ public sealed class ModEntry : SimpleMod
 		);
 
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new ReboundReagentDefinitionEditor());
+		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new ShoutDefinitionEditor());
 
 		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
 		{
