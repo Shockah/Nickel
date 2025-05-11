@@ -183,6 +183,18 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 		var resolveResultOrError = cobaltCoreResolver.ResolveCobaltCore();
 		CobaltCoreResolveResult? nullableResolveResult = resolveResultOrError.IsT0 ? resolveResultOrError.AsT0 : null;
+		
+		if (resolveResultOrError.TryPickT1(out var error, out var resolveResult))
+		{
+			logger.LogCritical("Could not resolve Cobalt Core: {Error}", error.Value);
+			return -1;
+		}
+
+		var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? resolveResult.WorkingDirectory;
+		logger.LogInformation("GameWorkingDirectory: {Path}", PathUtilities.SanitizePath(gameWorkingDirectory.FullName));
+		
+		using (var exeStream = resolveResult.ExePath.OpenRead())
+			logger.LogDebug("Game EXE hash: {Hash}", Convert.ToHexString(MD5.HashData(exeStream)));
 
 		var extendableAssemblyDefinitionEditor = new ExtendableAssemblyDefinitionEditor(() => new CompoundAssemblyResolver([
 			new CobaltCoreAssemblyResolver(nullableResolveResult),
@@ -240,15 +252,6 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			}
 			instance.ModManager.LoadMods(ModLoadPhase.BeforeGameAssembly);
 		}
-		
-		if (resolveResultOrError.TryPickT1(out var error, out var resolveResult))
-		{
-			logger.LogCritical("Could not resolve Cobalt Core: {Error}", error.Value);
-			return -1;
-		}
-		
-		using (var exeStream = resolveResult.ExePath.OpenRead())
-			logger.LogDebug("Game EXE hash: {Hash}", Convert.ToHexString(MD5.HashData(exeStream)));
 
 		var handler = new CobaltCoreHandler(logger, extendableAssemblyDefinitionEditor);
 		var handlerResultOrError = handler.SetupGame(resolveResult);
@@ -292,9 +295,6 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		var version = GetVanillaVersion();
 		logger.LogInformation("Game version: {Version}", version);
 
-		var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? handlerResult.WorkingDirectory;
-		logger.LogInformation("GameWorkingDirectory: {Path}", PathUtilities.SanitizePath(gameWorkingDirectory.FullName));
-
 		if (!launchArguments.Vanilla)
 		{
 			instance.SaveManager = new(
@@ -323,6 +323,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		FeatureFlags.Modded = instance.DebugMode != DebugMode.Disabled || !launchArguments.Vanilla;
 
 		var oldWorkingDirectory = Directory.GetCurrentDirectory();
+		var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? handlerResult.WorkingDirectory;
 		Directory.SetCurrentDirectory(gameWorkingDirectory.FullName);
 
 #pragma warning disable CA2254 // Template should be a static expression
