@@ -114,8 +114,6 @@ internal static class ModDescriptions
 
 	private static List<Tooltip> AddModTooltipIfNeeded(List<Tooltip> tooltips, IModOwned? entry)
 	{
-		if (!Input.alt)
-			return tooltips;
 		if (!ShouldShowModDescription(entry))
 			return tooltips;
 
