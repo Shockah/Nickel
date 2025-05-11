@@ -49,10 +49,10 @@ public sealed class ModEntry : SimpleMod
 		RockFactoryFixes.ApplyPatches(harmony);
 		RunSummaryCardOrderFixes.ApplyPatches(harmony);
 		SecondOpinionsFixes.ApplyPatches(harmony);
+		SetStatusXFixes.ApplyPatches(harmony);
 		SurviveVulnerabilityFixes.ApplyPatches(harmony);
 		UnimplementedActionFeaturesFixes.ApplyPatches(harmony);
 
 		SpriteCulling.ApplyPatches(harmony);
-		SetXRenderer.ApplyPatches(harmony);
 	}
 }
