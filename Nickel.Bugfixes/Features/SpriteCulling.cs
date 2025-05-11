@@ -76,9 +76,9 @@ internal static class SpriteCulling
 		else if (rotationOriginRelative.HasValue)
 			bbox = new Rect(bbox.x - rotationOriginRelative.Value.x * bbox.w, bbox.y - rotationOriginRelative.Value.y * bbox.h, bbox.w, bbox.h);
 		
-		// being lazy with it, just expand the bbox to twice its size
+		// being lazy with it, just expand the bbox to thrice its size
 		if (rotation != 0)
-			bbox = new Rect(bbox.x - bbox.w, bbox.y - bbox.h, bbox.w * 2, bbox.h * 2);
+			bbox = new Rect(bbox.x - bbox.w, bbox.y - bbox.h, bbox.w * 3, bbox.h * 3);
 
 		if (bbox.x < mg.PIX_W && bbox.x2 > 0 && bbox.y < mg.PIX_H && bbox.y2 > 0)
 			return true;

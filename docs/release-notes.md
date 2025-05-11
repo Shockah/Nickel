@@ -10,6 +10,7 @@
 * Fixed rendering of `[Status] = X` kind of actions (thanks to [@urufu765](https://github.com/urufu765)!).
 * Fixed modded tooltips using `GlossaryTooltip` not utilizing the provided `vals`, causing text formatting issues.
 * Fixed mod descriptions not quite obeying the keybind chosen for displaying them.
+* Fixed Nickel's sprite culling optimization being a bit too eager for rotated sprites, causing some sprites to blink into existence.
 
 ## 1.16.0
 Released 27 April 2025.
