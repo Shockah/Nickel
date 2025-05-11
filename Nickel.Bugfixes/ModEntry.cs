@@ -53,5 +53,6 @@ public sealed class ModEntry : SimpleMod
 		UnimplementedActionFeaturesFixes.ApplyPatches(harmony);
 
 		SpriteCulling.ApplyPatches(harmony);
+		SetXRenderer.ApplyPatches(harmony);
 	}
 }
