@@ -1,3 +1,4 @@
+using Nanoray.PluginManager;
 using OneOf;
 using OneOf.Types;
 using SingleFileExtractor.Core;
@@ -7,7 +8,7 @@ using System.Linq;
 
 namespace Nickel;
 
-internal sealed class SingleFileApplicationCobaltCoreResolver(FileInfo exePath, FileInfo? pdbPath) : ICobaltCoreResolver
+internal sealed class SingleFileApplicationCobaltCoreResolver(IFileInfo exePath, IFileInfo? pdbPath) : ICobaltCoreResolver
 {
 	private const string CobaltCoreResource = "CobaltCore.dll";
 
@@ -37,7 +38,7 @@ internal sealed class SingleFileApplicationCobaltCoreResolver(FileInfo exePath, 
 				return () => new MemoryStream(data);
 			}
 		);
-		foreach (var file in exePath.Directory!.GetFiles("*.dll", SearchOption.TopDirectoryOnly).Where(f => f.Name != CobaltCoreResource))
+		foreach (var file in exePath.Parent!.Files.Where(f => f.Name.EndsWith(".dll") && f.Name != CobaltCoreResource))
 			otherDllDataStreamProviders[file.Name] = () => file.OpenRead();
 
 		return new CobaltCoreResolveResult
@@ -46,7 +47,7 @@ internal sealed class SingleFileApplicationCobaltCoreResolver(FileInfo exePath, 
 			GameAssemblyDataStreamProvider = () => new MemoryStream(gameAssemblyData),
 			GameSymbolsDataStreamProvider = gameSymbolsData is null ? null : () => new MemoryStream(gameSymbolsData),
 			OtherDllDataStreamProviders = otherDllDataStreamProviders,
-			WorkingDirectory = exePath.Directory!
+			WorkingDirectory = exePath.Parent!
 		};
 	}
 }

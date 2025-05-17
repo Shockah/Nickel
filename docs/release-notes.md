@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Nickel now looks for Cobalt Core in any parent directories relative to its location, before attempting to load from Steam's location.
+
 ## 1.16.1
 Released 11 May 2025.
 

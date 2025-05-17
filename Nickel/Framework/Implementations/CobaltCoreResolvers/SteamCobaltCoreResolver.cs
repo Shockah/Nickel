@@ -1,4 +1,5 @@
 using Microsoft.Win32;
+using Nanoray.PluginManager;
 using OneOf;
 using OneOf.Types;
 using System;
@@ -10,7 +11,7 @@ using VdfParser;
 
 namespace Nickel;
 
-internal sealed class SteamCobaltCoreResolver(Func<FileInfo, FileInfo?, ICobaltCoreResolver> resolverFactory) : ICobaltCoreResolver
+internal sealed class SteamCobaltCoreResolver(Func<IFileInfo, IFileInfo?, ICobaltCoreResolver> resolverFactory) : ICobaltCoreResolver
 {
 	public OneOf<CobaltCoreResolveResult, Error<string>> ResolveCobaltCore()
 	{
@@ -123,11 +124,11 @@ internal sealed class SteamCobaltCoreResolver(Func<FileInfo, FileInfo?, ICobaltC
 			if (!directory.Exists)
 				continue;
 
-			var singleFileApplicationPath = new FileInfo(Path.Combine(directory.FullName, "CobaltCore.exe"));
+			var singleFileApplicationPath = new FileInfoImpl(new FileInfo(Path.Combine(directory.FullName, "CobaltCore.exe")));
 			if (!singleFileApplicationPath.Exists)
 				continue;
 
-			var pdbPath = new FileInfo(Path.Combine(directory.FullName, "CobaltCore.pdb"));
+			var pdbPath = new FileInfoImpl(new FileInfo(Path.Combine(directory.FullName, "CobaltCore.pdb")));
 			if (pdbPath.Exists != true)
 				pdbPath = null;
 

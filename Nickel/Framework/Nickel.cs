@@ -2,6 +2,7 @@ using FSPRO;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Mono.Cecil;
+using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using Nickel.Common;
 using Nickel.ModSettings;
@@ -178,8 +179,21 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
 		
 		ICobaltCoreResolver cobaltCoreResolver = launchArguments.GamePath is { } gamePath
-			? new SingleFileApplicationCobaltCoreResolver(gamePath, new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb")))
-			: new SteamCobaltCoreResolver((exe, pdb) => new SingleFileApplicationCobaltCoreResolver(exe, pdb));
+			? new SingleFileApplicationCobaltCoreResolver(new FileInfoImpl(gamePath), new FileInfoImpl(new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb"))))
+			: new CompoundCobaltCoreResolver([
+				new RecursiveToRootDirectoryCobaltCoreResolver(
+					new DirectoryInfoImpl(new DirectoryInfo(Environment.CurrentDirectory)),
+					directory =>
+					{
+						var exePath = directory.GetRelativeFile("CobaltCore.exe");
+						var pdbPath = directory.GetRelativeFile("CobaltCore.pdb");
+						return exePath.Exists
+							? new SingleFileApplicationCobaltCoreResolver(exePath, pdbPath)
+							: null;
+					}
+				),
+				new SteamCobaltCoreResolver((exe, pdb) => new SingleFileApplicationCobaltCoreResolver(exe, pdb)),
+			]);
 
 		var resolveResultOrError = cobaltCoreResolver.ResolveCobaltCore();
 		CobaltCoreResolveResult? nullableResolveResult = resolveResultOrError.IsT0 ? resolveResultOrError.AsT0 : null;
@@ -190,7 +204,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			return -1;
 		}
 
-		var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? resolveResult.WorkingDirectory;
+		var gameWorkingDirectory = resolveResult.WorkingDirectory;
 		logger.LogInformation("GameWorkingDirectory: {Path}", PathUtilities.SanitizePath(gameWorkingDirectory.FullName));
 		
 		using (var exeStream = resolveResult.ExePath.OpenRead())
@@ -323,7 +337,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		FeatureFlags.Modded = instance.DebugMode != DebugMode.Disabled || !launchArguments.Vanilla;
 
 		var oldWorkingDirectory = Directory.GetCurrentDirectory();
-		var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? handlerResult.WorkingDirectory;
+		var gameWorkingDirectory = handlerResult.WorkingDirectory;
 		Directory.SetCurrentDirectory(gameWorkingDirectory.FullName);
 
 #pragma warning disable CA2254 // Template should be a static expression
