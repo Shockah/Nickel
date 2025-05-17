@@ -45,7 +45,6 @@ public sealed class ModEntry : SimpleMod
 		DebugMenuFixes.ApplyPatches(harmony);
 		DisabledActionSpriteFixes.ApplyPatches(harmony);
 		EnergyFragmentFixes.ApplyPatches(harmony);
-		ExhaustEntireHandActionFixes.ApplyPatches(harmony);
 		IsaacUnlockFixes.ApplyPatches(harmony);
 		RockFactoryFixes.ApplyPatches(harmony);
 		RunSummaryCardOrderFixes.ApplyPatches(harmony);
