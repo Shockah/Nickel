@@ -28,11 +28,10 @@ public sealed class DirectGameEnumUsageAnalyzer : DiagnosticAnalyzer
 			category: "Nickel.CommonErrors",
 			defaultSeverity: s,
 			isEnabledByDefault: true
-			// helpLinkUri: "https://smapi.io/package/avoid-net-field"
 		));
 			
 		this.SupportedDiagnostics = [
-			..this.DirectGameEnumUsageRule.Values
+			.. this.DirectGameEnumUsageRule.Values
 		];
 	}
 	
@@ -58,12 +57,28 @@ public sealed class DirectGameEnumUsageAnalyzer : DiagnosticAnalyzer
 			return;
 		if (!declaringType.ContainingNamespace.IsGlobalNamespace)
 			return;
+		if (!declaringType.ContainingAssembly.Name.StartsWith("CobaltCore"))
+			return;
 		if (namedTypeSymbol.GetMembers().OfType<IFieldSymbol>().All(s => s.Name != expression.Name.ToString()))
 			return;
 		if (GetSeverity() is not { } severity)
 			return;
+		if (IsInAttribute(expression))
+			return;
 
 		context.ReportDiagnostic(Diagnostic.Create(this.DirectGameEnumUsageRule[severity], context.Node.GetLocation(), declaringType, expression.Name));
+
+		bool IsInAttribute(SyntaxNode node)
+		{
+			while (true)
+			{
+				if (node.Parent is not { } parent)
+					return false;
+				if (parent is AttributeArgumentSyntax)
+					return true;
+				node = parent;
+			}
+		}
 
 		DiagnosticSeverity? GetSeverity()
 		{
@@ -73,7 +88,9 @@ public sealed class DirectGameEnumUsageAnalyzer : DiagnosticAnalyzer
 				return DiagnosticSeverity.Warning;
 			if (options.InfoEnums.Contains(declaringType.Name) || options.InfoEnums.Contains("*"))
 				return DiagnosticSeverity.Info;
-			return null;
+			if (options.IgnoredEnums.Contains(declaringType.Name) || options.IgnoredEnums.Contains("*"))
+				return null;
+			return options.DefaultSeverity;
 		}
 	}
 
@@ -82,19 +99,33 @@ public sealed class DirectGameEnumUsageAnalyzer : DiagnosticAnalyzer
 		var errorEnums = new[] { "Spr", "UK" };
 		var warningEnums = Array.Empty<string>();
 		var infoEnums = Array.Empty<string>();
+		var ignoredEnums = Array.Empty<string>();
+		DiagnosticSeverity? defaultSeverity = DiagnosticSeverity.Error;
 
 		if (options.TryGetValue("mod_build_config.direct_game_enum_usage.error_enums", out var rawErrorEnums))
 			errorEnums = string.IsNullOrEmpty(rawErrorEnums) ? [] : rawErrorEnums.Split(',').Select(s => s.Trim()).ToArray();
 		if (options.TryGetValue("mod_build_config.direct_game_enum_usage.warning_enums", out var rawWarningEnums))
-			warningEnums = string.IsNullOrEmpty(rawErrorEnums) ? [] : rawWarningEnums.Split(',').Select(s => s.Trim()).ToArray();
+			warningEnums = string.IsNullOrEmpty(rawWarningEnums) ? [] : rawWarningEnums.Split(',').Select(s => s.Trim()).ToArray();
 		if (options.TryGetValue("mod_build_config.direct_game_enum_usage.info_enums", out var rawInfoEnums))
-			infoEnums = string.IsNullOrEmpty(rawErrorEnums) ? [] : rawInfoEnums.Split(',').Select(s => s.Trim()).ToArray();
+			infoEnums = string.IsNullOrEmpty(rawInfoEnums) ? [] : rawInfoEnums.Split(',').Select(s => s.Trim()).ToArray();
+		if (options.TryGetValue("mod_build_config.direct_game_enum_usage.ignored_enums", out var rawIgnoredEnums))
+			ignoredEnums = string.IsNullOrEmpty(rawIgnoredEnums) ? [] : rawIgnoredEnums.Split(',').Select(s => s.Trim()).ToArray();
+
+		if (options.TryGetValue("mod_build_config.direct_game_enum_usage.default_severity", out var rawDefaultSeverity))
+		{
+			if (rawDefaultSeverity.Equals("null", StringComparison.InvariantCultureIgnoreCase) || rawDefaultSeverity.Equals("none", StringComparison.InvariantCultureIgnoreCase))
+				defaultSeverity = null;
+			else if (Enum.TryParse<DiagnosticSeverity>(rawDefaultSeverity, out var parsedDefaultSeverity))
+				defaultSeverity = parsedDefaultSeverity;
+		}
 
 		return new()
 		{
 			ErrorEnums = errorEnums,
 			WarningEnums = warningEnums,
 			InfoEnums = infoEnums,
+			IgnoredEnums = ignoredEnums,
+			DefaultSeverity = defaultSeverity,
 		};
 	}
 
@@ -103,5 +134,7 @@ public sealed class DirectGameEnumUsageAnalyzer : DiagnosticAnalyzer
 		public string[] ErrorEnums;
 		public string[] WarningEnums;
 		public string[] InfoEnums;
+		public string[] IgnoredEnums;
+		public DiagnosticSeverity? DefaultSeverity;
 	}
 }

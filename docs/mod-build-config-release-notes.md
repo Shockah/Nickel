@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+* The analyzer now specifically only acts on types coming from Cobalt Core's DLL.
+* Fixed some analyzer settings not working correctly, and added some extra settings.
+
 ## 2.0.2
 Released 16 March 2025.
 
