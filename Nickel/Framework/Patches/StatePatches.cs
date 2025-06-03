@@ -13,8 +13,8 @@ namespace Nickel;
 
 internal static class StatePatches
 {
-	internal static EventHandler<EnumerateAllArtifactsEventArgs>? OnEnumerateAllArtifactsBeforeAddingArtifacts;
-	internal static EventHandler<EnumerateAllArtifactsEventArgs>? OnEnumerateAllArtifactsAfterAddingArtifacts;
+	internal static EventHandler<EnumerateAllArtifactsEventArgs>? OnEnumerateAllArtifacts;
+	internal static EventHandler<UpdateArtifactCacheEventArgs>? OnUpdateArtifactCache;
 	internal static RefEventHandler<ModifyPotentialExeCardsEventArgs>? OnModifyPotentialExeCards;
 	internal static RefEventHandler<LoadEventArgs>? OnLoad;
 	internal static EventHandler<State>? OnUpdate;
@@ -24,7 +24,12 @@ internal static class StatePatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.EnumerateAllArtifacts))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.EnumerateAllArtifacts)}`"),
-			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(EnumerateAllArtifacts_Transpiler))
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(EnumerateAllArtifacts_Postfix))
+		);
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(State), "UpdateArtifactCache" /*nameof(State.UpdateArtifactCache)*/) // TODO: replace with `nameof`
+			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.UpdateArtifactCache`"),
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(UpdateArtifactCache_Postfix))
 		);
 		harmony.Patch(
 			original: typeof(State).GetNestedTypes(AccessTools.all).SelectMany(t => t.GetMethods(AccessTools.all)).First(m => m.Name.StartsWith("<PopulateRun>") && m.ReturnType == typeof(Route))
@@ -47,56 +52,22 @@ internal static class StatePatches
 			postfix: new HarmonyMethod(AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Update_Postfix)), priority: Priority.Last)
 		);
 	}
-	
-	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-	private static IEnumerable<CodeInstruction> EnumerateAllArtifacts_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
-	{
-		try
-		{
-			return new SequenceBlockMatcher<CodeInstruction>(instructions)
-				.Find([
-					ILMatches.Ldarg(0),
-					ILMatches.Ldfld(nameof(State._artifactScratch)),
-					ILMatches.Call("Clear"),
-				])
-				.Insert(SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
-					new CodeInstruction(OpCodes.Ldarg_0),
-					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(EnumerateAllArtifacts_Transpiler_BeforeAddingArtifacts))),
-				])
-				.Find(ILMatches.Instruction(OpCodes.Endfinally))
-				.PointerMatcher(SequenceMatcherRelativeElement.AfterLast)
-				.ExtractLabels(out var labels)
-				.Insert(SequenceMatcherPastBoundsDirection.Before, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
-					new CodeInstruction(OpCodes.Ldarg_0).WithLabels(labels),
-					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(EnumerateAllArtifacts_Transpiler_AfterAddingArtifacts))),
-				])
-				.AllElements();
-		}
-		catch (Exception ex)
-		{
-			Nickel.Instance.ModManager.Logger.LogCritical("Could not patch method {Method} - {ModLoaderName} probably won't work.\nReason: {Exception}", originalMethod, NickelConstants.Name, ex);
-			return instructions;
-		}
-	}
 
-	private static void EnumerateAllArtifacts_Transpiler_BeforeAddingArtifacts(State state)
+	private static void EnumerateAllArtifacts_Postfix(State __instance, ref List<Artifact> __result)
 	{
 		var args = new EnumerateAllArtifactsEventArgs
 		{
-			State = state,
-			Artifacts = state._artifactScratch,
+			State = __instance,
+			Artifacts = __result,
 		};
-		OnEnumerateAllArtifactsBeforeAddingArtifacts?.Invoke(null, args);
+		OnEnumerateAllArtifacts?.Invoke(null, args);
+		__result = args.Artifacts;
 	}
 
-	private static void EnumerateAllArtifacts_Transpiler_AfterAddingArtifacts(State state)
+	private static void UpdateArtifactCache_Postfix(State __instance)
 	{
-		var args = new EnumerateAllArtifactsEventArgs
-		{
-			State = state,
-			Artifacts = state._artifactScratch,
-		};
-		OnEnumerateAllArtifactsAfterAddingArtifacts?.Invoke(null, args);
+		var args = new UpdateArtifactCacheEventArgs { State = __instance };
+		OnUpdateArtifactCache?.Invoke(null, args);
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -168,7 +139,12 @@ internal static class StatePatches
 	internal struct EnumerateAllArtifactsEventArgs
 	{
 		public required State State { get; init; }
-		public required List<Artifact> Artifacts { get; init; }
+		public required List<Artifact> Artifacts { get; set; }
+	}
+
+	internal struct UpdateArtifactCacheEventArgs
+	{
+		public required State State { get; init; }
 	}
 
 	internal struct ModifyPotentialExeCardsEventArgs

@@ -78,7 +78,6 @@ internal static class CardPatches
 					ILMatches.Stloc<Deck>(originalMethod),
 					ILMatches.Ldloc<Deck>(originalMethod),
 					ILMatches.Instruction(OpCodes.Switch),
-					ILMatches.Br,
 				])
 				.Find([
 					ILMatches.Ldflda("color"),

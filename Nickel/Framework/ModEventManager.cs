@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Nickel;
 
@@ -61,6 +63,7 @@ internal sealed class ModEventManager
 
 	private readonly Func<ModLoadPhaseState> CurrentModLoadPhaseProvider;
 	private readonly Func<IModManifest, ILogger> LoggerProvider;
+	private readonly ConditionalWeakTable<object /* State */, object /* List<Artifact> */> ArtifactCacheWithHookables = new();
 
 	public ModEventManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest modLoaderModManifest)
 	{
@@ -96,26 +99,37 @@ internal sealed class ModEventManager
 			var logger = this.LoggerProvider(mod);
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnSaveLoadedEvent), exception);
 		});
-		
-		StatePatches.OnEnumerateAllArtifactsBeforeAddingArtifacts += this.OnEnumerateAllArtifactsBeforeAddingArtifacts;
-		StatePatches.OnEnumerateAllArtifactsAfterAddingArtifacts += this.OnEnumerateAllArtifactsAfterAddingArtifacts;
+
+		StatePatches.OnEnumerateAllArtifacts += this.OnEnumerateAllArtifacts;
+		StatePatches.OnUpdateArtifactCache += this.OnUpdateArtifactCache;
 		ArtifactPatches.OnKey += this.OnArtifactKey;
 		CheevosPatches.OnCheckOnLoad += this.OnCheckOnLoad;
 		GPatches.OnAfterFrame += this.OnAfterFrame;
 	}
 
-	private void OnEnumerateAllArtifactsBeforeAddingArtifacts(object? _, StatePatches.EnumerateAllArtifactsEventArgs e)
+	private void OnEnumerateAllArtifacts(object? _, StatePatches.EnumerateAllArtifactsEventArgs e)
 	{
 		if (e.State.IsOutsideRun() || RunSummaryPatches.IsDuringRunSummarySaveFromState)
 			return;
-		e.Artifacts.Add(this.PrefixArtifact);
+		if (!this.ArtifactCacheWithHookables.TryGetValue(e.State, out var rawArtifactCache))
+			return;
+		e.Artifacts = (List<Artifact>)rawArtifactCache;
 	}
 
-	private void OnEnumerateAllArtifactsAfterAddingArtifacts(object? _, StatePatches.EnumerateAllArtifactsEventArgs e)
+	private void OnUpdateArtifactCache(object? _, StatePatches.UpdateArtifactCacheEventArgs e)
 	{
-		if (e.State.IsOutsideRun() || RunSummaryPatches.IsDuringRunSummarySaveFromState)
-			return;
-		e.Artifacts.Add(this.SuffixArtifact);
+		if (!this.ArtifactCacheWithHookables.TryGetValue(e.State, out var rawArtifactCache))
+		{
+			rawArtifactCache = new List<Artifact>();
+			this.ArtifactCacheWithHookables.Add(e.State, rawArtifactCache);
+		}
+
+		var artifactCache = (List<Artifact>)rawArtifactCache;
+
+		artifactCache.Clear();
+		artifactCache.Add(this.PrefixArtifact);
+		artifactCache.AddRange(e.State._artifactCache!);
+		artifactCache.Add(this.SuffixArtifact);
 	}
 
 	[EventPriority(-1)]
