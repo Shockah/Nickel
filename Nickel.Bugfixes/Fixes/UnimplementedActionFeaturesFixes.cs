@@ -61,7 +61,6 @@ internal static class UnimplementedActionFeaturesFixes
 		);
 	}
 
-
 	private static bool Card_RenderAction_Prefix(ref int __result, G g, State state, CardAction action, bool dontDraw, int shardAvailable, int stunChargeAvailable, int bubbleJuiceAvailable)
 	{
 		if (!ApplyPrefix)

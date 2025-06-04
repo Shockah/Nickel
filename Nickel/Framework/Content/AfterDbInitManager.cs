@@ -11,6 +11,9 @@ internal sealed class AfterDbInitManager<TEntry>(
 {
 	private readonly List<TEntry> QueuedEntries = [];
 
+	public bool HasQueuedEntries
+		=> this.QueuedEntries.Count != 0;
+
 	public void InjectQueuedEntries()
 	{
 		var queued = this.QueuedEntries.ToList();

@@ -27,6 +27,8 @@ internal sealed class CharacterManager
 	private readonly Dictionary<Deck, PlayableCharacterEntry> DeckToCharacterEntry = [];
 	private readonly Dictionary<string, ICharacterEntry> CharacterTypeToCharacterEntry = [];
 	private readonly List<string> VanillaPlayableCharacterDeckNames;
+	
+	private bool IsDeckOrderUpdateQueued;
 
 	public CharacterManager(
 		Func<ModLoadPhaseState> currentModLoadPhaseProvider,
@@ -331,6 +333,23 @@ internal sealed class CharacterManager
 			return false;
 		}
 	}
+	
+	private void QueueDeckOrderUpdate()
+	{
+		if (this.IsDeckOrderUpdateQueued)
+			return;
+		
+		if (this.PlayableCharacterManager.HasQueuedEntries)
+		{
+			this.IsDeckOrderUpdateQueued = true;
+			return;
+		}
+		
+		this.UpdateDeckOrder();
+	}
+
+	private void UpdateDeckOrder()
+		=> this.Decks.QueueDeckOrderUpdate();
 
 	private static void Inject(AnimationEntry entry)
 	{
@@ -381,6 +400,8 @@ internal sealed class CharacterManager
 		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 
 		entry.IsInjected = true;
+		
+		this.QueueDeckOrderUpdate();
 	}
 	
 	private void Amend(PlayableCharacterEntry entry, PlayableCharacterConfiguration.Amends amends)

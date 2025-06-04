@@ -39,14 +39,12 @@ public sealed class ModEntry : SimpleMod
 
 		BlendStateFixes.ApplyPatches(harmony);
 		CardActionRenderingFixes.ApplyPatches(harmony);
-		CardBrowseOrderFixes.ApplyPatches(harmony);
 		CardCodexCacheFixes.ApplyPatches(harmony);
 		DebugMenuFixes.ApplyPatches(harmony);
 		DisabledActionSpriteFixes.ApplyPatches(harmony);
 		EnergyFragmentFixes.ApplyPatches(harmony);
 		IsaacUnlockFixes.ApplyPatches(harmony);
 		RockFactoryFixes.ApplyPatches(harmony);
-		RunSummaryCardOrderFixes.ApplyPatches(harmony);
 		SetStatusXFixes.ApplyPatches(harmony);
 		SoloRunFixes.ApplyPatches(harmony);
 		SurviveVulnerabilityFixes.ApplyPatches(harmony);
