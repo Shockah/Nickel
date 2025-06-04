@@ -128,7 +128,7 @@ internal sealed class ModEventManager
 
 		artifactCache.Clear();
 		artifactCache.Add(this.PrefixArtifact);
-		artifactCache.AddRange(e.State._artifactCache);
+		artifactCache.AddRange(e.State._artifactCache!);
 		artifactCache.Add(this.SuffixArtifact);
 	}
 

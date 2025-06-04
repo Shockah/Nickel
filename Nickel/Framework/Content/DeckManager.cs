@@ -22,6 +22,11 @@ internal sealed class DeckManager
 		AccessTools.DeclaredField(typeof(StoryVars), nameof(StoryVars.memoryUnlockLevel)),
 	];
 
+	internal CharacterManager Characters { private get; set; } = null!;
+
+	private bool IsDeckOrderUpdateQueued;
+	private List<Deck>? VanillaOrderedDecks;
+
 	public DeckManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest)
 	{
 		this.Manager = new(currentModLoadPhaseProvider, this.Inject);
@@ -160,17 +165,60 @@ internal sealed class DeckManager
 			amendDelegate: (_, _) => throw new InvalidOperationException("Vanilla entries cannot be amended")
 		);
 
+	internal void QueueDeckOrderUpdate()
+	{
+		if (this.IsDeckOrderUpdateQueued)
+			return;
+		
+		if (this.Manager.HasQueuedEntries)
+		{
+			this.IsDeckOrderUpdateQueued = true;
+			return;
+		}
+		
+		this.UpdateDeckOrder();
+	}
+
+	private void UpdateDeckOrder()
+	{
+		this.VanillaOrderedDecks ??= DB.orderedDecks.ToList();
+
+		var moddedDecksWithCharacters = this.UniqueNameToEntry.Values
+			.Select(e => (Deck: e, Character: this.Characters.LookupByDeckV2(e.Deck)))
+			.ToList();
+
+		DB.orderedDecks = [
+			.. this.VanillaOrderedDecks.Where(deck => NewRunOptions.allChars.Contains(deck)),
+			.. moddedDecksWithCharacters.Where(e => e.Character is not null).Select(e => e.Deck.Deck),
+			.. this.VanillaOrderedDecks.Where(deck => deck != Deck.trash && deck != Deck.corrupted && !NewRunOptions.allChars.Contains(deck)),
+			.. moddedDecksWithCharacters.Where(e => e.Character is null).Select(e => e.Deck.Deck),
+			Deck.corrupted,
+			Deck.trash,
+		];
+
+		DB.deckOrder = Enumerable.Range(0, DB.orderedDecks.Count).ToDictionary(i => DB.orderedDecks[i], i => i);
+
+		this.IsDeckOrderUpdateQueued = false;
+	}
+
 	private void Inject(Entry entry)
 	{
 		DB.decks[entry.Deck] = entry.Configuration.Definition;
+		
 		DB.cardArtDeckDefault[entry.Deck] = entry.Configuration.DefaultCardArt;
 		DB.deckBorders[entry.Deck] = entry.Configuration.BorderSprite;
 		if (entry.Configuration.OverBordersSprite is { } overBordersSprite)
 			DB.deckBordersOver[entry.Deck] = overBordersSprite;
+		
 		Colors.colorDict[entry.Deck.Key()] = entry.Configuration.Definition.color.ToInt();
 		Colors.colorDict[entry.Deck.ToString()] = entry.Configuration.Definition.color.ToInt();
 
 		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+		this.QueueDeckOrderUpdate();
+
+		if (this.Manager.HasQueuedEntries)
+			return;
+		this.UpdateDeckOrder();
 	}
 	
 	private void Amend(Entry entry, DeckConfiguration.Amends amends)

@@ -67,6 +67,9 @@ internal sealed class ContentManager
 		var ships = new ShipManager(currentModLoadPhaseProvider, vanillaModManifest);
 		var cardTraits = new CardTraitManager(loggerProvider, vanillaModManifest, modLoaderModManifest, modDataHandler);
 		var enemies = new EnemyManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
+
+		decks.Characters = characters;
+		
 		return new(sprites, audio, decks, statuses, cards, artifacts, characters, parts, ships, cardTraits, enemies);
 	}
 
