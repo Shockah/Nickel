@@ -18,10 +18,15 @@ internal static class MGPatches
 	private static void MakeLoadingQueue_Postfix(ref Queue<(string name, Action action)> __result)
 	{
 		var newQueue = __result.ToList();
+
+		var prewarmingSerializationIndex = newQueue.FindIndex(e => e.name == "prewarming serialization");
+		if (prewarmingSerializationIndex != -1)
+			newQueue.RemoveAt(prewarmingSerializationIndex);
+
 		var loadSavegameIndex = newQueue.FindIndex(e => e.name == "load savegame, settings");
 		if (loadSavegameIndex == -1)
 			throw new InvalidOperationException("Could not inject mod loading into game loading queue");
-		
+
 		newQueue.InsertRange(loadSavegameIndex, Nickel.Instance.ModManager.GetGameLoadQueueStepForModLoadPhase(ModLoadPhase.AfterDbInit));
 		__result = new Queue<(string name, Action action)>(newQueue);
 	}

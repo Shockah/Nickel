@@ -5,6 +5,7 @@
 ## Upcoming release
 
 * Fixed errors introduced by the previous update.
+* Made the game's warmup code no longer run, as it could cause mod breakage, and which was unneeded on PC anyway.
 
 ## 1.16.2
 Released 25 June 2025.
