@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using System.Collections.Generic;
@@ -51,6 +51,7 @@ public sealed class ModEntry : SimpleMod
 		RunSummaryCardOrderFixes.ApplyPatches(harmony);
 		SecondOpinionsFixes.ApplyPatches(harmony);
 		SetStatusXFixes.ApplyPatches(harmony);
+		SoloRunFixes.ApplyPatches(harmony);
 		SurviveVulnerabilityFixes.ApplyPatches(harmony);
 		UnimplementedActionFeaturesFixes.ApplyPatches(harmony);
 
