@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.16.2
+Released 25 June 2025.
 
 * Nickel now looks for Cobalt Core in any parent directories relative to its location, before attempting to load from Steam's location.
 * Fixed solo runs removing custom ship starter cards.
