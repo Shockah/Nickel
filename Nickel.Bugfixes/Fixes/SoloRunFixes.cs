@@ -41,8 +41,10 @@ internal static class SoloRunFixes
 		// ReSharper restore PossibleMultipleEnumeration
 	}
 
-	private static List<Card> DailyJustOneCharacter_OnReceiveArtifact_Transpiler_ModifyDontRemoveThese(State state, List<Card> dontRemoveThese)
+	private static List<Card> DailyJustOneCharacter_OnReceiveArtifact_Transpiler_ModifyDontRemoveThese(List<Card> dontRemoveThese, State state)
 	{
+		if (string.IsNullOrEmpty(state.ship?.key))
+			return dontRemoveThese;
 		if (StarterShip.ships.TryGetValue(state.ship.key, out var starterShip))
 			dontRemoveThese.AddRange(starterShip.cards);
 		return dontRemoveThese;

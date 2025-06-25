@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed errors introduced by the previous update.
+
 ## 1.16.2
 Released 25 June 2025.
 
