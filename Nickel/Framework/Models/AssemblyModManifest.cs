@@ -15,6 +15,12 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 	public IReadOnlySet<ModDependency> Dependencies
 		=> this.ModManifest.Dependencies;
 
+	public SemanticVersion? MinimumGameVersion
+		=> this.ModManifest.MinimumGameVersion;
+
+	public SemanticVersion? UnsupportedGameVersion
+		=> this.ModManifest.UnsupportedGameVersion;
+
 	public string? DisplayName
 		=> this.ModManifest.DisplayName;
 
@@ -41,7 +47,6 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 	public string? EntryPointType { get; internal set; }
 	
 	[JsonProperty]
-	[JsonRequired]
 	[JsonConverter(typeof(SemanticVersionConverter))]
 	public SemanticVersion? RequiredApiVersion { get; internal set; }
 

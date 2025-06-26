@@ -397,6 +397,60 @@ internal sealed class ModManager
 				var displayName = manifest.GetDisplayName(@long: false);
 				this.Logger.LogDebug("Loading mod {DisplayName} from {Package}...", displayName, package.PackageRoot);
 
+				if (manifest.MinimumGameVersion is { } minimumGameVersion)
+				{
+					if (phase == ModLoadPhase.BeforeGameAssembly)
+					{
+						this.FailedMods.Add(manifest);
+						this.Logger.LogError(
+							"Could not load {DisplayName}: Mod requested a minimum game version of {MinimumGameVersion}, but the game version is not yet known in the {Phase} mod load phase.",
+							displayName,
+							minimumGameVersion,
+							phase
+						);
+						return null;
+					}
+
+					if (this.VanillaModManifest is { } vanillaModManifest && vanillaModManifest.Version < minimumGameVersion)
+					{
+						this.FailedMods.Add(manifest);
+						this.Logger.LogError(
+							"Could not load {DisplayName}: Mod requested a minimum game version of {MinimumGameVersion}, but the game version is {GameVersion}.",
+							displayName,
+							minimumGameVersion,
+							vanillaModManifest.Version
+						);
+						return null;
+					}
+				}
+
+				if (manifest.UnsupportedGameVersion is { } unsupportedGameVersion)
+				{
+					if (phase == ModLoadPhase.BeforeGameAssembly)
+					{
+						this.FailedMods.Add(manifest);
+						this.Logger.LogError(
+							"Could not load {DisplayName}: Mod specified an unsupported game version of {UnsupportedGameVersion}, but the game version is not yet known in the {Phase} mod load phase.",
+							displayName,
+							unsupportedGameVersion,
+							phase
+						);
+						return null;
+					}
+
+					if (this.VanillaModManifest is { } vanillaModManifest && vanillaModManifest.Version >= unsupportedGameVersion)
+					{
+						this.FailedMods.Add(manifest);
+						this.Logger.LogError(
+							"Could not load {DisplayName}: Mod specified an unsupported game version of {UnsupportedGameVersion}, and the game version is {GameVersion}.",
+							displayName,
+							unsupportedGameVersion,
+							vanillaModManifest.Version
+						);
+						return null;
+					}
+				}
+
 				var failedRequiredDependencies = manifest.Dependencies
 					.Where(d => d.IsRequired && this.FailedMods.Any(m => m.UniqueName == d.UniqueName))
 					.ToList();

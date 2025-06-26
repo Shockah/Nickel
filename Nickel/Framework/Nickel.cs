@@ -309,6 +309,12 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		var version = GetVanillaVersion();
 		logger.LogInformation("Game version: {Version}", version);
 
+		if (NickelConstants.MinimumGameVersion is { } minimumGameVersion && version < minimumGameVersion)
+		{
+			logger.LogCritical("{ModLoaderName}'s minimum supported game version is {MinimumGameVersion}, but the game is at version {GameVersion}; aborting.", NickelConstants.Name, NickelConstants.MinimumGameVersion, version);
+			return -5;
+		}
+
 		if (!launchArguments.Vanilla)
 		{
 			instance.SaveManager = new(

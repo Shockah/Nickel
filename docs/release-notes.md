@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For developers:
+* Mods can now declare a minimum and an unsupported game version in their manifests via the `MinimumGameVersion` and `UnsupportedGameVersion` keys.
+
 ## 1.16.3
 Released 25 June 2025.
 

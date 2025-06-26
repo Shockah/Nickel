@@ -24,6 +24,12 @@ internal sealed class GeneratedLegacyModManifest : IAssemblyModManifest
 	public required IReadOnlySet<ModDependency> Dependencies { get; init; }
 
 	[JsonProperty]
+	public SemanticVersion? MinimumGameVersion { get; init; }
+
+	[JsonProperty]
+	public SemanticVersion? UnsupportedGameVersion { get; init; }
+
+	[JsonProperty]
 	public string ModType { get; } = ModEntry.LegacyModType;
 
 	[JsonIgnore]
