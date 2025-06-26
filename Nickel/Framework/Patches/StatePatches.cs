@@ -27,8 +27,8 @@ internal static class StatePatches
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(EnumerateAllArtifacts_Postfix))
 		);
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(State), "UpdateArtifactCache" /*nameof(State.UpdateArtifactCache)*/) // TODO: replace with `nameof`
-			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.UpdateArtifactCache`"),
+			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.UpdateArtifactCache))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.UpdateArtifactCache)}`"),
 			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(UpdateArtifactCache_Postfix))
 		);
 		harmony.Patch(
