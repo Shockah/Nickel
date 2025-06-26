@@ -48,7 +48,6 @@ public sealed class ModEntry : SimpleMod
 		IsaacUnlockFixes.ApplyPatches(harmony);
 		RockFactoryFixes.ApplyPatches(harmony);
 		RunSummaryCardOrderFixes.ApplyPatches(harmony);
-		SecondOpinionsFixes.ApplyPatches(harmony);
 		SetStatusXFixes.ApplyPatches(harmony);
 		SoloRunFixes.ApplyPatches(harmony);
 		SurviveVulnerabilityFixes.ApplyPatches(harmony);
