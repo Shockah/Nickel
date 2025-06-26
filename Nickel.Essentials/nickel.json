@@ -4,6 +4,7 @@
 	"DisplayName": "Nickel: Essentials",
 	"Description": "Provides functionality essential for playing the modded game.",
 	"Author": "Nickel",
+	"MinimumGameVersion": "1.2.5",
 	"RequiredApiVersion": "{{ModVersion}}",
 	"EntryPointAssembly": "Nickel.Essentials.dll"
 }

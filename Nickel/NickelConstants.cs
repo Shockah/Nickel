@@ -22,7 +22,7 @@ public static class NickelConstants
 	public static SemanticVersion Version => LazyVersion.Value;
 
 	/// <summary>The minimum game version supported by the mod loader.</summary>
-	public static SemanticVersion? MinimumGameVersion { get; }
+	public static SemanticVersion? MinimumGameVersion { get; } = new SemanticVersion(1, 2, 5);
 
 	/// <summary>A fallback version that is used if the game's version could not be parsed.</summary>
 	public static SemanticVersion FallbackGameVersion { get; } = new SemanticVersion(1, 2, 5);

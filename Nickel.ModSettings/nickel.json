@@ -4,6 +4,7 @@
 	"DisplayName": "Nickel: Mod settings",
 	"Description": "Allows mods to create their own custom settings menus.",
 	"Author": "Nickel",
+	"MinimumGameVersion": "1.2.5",
 	"RequiredApiVersion": "{{ModVersion}}",
 	"EntryPointAssembly": "Nickel.ModSettings.dll"
 }
