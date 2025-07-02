@@ -53,8 +53,13 @@
 		},
 		"description": "<c=keyword>Mod:</c> {{ModName}}"
 	},
+	"saveExport": {
+		"title": "EXPORT PROFILE TO",
+		"button": "EXPORT",
+		"cannotOverride": "Delete this profile in vanilla first."
+	},
 	"saveImport": {
-		"title": "IMPORT PROFILE",
+		"title": "IMPORT PROFILE FROM",
 		"button": "IMPORT"
 	},
 	"starterDeckPreview": {

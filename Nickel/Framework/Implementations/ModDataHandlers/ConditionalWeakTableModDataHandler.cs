@@ -158,6 +158,31 @@ internal sealed class ConditionalWeakTableModDataHandler(
 		return true;
 	}
 
+	public bool TryRemoveOwnedModDataDirectly(string modUniqueName, object o)
+	{
+		if (o.GetType().IsValueType)
+			return false;
+		if (!storage.TryGetValue(o, out var allObjectData))
+			return true;
+		
+		if (!allObjectData.Remove(modUniqueName))
+			return true;
+		if (allObjectData.Count == 0)
+			storage.Remove(o);
+		return true;
+	}
+
+	public bool TryRemoveAllModDataDirectly(object o)
+	{
+		if (o.GetType().IsValueType)
+			return false;
+		if (!storage.TryGetValue(o, out _))
+			return true;
+		
+		storage.Remove(o);
+		return true;
+	}
+
 	public IEnumerable<KeyValuePair<string, object?>> GetAllOwnedModData(string modUniqueName, object o)
 	{
 		if (o.GetType().IsValueType)

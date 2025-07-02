@@ -104,6 +104,18 @@ public interface IModData
 	/// <param name="from">The object to copy data from.</param>
 	/// <param name="to">The object to copy data to.</param>
 	void CopyAllModData(object from, object to);
+	
+	/// <summary>
+	/// Removes all stored values owned by this mod on the given object.
+	/// </summary>
+	/// <param name="o">The object to remove the data from.</param>
+	void RemoveOwnedModData(object o);
+
+	/// <summary>
+	/// Removes all stored values owned by any mod on the given object.
+	/// </summary>
+	/// <param name="o">The object to remove the data from.</param>
+	void RemoveAllModData(object o);
 }
 
 /// <summary>

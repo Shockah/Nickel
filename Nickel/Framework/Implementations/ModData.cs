@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Nickel;
 
@@ -47,5 +48,22 @@ internal sealed class ModData(IModManifest modManifest, IModDataHandler modDataH
 		foreach (var (modUniqueName, data) in modDataHandler.GetAllModData(from))
 			foreach (var (key, value) in data)
 				modDataHandler.SetModData(modUniqueName, to, key, value);
+	}
+
+	public void RemoveOwnedModData(object o)
+	{
+		if (modDataHandler.TryRemoveOwnedModDataDirectly(modManifest.UniqueName, o))
+			return;
+		foreach (var key in modDataHandler.GetAllOwnedModData(modManifest.UniqueName, o).Select(kvp => kvp.Key).ToList())
+			modDataHandler.RemoveModData(modManifest.UniqueName, o, key);
+	}
+
+	public void RemoveAllModData(object o)
+	{
+		if (modDataHandler.TryRemoveAllModDataDirectly(o))
+			return;
+		foreach (var (modUniqueName, keys) in modDataHandler.GetAllModData(o).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Select(kvp2 => kvp2.Key).ToList()))
+			foreach (var key in keys)
+				modDataHandler.RemoveModData(modUniqueName, o, key);
 	}
 }

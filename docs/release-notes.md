@@ -4,6 +4,9 @@
 
 ## Upcoming release
 
+### For everyone:
+* Added an option to export a save file back into vanilla (while attempting to remove any modded data that could make it unreadable).
+
 ### For developers:
 * Mods can now declare a minimum and an unsupported game version in their manifests via the `MinimumGameVersion` and `UnsupportedGameVersion` keys.
 

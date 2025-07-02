@@ -24,6 +24,10 @@ internal interface IModDataHandler
 
 	bool TryCopyAllModDataDirectly(object from, object to);
 
+	bool TryRemoveOwnedModDataDirectly(string modUniqueName, object o);
+
+	bool TryRemoveAllModDataDirectly(object o);
+
 	IEnumerable<KeyValuePair<string, object?>> GetAllOwnedModData(string modUniqueName, object o);
 
 	IEnumerable<KeyValuePair<string, IEnumerable<KeyValuePair<string, object?>>>> GetAllModData(object o);

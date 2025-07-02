@@ -64,6 +64,12 @@ internal sealed class CompoundModDataHandler(IEnumerable<IModDataHandler> handle
 	public bool TryCopyAllModDataDirectly(object from, object to)
 		=> this.GetHandler(from).TryCopyAllModDataDirectly(from, to);
 
+	public bool TryRemoveOwnedModDataDirectly(string modUniqueName, object o)
+		=> this.GetHandler(o).TryRemoveOwnedModDataDirectly(modUniqueName, o);
+
+	public bool TryRemoveAllModDataDirectly(object o)
+		=> this.GetHandler(o).TryRemoveAllModDataDirectly(o);
+
 	public IEnumerable<KeyValuePair<string, object?>> GetAllOwnedModData(string modUniqueName, object o)
 		=> this.GetHandler(o).GetAllOwnedModData(modUniqueName, o);
 

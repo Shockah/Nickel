@@ -81,6 +81,12 @@ internal sealed class GameTypeDictionaryFieldModDataHandler : IModDataHandler
 	public bool TryCopyAllModDataDirectly(object from, object to)
 		=> this.GetHandlerOrThrow().TryCopyAllModDataDirectly(from, to);
 
+	public bool TryRemoveOwnedModDataDirectly(string modUniqueName, object o)
+		=> this.GetHandlerOrThrow().TryRemoveOwnedModDataDirectly(modUniqueName, o);
+
+	public bool TryRemoveAllModDataDirectly(object o)
+		=> this.GetHandlerOrThrow().TryRemoveAllModDataDirectly(o);
+
 	public IEnumerable<KeyValuePair<string, object?>> GetAllOwnedModData(string modUniqueName, object o)
 		=> this.GetHandlerOrThrow().GetAllOwnedModData(modUniqueName, o);
 
