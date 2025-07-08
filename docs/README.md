@@ -25,7 +25,7 @@ Get the latest version from:
 
 ### For developers
 
-* [`ModBuildConfig` release notes](https://github.com/Shockah/Nickel/blob/master/docs/mod-build-config-player-guide.md)
+* [`ModBuildConfig` release notes](https://github.com/Shockah/Nickel/blob/master/docs/mod-build-config-release-notes.md)
 
 ### Other
 

@@ -2,8 +2,10 @@
 
 # Release notes
 
-## Upcoming release
+## 2.1.0
+Released 8 July 2025.
 
+* Added an `EnableDllReference` property - if `false`, the package will assume you have a different reference to `CobaltCore.dll` defined in some way.
 * The analyzer now specifically only acts on types coming from Cobalt Core's DLL.
 * Fixed some analyzer settings not working correctly, and added some extra settings.
 
