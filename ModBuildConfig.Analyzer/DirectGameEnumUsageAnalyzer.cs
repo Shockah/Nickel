@@ -16,6 +16,8 @@ public sealed class DirectGameEnumUsageAnalyzer : DiagnosticAnalyzer
 
 	private readonly Dictionary<DiagnosticSeverity, DiagnosticDescriptor> DirectGameEnumUsageRule;
 
+	private ParsedOptions? Options;
+
 	public DirectGameEnumUsageAnalyzer()
 	{
 		this.DirectGameEnumUsageRule = new List<DiagnosticSeverity>
@@ -48,7 +50,13 @@ public sealed class DirectGameEnumUsageAnalyzer : DiagnosticAnalyzer
 
 	private void Analyze(SyntaxNodeAnalysisContext context)
 	{
-		var options = ParseOptions(context.Options.AnalyzerConfigOptionsProvider.GetOptions(context.FilterTree));
+		lock (this)
+		{
+			this.Options ??= ParseOptions(context.Options.AnalyzerConfigOptionsProvider.GetOptions(context.FilterTree));
+		}
+		
+		// ReSharper disable once InconsistentlySynchronizedField
+		var options = this.Options!.Value;
 		
 		var expression = (MemberAccessExpressionSyntax)context.Node;
 		var declaringType = context.SemanticModel.GetTypeInfo(expression.Expression).Type;
@@ -94,13 +102,13 @@ public sealed class DirectGameEnumUsageAnalyzer : DiagnosticAnalyzer
 		}
 	}
 
-	private static Options ParseOptions(AnalyzerConfigOptions options)
+	private static ParsedOptions ParseOptions(AnalyzerConfigOptions options)
 	{
 		var errorEnums = new[] { "Spr", "UK" };
 		var warningEnums = Array.Empty<string>();
 		var infoEnums = Array.Empty<string>();
 		var ignoredEnums = Array.Empty<string>();
-		DiagnosticSeverity? defaultSeverity = DiagnosticSeverity.Error;
+		DiagnosticSeverity? defaultSeverity = null;
 
 		if (options.TryGetValue("mod_build_config.direct_game_enum_usage.error_enums", out var rawErrorEnums))
 			errorEnums = string.IsNullOrEmpty(rawErrorEnums) ? [] : rawErrorEnums.Split(',').Select(s => s.Trim()).ToArray();
@@ -129,7 +137,7 @@ public sealed class DirectGameEnumUsageAnalyzer : DiagnosticAnalyzer
 		};
 	}
 
-	private struct Options
+	private struct ParsedOptions
 	{
 		public string[] ErrorEnums;
 		public string[] WarningEnums;
