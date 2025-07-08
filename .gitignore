@@ -1,14 +1,17 @@
-**/.vs/**
-**/.idea/**
-*/bin/**
-*/obj/**
-**/.bin/**
-**/.obj/**
-*/.release/**
-packages/**
-**/*.zip
+# IDEs
+.idea
+.vs
+
+# user configs
 *.user
-*.user.*
-CobaltCore.dll
-*/Properties/**
+/*/Properties/PublishProfiles
+
+# build artifacts
+.bin
+.obj
+/*/release
+/_Mac/Publish/Contents/MacOS
 /_Publish
+
+# proprietary
+CobaltCore.dll
