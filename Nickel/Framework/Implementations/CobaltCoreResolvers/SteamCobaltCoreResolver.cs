@@ -118,13 +118,13 @@ internal sealed class SteamCobaltCoreResolver(Func<IFileInfo, IFileInfo?, ICobal
 		{
 			var potentialPath = Path.Combine(potentialSteamAppPath, "common", "Cobalt Core");
 			if (isOsx)
-				potentialPath = Path.Combine(potentialPath, "Contents", "MacOS");
+				potentialPath = Path.Combine(potentialPath, "Cobalt Core.app", "Contents", "MacOS");
 
 			var directory = new DirectoryInfo(potentialPath);
 			if (!directory.Exists)
 				continue;
 
-			var singleFileApplicationPath = new FileInfoImpl(new FileInfo(Path.Combine(directory.FullName, "CobaltCore.exe")));
+			var singleFileApplicationPath = new FileInfoImpl(new FileInfo(Path.Combine(directory.FullName, isOsx ? "CobaltCore" : "CobaltCore.exe")));
 			if (!singleFileApplicationPath.Exists)
 				continue;
 
