@@ -10,7 +10,6 @@
 .bin
 .obj
 /*/release
-/_Mac/Publish/Contents/MacOS
 /_Publish
 
 # proprietary
