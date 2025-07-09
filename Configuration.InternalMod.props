@@ -6,7 +6,8 @@
 		<ModDeployModsPath>$(ModLoaderPath)\InternalModLibrary</ModDeployModsPath>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Nickel.ModBuildConfig" Version="2.0.1" />
+		<PackageReference Include="Nickel.ModBuildConfig" Version="2.1.0" />
+		<PackageReference Condition="!'$(EnableDllReference)'" Include="Nickel.ModBuildConfig.ReferenceAssembly" Version="1.2.4" />
 		<PackageReference Include="EnumByNameSourceGenerator" Version="1.1.2" PrivateAssets="All" ExcludeAssets="runtime" />
 	</ItemGroup>
 </Project>

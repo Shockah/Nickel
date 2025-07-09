@@ -11,3 +11,4 @@ packages/**
 *.user.*
 CobaltCore.dll
 */Properties/**
+/_Publish
