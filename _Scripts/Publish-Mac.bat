@@ -9,7 +9,7 @@ call Publish-Any.bat osx-x64 Nickel.app\Contents\MacOS
 
 cd "..\_Publish\osx-x64"
 tar.exe -a -cf "..\Nickel-!Version!-Mac.zip" "Nickel.app"
-%SCRIPTPATH%\zip_exec\zip_exec.exe "..\Nickel-!Version!-Mac.zip" Nickel.app/Contents/MacOS/Nickel
-%SCRIPTPATH%\zip_exec\zip_exec.exe "..\Nickel-!Version!-Mac.zip" Nickel.app/Contents/MacOS/NickelLauncher
+..\..\_Scripts\zip_exec\zip_exec.exe "..\Nickel-!Version!-Mac.zip" Nickel.app/Contents/MacOS/Nickel
+..\..\_Scripts\zip_exec\zip_exec.exe "..\Nickel-!Version!-Mac.zip" Nickel.app/Contents/MacOS/NickelLauncher
 
 popd
