@@ -3,20 +3,20 @@ pushd .
 
 cd ..
 set /p Version=<Version.txt
-mkdir "_Publish\DotNet\Nickel"
+mkdir "_Publish\%1\%2"
 
 pushd NickelLauncher
-dotnet publish NickelLauncher.csproj -c Release -r %1 -p:PublishReadyToRun=false -p:TieredCompilation=false -p:PublishSingleFile=false -p:UseReferenceAssembly=true -p:OutDir="..\_Publish\DotNet\Nickel" --self-contained
+dotnet publish NickelLauncher.csproj -c Release -r %1 -p:PublishReadyToRun=false -p:TieredCompilation=false -p:PublishSingleFile=false -p:UseReferenceAssembly=true -p:OutDir="..\_Publish\%1\%2" --self-contained
 popd
 
-call :BuildInternalMod Nickel.Bugfixes
-call :BuildInternalMod Nickel.Essentials
-call :BuildInternalMod Nickel.Legacy
-call :BuildInternalMod Nickel.ModSettings
-call :BuildInternalMod Nickel.UpdateChecks
-call :BuildInternalMod Nickel.UpdateChecks.GitHub
-call :BuildInternalMod Nickel.UpdateChecks.NexusMods
-call :BuildInternalMod Nickel.UpdateChecks.UI
+call :BuildInternalMod %1 %2 Nickel.Bugfixes
+call :BuildInternalMod %1 %2 Nickel.Essentials
+call :BuildInternalMod %1 %2 Nickel.Legacy
+call :BuildInternalMod %1 %2 Nickel.ModSettings
+call :BuildInternalMod %1 %2 Nickel.UpdateChecks
+call :BuildInternalMod %1 %2 Nickel.UpdateChecks.GitHub
+call :BuildInternalMod %1 %2 Nickel.UpdateChecks.NexusMods
+call :BuildInternalMod %1 %2 Nickel.UpdateChecks.UI
 
 popd
 goto :EOF
@@ -24,8 +24,8 @@ goto :EOF
 
 
 :BuildInternalMod
-pushd %1
-dotnet build %1.csproj -c Release -p:EnableDllReference=false -p:ModLoaderPath="..\_Publish\DotNet\Nickel" -p:ModDeployModsPath="..\_Publish\DotNet\Nickel\InternalModLibrary"
+pushd %3
+dotnet build %3.csproj -c Release -p:EnableDllReference=false -p:ModLoaderPath="..\_Publish\%1\%2" -p:ModDeployModsPath="..\_Publish\%1\%2\InternalModLibrary"
 popd
 goto :EOF
 

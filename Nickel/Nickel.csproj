@@ -21,6 +21,7 @@
 
 	<PropertyGroup>
 		<EnableGameDllExtract Condition="'$(EnableGameDllExtract)' == ''">true</EnableGameDllExtract>
+		<UseReferenceAssembly Condition="'$(UseReferenceAssembly)' == ''">false</UseReferenceAssembly>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(EnableGameDllExtract)' And '$(GameExePath)' == '' And ($(OS) == 'Unix' Or $(OS) == 'OSX')">
@@ -58,7 +59,7 @@
 		<ProjectReference Include="..\PluginManager.Cecil\PluginManager.Cecil.csproj" />
 		
 		<!-- game handling -->
-		<PackageReference Condition="'$(UseReferenceAssembly)'" Include="Nickel.ModBuildConfig.ReferenceAssembly" Version="1.2.4" />
+		<PackageReference Condition="'$(UseReferenceAssembly)'" Include="Nickel.ModBuildConfig.ReferenceAssembly" Version="$(GameReferenceAssemblyVersion)" PrivateAssets="All" ExcludeAssets="runtime" />
 		<PackageReference Condition="!'$(UseReferenceAssembly)'" Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" />
 		<PackageReference Condition="!'$(UseReferenceAssembly)'" Include="Fayti1703.AssemblyTasks" Version="1.1.0" PrivateAssets="none" />
 		<Reference Condition="!'$(UseReferenceAssembly)'" Include="CobaltCore" HintPath="$(IntermediateOutputPath)/CobaltCore.dll" Private="False" />

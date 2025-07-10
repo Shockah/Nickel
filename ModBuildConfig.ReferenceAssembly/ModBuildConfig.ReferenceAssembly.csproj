@@ -32,7 +32,7 @@
 	<!-- Set build options -->
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework> <!-- game's .NET version -->
-		<Version>1.2.4</Version>
+		<Version>$(GameReferenceAssemblyVersion)</Version>
 		
 		<!-- Constants -->
 		<_GameName>Cobalt Core</_GameName>

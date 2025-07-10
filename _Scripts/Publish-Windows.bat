@@ -3,10 +3,11 @@ pushd .
 
 set /p Version=<"..\Version.txt"
 
-call Publish-Any.bat win-x64
-mkdir "..\_Publish\DotNet\Nickel\ModLibrary"
+rmdir /q /s "..\_Publish\win-x64"
+call Publish-Any.bat win-x64 Nickel
+mkdir "..\_Publish\win-x64\Nickel\ModLibrary"
 
-cd "..\_Publish\DotNet"
-tar.exe -a -cf "..\Nickel !Version!.zip" "Nickel"
+cd "..\_Publish\win-x64"
+tar.exe -a -cf "..\Nickel-!Version!-Windows.zip" "Nickel"
 
 popd
