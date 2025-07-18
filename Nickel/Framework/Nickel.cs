@@ -33,64 +33,21 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 	{
 		var stopwatch = Stopwatch.StartNew();
 		
-		Option<bool> vanillaOption = new(
-			name: "--vanilla",
-			description: "Whether to run the vanilla game instead.",
-			getDefaultValue: () => false
-		)
-		{
-			Arity = ArgumentArity.ZeroOrOne
-		};
-		Option<bool?> debugOption = new(
-			name: "--debug",
-			description: "Whether the game should be ran in debug mode."
-		);
-		Option<bool?> saveInDebugOption = new(
-			name: "--saveInDebug",
-			description: "Whether the game should be auto-saved even in debug mode."
-		);
-		Option<bool?> initSteamOption = new(
-			name: "--initSteam",
-			description: "Whether Steam integration should be enabled."
-		);
-		Option<FileInfo?> gamePathOption = new(
-			name: "--gamePath",
-			description: "The path to CobaltCore.exe."
-		);
-		Option<DirectoryInfo?> modsPathOption = new(
-			name: "--modsPath",
-			description: "The path containing the mods to load."
-		);
-		Option<DirectoryInfo?> internalModsPathOption = new(
-			name: "--internalModsPath",
-			description: "The path containing the internal mods to load."
-		);
-		Option<DirectoryInfo?> modStoragePathOption = new(
-			name: "--modStoragePath",
-			description: "The path containing mod data, like settings (ones that are fine to share)."
-		);
-		Option<DirectoryInfo?> privateModStoragePathOption = new(
-			name: "--privateModStoragePath",
-			description: "The path containing private mod data, like settings (ones that should never be shared)."
-		);
-		Option<DirectoryInfo?> savePathOption = new(
-			name: "--savePath",
-			description: "The path that will store the save data."
-		);
-		Option<DirectoryInfo?> logPathOption = new(
-			name: "--logPath",
-			description: "The folder logs will be stored in."
-		);
-		Option<bool?> timestampedLogFiles = new(
-			name: "--keepLogs",
-			description: "Uses timestamps for log filenames."
-		);
-		Option<string?> logPipeNameOption = new(
-			name: "--logPipeName"
-		)
-		{ IsHidden = true };
+		var vanillaOption = new Option<bool>("--vanilla", () => false, "Whether to run the vanilla game instead.") { Arity = ArgumentArity.ZeroOrOne };
+		var debugOption = new Option<bool?>("--debug", "Whether the game should be ran in debug mode.");
+		var saveInDebugOption = new Option<bool?>("--saveInDebug", "Whether the game should be auto-saved even in debug mode.");
+		var initSteamOption = new Option<bool?>("--initSteam", "Whether Steam integration should be enabled.");
+		var gamePathOption = new Option<FileInfo?>("--gamePath", "The path to CobaltCore.exe.");
+		var modsPathOption = new Option<DirectoryInfo?>("--modsPath", "The path containing the mods to load.");
+		var internalModsPathOption = new Option<DirectoryInfo?>("--internalModsPath", "The path containing the internal mods to load.");
+		var modStoragePathOption = new Option<DirectoryInfo?>("--modStoragePath", "The path containing mod data, like settings (ones that are fine to share).");
+		var privateModStoragePathOption = new Option<DirectoryInfo?>("--privateModStoragePath", "The path containing private mod data, like settings (ones that should never be shared).");
+		var savePathOption = new Option<DirectoryInfo?>("--savePath", "The path that will store the save data.");
+		var logPathOption = new Option<DirectoryInfo?>("--logPath", "The folder logs will be stored in.");
+		var timestampedLogFiles = new Option<bool?>("--keepLogs", "Uses timestamps for log filenames.");
+		var logPipeNameOption = new Option<string?>("--logPipeName") { IsHidden = true };
 
-		RootCommand rootCommand = new(NickelConstants.IntroMessage);
+		var rootCommand = new RootCommand(NickelConstants.IntroMessage);
 		rootCommand.AddOption(vanillaOption);
 		rootCommand.AddOption(debugOption);
 		rootCommand.AddOption(saveInDebugOption);

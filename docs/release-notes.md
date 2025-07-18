@@ -8,6 +8,7 @@
 * Added an option to export a save file back into vanilla (while attempting to remove any modded data that could make it unreadable).
 
 ### For developers:
+* Added APIs to change the font and height of button mod settings.
 * Mods can now declare a minimum and an unsupported game version in their manifests via the `MinimumGameVersion` and `UnsupportedGameVersion` keys.
 
 ## 1.16.3

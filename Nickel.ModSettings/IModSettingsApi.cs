@@ -343,8 +343,14 @@ public interface IModSettingsApi
 		/// <summary>The title of this element, shown on the left.</summary>
 		Func<string> Title { get; set; }
 		
+		/// <summary>The font to use for the <see cref="Title">title</see>, or <c>null</c> for default.</summary>
+		Func<Font?>? TitleFont { get; set; }
+		
 		/// <summary>The optional value to display, shown on the right.</summary>
 		Func<string?>? ValueText { get; set; }
+		
+		/// <summary>The font to use for the <see cref="ValueText">value text</see>, or <c>null</c> for default.</summary>
+		Func<Font?>? ValueTextFont { get; set; }
 		
 		/// <summary>The action callback that will be invoked when the element is clicked.</summary>
 		Action<G, IModSettingsRoute> OnClick { get; set; }
@@ -355,6 +361,9 @@ public interface IModSettingsApi
 		/// <summary>The horizontal alignment of the title.</summary>
 		HorizontalAlignment TitleHorizontalAlignment { get; set; }
 		
+		/// <summary>The height of the setting. Defaults to <c>20</c>.</summary>
+		int Height { get; set; }
+		
 		/// <summary>The spacing between the title and the value text.</summary>
 		int Spacing { get; set; }
 
@@ -362,11 +371,21 @@ public interface IModSettingsApi
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
 		IButtonModSetting SetTitle(Func<string> value);
+
+		/// <summary>Sets the <see cref="TitleFont"/>.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		IButtonModSetting SetTitleFont(Func<Font?>? value);
 		
 		/// <summary>Sets the <see cref="ValueText"/>.</summary>
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
 		IButtonModSetting SetValueText(Func<string?>? value);
+
+		/// <summary>Sets the <see cref="ValueTextFont"/>.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		IButtonModSetting SetValueTextFont(Func<Font?>? value);
 		
 		/// <summary>Sets the <see cref="OnClick"/> callback.</summary>
 		/// <param name="value">The new value.</param>
@@ -382,6 +401,11 @@ public interface IModSettingsApi
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
 		IButtonModSetting SetTitleHorizontalAlignment(HorizontalAlignment value);
+
+		/// <summary>Sets the <see cref="Height"/>.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		IButtonModSetting SetHeight(int value);
 
 		/// <summary>Sets the <see cref="Spacing"/> between the title and the value text.</summary>
 		/// <param name="value">The new value.</param>
