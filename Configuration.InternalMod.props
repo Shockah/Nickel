@@ -4,6 +4,7 @@
 	<PropertyGroup>
 		<Version>$(NickelVersion)</Version>
 		<ModDeployModsPath>$(ModLoaderPath)\InternalModLibrary</ModDeployModsPath>
+		<EnableDllReference Condition="'$(EnableDllReference)' == ''">true</EnableDllReference>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Nickel.ModBuildConfig" Version="2.1.0" />
