@@ -82,8 +82,10 @@ internal static class CrewSelection
 		// reset the scroll position to the very top
 		=> ScrollPosition = 0;
 
-	private static void NewRunOptions_Render_Prefix()
+	private static void NewRunOptions_Render_Prefix(NewRunOptions __instance)
 	{
+		if (__instance.subRoute is not null)
+			return;
 		if (ShipSelection.ShowingShips)
 			return;
 		

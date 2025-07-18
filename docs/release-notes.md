@@ -6,6 +6,7 @@
 
 ### For everyone:
 * Added an option to export a save file back into vanilla (while attempting to remove any modded data that could make it unreadable).
+* Fixed the character and ship selectors scrolling when scrolling in a submenu.
 
 ### For developers:
 * Added APIs to change the font and height of button and checkbox mod settings.
