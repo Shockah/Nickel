@@ -423,6 +423,15 @@ public interface IModSettingsApi
 		/// <summary>The title of this element, shown on the left.</summary>
 		Func<string> Title { get; set; }
 		
+		/// <summary>The font to use for the <see cref="Title">title</see>, or <c>null</c> for default.</summary>
+		Func<Font?>? TitleFont { get; set; }
+		
+		/// <summary>The optional value to display, shown on the right, instead of the checkbox.</summary>
+		Func<bool, string?>? ValueText { get; set; }
+		
+		/// <summary>The font to use for the <see cref="ValueText">value text</see>, or <c>null</c> for default.</summary>
+		Func<bool, Font?>? ValueTextFont { get; set; }
+		
 		/// <summary>The getter callback. Depending on its value, the checkbox will have a checkmark or not.</summary>
 		Func<bool> Getter { get; set; }
 		
@@ -431,11 +440,29 @@ public interface IModSettingsApi
 		
 		/// <summary>The optional tooltips for the element.</summary>
 		Func<IEnumerable<Tooltip>>? Tooltips { get; set; }
+		
+		/// <summary>The height of the setting. Defaults to <c>20</c>.</summary>
+		int Height { get; set; }
 
 		/// <summary>Sets the <see cref="Title"/>.</summary>
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
 		ICheckboxModSetting SetTitle(Func<string> value);
+
+		/// <summary>Sets the <see cref="TitleFont"/>.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		ICheckboxModSetting SetTitleFont(Func<Font?>? value);
+		
+		/// <summary>Sets the <see cref="ValueText"/>.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		ICheckboxModSetting SetValueText(Func<bool, string?>? value);
+
+		/// <summary>Sets the <see cref="ValueTextFont"/>.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		ICheckboxModSetting SetValueTextFont(Func<bool, Font?>? value);
 		
 		/// <summary>Sets the <see cref="Getter"/> callback.</summary>
 		/// <param name="value">The new value.</param>
@@ -451,6 +478,11 @@ public interface IModSettingsApi
 		/// <param name="value">The new value.</param>
 		/// <returns>This setting.</returns>
 		ICheckboxModSetting SetTooltips(Func<IEnumerable<Tooltip>>? value);
+
+		/// <summary>Sets the <see cref="Height"/>.</summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This setting.</returns>
+		ICheckboxModSetting SetHeight(int value);
 	}
 
 	/// <summary>
