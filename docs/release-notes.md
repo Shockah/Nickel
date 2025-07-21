@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.17.0
+Released 21 July 2025.
 
 ### For everyone:
 * Added an option to export a save file back into vanilla (while attempting to remove any modded data that could make it unreadable).
