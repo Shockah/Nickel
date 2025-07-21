@@ -12,6 +12,7 @@
 * Changed how/when Nickel validates character animations, and actually started validating `squint` and `gameover` animations.
 * Added APIs to change the font and height of button and checkbox mod settings.
 * Mods can now declare a minimum and an unsupported game version in their manifests via the `MinimumGameVersion` and `UnsupportedGameVersion` keys.
+* Slightly improved the card traits debug tab (thanks to [@Terria-K](https://github.com/Terria-K)!).
 
 ## 1.16.3
 Released 25 June 2025.
