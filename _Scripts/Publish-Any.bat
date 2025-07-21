@@ -2,7 +2,6 @@ setlocal EnableExtensions EnableDelayedExpansion
 pushd .
 
 cd ..
-set /p Version=<Version.txt
 mkdir "_Publish\%1\%2"
 
 pushd NickelLauncher

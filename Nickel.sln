@@ -27,8 +27,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginManager.Cecil", "Plug
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModBuildConfig", "ModBuildConfig\ModBuildConfig.csproj", "{9240D306-36C9-4245-90BD-1954A31994C8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModding.Definitions", "LegacyModLoader\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj", "{C27B6030-7813-4B04-8398-E8C7347E01AB}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginManager.Tests", "PluginManager.Tests\PluginManager.Tests.csproj", "{28D842D3-14DC-49CB-AE43-1918A25286C4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nickel.Essentials", "Nickel.Essentials\Nickel.Essentials.csproj", "{6085F930-E08A-4D7A-B3B3-BC97BE20B32E}"
@@ -81,10 +79,6 @@ Global
 		{9240D306-36C9-4245-90BD-1954A31994C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9240D306-36C9-4245-90BD-1954A31994C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9240D306-36C9-4245-90BD-1954A31994C8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C27B6030-7813-4B04-8398-E8C7347E01AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C27B6030-7813-4B04-8398-E8C7347E01AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C27B6030-7813-4B04-8398-E8C7347E01AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C27B6030-7813-4B04-8398-E8C7347E01AB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{28D842D3-14DC-49CB-AE43-1918A25286C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{28D842D3-14DC-49CB-AE43-1918A25286C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{28D842D3-14DC-49CB-AE43-1918A25286C4}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -4,6 +4,7 @@
 		<RootNamespace>Nickel.Legacy</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\LegacyModLoader\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj" />
+		<!-- source: github.com/Ewanderer/CobaltCoreModLoader/tree/master/CobaltCoreModding.Definitions -->
+		<Reference Include="CobaltCoreModding.Definitions" HintPath="lib\CobaltCoreModding.Definitions.dll" />
 	</ItemGroup>
 </Project>
