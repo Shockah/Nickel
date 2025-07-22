@@ -64,7 +64,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 		rootCommand.SetHandler(context =>
 		{
-			LaunchArguments launchArguments = new()
+			var launchArguments = new LaunchArguments
 			{
 				Vanilla = context.ParseResult.GetValueForOption(vanillaOption),
 				Debug = context.ParseResult.GetValueForOption(debugOption),

@@ -5,56 +5,45 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Nickel.Launcher;
 
-internal class NickelLauncher
+internal sealed class NickelLauncher
 {
 	internal static int Main(string[] args)
 	{
-		Option<FileInfo?> launchPathOption = new(
-			name: "--launchPath",
-			description: $"The path of the application to launch."
-		);
-		Option<DirectoryInfo?> logPathOption = new(
-			name: "--logPath",
-			description: "The folder logs will be stored in."
-		);
-		Option<bool?> timestampedLogFiles = new(
-			name: "--keepLogs",
-			description: "Uses timestamps for log filenames."
-		);
+		var launchPathOption = new Option<FileInfo?>("--launchPath", "The path of the application to launch.");
+		var logPathOption = new Option<DirectoryInfo?>("--logPath", "The folder logs will be stored in.");
+		var timestampedLogFiles = new Option<bool?>("--keepLogs", "Uses timestamps for log filenames.");
 
-		RootCommand rootCommand = new(NickelConstants.IntroMessage)
-		{
-			TreatUnmatchedTokensAsErrors = false
-		};
+		var rootCommand = new RootCommand(NickelConstants.IntroMessage) { TreatUnmatchedTokensAsErrors = false };
 		rootCommand.AddOption(launchPathOption);
 		rootCommand.AddOption(logPathOption);
 		rootCommand.AddOption(timestampedLogFiles);
 
 		rootCommand.SetHandler(context =>
 		{
-			LaunchArguments launchArguments = new()
+			var launchArguments = new LaunchArguments
 			{
 				LaunchPath = context.ParseResult.GetValueForOption(launchPathOption),
-				UnmatchedArguments = context.ParseResult.UnmatchedTokens,
 				LogPath = context.ParseResult.GetValueForOption(logPathOption),
 				TimestampedLogFiles = context.ParseResult.GetValueForOption(timestampedLogFiles),
+				UnmatchedArguments = context.ParseResult.UnmatchedTokens,
 			};
-			CreateAndStartInstance(launchArguments);
+			context.ExitCode = CreateAndStartInstance(launchArguments);
 		});
 		return rootCommand.Invoke(args);
 	}
 
-	private static void CreateAndStartInstance(LaunchArguments launchArguments)
+	private static int CreateAndStartInstance(LaunchArguments arguments)
 	{
 		var realOut = Console.Out;
 		var loggerFactory = LoggerFactory.Create(builder =>
 		{
 			builder.SetMinimumLevel(LogLevel.Debug);
-			var fileLogDirectory = launchArguments.LogPath ?? GetOrCreateDefaultLogDirectory();
-			var timestampedLogFiles = launchArguments.TimestampedLogFiles ?? false;
+			var fileLogDirectory = arguments.LogPath ?? GetOrCreateDefaultLogDirectory();
+			var timestampedLogFiles = arguments.TimestampedLogFiles ?? false;
 			builder.AddProvider(FileLoggerProvider.CreateNewLog(LogLevel.Debug, fileLogDirectory, timestampedLogFiles));
 			builder.AddProvider(new ConsoleLoggerProvider(LogLevel.Information, realOut, disposeWriter: false));
 		});
@@ -64,9 +53,14 @@ internal class NickelLauncher
 		Dictionary<string, ILogger> categoryLoggers = [];
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
 
-		var launchPath = launchArguments.LaunchPath ?? new($"{NickelConstants.Name}.exe"); // TODO: this probably doesn't work on non-Windows machines; make sure it does
+		var launchPath = arguments.LaunchPath;
+		if (launchPath is null)
+		{
+			var executableName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? $"{NickelConstants.Name}.exe" : NickelConstants.Name;
+			launchPath = new FileInfo(Path.Combine(AppContext.BaseDirectory, executableName));
+		}
+		
 		var pipeName = Guid.NewGuid().ToString();
-
 		using var logNamedPipeServer = string.IsNullOrEmpty(pipeName) ? null : new LogNamedPipeServer(pipeName, logger, e =>
 		{
 			if (!categoryLoggers.TryGetValue(e.CategoryName, out var categoryLogger))
@@ -92,28 +86,32 @@ internal class NickelLauncher
 			psi.ArgumentList.Add("--logPipeName");
 			psi.ArgumentList.Add(pipeName);
 		}
-		foreach (var unmatchedArgument in launchArguments.UnmatchedArguments)
+		foreach (var unmatchedArgument in arguments.UnmatchedArguments)
 			psi.ArgumentList.Add(unmatchedArgument);
 
 		try
 		{
-			StartAndLogProcess(psi, logger, loggerFactory);
+			return StartAndLogProcess(psi, logger, loggerFactory);
 		}
 		catch (Exception ex)
 		{
 			logger.LogCritical("{Name} threw an exception: {Exception}", NickelConstants.Name, ex);
+			return -1;
 		}
-		loggerFactory.Dispose();
+		finally
+		{
+			loggerFactory.Dispose();
+		}
 	}
 
-	private static void StartAndLogProcess(ProcessStartInfo psi, ILogger logger, ILoggerFactory loggerFactory)
+	private static int StartAndLogProcess(ProcessStartInfo psi, ILogger logger, ILoggerFactory loggerFactory)
 	{
 		var exitingLauncher = false;
 		var process = Process.Start(psi);
 		if (process is null)
 		{
 			logger.LogCritical("Could not start {ModLoaderName}: no process was started.", NickelConstants.Name);
-			return;
+			return -1;
 		}
 
 		logger.LogDebug("Launched Nickel with PID {PID}.", process.Id);
@@ -164,6 +162,7 @@ internal class NickelLauncher
 		launcherProcess.Exited -= OnExited;
 		Console.CancelKeyPress -= OnExited;
 		AppDomain.CurrentDomain.ProcessExit -= OnExited;
+		return process.ExitCode;
 	}
 
 	private static DirectoryInfo GetOrCreateDefaultLogDirectory()

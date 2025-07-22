@@ -15,7 +15,7 @@
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleExecutable</key>
-    <string>Nickel</string>
+    <string>NickelMacLauncher</string>
     <key>CFBundleIconFile</key>
     <string>Icon.icns</string>
     <key>CFBundleShortVersionString</key>
