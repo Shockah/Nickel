@@ -4,6 +4,9 @@
 
 ## Upcoming release
 
+### For everyone:
+* Improved error messages when Nickel or its internal mods fail to patch game methods.
+
 ### For developers:
 * Assembly mods (aka most mods) can now declare methods they would like to stop from being inlined via the `MethodsToStopInlining` key in their manifests.
 
