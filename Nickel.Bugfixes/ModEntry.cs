@@ -37,7 +37,6 @@ public sealed class ModEntry : SimpleMod
 	{
 		var harmony = this.Helper.Utilities.Harmony;
 
-		ArtifactCodexFixes.ApplyPatches(harmony);
 		BlendStateFixes.ApplyPatches(harmony);
 		CardActionRenderingFixes.ApplyPatches(harmony);
 		CardBrowseOrderFixes.ApplyPatches(harmony);
