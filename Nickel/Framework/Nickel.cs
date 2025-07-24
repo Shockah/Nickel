@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
@@ -460,7 +461,12 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static DirectoryInfo GetOrCreateDefaultModLibraryDirectory()
 	{
-		var directoryInfo = new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModLibrary"));
+		DirectoryInfo directoryInfo;
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			directoryInfo = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", NickelConstants.Name, "ModLibrary"));
+		else
+			directoryInfo = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModLibrary"));
+		
 		if (!directoryInfo.Exists)
 			directoryInfo.Create();
 		return directoryInfo;
@@ -468,7 +474,12 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static DirectoryInfo GetOrCreateDefaultLogDirectory()
 	{
-		var directoryInfo = new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
+		DirectoryInfo directoryInfo;
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			directoryInfo = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", NickelConstants.Name, "Logs"));
+		else
+			directoryInfo = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
+		
 		if (!directoryInfo.Exists)
 			directoryInfo.Create();
 		return directoryInfo;
