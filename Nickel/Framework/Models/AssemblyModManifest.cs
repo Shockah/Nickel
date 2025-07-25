@@ -51,6 +51,8 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 	public SemanticVersion? RequiredApiVersion { get; internal set; }
 
 	public IReadOnlyList<ModAssemblyReference> AssemblyReferences { get; internal set; } = [];
+	
+	public IReadOnlyList<StopInliningDefinition> MethodsToStopInlining { get; internal set; } = [];
 
 	private IModManifest ModManifest { get; }
 

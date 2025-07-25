@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For developers:
+* Assembly mods (aka most mods) can now declare methods they would like to stop from being inlined via the `MethodsToStopInlining` key in their manifests.
+
 ## 1.17.0
 Released 21 July 2025.
 

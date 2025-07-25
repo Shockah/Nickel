@@ -172,7 +172,13 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 			new PackageAssemblyResolver(launchArguments.Vanilla ? [] : instance.ModManager.ResolvedMods),
 			new DefaultAssemblyResolver(),
 		]));
-		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor());
+		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor(
+			() => instance.ModManager.ModLoaderPackage.Manifest,
+			() => instance.ModManager.ResolvedMods
+				.Select(p => p.Manifest.AsAssemblyModManifest())
+				.Where(m => m.IsT0)
+				.Select(m => m.AsT0)
+		));
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GamePublicizerDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new CardTraitStateCacheFieldDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new ModDataFieldDefinitionEditor());
