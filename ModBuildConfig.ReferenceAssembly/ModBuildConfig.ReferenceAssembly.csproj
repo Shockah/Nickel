@@ -16,7 +16,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
-	<Import Project="Configuration.props.user" Condition="Exists('Configuration.props.user')" />
+	<Import Project="..\Configuration.props" />
 	<ItemGroup>
 		<PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" PrivateAssets="none" />
 		<PackageReference Include="Fayti1703.AssemblyTasks" Version="1.1.0" PrivateAssets="none" />
