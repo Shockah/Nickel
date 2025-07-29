@@ -2,9 +2,11 @@
 
 # Release notes
 
-## Upcoming release
+## 1.18.0
+Released 29 July 2025.
 
 ### For everyone:
+* Updated for Cobalt Core 1.2.5.
 * Improved error messages when Nickel or its internal mods fail to patch game methods.
 
 ### For developers:
