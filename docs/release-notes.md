@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For developers:
+* `MethodsToStopInlining` will now by default log an error if they match no methods.
+
 ## 1.18.0
 Released 29 July 2025.
 

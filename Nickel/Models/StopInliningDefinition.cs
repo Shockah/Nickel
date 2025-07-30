@@ -17,4 +17,7 @@ public sealed class StopInliningDefinition
 	
 	/// <summary>The number of arguments of the matched method.</summary>
 	public int? ArgumentCount { get; init; }
+	
+	/// <summary>Whether the mod loader should ignore when this entry never matched anything. Otherwise a warning is produced.</summary>
+	public bool IgnoreNoMatches { get; init; }
 }

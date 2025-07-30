@@ -19,8 +19,12 @@ internal sealed class NoInliningDefinitionEditor(
 		Regex AssemblyName,
 		Regex TypeName,
 		Regex MethodName,
-		int? ArgumentCount
-	);
+		int? ArgumentCount,
+		bool IgnoreNoMatches
+	)
+	{
+		public int TimesMatched;
+	}
 	
 	private readonly Lazy<List<StopInliningCompiledDefinition>> Definitions = new(() =>
 	{
@@ -34,6 +38,8 @@ internal sealed class NoInliningDefinitionEditor(
 			new() { TypeName = nameof(FightModifier), MethodName = nameof(FightModifier.Key) },
 			new() { TypeName = nameof(Log), MethodName = nameof(Log.Line) },
 			new() { TypeName = nameof(MapBase), MethodName = nameof(MapBase.Key) },
+			new() { TypeName = nameof(State), MethodName = nameof(State.EnumerateAllArtifacts) },
+			new() { TypeName = nameof(State), MethodName = nameof(State.UpdateArtifactCache) },
 		];
 		
 		List<(IModManifest Manifest, StopInliningDefinition Definition)> modLoaderDefinitionsOnBehalfOf = modLoaderDefinitions
@@ -50,7 +56,7 @@ internal sealed class NoInliningDefinitionEditor(
 				var assemblyName = new Regex($"^{(string.IsNullOrEmpty(d.Definition.AssemblyName) ? "CobaltCore" : d.Definition.AssemblyName)}$");
 				var typeName = new Regex($"^{d.Definition.TypeName}$");
 				var methodName = new Regex($"^{d.Definition.MethodName}$");
-				return new StopInliningCompiledDefinition(d.Manifest, assemblyName, typeName, methodName, d.Definition.ArgumentCount);
+				return new StopInliningCompiledDefinition(d.Manifest, assemblyName, typeName, methodName, d.Definition.ArgumentCount, d.Definition.IgnoreNoMatches);
 			})
 			.ToList();
 	});
@@ -74,6 +80,11 @@ internal sealed class NoInliningDefinitionEditor(
 		var didAnything = false;
 		foreach (var module in definition.Modules)
 			didAnything |= HandleModule(module, logger, matchingDefinitions);
+		
+		foreach (var matchingDefinition in matchingDefinitions)
+			if (matchingDefinition is { TimesMatched: 0, IgnoreNoMatches: false })
+				logger(new() { Level = AssemblyEditorResult.MessageLevel.Error, Content = $"Requested by {matchingDefinition.OnBehalfOf.GetDisplayName(false)} to rewrite: {{Assembly: `{matchingDefinition.AssemblyName}`, Type: `{matchingDefinition.TypeName}`, Method: `{matchingDefinition.MethodName}`}}, but found no candidates." });
+		
 		return didAnything;
 	}
 
@@ -108,7 +119,9 @@ internal sealed class NoInliningDefinitionEditor(
 		if (matchingDefinitions.Count == 0)
 			return false;
 		
-		logger(new() { Level = AssemblyEditorResult.MessageLevel.Debug, Content = $"Rewriting method {method.FullName} in an attempt to stop it from being inlined, requested by {matchingDefinitions[0].OnBehalfOf.GetDisplayName(false)}." });
+		foreach (var matchingDefinition in matchingDefinitions)
+			matchingDefinition.TimesMatched++;
+		logger(new() { Level = AssemblyEditorResult.MessageLevel.Debug, Content = $"Rewriting method {method.FullName} to stop it from being inlined, requested by {matchingDefinitions[0].OnBehalfOf.GetDisplayName(false)}." });
 		method.ImplAttributes |= MethodImplAttributes.NoInlining;
 		
 		return true;
