@@ -7,7 +7,7 @@
 		<WarningsAsErrors>Nullable</WarningsAsErrors>
 		<CheckEolTargetFramework>false</CheckEolTargetFramework>
 		<NickelVersion>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\..\Version.txt').TrimEnd())</NickelVersion>
-		<GameReferenceAssemblyVersion>1.2.5</GameReferenceAssemblyVersion>
+		<GameReferenceAssemblyVersion>1.2.5.1</GameReferenceAssemblyVersion>
 	</PropertyGroup>
 	<ItemGroup>
 		<None Include="$(MSBuildProjectDirectory)\..\.editorconfig" Link=".editorconfig" />
