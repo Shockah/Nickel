@@ -27,6 +27,9 @@ public static class NickelConstants
 	/// <summary>A fallback version that is used if the game's version could not be parsed.</summary>
 	public static SemanticVersion FallbackGameVersion { get; } = new SemanticVersion(1, 2, 5);
 
+	/// <summary>The app ID of the game on the Steam platform.</summary>
+	public static string GameSteamAppId { get; } = "2179850";
+
 	/// <summary>The intro message that is logged right when the mod loader starts.</summary>
 	public static string IntroMessage { get; } = $"{Name} {Version} -- A modding API / mod loader for the game Cobalt Core.";
 

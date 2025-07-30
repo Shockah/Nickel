@@ -6,6 +6,7 @@
 
 ### For everyone:
 * Fixed issues introduced after the Cobalt Core 1.2.5 update (relating to artifact hooks).
+* Fixed Steam initialization on Mac.
 
 ### For developers:
 * `MethodsToStopInlining` will now by default log an error if they match no methods.

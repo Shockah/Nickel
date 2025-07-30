@@ -15,6 +15,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Nickel;
@@ -309,6 +310,10 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		var oldWorkingDirectory = Directory.GetCurrentDirectory();
 		var gameWorkingDirectory = handlerResult.WorkingDirectory;
 		Directory.SetCurrentDirectory(gameWorkingDirectory.FullName);
+		
+		// Steam fails to init otherwise on Mac
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			File.WriteAllBytes("steam_appid.txt", Encoding.UTF8.GetBytes(NickelConstants.GameSteamAppId));
 
 #pragma warning disable CA2254 // Template should be a static expression
 		logger.LogInformation(
