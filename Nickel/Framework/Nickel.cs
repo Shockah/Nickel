@@ -468,7 +468,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 	{
 		DirectoryInfo directoryInfo;
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-			directoryInfo = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", NickelConstants.Name, "ModLibrary"));
+			directoryInfo = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), NickelConstants.Name, "ModLibrary"));
 		else
 			directoryInfo = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModLibrary"));
 		
@@ -481,7 +481,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 	{
 		DirectoryInfo directoryInfo;
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-			directoryInfo = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", NickelConstants.Name, "Logs"));
+			directoryInfo = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), NickelConstants.Name, "Logs"));
 		else
 			directoryInfo = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
 		

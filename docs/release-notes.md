@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For everyone:
+* Fixed some paths at which Nickel looked for things (like mods) or stored things in (like logs) on Mac.
+
 ## 1.18.1
 Released 30 July 2025.
 

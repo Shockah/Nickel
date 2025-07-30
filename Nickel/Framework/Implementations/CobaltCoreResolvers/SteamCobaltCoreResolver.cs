@@ -36,8 +36,8 @@ internal sealed class SteamCobaltCoreResolver(Func<IFileInfo, IFileInfo?, ICobal
 		{
 			potentialSteamLocations.AddRange([
 				Path.Combine(
-					Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-					"Library/Application Support/Steam"
+					Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+					"Steam"
 				),
 			]);
 		}

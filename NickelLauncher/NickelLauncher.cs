@@ -167,7 +167,12 @@ internal sealed class NickelLauncher
 
 	private static DirectoryInfo GetOrCreateDefaultLogDirectory()
 	{
-		var directoryInfo = new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
+		DirectoryInfo directoryInfo;
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			directoryInfo = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), NickelConstants.Name, "Logs"));
+		else
+			directoryInfo = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
+		
 		if (!directoryInfo.Exists)
 			directoryInfo.Create();
 		return directoryInfo;
