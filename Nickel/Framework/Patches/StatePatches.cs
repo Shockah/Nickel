@@ -13,7 +13,7 @@ namespace Nickel;
 
 internal static class StatePatches
 {
-	internal static EventHandler<EnumerateAllArtifactsEventArgs>? OnEnumerateAllArtifacts;
+	internal static RefEventHandler<EnumerateAllArtifactsEventArgs>? OnEnumerateAllArtifacts;
 	internal static EventHandler<UpdateArtifactCacheEventArgs>? OnUpdateArtifactCache;
 	internal static RefEventHandler<ModifyPotentialExeCardsEventArgs>? OnModifyPotentialExeCards;
 	internal static RefEventHandler<LoadEventArgs>? OnLoad;
@@ -60,7 +60,7 @@ internal static class StatePatches
 			State = __instance,
 			Artifacts = __result,
 		};
-		OnEnumerateAllArtifacts?.Invoke(null, args);
+		OnEnumerateAllArtifacts?.Invoke(null, ref args);
 		__result = args.Artifacts;
 	}
 

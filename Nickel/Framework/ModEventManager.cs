@@ -107,7 +107,7 @@ internal sealed class ModEventManager
 		GPatches.OnAfterFrame += this.OnAfterFrame;
 	}
 
-	private void OnEnumerateAllArtifacts(object? _, StatePatches.EnumerateAllArtifactsEventArgs e)
+	private void OnEnumerateAllArtifacts(object? _, ref StatePatches.EnumerateAllArtifactsEventArgs e)
 	{
 		if (e.State.IsOutsideRun() || RunSummaryPatches.IsDuringRunSummarySaveFromState)
 			return;
@@ -158,10 +158,16 @@ internal sealed class ModEventManager
 	{
 		var subclass = new HookableSubclassGenerator().GenerateHookableSubclass<Artifact>(method =>
 		{
+			int? replaceSpawnedThingInitialValueIndex = null;
+			
 			if (method.Name == nameof(Artifact.ReplaceSpawnedThing))
 				return (
 					(_, _, newValue) => newValue,
-					args => args[method.GetParameters().ToList().FindIndex(p => p.Name == "thing")]
+					args =>
+					{
+						replaceSpawnedThingInitialValueIndex ??= method.GetParameters().ToList().FindIndex(p => p.Name == "thing");
+						return args[replaceSpawnedThingInitialValueIndex.Value];
+					}
 				);
 			if (method.ReturnType == typeof(bool))
 				return (

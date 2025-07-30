@@ -39,7 +39,6 @@ internal sealed class NoInliningDefinitionEditor(
 			new() { TypeName = nameof(Log), MethodName = nameof(Log.Line) },
 			new() { TypeName = nameof(MapBase), MethodName = nameof(MapBase.Key) },
 			new() { TypeName = nameof(State), MethodName = nameof(State.EnumerateAllArtifacts) },
-			new() { TypeName = nameof(State), MethodName = nameof(State.UpdateArtifactCache) },
 		];
 		
 		List<(IModManifest Manifest, StopInliningDefinition Definition)> modLoaderDefinitionsOnBehalfOf = modLoaderDefinitions
