@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.18.1
+Released 30 July 2025.
 
 ### For everyone:
 * Fixed issues introduced after the Cobalt Core 1.2.5 update (relating to artifact hooks).
