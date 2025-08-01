@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.18.2
+Released 1 August 2025.
 
 ### For everyone:
 * Fixed starter artifacts displaying on subscreens of the New Run screen (like the Daily Run Preview).
