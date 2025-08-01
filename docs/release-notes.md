@@ -10,6 +10,7 @@
 
 ### For developers:
 * The entries on the Combat Log tab of the debug menu are now selectable and inspectable.
+* Nickel now logs whenever a mod requests another mod's API.
 
 ## 1.18.1
 Released 30 July 2025.

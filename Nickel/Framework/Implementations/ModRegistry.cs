@@ -72,7 +72,11 @@ internal sealed class ModRegistry(
 
 		ref var apiObject = ref CollectionsMarshal.GetValueRefOrAddDefault(this.ApiCache, uniqueName, out var apiObjectExists);
 		if (!apiObjectExists)
+		{
+			var logger = loggerProvider(package.Manifest);
+			logger.LogDebug("Requested mod API by mod {Mod}", modManifest.GetDisplayName(false));
 			apiObject = mod.GetApi(modManifest);
+		}
 		if (apiObject is null)
 			throw new ArgumentException($"The mod {uniqueName} does not expose an API.");
 
