@@ -5,6 +5,7 @@
 ## Upcoming release
 
 ### For everyone:
+* Fixed starter artifacts displaying on subscreens of the New Run screen (like the Daily Run Preview).
 * Fixed some paths at which Nickel looked for things (like mods) or stored things in (like logs) on Mac.
 
 ## 1.18.1
