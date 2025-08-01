@@ -3,9 +3,11 @@ using ImGuiNET;
 using Microsoft.Extensions.Logging;
 using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -33,11 +35,58 @@ internal static class DebugMenuImprovements
 		.. ModEntry.Instance.Helper.ModRegistry.LoadedMods.Values.SelectMany(mod => ModEntry.Instance.Helper.ModRegistry.GetModHelper(mod).Content.Cards.RegisteredTraits.Values),
 	]);
 
+	private static bool ShouldClearSelectedCardAction;
+	private static CardAction? SelectedCardAction;
+	private static string? SelectedCardActionJson;
+	private static bool DidForceSelectedCardActionWindowSizeOnce;
+	private static Vector2 SelectedCardActionWindowSize = new(550, 600);
+
 	public static void ApplyPatches(IHarmony harmony)
-		=> harmony.Patch(
+	{
+		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Editor), nameof(Editor.ImGuiLayout)),
+			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Editor_ImGuiLayout_Prefix)),
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Editor_ImGuiLayout_Postfix)),
 			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Editor_ImGuiLayout_Transpiler))
 		);
+		harmony.Patch(
+			original: AccessTools.DeclaredMethod(typeof(Editor), nameof(Editor.PanelCombatLog)),
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Editor_PanelCombatLog_Postfix)),
+			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Editor_PanelCombatLog_Transpiler))
+		);
+	}
+
+	private static void Editor_ImGuiLayout_Prefix()
+		=> ShouldClearSelectedCardAction = true;
+
+	private static void Editor_ImGuiLayout_Postfix(Editor __instance)
+	{
+		if (ShouldClearSelectedCardAction)
+			SelectedCardAction = null;
+		if (!__instance.isActive)
+			return;
+		if (SelectedCardAction is null || SelectedCardActionJson is not { } actionJson)
+			return;
+
+		ImGui.Begin("Combat Log Action", ImGuiWindowFlags.None);
+		ImGui.Text(actionJson);
+
+		if (!ImGui.IsWindowCollapsed())
+		{
+			if (DidForceSelectedCardActionWindowSizeOnce)
+			{
+				SelectedCardActionWindowSize = ImGui.GetWindowSize();
+				ImGui.SetWindowSize(SelectedCardActionWindowSize);
+			}
+			else
+			{
+				ImGui.SetWindowSize(SelectedCardActionWindowSize);
+				DidForceSelectedCardActionWindowSizeOnce = true;
+			}
+		}
+
+		ImGui.End();
+	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static IEnumerable<CodeInstruction> Editor_ImGuiLayout_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
@@ -237,6 +286,58 @@ internal static class DebugMenuImprovements
 		{
 			ImGui.SetWindowSize(WindowSize);
 			DidForceWindowSizeOnce = true;
+		}
+	}
+
+	private static void Editor_PanelCombatLog_Postfix()
+		=> ShouldClearSelectedCardAction = false;
+
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+	private static IEnumerable<CodeInstruction> Editor_PanelCombatLog_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
+	{
+		try
+		{
+			var declaringType = MethodBase.GetCurrentMethod()!.DeclaringType!;
+			return new SequenceBlockMatcher<CodeInstruction>(instructions)
+				.ForEach(
+					SequenceMatcherRelativeBounds.Enclosed,
+					[
+						ILMatches.Call("Key"),
+						ILMatches.Call("Text"),
+					],
+					code => code
+						.Replace([
+							new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(declaringType, nameof(Editor_PanelCombatLog_Transpiler_MakeSelectable)))
+						]),
+					minExpectedOccurences: 2, maxExpectedOccurences: 2
+				)
+				.AllElements();
+		}
+		catch (Exception ex)
+		{
+			ModEntry.Instance.Logger.LogError("Could not patch method {DeclaringType}::{Method} - {Mod} probably won't work.\nReason: {Exception}", originalMethod.DeclaringType, originalMethod, ModEntry.Instance.Package.Manifest.UniqueName, ex);
+			return instructions;
+		}
+	}
+
+	private static void Editor_PanelCombatLog_Transpiler_MakeSelectable(CardAction action)
+	{
+		ImGui.Selectable(action.Key(), SelectedCardAction == action);
+		if (ImGui.IsItemClicked())
+		{
+			SelectedCardAction = action;
+
+			try
+			{
+				using var stream = new StringWriter();
+				using var jsonWriter = new JsonTextWriter(stream);
+				ModEntry.Instance.Helper.Storage.JsonSerializer.Serialize(jsonWriter, action);
+				SelectedCardActionJson = stream.ToString();
+			}
+			catch (Exception ex)
+			{
+				SelectedCardActionJson = ex.ToString();
+			}
 		}
 	}
 	

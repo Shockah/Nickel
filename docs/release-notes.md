@@ -8,6 +8,9 @@
 * Fixed starter artifacts displaying on subscreens of the New Run screen (like the Daily Run Preview).
 * Fixed some paths at which Nickel looked for things (like mods) or stored things in (like logs) on Mac.
 
+### For developers:
+* The entries on the Combat Log tab of the debug menu are now selectable and inspectable.
+
 ## 1.18.1
 Released 30 July 2025.
 
