@@ -43,6 +43,7 @@ internal sealed class ModManager
 	private ModLoadPhaseState CurrentModLoadPhase = new(ModLoadPhase.BeforeGameAssembly, IsDone: false);
 	internal ContentManager? ContentManager { get; private set; }
 	private IModManifest? VanillaModManifest;
+	private IModHelper? VanillaModHelper;
 
 	internal readonly List<IPluginPackage<IModManifest>> ResolvedMods = [];
 
@@ -710,11 +711,63 @@ internal sealed class ModManager
 
 	private IModHelper ObtainModHelper(IModManifest manifest)
 	{
+		if (manifest == this.VanillaModManifest)
+			return this.ObtainVanillaModHelper();
 		if (this.UniqueNameToHelper.TryGetValue(manifest.UniqueName, out var helper))
 			return helper;
 		if (!this.UniqueNameToPackage.TryGetValue(manifest.UniqueName, out var package))
 			throw new InvalidOperationException();
 		return this.ObtainModHelper(package);
+	}
+
+	private IModHelper ObtainVanillaModHelper()
+	{
+		if (this.VanillaModManifest is not { } manifest)
+			throw new InvalidOperationException();
+		if (this.VanillaModHelper is { } helper)
+			return helper;
+		
+		var modEvents = new VanillaModEvents();
+		helper = new ModHelper(
+			new ModRegistry(
+				manifest,
+				() => this.VanillaModManifest,
+				() => this.ModLoaderPackage.Manifest,
+				this.ModsDirectory,
+				this.UniqueNameToInstance,
+				this.UniqueNameToPackage,
+				this.ResolvedMods,
+				this.ProxyManager,
+				() => this.CurrentModLoadPhase,
+				modEvents,
+				this.ObtainModHelper,
+				this.ObtainLogger,
+				mod => this.UniqueNameToPackage[mod.UniqueName]
+			),
+			modEvents,
+			() => new ModContent(
+				new VanillaModSprites(() => this.ContentManager!.Sprites),
+				new VanillaModAudio(manifest, () => this.ContentManager!.Audio),
+				new VanillaModDecks(() => this.ContentManager!.Decks),
+				new VanillaModStatuses(() => this.ContentManager!.Statuses),
+				new VanillaModCards(() => this.ContentManager!.Cards, () => this.ContentManager!.CardTraits),
+				new VanillaModArtifacts(() => this.ContentManager!.Artifacts),
+				new VanillaModCharacters(manifest, () => this.ContentManager!.Characters),
+				new VanillaModShips(manifest, () => this.ContentManager!.Ships),
+				new VanillaModEnemies(() => this.ContentManager!.Enemies)
+			),
+			new VanillaModData(this.ModDataHandler),
+			new VanillaModStorage(manifest, this.ModStorageManager),
+			new VanillaModUtilities(
+				this.EnumCasePool,
+				this.ProxyManager,
+				this.DelayedHarmonyManager
+			),
+			() => this.CurrentModLoadPhase
+		);
+		this.VanillaModHelper = helper;
+
+		return helper;
 	}
 
 	internal IModHelper ObtainModHelper(IPluginPackage<IModManifest> package)

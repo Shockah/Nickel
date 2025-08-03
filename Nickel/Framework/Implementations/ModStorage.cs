@@ -84,3 +84,39 @@ internal sealed class ModStorage(
 		}
 	}
 }
+
+internal sealed class VanillaModStorage(
+	IModManifest modManifest,
+	ModStorageManager modStorageManager
+) : IModStorage
+{
+	public IWritableDirectoryInfo StorageDirectory
+		=> throw new NotSupportedException();
+	
+	public IWritableFileInfo GetMainStorageFile(string fileExtension)
+		=> throw new NotSupportedException();
+
+	public IWritableDirectoryInfo PrivateStorageDirectory
+		=> throw new NotSupportedException();
+	
+	public IWritableFileInfo GetMainPrivateStorageFile(string fileExtension)
+		=> throw new NotSupportedException();
+
+	public void ApplyGlobalJsonSerializerSettings(Action<JsonSerializerSettings> function, double priority = 0)
+		=> throw new NotSupportedException();
+
+	public void ApplyJsonSerializerSettings(Action<JsonSerializerSettings> function, double priority = 0)
+		=> throw new NotSupportedException();
+
+	public JsonSerializerSettings JsonSerializerSettings
+		=> modStorageManager.GetSerializerSettingsForMod(modManifest);
+
+	public JsonSerializer JsonSerializer
+		=> modStorageManager.GetSerializerForMod(modManifest);
+	
+	public bool TryLoadJson<T>(IFileInfo file, [MaybeNullWhen(false)] out T obj)
+		=> throw new NotSupportedException();
+
+	public void SaveJson<T>(IWritableFileInfo file, T obj)
+		=> throw new NotSupportedException();
+}

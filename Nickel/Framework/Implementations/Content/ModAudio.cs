@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 
 namespace Nickel;
@@ -102,4 +103,54 @@ internal sealed class ModAudio(
 	
 	public Song? ObtainSongForSound(IEventSoundEntry entry)
 		=> audioManagerProvider().ObtainSongForSound(package.Manifest, entry);
+}
+
+internal sealed class VanillaModAudio(
+	IModManifest modManifest,
+	Func<AudioManager> audioManagerProvider
+) : IModAudio
+{
+	public IReadOnlyDictionary<string, IModSoundEntry> RegisteredSounds { get; } = new Dictionary<string, IModSoundEntry>();
+	
+	public IEventSoundEntry? LookupSoundByEventId(GUID eventId)
+		=> audioManagerProvider().LookupSoundByEventId(eventId);
+
+	public ISoundEntry? LookupSoundByUniqueName(string uniqueName)
+		=> audioManagerProvider().LookupSoundByUniqueName(uniqueName);
+
+	public IModSoundEntry RegisterSound(IFileInfo file)
+		=> throw new NotSupportedException();
+
+	public IModSoundEntry RegisterSound(string name, IFileInfo file)
+		=> throw new NotSupportedException();
+
+	public IModSoundEntry RegisterSound(Func<Stream> streamProvider)
+		=> throw new NotSupportedException();
+
+	public IModSoundEntry RegisterSound(string name, Func<Stream> streamProvider)
+		=> throw new NotSupportedException();
+
+	public TEntry RegisterSound<TEntry, TArgs>(ICustomSoundEntryFactory<TEntry, TArgs> factory, TArgs args) where TEntry : ICustomSoundEntry
+		=> throw new NotSupportedException();
+
+	public TEntry RegisterSound<TEntry, TArgs>(ICustomSoundEntryFactory<TEntry, TArgs> factory, string name, TArgs args) where TEntry : ICustomSoundEntry
+		=> throw new NotSupportedException();
+
+	public TEntry RegisterSound<TEntry, TArgs>(TArgs args) where TEntry : ICustomSoundEntry where TArgs : ICustomSoundEntryArgsWithDefaultFactory<TEntry, TArgs>
+		=> throw new NotSupportedException();
+
+	public TEntry RegisterSound<TEntry, TArgs>(string name, TArgs args) where TEntry : ICustomSoundEntry where TArgs : ICustomSoundEntryArgsWithDefaultFactory<TEntry, TArgs>
+		=> throw new NotSupportedException();
+
+	public void RegisterBank(IFileInfo file)
+		=> throw new NotSupportedException();
+
+	public void RegisterBank(Func<Stream> streamProvider)
+		=> throw new NotSupportedException();
+
+	public Song? ObtainSongForEventId(GUID eventId)
+		=> audioManagerProvider().ObtainSongForEventId(modManifest, eventId);
+
+	public Song? ObtainSongForSound(IEventSoundEntry entry)
+		=> audioManagerProvider().ObtainSongForSound(modManifest, entry);
 }
