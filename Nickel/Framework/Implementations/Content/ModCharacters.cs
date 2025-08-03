@@ -24,3 +24,26 @@ internal sealed class ModCharacters(
 	public ICharacterEntry RegisterCharacter(string name, CharacterConfiguration configuration)
 		=> characterManagerProvider().RegisterCharacter(modManifest, name, configuration);
 }
+
+internal sealed class VanillaModCharacters(
+	IModManifest modManifest,
+	Func<CharacterManager> characterManagerProvider
+) : IModCharacters
+{
+	public IModCharactersV2 V2 { get; } = new VanillaModCharactersV2(modManifest, characterManagerProvider);
+	
+	public ICharacterAnimationEntry RegisterCharacterAnimation(CharacterAnimationConfiguration configuration)
+		=> throw new NotSupportedException();
+
+	public ICharacterAnimationEntry RegisterCharacterAnimation(string name, CharacterAnimationConfiguration configuration)
+		=> throw new NotSupportedException();
+
+	public ICharacterEntry? LookupByDeck(Deck deck)
+		=> characterManagerProvider().LookupByDeck(deck);
+
+	public ICharacterEntry? LookupByUniqueName(string uniqueName)
+		=> characterManagerProvider().LookupByUniqueName(uniqueName);
+
+	public ICharacterEntry RegisterCharacter(string name, CharacterConfiguration configuration)
+		=> throw new NotSupportedException();
+}

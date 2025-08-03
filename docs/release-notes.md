@@ -6,6 +6,7 @@
 
 ### For developers:
 * Updated the Shrike.Harmony library to version 3.3.0.
+* It is now possible to request an `IModHelper` for vanilla, for the sake of enumerating its content.
 
 ## 1.18.2
 Released 1 August 2025.

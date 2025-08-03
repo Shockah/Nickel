@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Nickel;
 
@@ -45,4 +46,40 @@ internal sealed class ModShips(
 		this.RegisteredPartStorage[name] = entry;
 		return entry;
 	}
+}
+
+internal sealed class VanillaModShips(
+	IModManifest modManifest,
+	Func<ShipManager> shipManagerProvider
+) : IModShips
+{
+	private readonly Lazy<Dictionary<string, IShipEntry>> LazyRegisteredShips = new(
+		() => StarterShip.ships
+			.Select(d => shipManagerProvider().LookupByUniqueName(d.Key))
+			.Where(e => e?.ModOwner == modManifest)
+			.ToDictionary(e => e!.UniqueName, e => e!)
+	);
+	
+	public IReadOnlyDictionary<string, IShipEntry> RegisteredShips
+		=> this.LazyRegisteredShips.Value;
+	
+	// TODO: maybe implement one day
+	public IReadOnlyDictionary<string, IPartTypeEntry> RegisteredPartTypes
+		=> throw new NotImplementedException();
+	
+	// TODO: maybe implement one day
+	public IReadOnlyDictionary<string, IPartEntry> RegisteredParts
+		=> throw new NotImplementedException();
+	
+	public IShipEntry? LookupByUniqueName(string uniqueName)
+		=> shipManagerProvider().LookupByUniqueName(uniqueName);
+
+	public IShipEntry RegisterShip(string name, ShipConfiguration configuration)
+		=> throw new NotSupportedException();
+
+	public IPartTypeEntry RegisterPartType(string name, PartTypeConfiguration configuration)
+		=> throw new NotSupportedException();
+
+	public IPartEntry RegisterPart(string name, PartConfiguration configuration)
+		=> throw new NotSupportedException();
 }

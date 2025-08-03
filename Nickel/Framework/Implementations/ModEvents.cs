@@ -96,3 +96,60 @@ internal sealed class ModEvents(IModManifest modManifest, ModEventManager eventM
 		((IHookable)eventManager.SuffixArtifact).UnregisterMethodHook(method, @delegate);
 	}
 }
+
+internal sealed class VanillaModEvents : IModEvents
+{
+	public event EventHandler<ModLoadPhase>? OnModLoadPhaseFinished
+	{
+		add => throw new NotSupportedException();
+		remove => throw new NotSupportedException();
+	}
+	
+	public event EventHandler<IModManifest>? OnModLoaded
+	{
+		add => throw new NotSupportedException();
+		remove => throw new NotSupportedException();
+	}
+	
+	public event EventHandler<State>? OnSaveLoaded
+	{
+		add => throw new NotSupportedException();
+		remove => throw new NotSupportedException();
+	}
+	
+	public event EventHandler<LoadStringsForLocaleEventArgs>? OnLoadStringsForLocale
+	{
+		add => throw new NotSupportedException();
+		remove => throw new NotSupportedException();
+	}
+	
+	public event EventHandler<Exception?>? OnGameClosing
+	{
+		add => throw new NotSupportedException();
+		remove => throw new NotSupportedException();
+	}
+	
+	public void RegisterBeforeArtifactsHook<THookDelegate>(string eventName, THookDelegate @delegate, double priority = 0) where THookDelegate : Delegate
+		=> throw new NotSupportedException();
+
+	public void RegisterBeforeArtifactsHook<THookDelegate>(MethodInfo method, THookDelegate @delegate, double priority = 0) where THookDelegate : Delegate
+		=> throw new NotSupportedException();
+
+	public void UnregisterBeforeArtifactsHook<THookDelegate>(string eventName, THookDelegate @delegate) where THookDelegate : Delegate
+		=> throw new NotSupportedException();
+
+	public void UnregisterBeforeArtifactsHook<THookDelegate>(MethodInfo method, THookDelegate @delegate) where THookDelegate : Delegate
+		=> throw new NotSupportedException();
+
+	public void RegisterAfterArtifactsHook<THookDelegate>(string eventName, THookDelegate @delegate, double priority = 0) where THookDelegate : Delegate
+		=> throw new NotSupportedException();
+
+	public void RegisterAfterArtifactsHook<THookDelegate>(MethodInfo method, THookDelegate @delegate, double priority = 0) where THookDelegate : Delegate
+		=> throw new NotSupportedException();
+
+	public void UnregisterAfterArtifactsHook<THookDelegate>(string eventName, THookDelegate @delegate) where THookDelegate : Delegate
+		=> throw new NotSupportedException();
+
+	public void UnregisterAfterArtifactsHook<THookDelegate>(MethodInfo method, THookDelegate @delegate) where THookDelegate : Delegate
+		=> throw new NotSupportedException();
+}
