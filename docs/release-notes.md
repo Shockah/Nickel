@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For developers:
+* Updated the Shrike.Harmony library to version 3.3.0.
+
 ## 1.18.2
 Released 1 August 2025.
 
