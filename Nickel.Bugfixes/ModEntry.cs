@@ -45,7 +45,7 @@ public sealed class ModEntry : SimpleMod
 		RockFactoryFixes.ApplyPatches(harmony);
 		SoloRunFixes.ApplyPatches(harmony);
 		SurviveVulnerabilityFixes.ApplyPatches(harmony);
-		// UnimplementedActionFeaturesFixes.ApplyPatches(harmony);
+		UnimplementedActionFeaturesFixes.ApplyPatches(harmony);
 
 		SpriteCulling.ApplyPatches(harmony);
 	}
