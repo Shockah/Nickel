@@ -4,6 +4,7 @@ using Nanoray.PluginManager;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Nickel;
 
@@ -97,4 +98,44 @@ internal sealed class ModSprites(
 		this.RegisteredSpriteStorage[name] = entry;
 		return entry;
 	}
+}
+
+internal sealed class VanillaModSprites(
+	Func<SpriteManager> spriteManagerProvider
+) : IModSprites
+{
+	private readonly Lazy<Dictionary<string, ISpriteEntry>> LazyRegisteredSprites = new(() => Enum.GetValues<Spr>().Select(s => spriteManagerProvider().LookupBySpr(s)!).ToDictionary(e => e.LocalName));
+	
+	public IReadOnlyDictionary<string, ISpriteEntry> RegisteredSprites
+		=> this.LazyRegisteredSprites.Value;
+	
+	public ISpriteEntry? LookupBySpr(Spr spr)
+		=> spriteManagerProvider().LookupBySpr(spr);
+
+	public ISpriteEntry? LookupByUniqueName(string uniqueName)
+		=> spriteManagerProvider().LookupByUniqueName(uniqueName);
+
+	public ISpriteEntry RegisterSprite(IFileInfo file)
+		=> throw new NotSupportedException();
+
+	public ISpriteEntry RegisterSprite(string name, IFileInfo file)
+		=> throw new NotSupportedException();
+
+	public ISpriteEntry RegisterSprite(Func<Stream> streamProvider)
+		=> throw new NotSupportedException();
+
+	public ISpriteEntry RegisterSprite(string name, Func<Stream> streamProvider)
+		=> throw new NotSupportedException();
+
+	public ISpriteEntry RegisterSprite(Func<Texture2D> textureProvider)
+		=> throw new NotSupportedException();
+
+	public ISpriteEntry RegisterSprite(string name, Func<Texture2D> textureProvider)
+		=> throw new NotSupportedException();
+
+	public ISpriteEntry RegisterDynamicSprite(Func<Texture2D> textureProvider)
+		=> throw new NotSupportedException();
+
+	public ISpriteEntry RegisterDynamicSprite(string name, Func<Texture2D> textureProvider)
+		=> throw new NotSupportedException();
 }

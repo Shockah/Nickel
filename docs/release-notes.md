@@ -15,6 +15,7 @@
 * Removed `IHasCustomTraits` in favor of the new `CardData.ExtraTraits` extension property.
 * Added `IModStorage.ProfileStorageDirectory` and `IModStorage.GetMainProfileStorageFile`.
 * Changed namespaces of some classes that were mistakenly put in wrong ones.
+* It is now possible to request an `IModHelper` for vanilla, for the sake of enumerating its content.
 
 ## 1.21.3
 
