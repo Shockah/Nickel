@@ -22,8 +22,39 @@ internal sealed partial class ProfileSettings
 
 internal static class CrewSelection
 {
-	private const int CharactersPerRow = 2;
-	private const int MaxCharactersOnScreen = 8;
+	private static readonly Lazy<int> CharactersPerRow = new(() =>
+	{
+		var method = AccessTools.DeclaredMethod(typeof(NewRunOptions), nameof(NewRunOptions.CharSelect));
+		try
+		{
+			_ = new SequenceBlockMatcher<CodeInstruction>(PatchProcessor.GetOriginalInstructions(method))
+				.Find([
+					ILMatches.Ldloc<int>(method),
+					ILMatches.Ldloc<int>(method).GetLocalIndex(out var perRowLocalIndex),
+					ILMatches.Blt,
+					ILMatches.LdcI4(0),
+					ILMatches.Stloc<int>(method),
+				])
+				.Find(SequenceBlockMatcherFindOccurence.First, SequenceMatcherRelativeBounds.WholeSequence, [
+					ILMatches.AnyLdcI4.SelectElement(out var perRow, i => i.TryGetIntConstant(out var perRow) ? perRow : 2),
+					ILMatches.Stloc(perRowLocalIndex.Value),
+				]);
+			return perRow.Value;
+		}
+		catch (Exception ex)
+		{
+			ModEntry.Instance.Logger.LogError("Could not inspect method {DeclaringType}::{Method} - {Mod} probably won't work.\nReason: {Exception}", method.DeclaringType, method, ModEntry.Instance.Package.Manifest.UniqueName, ex);
+			return 2;
+		}
+	});
+	
+	private static readonly Lazy<int> MaxCharactersOnScreen = new(() =>
+	{
+		var vanillaCharacterCount = ModEntry.Instance.Helper.ModRegistry.GetModHelper(ModEntry.Instance.Helper.ModRegistry.VanillaModManifest).Content.Characters.V2.RegisteredPlayableCharacters.Count;
+		var charactersPerRow = CharactersPerRow.Value;
+		var characterRows = (int)Math.Ceiling(1.0 * vanillaCharacterCount / charactersPerRow);
+		return characterRows * charactersPerRow;
+	});
 
 	private static int ScrollPosition;
 
@@ -31,8 +62,8 @@ internal static class CrewSelection
 	{
 		get
 		{
-			var totalRows = (int)Math.Ceiling((double)NewRunOptions.allChars.Count / CharactersPerRow);
-			var maxScroll = Math.Max(0, totalRows * CharactersPerRow - MaxCharactersOnScreen);
+			var totalRows = (int)Math.Ceiling((double)NewRunOptions.allChars.Count / CharactersPerRow.Value);
+			var maxScroll = Math.Max(0, totalRows * CharactersPerRow.Value - MaxCharactersOnScreen.Value);
 			return maxScroll;
 		}
 	}
@@ -41,8 +72,8 @@ internal static class CrewSelection
 	{
 		get
 		{
-			var totalPages = (int)Math.Ceiling((double)NewRunOptions.allChars.Count / MaxCharactersOnScreen);
-			var maxScroll = Math.Max(0, (totalPages - 1) * MaxCharactersOnScreen);
+			var totalPages = (int)Math.Ceiling((double)NewRunOptions.allChars.Count / MaxCharactersOnScreen.Value);
+			var maxScroll = Math.Max(0, (totalPages - 1) * MaxCharactersOnScreen.Value);
 			return maxScroll;
 		}
 	}
@@ -92,7 +123,7 @@ internal static class CrewSelection
 		// handling mouse scroll wheel to page the character list
 		var mouseScroll = (int)Math.Round(-Input.scrollY / 120);
 		if (mouseScroll != 0)
-			ScrollPosition = Math.Clamp(ScrollPosition + CharactersPerRow * mouseScroll, 0, MaxScroll);
+			ScrollPosition = Math.Clamp(ScrollPosition + CharactersPerRow.Value * mouseScroll, 0, MaxScroll);
 	}
 
 	private static void NewRunOptions_CharSelect_Postfix(G g, bool __runOriginal)
@@ -104,13 +135,13 @@ internal static class CrewSelection
 		if (ScrollPosition > 0)
 		{
 			Rect rect = new(NewRunOptions.charSelectPos.x + 19, NewRunOptions.charSelectPos.y - 53, 31, 26);
-			OnMouseDown onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Max(0, ScrollPosition - MaxCharactersOnScreen));
+			OnMouseDown onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Max(0, ScrollPosition - MaxCharactersOnScreen.Value));
 			SharedArt.ButtonSprite(g, rect, StableUK.btn_move_left, ModEntry.Instance.ScrollUpSprite.Sprite, ModEntry.Instance.ScrollUpOnSprite.Sprite, onMouseDown: onMouseDown);
 		}
 		if (ScrollPosition < MaxScroll)
 		{
 			Rect rect = new(NewRunOptions.charSelectPos.x + 19, NewRunOptions.charSelectPos.y + 140, 31, 26);
-			OnMouseDown onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Clamp(ScrollPosition + MaxCharactersOnScreen, 0, MaxPageByPageScroll));
+			OnMouseDown onMouseDown = new MouseDownHandler(() => ScrollPosition = Math.Clamp(ScrollPosition + MaxCharactersOnScreen.Value, 0, MaxPageByPageScroll));
 			SharedArt.ButtonSprite(g, rect, StableUK.btn_move_right, ModEntry.Instance.ScrollDownSprite.Sprite, ModEntry.Instance.ScrollDownOnSprite.Sprite, onMouseDown: onMouseDown);
 		}
 	}
@@ -176,5 +207,5 @@ internal static class CrewSelection
 	}
 
 	private static List<Deck> NewRunOptions_CharSelect_Transpiler_ModifyAllChars(List<Deck> allChars)
-		=> allChars.Skip(ScrollPosition).Take(MaxCharactersOnScreen).ToList();
+		=> allChars.Skip(ScrollPosition).Take(MaxCharactersOnScreen.Value).ToList();
 }
