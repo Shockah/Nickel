@@ -10,6 +10,7 @@
 * All of the commandline arguments now have their equivalents in the Nickel's settings file. Passing in commandline arguments overrides the settings values.
 
 ### For developers:
+* Updated the Shrike.Harmony library to version 3.3.0.
 * Removed deprecated code.
 * Removed `IHasCustomTraits` in favor of the new `CardData.ExtraTraits` extension property.
 * Added `IModStorage.ProfileStorageDirectory` and `IModStorage.GetMainProfileStorageFile`.
