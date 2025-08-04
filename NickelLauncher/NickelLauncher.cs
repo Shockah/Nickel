@@ -41,10 +41,10 @@ internal sealed class NickelLauncher
 		var realOut = Console.Out;
 		var loggerFactory = LoggerFactory.Create(builder =>
 		{
-			builder.SetMinimumLevel(LogLevel.Debug);
+			builder.SetMinimumLevel(LogLevel.Trace);
 			var fileLogDirectory = arguments.LogPath ?? GetOrCreateDefaultLogDirectory();
 			var timestampedLogFiles = arguments.TimestampedLogFiles ?? false;
-			builder.AddProvider(FileLoggerProvider.CreateNewLog(LogLevel.Debug, fileLogDirectory, timestampedLogFiles));
+			builder.AddProvider(FileLoggerProvider.CreateNewLog(LogLevel.Trace, fileLogDirectory, timestampedLogFiles));
 			builder.AddProvider(new ConsoleLoggerProvider(LogLevel.Information, realOut, disposeWriter: false));
 		});
 		var logger = loggerFactory.CreateLogger($"{NickelConstants.Name}Launcher");

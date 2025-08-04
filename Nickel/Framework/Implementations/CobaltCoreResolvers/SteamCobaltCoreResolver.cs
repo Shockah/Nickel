@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Nanoray.PluginManager;
 using OneOf;
@@ -11,10 +12,14 @@ using VdfParser;
 
 namespace Nickel;
 
-internal sealed class SteamCobaltCoreResolver(Func<IFileInfo, IFileInfo?, ICobaltCoreResolver> resolverFactory) : ICobaltCoreResolver
+internal sealed class SteamCobaltCoreResolver(
+	Func<IFileInfo, IFileInfo?, ICobaltCoreResolver> resolverFactory,
+	ILogger logger
+) : ICobaltCoreResolver
 {
 	public OneOf<CobaltCoreResolveResult, Error<string>> ResolveCobaltCore()
 	{
+		logger.LogTrace("Attempting to resolve Cobalt Core from its Steam path...");
 		List<string> potentialSteamLocations = [];
 
 		var isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
@@ -47,6 +52,7 @@ internal sealed class SteamCobaltCoreResolver(Func<IFileInfo, IFileInfo?, ICobal
 			const string steamInstallSubKey32 = @"SOFTWARE\Valve\Steam";
 			const string steamInstallSubKey64 = @"SOFTWARE\WOW6432Node\Valve\Steam";
 
+			logger.LogTrace("Accessing Windows registry for the Steam path...");
 			foreach (var subkey in new[] { steamInstallSubKey64, steamInstallSubKey32 })
 			{
 				using var key = Registry.LocalMachine.OpenSubKey(subkey);
@@ -69,6 +75,8 @@ internal sealed class SteamCobaltCoreResolver(Func<IFileInfo, IFileInfo?, ICobal
 		var potentialSteamAppsPaths = new HashSet<string>();
 		foreach (var potentialSteamPath in potentialSteamLocations)
 		{
+			logger.LogTrace("Potential Steam path: {SteamPath}", PathUtilities.SanitizePath(potentialSteamPath));
+			
 			// This should be safe to delete
 			potentialSteamAppsPaths.Add(Path.Combine(potentialSteamPath, "steamapps"));
 
@@ -76,6 +84,8 @@ internal sealed class SteamCobaltCoreResolver(Func<IFileInfo, IFileInfo?, ICobal
 			var libraryVdfPath = Path.Combine(potentialSteamPath, "steamapps", "libraryfolders.vdf");
 			if (!File.Exists(libraryVdfPath))
 				continue;
+			
+			logger.LogTrace("Found Steam library VDF file: {Path}", PathUtilities.SanitizePath(libraryVdfPath));
 
 			using var libraryVdfFile = File.OpenRead(libraryVdfPath);
 			var deserializer = new VdfDeserializer();
@@ -116,21 +126,29 @@ internal sealed class SteamCobaltCoreResolver(Func<IFileInfo, IFileInfo?, ICobal
 
 		foreach (var potentialSteamAppPath in potentialSteamAppsPaths)
 		{
+			logger.LogTrace("Potential Steam app path: {SteamAppPath}", PathUtilities.SanitizePath(potentialSteamAppPath));
+			
 			var potentialPath = Path.Combine(potentialSteamAppPath, "common", "Cobalt Core");
 			if (isOsx)
 				potentialPath = Path.Combine(potentialPath, "Cobalt Core.app", "Contents", "MacOS");
+			
+			logger.LogTrace("Potential Cobalt Core path: {SteamAppPath}", PathUtilities.SanitizePath(potentialPath));
 
 			var directory = new DirectoryInfo(potentialPath);
 			if (!directory.Exists)
 				continue;
 
-			var singleFileApplicationPath = new FileInfoImpl(new FileInfo(Path.Combine(directory.FullName, isOsx ? "CobaltCore" : "CobaltCore.exe")));
+			var singleFileApplicationPath = new FileInfoImpl(new FileInfo(Path.Combine(directory.FullName, isWindows ? "CobaltCore.exe" : "CobaltCore")));
 			if (!singleFileApplicationPath.Exists)
 				continue;
+			
+			logger.LogTrace("Resolved Cobalt Core path: {Path}", PathUtilities.SanitizePath(singleFileApplicationPath.FullName));
 
 			var pdbPath = new FileInfoImpl(new FileInfo(Path.Combine(directory.FullName, "CobaltCore.pdb")));
 			if (pdbPath.Exists != true)
 				pdbPath = null;
+			
+			logger.LogTrace("Resolved Cobalt Core PDB path: {Path}", pdbPath is null ? "<null>" : PathUtilities.SanitizePath(pdbPath.FullName));
 
 			var resolver = resolverFactory(singleFileApplicationPath, pdbPath);
 			return resolver.ResolveCobaltCore();

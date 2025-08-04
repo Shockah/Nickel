@@ -95,10 +95,10 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		{
 			if (string.IsNullOrEmpty(launchArguments.LogPipeName))
 			{
-				builder.SetMinimumLevel(LogLevel.Debug);
+				builder.SetMinimumLevel(LogLevel.Trace);
 				var fileLogDirectory = launchArguments.LogPath ?? GetOrCreateDefaultLogDirectory();
 				var timestampedLogFiles = launchArguments.TimestampedLogFiles ?? false;
-				builder.AddProvider(FileLoggerProvider.CreateNewLog(LogLevel.Debug, fileLogDirectory, timestampedLogFiles));
+				builder.AddProvider(FileLoggerProvider.CreateNewLog(LogLevel.Trace, fileLogDirectory, timestampedLogFiles));
 				builder.AddProvider(new ConsoleLoggerProvider(LogLevel.Information, realOut, disposeWriter: false));
 			}
 			else
@@ -135,42 +135,46 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		var modStorageDirectory = launchArguments.ModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "ModStorage"));
 		logger.LogInformation("ModStoragePath: {Path}", PathUtilities.SanitizePath(modStorageDirectory.FullName));
 		
-		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
-		
 		ICobaltCoreResolver cobaltCoreResolver = launchArguments.GamePath is { } gamePath
-			? new SingleFileApplicationCobaltCoreResolver(new FileInfoImpl(gamePath), new FileInfoImpl(new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb"))))
+			? new SingleFileApplicationCobaltCoreResolver(
+				new FileInfoImpl(gamePath),
+				new FileInfoImpl(new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb"))),
+				logger
+			)
 			: new CompoundCobaltCoreResolver([
 				new RecursiveToRootDirectoryCobaltCoreResolver(
 					new DirectoryInfoImpl(new DirectoryInfo(Environment.CurrentDirectory)),
 					directory =>
 					{
-						var exePath = directory.GetRelativeFile("CobaltCore.exe");
+						var exePath = directory.GetRelativeFile(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "CobaltCore.exe" : "CobaltCore");
 						var pdbPath = directory.GetRelativeFile("CobaltCore.pdb");
-						return exePath.Exists
-							? new SingleFileApplicationCobaltCoreResolver(exePath, pdbPath)
+						return exePath is { Exists: true, IsFile: true }
+							? new SingleFileApplicationCobaltCoreResolver(exePath, pdbPath, logger)
 							: null;
-					}
+					},
+					logger
 				),
-				new SteamCobaltCoreResolver((exe, pdb) => new SingleFileApplicationCobaltCoreResolver(exe, pdb)),
+				new SteamCobaltCoreResolver(
+					(exePath, pdbPath) => new SingleFileApplicationCobaltCoreResolver(exePath, pdbPath, logger),
+					logger
+				),
 			]);
 
 		var resolveResultOrError = cobaltCoreResolver.ResolveCobaltCore();
-		CobaltCoreResolveResult? nullableResolveResult = resolveResultOrError.IsT0 ? resolveResultOrError.AsT0 : null;
-		
-		if (resolveResultOrError.TryPickT1(out var error, out var resolveResult))
+		if (resolveResultOrError.TryPickT1(out var resolveError, out var resolveResult))
 		{
-			logger.LogCritical("Could not resolve Cobalt Core: {Error}", error.Value);
+			logger.LogCritical("Could not resolve Cobalt Core: {Error}", resolveError.Value);
 			return -1;
 		}
-
-		var gameWorkingDirectory = resolveResult.WorkingDirectory;
-		logger.LogInformation("GameWorkingDirectory: {Path}", PathUtilities.SanitizePath(gameWorkingDirectory.FullName));
+		
+		logger.LogDebug("Resolved game EXE path: {Path}", PathUtilities.SanitizePath(resolveResult.ExePath.FullName));
+		logger.LogDebug("Resolved game working directory path: {Path}", PathUtilities.SanitizePath(resolveResult.WorkingDirectory.FullName));
 		
 		using (var exeStream = resolveResult.ExePath.OpenRead())
 			logger.LogDebug("Game EXE hash: {Hash}", Convert.ToHexString(MD5.HashData(exeStream)));
 
 		var extendableAssemblyDefinitionEditor = new ExtendableAssemblyDefinitionEditor(() => new CompoundAssemblyResolver([
-			new CobaltCoreAssemblyResolver(nullableResolveResult),
+			new CobaltCoreAssemblyResolver(resolveResult),
 			new PackageAssemblyResolver(launchArguments.Vanilla ? [] : instance.ModManager.ResolvedMods),
 			new DefaultAssemblyResolver(),
 		]));
@@ -234,12 +238,13 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 		var handler = new CobaltCoreHandler(logger, extendableAssemblyDefinitionEditor);
 		var handlerResultOrError = handler.SetupGame(resolveResult);
-		if (handlerResultOrError.TryPickT1(out error, out var handlerResult))
+		if (handlerResultOrError.TryPickT1(out var handlerError, out var handlerResult))
 		{
-			logger.LogCritical("Could not start the game: {Error}", error.Value);
+			logger.LogCritical("Could not start the game: {Error}", handlerError.Value);
 			return -2;
 		}
-
+		
+		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
 		var exitCode = ContinueAfterLoadingGameAssembly(instance, launchArguments, harmony, logger, gameLogger, handlerResult);
 		loggerFactory.Dispose();
 		return exitCode;

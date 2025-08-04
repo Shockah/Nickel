@@ -38,7 +38,7 @@ internal static class HarmonyPatches
 
 	internal static void Apply(Harmony harmony, ILogger logger)
 	{
-		logger.LogInformation("Preparing Harmony for mod usage...");
+		logger.LogDebug("Preparing Harmony for mod usage...");
 		PatchUpdateWrapper();
 		PatchCreateDynamicMethod();
 		PatchClassProcessorProcessPatchJob();
