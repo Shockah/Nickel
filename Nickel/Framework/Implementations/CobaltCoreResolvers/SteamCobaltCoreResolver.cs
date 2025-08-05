@@ -5,10 +5,11 @@ using OneOf;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using VdfParser;
+using ValveKeyValue;
 
 namespace Nickel;
 
@@ -87,40 +88,23 @@ internal sealed class SteamCobaltCoreResolver(
 			
 			logger.LogTrace("Found Steam library VDF file: {Path}", PathUtilities.SanitizePath(libraryVdfPath));
 
-			using var libraryVdfFile = File.OpenRead(libraryVdfPath);
-			var deserializer = new VdfDeserializer();
-
-			if (deserializer.Deserialize(libraryVdfFile) is not IDictionary<string, dynamic> result)
-				continue;
-
-			// regular install
-			if (!result.TryGetValue("libraryfolders", out var libraryFoldersVdfEntryRaw))
+			try
 			{
-				// proton shim
-				if (!result.TryGetValue("LibraryFolders", out libraryFoldersVdfEntryRaw))
-				{
-					// trying the patience
-					var entry = result.FirstOrDefault(x => x.Key.Equals("libraryfolders", StringComparison.InvariantCultureIgnoreCase));
-					if (entry.Key is null)
-					{
-						// nope, not found
-						continue;
-					}
+				using var libraryVdfStream = File.OpenRead(libraryVdfPath);
+				var kv = KVSerializer.Create(KVSerializationFormat.KeyValues1Text);
+				var kvData = kv.Deserialize(libraryVdfStream);
 
-					libraryFoldersVdfEntryRaw = entry.Value;
-				}
+				if (kvData.Children.FirstOrDefault(c => c.Name.Equals("LibraryFolders", StringComparison.InvariantCultureIgnoreCase)) is not { } kvLibraryFolders)
+					continue;
+				if (kvLibraryFolders.FirstOrDefault(c => c.Name.Equals("Path", StringComparison.InvariantCultureIgnoreCase) && c.Value.ValueType == KVValueType.String) is not { } kvLibraryFolderPath)
+					continue;
+
+				var libraryFolderPath = kvLibraryFolderPath.Value.ToString(CultureInfo.InvariantCulture);
+				potentialSteamAppsPaths.Add(Path.Combine(libraryFolderPath, "steamapps"));
 			}
-
-			if (libraryFoldersVdfEntryRaw is not IDictionary<string, dynamic> libraryFoldersVdfEntry)
-				continue;
-
-			foreach (var folderDynamic in libraryFoldersVdfEntry.Values)
+			catch (Exception ex)
 			{
-				if (folderDynamic is not IDictionary<string, dynamic> folderDict)
-					continue;
-				if (folderDict["path"] is not string path)
-					continue;
-				potentialSteamAppsPaths.Add(Path.Combine(path, "steamapps"));
+				logger.LogWarning("Could not deserialize Steam library VDF file: {Exception}", ex);
 			}
 		}
 
@@ -142,13 +126,13 @@ internal sealed class SteamCobaltCoreResolver(
 			if (!singleFileApplicationPath.Exists)
 				continue;
 			
-			logger.LogTrace("Resolved Cobalt Core path: {Path}", PathUtilities.SanitizePath(singleFileApplicationPath.FullName));
+			logger.LogTrace("Resolved Steam Cobalt Core path: {Path}", PathUtilities.SanitizePath(singleFileApplicationPath.FullName));
 
 			var pdbPath = new FileInfoImpl(new FileInfo(Path.Combine(directory.FullName, "CobaltCore.pdb")));
 			if (pdbPath.Exists != true)
 				pdbPath = null;
 			
-			logger.LogTrace("Resolved Cobalt Core PDB path: {Path}", pdbPath is null ? "<null>" : PathUtilities.SanitizePath(pdbPath.FullName));
+			logger.LogTrace("Resolved Steam Cobalt Core PDB path: {Path}", pdbPath is null ? "<null>" : PathUtilities.SanitizePath(pdbPath.FullName));
 
 			var resolver = resolverFactory(singleFileApplicationPath, pdbPath);
 			return resolver.ResolveCobaltCore();

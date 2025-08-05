@@ -64,7 +64,7 @@
 		<PackageReference Condition="!'$(UseReferenceAssembly)'" Include="Fayti1703.AssemblyTasks" Version="1.1.0" PrivateAssets="none" />
 		<Reference Condition="!'$(UseReferenceAssembly)'" Include="CobaltCore" HintPath="$(IntermediateOutputPath)/CobaltCore.dll" Private="False" />
 		<PackageReference Include="SingleFileExtractor.Core" Version="2.2.1" />
-		<PackageReference Include="VdfConverter" Version="1.0.3" />
+		<PackageReference Include="ValveKeyValue" Version="0.13.1.398" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.2.1105" />
 
 		<!-- mod management -->
