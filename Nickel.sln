@@ -13,6 +13,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Configuration.props.user = Configuration.props.user
 		Directory.Build.props = Directory.Build.props
 		FindModLoaderPath.targets = FindModLoaderPath.targets
+		Version.txt = Version.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{DFCFAAC8-927B-4237-800D-D0FD584DA8D6}"
+	ProjectSection(SolutionItems) = preProject
+		docs\mod-build-config-release-notes.md = docs\mod-build-config-release-notes.md
+		docs\player-guide.md = docs\player-guide.md
+		docs\README.md = docs\README.md
+		docs\release-notes.md = docs\release-notes.md
+		docs\update-checks.md = docs\update-checks.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nickel", "Nickel\Nickel.csproj", "{B11A6D4A-E91B-48BF-BA1E-18AC40EFFA0A}"
@@ -135,5 +145,8 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EC90FEA3-909D-4BA8-BC7A-19A848FC4567}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DFCFAAC8-927B-4237-800D-D0FD584DA8D6} = {22CED42A-3C4C-4282-BB23-2B999492A3F5}
 	EndGlobalSection
 EndGlobal
