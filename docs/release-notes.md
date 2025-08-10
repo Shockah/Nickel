@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.18.3
+Released 10 August 2025.
 
 ### For everyone:
 * Changed the library Nickel uses for reading Steam library VDF files, which should fix some errors with finding Cobalt Core on some machine setups.
