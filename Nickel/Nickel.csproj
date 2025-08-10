@@ -55,7 +55,6 @@
 	<ItemGroup>
 		<!-- project references -->
 		<ProjectReference Include="..\$(_ModLoaderName)Common\$(_ModLoaderName)Common.csproj" />
-		<ProjectReference Include="..\PluginManager\PluginManager.csproj" />
 		<ProjectReference Include="..\PluginManager.Cecil\PluginManager.Cecil.csproj" />
 		
 		<!-- game handling -->

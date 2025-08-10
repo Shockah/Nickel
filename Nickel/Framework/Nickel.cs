@@ -90,20 +90,35 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static int CreateAndStartInstance(LaunchArguments launchArguments, Stopwatch stopwatch)
 	{
+		var modStorageDirectory = launchArguments.ModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "ModStorage"));
+
+		Settings settings;
+		try
+		{
+			settings = SettingsUtilities.ReadSettings<Settings>(new DirectoryInfoImpl(modStorageDirectory)) ?? throw new InvalidDataException();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(NickelConstants.IntroMessage);
+			Console.WriteLine($"ModStoragePath: {PathUtilities.SanitizePath(modStorageDirectory.FullName)}");
+			Console.WriteLine(ex);
+			return -1;
+		}
+		
 		var realOut = Console.Out;
 		var loggerFactory = LoggerFactory.Create(builder =>
 		{
 			if (string.IsNullOrEmpty(launchArguments.LogPipeName))
 			{
-				builder.SetMinimumLevel(LogLevel.Trace);
+				builder.SetMinimumLevel((LogLevel)Math.Min((int)settings.MinimumFileLogLevel, (int)settings.MinimumConsoleLogLevel));
 				var fileLogDirectory = launchArguments.LogPath ?? GetOrCreateDefaultLogDirectory();
 				var timestampedLogFiles = launchArguments.TimestampedLogFiles ?? false;
-				builder.AddProvider(FileLoggerProvider.CreateNewLog(LogLevel.Trace, fileLogDirectory, timestampedLogFiles));
-				builder.AddProvider(new ConsoleLoggerProvider(LogLevel.Information, realOut, disposeWriter: false));
+				builder.AddProvider(FileLoggerProvider.CreateNewLog(settings.MinimumFileLogLevel, fileLogDirectory, timestampedLogFiles));
+				builder.AddProvider(new ConsoleLoggerProvider(settings.MinimumConsoleLogLevel, realOut, disposeWriter: false));
 			}
 			else
 			{
-				builder.SetMinimumLevel(LogLevel.Trace);
+				builder.SetMinimumLevel((LogLevel)Math.Min((int)settings.MinimumFileLogLevel, (int)settings.MinimumConsoleLogLevel));
 				builder.AddProvider(new NamedPipeClientLoggerProvider(launchArguments.LogPipeName));
 			}
 		});
@@ -111,12 +126,14 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, realOut));
 		Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
+		
+		logger.LogInformation("ModStoragePath: {Path}", PathUtilities.SanitizePath(modStorageDirectory.FullName));
 
 		try
 		{
 			var instance = new Nickel(launchArguments);
 			Instance = instance;
-			return StartInstance(instance, launchArguments, loggerFactory, logger, stopwatch);
+			return StartInstance(instance, launchArguments, loggerFactory, logger, stopwatch, modStorageDirectory);
 		}
 		catch (Exception ex)
 		{
@@ -126,14 +143,11 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		}
 	}
 
-	private static int StartInstance(Nickel instance, LaunchArguments launchArguments, ILoggerFactory loggerFactory, ILogger logger, Stopwatch stopwatch)
+	private static int StartInstance(Nickel instance, LaunchArguments launchArguments, ILoggerFactory loggerFactory, ILogger logger, Stopwatch stopwatch, DirectoryInfo modStorageDirectory)
 	{
 		var steamCompatDataPath = Environment.GetEnvironmentVariable("STEAM_COMPAT_DATA_PATH");
 		if (!string.IsNullOrEmpty(steamCompatDataPath))
 			logger.LogInformation("SteamCompatDataPath: {Path}", steamCompatDataPath);
-		
-		var modStorageDirectory = launchArguments.ModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "ModStorage"));
-		logger.LogInformation("ModStoragePath: {Path}", PathUtilities.SanitizePath(modStorageDirectory.FullName));
 		
 		ICobaltCoreResolver cobaltCoreResolver = launchArguments.GamePath is { } gamePath
 			? new SingleFileApplicationCobaltCoreResolver(

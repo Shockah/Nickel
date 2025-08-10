@@ -1,13 +1,10 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace Nickel;
+namespace Nickel.Launcher;
 
 internal sealed class Settings
 {
-	[JsonProperty]
-	public DebugMode DebugMode = DebugMode.Disabled;
-	
 	[JsonProperty]
 	public LogLevel MinimumFileLogLevel = LogLevel.Debug;
 	

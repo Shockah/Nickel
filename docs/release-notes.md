@@ -6,6 +6,7 @@
 
 ### For everyone:
 * Changed the library Nickel uses for reading Steam library VDF files, which should fix some errors with finding Cobalt Core on some machine setups.
+* Added `MinimumFileLogLevel` and `MinimumConsoleLogLevel` to the `Nickel.json` settings file, allowing specifying which lines should be logged. Most importantly, `Trace` logs can now be logged.
 
 ## 1.18.2
 Released 1 August 2025.
