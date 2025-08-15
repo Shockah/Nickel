@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed handling of additional Steam libraries.
+
 ## 1.18.3
 Released 10 August 2025.
 

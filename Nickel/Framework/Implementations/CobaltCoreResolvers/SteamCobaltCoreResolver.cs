@@ -101,14 +101,18 @@ internal sealed class SteamCobaltCoreResolver(
 			var kv = KVSerializer.Create(KVSerializationFormat.KeyValues1Text);
 			var kvData = kv.Deserialize(libraryVdfStream);
 
-			if (kvData.Children.FirstOrDefault(c => c.Name.Equals("LibraryFolders", StringComparison.InvariantCultureIgnoreCase)) is not { } kvLibraryFolders)
-				return null;
-			if (kvLibraryFolders.FirstOrDefault(c => c.Name.Equals("Path", StringComparison.InvariantCultureIgnoreCase) && c.Value.ValueType == KVValueType.String) is not { } kvLibraryFolderPath)
+			if (!kvData.Name.Equals("LibraryFolders", StringComparison.InvariantCultureIgnoreCase))
 				return null;
 
-			var libraryFolderPath = kvLibraryFolderPath.Value.ToString(CultureInfo.InvariantCulture);
-			if (this.HandleSteamAppsPath(Path.Combine(libraryFolderPath, "steamapps"), isWindows, isOsx) is { } result2)
-				return result2;
+			foreach (var kvLibraryFolder in kvData)
+			{
+				if (kvLibraryFolder.FirstOrDefault(c => c.Name.Equals("Path", StringComparison.InvariantCultureIgnoreCase) && c.Value.ValueType == KVValueType.String) is not { } kvLibraryFolderPath)
+					continue;
+				
+				var libraryFolderPath = kvLibraryFolderPath.Value.ToString(CultureInfo.InvariantCulture);
+				if (this.HandleSteamAppsPath(Path.Combine(libraryFolderPath, "steamapps"), isWindows, isOsx) is { } result2)
+					return result2;
+			}
 		}
 		catch (Exception ex)
 		{
