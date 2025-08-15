@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.18.4
+Released 15 August 2025.
 
 * Fixed handling of additional Steam libraries.
 
