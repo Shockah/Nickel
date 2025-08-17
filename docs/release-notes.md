@@ -5,6 +5,7 @@
 ## Upcoming release
 
 * Fixed file write operations merely overwriting existing bytes in files, instead of overwriting them as a whole, causing garbled files, most notably with settings.
+* Fixed the Debug option not staying on.
 
 ## 1.18.4
 Released 15 August 2025.

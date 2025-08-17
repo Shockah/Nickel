@@ -116,7 +116,7 @@ internal static class StatePatches
 
 	private static void SaveIfRelease_Postfix(State __instance)
 	{
-		if (Nickel.Instance.DebugMode != DebugMode.EnabledWithSaving)
+		if (Nickel.Instance.Settings.DebugMode != DebugMode.EnabledWithSaving)
 			return;
 		if (FeatureFlags.Debug)
 			__instance.Save();

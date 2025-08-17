@@ -20,14 +20,16 @@ using System.Text.RegularExpressions;
 
 namespace Nickel;
 
-internal sealed partial class Nickel(LaunchArguments launchArguments)
+internal sealed partial class Nickel(
+	LaunchArguments launchArguments,
+	Settings settings
+)
 {
 	internal static Nickel Instance { get; private set; } = null!;
 	internal Harmony? Harmony { get; private set; }
 	internal ModManager ModManager { get; private set; } = null!;
 	private readonly LaunchArguments LaunchArguments = launchArguments;
-	internal DebugMode DebugMode { get; private set; } = DebugMode.Disabled;
-	private Settings Settings = new();
+	internal Settings Settings { get; private set; } = settings;
 	
 	private SaveManager SaveManager = null!;
 
@@ -95,7 +97,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		Settings settings;
 		try
 		{
-			settings = SettingsUtilities.ReadSettings<Settings>(new DirectoryInfoImpl(modStorageDirectory)) ?? throw new InvalidDataException();
+			settings = SettingsUtilities.ReadSettings<Settings>(new DirectoryInfoImpl(modStorageDirectory), true) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{
@@ -131,7 +133,16 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 		try
 		{
-			var instance = new Nickel(launchArguments);
+			if (launchArguments.Debug is { } debugArg)
+			{
+				if (debugArg)
+					settings.DebugMode = (launchArguments.SaveInDebug ?? true) ? DebugMode.EnabledWithSaving : DebugMode.Enabled;
+				else
+					settings.DebugMode = DebugMode.Disabled;
+			}
+			logger.LogInformation("DebugMode: {Value}", settings.DebugMode);
+			
+			var instance = new Nickel(launchArguments, settings);
 			Instance = instance;
 			return StartInstance(instance, launchArguments, loggerFactory, logger, stopwatch, modStorageDirectory);
 		}
@@ -281,15 +292,6 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static int ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony? harmony, ILogger logger, ILogger gameLogger, CobaltCoreHandlerResult handlerResult)
 	{
-		if (launchArguments.Debug is { } debugArg)
-		{
-			if (debugArg)
-				instance.DebugMode = (launchArguments.SaveInDebug ?? true) ? DebugMode.EnabledWithSaving : DebugMode.Enabled;
-			else
-				instance.DebugMode = DebugMode.Disabled;
-		}
-		logger.LogInformation("DebugMode: {Value}", instance.DebugMode);
-		
 		var version = GetVanillaVersion();
 		logger.LogInformation("Game version: {Version}", version);
 
@@ -324,7 +326,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 			FeatureFlags.OverrideSaveLocation = savePath.FullName;
 		}
-		FeatureFlags.Modded = instance.DebugMode != DebugMode.Disabled || !launchArguments.Vanilla;
+		FeatureFlags.Modded = instance.Settings.DebugMode != DebugMode.Disabled || !launchArguments.Vanilla;
 
 		var oldWorkingDirectory = Directory.GetCurrentDirectory();
 		var gameWorkingDirectory = handlerResult.WorkingDirectory;
@@ -345,7 +347,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		try
 		{
 			List<string> gameArguments = [];
-			if (instance.DebugMode != DebugMode.Disabled)
+			if (instance.Settings.DebugMode != DebugMode.Disabled)
 				gameArguments.Add("--debug");
 			gameArguments.AddRange(launchArguments.UnmatchedArguments);
 
@@ -511,14 +513,13 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private void OnSettingsUpdate()
 	{
-		this.DebugMode = this.Settings.DebugMode;
 		if (AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == "CobaltCore"))
 			this.OnSettingsUpdateAfterGameLoaded();
 	}
 
 	private void OnSettingsUpdateAfterGameLoaded()
 	{
-		FeatureFlags.Debug = this.DebugMode != DebugMode.Disabled;
+		FeatureFlags.Debug = this.Settings.DebugMode != DebugMode.Disabled;
 
 		// ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
 		if (MG.inst?.g is not { } g)

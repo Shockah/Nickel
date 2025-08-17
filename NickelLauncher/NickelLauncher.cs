@@ -44,7 +44,7 @@ internal sealed class NickelLauncher
 		Settings settings;
 		try
 		{
-			settings = SettingsUtilities.ReadSettings<Settings>(new DirectoryInfoImpl(modStorageDirectory)) ?? throw new InvalidDataException();
+			settings = SettingsUtilities.ReadSettings<Settings>(new DirectoryInfoImpl(modStorageDirectory), false) ?? throw new InvalidDataException();
 		}
 		catch (Exception ex)
 		{
