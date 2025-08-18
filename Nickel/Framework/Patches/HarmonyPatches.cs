@@ -60,7 +60,7 @@ internal static class HarmonyPatches
 
 		void PatchCreateDynamicMethod()
 		{
-			if (AccessTools.DeclaredMethod(typeof(Harmony).Assembly.GetType("HarmonyLib.MethodPatcher"), "CreateDynamicMethod") is not { } originalMethod)
+			if (AccessTools.DeclaredMethod(typeof(Harmony).Assembly.GetType("HarmonyLib.MethodPatcherTools"), "CreateDynamicMethod") is not { } originalMethod)
 			{
 				logger.LogError("Could not patch Harmony methods for better debugging capabilities: missing method.");
 				return;
@@ -68,7 +68,7 @@ internal static class HarmonyPatches
 
 			harmony.Patch(
 				original: originalMethod,
-				prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(MethodPatcher_CreateDynamicMethod_Prefix))
+				prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(MethodPatcherTools_CreateDynamicMethod_Prefix))
 			);
 		}
 
@@ -93,7 +93,7 @@ internal static class HarmonyPatches
 	private static void PatchFunctions_UpdateWrapper_Postfix()
 		=> CurrentPatchInfo = null;
 
-	private static void MethodPatcher_CreateDynamicMethod_Prefix(ref string suffix)
+	private static void MethodPatcherTools_CreateDynamicMethod_Prefix(ref string suffix)
 	{
 		if (CurrentPatchInfo is null)
 			return;

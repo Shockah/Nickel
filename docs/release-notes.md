@@ -6,6 +6,7 @@
 
 * Fixed file write operations merely overwriting existing bytes in files, instead of overwriting them as a whole, causing garbled files, most notably with settings.
 * Fixed the Debug option not staying on.
+* Updated the Harmony library to version 2.4.0, potentially fixing some macOS-specific issues.
 
 ## 1.18.4
 Released 15 August 2025.
