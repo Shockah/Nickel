@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.18.5
+Released 18 August 2025.
 
 * Fixed file write operations merely overwriting existing bytes in files, instead of overwriting them as a whole, causing garbled files, most notably with settings.
 * Fixed the Debug option not staying on.
