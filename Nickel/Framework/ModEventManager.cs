@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -100,36 +99,25 @@ internal sealed class ModEventManager
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnSaveLoadedEvent), exception);
 		});
 
-		StatePatches.OnEnumerateAllArtifacts += this.OnEnumerateAllArtifacts;
-		StatePatches.OnUpdateArtifactCache += this.OnUpdateArtifactCache;
+		StatePatches.OnEnumerateAllArtifactsBeforeAddingArtifacts += this.OnEnumerateAllArtifactsBeforeAddingArtifacts;
+		StatePatches.OnEnumerateAllArtifactsAfterAddingArtifacts += this.OnEnumerateAllArtifactsAfterAddingArtifacts;
 		ArtifactPatches.OnKey += this.OnArtifactKey;
 		CheevosPatches.OnCheckOnLoad += this.OnCheckOnLoad;
 		GPatches.OnAfterFrame += this.OnAfterFrame;
 	}
 
-	private void OnEnumerateAllArtifacts(object? _, ref StatePatches.EnumerateAllArtifactsEventArgs e)
+	private void OnEnumerateAllArtifactsBeforeAddingArtifacts(object? _, StatePatches.EnumerateAllArtifactsEventArgs e)
 	{
 		if (e.State.IsOutsideRun() || RunSummaryPatches.IsDuringRunSummarySaveFromState)
 			return;
-		if (!this.ArtifactCacheWithHookables.TryGetValue(e.State, out var rawArtifactCache))
-			return;
-		e.Artifacts = (List<Artifact>)rawArtifactCache;
+		e.Artifacts.Add(this.PrefixArtifact);
 	}
 
-	private void OnUpdateArtifactCache(object? _, StatePatches.UpdateArtifactCacheEventArgs e)
+	private void OnEnumerateAllArtifactsAfterAddingArtifacts(object? _, StatePatches.EnumerateAllArtifactsEventArgs e)
 	{
-		if (!this.ArtifactCacheWithHookables.TryGetValue(e.State, out var rawArtifactCache))
-		{
-			rawArtifactCache = new List<Artifact>();
-			this.ArtifactCacheWithHookables.Add(e.State, rawArtifactCache);
-		}
-
-		var artifactCache = (List<Artifact>)rawArtifactCache;
-
-		artifactCache.Clear();
-		artifactCache.Add(this.PrefixArtifact);
-		artifactCache.AddRange(e.State._artifactCache!);
-		artifactCache.Add(this.SuffixArtifact);
+		if (e.State.IsOutsideRun() || RunSummaryPatches.IsDuringRunSummarySaveFromState)
+			return;
+		e.Artifacts.Add(this.SuffixArtifact);
 	}
 
 	[EventPriority(-1)]

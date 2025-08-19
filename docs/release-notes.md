@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Updated for a stealth patch for Cobalt Core 1.2.5.
+
 ## 1.18.5
 Released 18 August 2025.
 
