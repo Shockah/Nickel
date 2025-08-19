@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.18.6
+Released 19 August 2025.
 
 * Updated for a stealth patch for Cobalt Core 1.2.5.
 
