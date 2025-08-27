@@ -205,11 +205,13 @@ internal static class StarterDeckPreview
 
 	private static void Character_Render_Prefix(Character __instance, G g, bool renderLocked)
 	{
+		if (!ModEntry.Instance.Settings.ProfileBased.Current.StarterDeckPreview)
+			return;
 		if (__instance.deckType is not { } deck)
 			return;
 		if (g.metaRoute is not null)
 			return;
-		if (g.state.route is not NewRunOptions)
+		if (g.state.route is not NewRunOptions { subRoute: null })
 			return;
 		if (renderLocked)
 			return;
@@ -249,11 +251,13 @@ internal static class StarterDeckPreview
 
 	private static void Artifact_RenderArtifactList_Prefix(G g, ref Vec offset)
 	{
+		if (!ModEntry.Instance.Settings.ProfileBased.Current.StarterDeckPreview)
+			return;
 		if (LastRenderedCharacter?.deckType is not { } deck)
 			return;
 		if (g.metaRoute is not null)
 			return;
-		if (g.state.route is not NewRunOptions)
+		if (g.state.route is not NewRunOptions { subRoute: null })
 			return;
 
 		if (NewRunOptions.allChars.IndexOf(deck) % 2 == 0)

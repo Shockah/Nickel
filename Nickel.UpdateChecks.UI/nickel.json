@@ -1,9 +1,10 @@
-﻿{
+{
 	"UniqueName": "Nickel.UpdateChecks.UI",
 	"Version": "{{ModVersion}}",
 	"DisplayName": "Nickel: Update checks UI",
 	"Description": "Adds actual UI and a way to access settings for mod update checks.",
 	"Author": "Nickel",
+	"MinimumGameVersion": "1.2.5",
 	"RequiredApiVersion": "{{ModVersion}}",
 	"EntryPointAssembly": "Nickel.UpdateChecks.UI.dll",
 	"EntryPointType": "Nickel.UpdateChecks.UI.ModEntry",

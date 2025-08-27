@@ -1,0 +1,88 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\Configuration.ModBuildConfig.props" />
+	<PropertyGroup>
+		<RootNamespace>Nickel.ModBuildConfig.ReferenceAssembly</RootNamespace>
+		<ProductName>Nickel.ModBuildConfig.ReferenceAssembly</ProductName>
+		<AssemblyName>Nickel.ModBuildConfig.ReferenceAssembly</AssemblyName>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<NoWarn>NU5128</NoWarn>
+	</PropertyGroup>
+	<PropertyGroup>
+		<PackageId>Nickel.ModBuildConfig.ReferenceAssembly</PackageId>
+		<Authors>Shockah</Authors>
+		<Description>A package which helps with creating, debugging and publishing of Cobalt Core mods using the Nickel modloader.</Description>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	</PropertyGroup>
+	<Import Project="..\Configuration.props" />
+	<ItemGroup>
+		<PackageReference Include="Nanoray.ExtractSingleFileApplicationResourceTask" Version="1.0.0" PrivateAssets="none" />
+		<PackageReference Include="Fayti1703.AssemblyTasks" Version="1.1.0" PrivateAssets="none" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="$(MSBuildProjectDirectory)\..\.editorconfig" Link=".editorconfig" />
+		<None Remove="$(MSBuildProjectDirectory)\.release\**" />
+		<None Include="..\docs\README.md" PackagePath="\" Pack="True" />
+		<None Include="..\LICENSE" PackagePath="\" Pack="True" />
+		<None Include="$(OutputPath)\CobaltCore.dll" PackagePath="lib\$(TargetFramework)" Pack="True" Visible="False" />
+	</ItemGroup>
+
+	<!-- Set build options -->
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework> <!-- game's .NET version -->
+		<Version>$(GameReferenceAssemblyVersion)</Version>
+		
+		<!-- Constants -->
+		<_GameName>Cobalt Core</_GameName>
+		<_GameSteamID>2179850</_GameSteamID>
+		<_ModLoaderName>Nickel</_ModLoaderName>
+		
+		<!-- Remember user-provided settings -->
+		<HasUserGameDllPath>false</HasUserGameDllPath>
+		<HasUserGameDllPath Condition="'$(GameDllPath)' != ''">true</HasUserGameDllPath>
+		<HasUserGameExePath>false</HasUserGameExePath>
+		<HasUserGameExePath Condition="'$(GameExePath)' != ''">true</HasUserGameExePath>
+		<HasUserEnableDllExtract>false</HasUserEnableDllExtract>
+		<HasUserEnableDllExtract Condition="'$(EnableDllExtract)' != ''">true</HasUserEnableDllExtract>
+	</PropertyGroup>
+
+	<Import Project="../FindModLoaderPath.targets" />
+
+	<!-- Trying to set GameDllPath and GameExePath based on the found game path -->
+	<PropertyGroup Condition="Exists('$(_GamePath)')">
+		<GameExePath Condition="!'$(HasUserGameExePath)' And !Exists('$(GameExePath)')">$(_GamePath)\CobaltCore.exe</GameExePath>
+		<GameDllPath Condition="!'$(HasUserGameDllPath)' And !Exists('$(GameDllPath)')">$(_GamePath)\CobaltCore.dll</GameDllPath>
+	</PropertyGroup>
+
+	<!-- default settings that do care about paths -->
+	<PropertyGroup>
+		<EnableDllExtract Condition="'$(EnableDllExtract)' == '' And Exists('$(GameExePath)')">true</EnableDllExtract>
+		<EnableDllExtract Condition="'$(EnableDllExtract)' == '' And !Exists('$(GameDllPath)')">true</EnableDllExtract>
+		<EnableDllExtract Condition="'$(EnableDllExtract)' == ''">false</EnableDllExtract>
+	</PropertyGroup>
+
+	<Target Name="ValidateProperties" BeforeTargets="CoreCompile">
+		<!-- confirmation messages -->
+		<Message Importance="high" Text="ModBuildConfig: EnableDllExtract = $(EnableDllExtract)" />
+		<Message Importance="high" Text="ModBuildConfig: EnableModDeploy = $(EnableModDeploy)" />
+		<Message Importance="high" Condition="'$(EnableDllExtract)'" Text="ModBuildConfig: GameExePath = '$(GameExePath)'" />
+		<Message Importance="high" Text="ModBuildConfig: GameDllPath = '$(GameDllPath)'" />
+
+		<!-- validation -->
+		<Error Condition="'$(OS)' != 'OSX' AND '$(OS)' != 'Unix' AND '$(OS)' != 'Windows_NT'" Text="The mod build package doesn't recognize OS type '$(OS)'." />
+		<Error Condition="'$(EnableDllExtract)' And !Exists('$(GameExePath)') " Text="The mod build package can't find the game EXE. You can specify where to find it with the `GameExePath` build property." ContinueOnError="false" />
+		<Error Condition="!'$(EnableDllExtract)' And !Exists('$(GameDllPath)')" Text="The mod build package can't find the extracted game DLL. You can specify where to find it with the `GameDllPath` build property." ContinueOnError="false" />
+		<Warning Condition="'$(Platform)' != 'AnyCPU'" Text="The target platform should be set to 'Any CPU' for compatibility with both 32-bit and 64-bit versions of the game (currently set to '$(Platform)')." />
+	</Target>
+
+	<Target Name="ExtractGameDllTarget" BeforeTargets="HandleGameDll" Condition="$(EnableDllExtract)">
+		<ExtractSingleFileApplicationResourceTask ExeInputPath="$(GameExePath)" ResourceName="CobaltCore.dll" ResourceOutputPath="$(GameDllPath)" />
+	</Target>
+
+	<Target Name="HandleGameDll" BeforeTargets="PrepareForBuild">
+		<Fayti1703.AssemblyTasks.PublishAllTypes SourceFilePath="$(GameDllPath)" TargetFilePath="$(IntermediateOutputPath)/CobaltCore_Publicized.dll" />
+		<Fayti1703.AssemblyTasks.MakeReferenceAssembly SourceFilePath="$(IntermediateOutputPath)/CobaltCore_Publicized.dll" TargetFilePath="$(OutputPath)/CobaltCore.dll" />
+	</Target>
+</Project>

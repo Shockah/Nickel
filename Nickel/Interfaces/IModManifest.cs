@@ -21,6 +21,12 @@ public interface IModManifest
 	/// <summary>The mod's dependencies on other mods. The mod loader will ensure these are loaded first.</summary>
 	IReadOnlySet<ModDependency> Dependencies { get; }
 
+	/// <summary>The minimum version of the game supported by this mod.</summary>
+	SemanticVersion? MinimumGameVersion { get; }
+
+	/// <summary>The first version of the game that is unsupported by this mod.</summary>
+	SemanticVersion? UnsupportedGameVersion { get; }
+
 	/// <summary>An optional display ("nice") name of the mod presented to the user.</summary>
 	string? DisplayName { get; }
 

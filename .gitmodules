@@ -1,6 +1,3 @@
-[submodule "LegacyModLoader"]
-	path = LegacyModLoader
-	url = https://github.com/Ewanderer/CobaltCoreModLoader
 [submodule "ModSiteSupportingFiles/NexusVortexExtension/vortex-api"]
 	path = ModSiteSupportingFiles/NexusVortexExtension/vortex-api
 	url = https://github.com/Nexus-Mods/vortex-api

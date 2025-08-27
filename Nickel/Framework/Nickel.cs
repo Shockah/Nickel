@@ -2,6 +2,7 @@ using FSPRO;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Mono.Cecil;
+using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using Nickel.Common;
 using Nickel.ModSettings;
@@ -12,19 +13,23 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Nickel;
 
-internal sealed partial class Nickel(LaunchArguments launchArguments)
+internal sealed partial class Nickel(
+	LaunchArguments launchArguments,
+	Settings settings
+)
 {
 	internal static Nickel Instance { get; private set; } = null!;
 	internal Harmony? Harmony { get; private set; }
 	internal ModManager ModManager { get; private set; } = null!;
 	private readonly LaunchArguments LaunchArguments = launchArguments;
-	internal DebugMode DebugMode { get; private set; } = DebugMode.Disabled;
-	private Settings Settings = new();
+	internal Settings Settings { get; private set; } = settings;
 	
 	private SaveManager SaveManager = null!;
 
@@ -32,64 +37,21 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 	{
 		var stopwatch = Stopwatch.StartNew();
 		
-		Option<bool> vanillaOption = new(
-			name: "--vanilla",
-			description: "Whether to run the vanilla game instead.",
-			getDefaultValue: () => false
-		)
-		{
-			Arity = ArgumentArity.ZeroOrOne
-		};
-		Option<bool?> debugOption = new(
-			name: "--debug",
-			description: "Whether the game should be ran in debug mode."
-		);
-		Option<bool?> saveInDebugOption = new(
-			name: "--saveInDebug",
-			description: "Whether the game should be auto-saved even in debug mode."
-		);
-		Option<bool?> initSteamOption = new(
-			name: "--initSteam",
-			description: "Whether Steam integration should be enabled."
-		);
-		Option<FileInfo?> gamePathOption = new(
-			name: "--gamePath",
-			description: "The path to CobaltCore.exe."
-		);
-		Option<DirectoryInfo?> modsPathOption = new(
-			name: "--modsPath",
-			description: "The path containing the mods to load."
-		);
-		Option<DirectoryInfo?> internalModsPathOption = new(
-			name: "--internalModsPath",
-			description: "The path containing the internal mods to load."
-		);
-		Option<DirectoryInfo?> modStoragePathOption = new(
-			name: "--modStoragePath",
-			description: "The path containing mod data, like settings (ones that are fine to share)."
-		);
-		Option<DirectoryInfo?> privateModStoragePathOption = new(
-			name: "--privateModStoragePath",
-			description: "The path containing private mod data, like settings (ones that should never be shared)."
-		);
-		Option<DirectoryInfo?> savePathOption = new(
-			name: "--savePath",
-			description: "The path that will store the save data."
-		);
-		Option<DirectoryInfo?> logPathOption = new(
-			name: "--logPath",
-			description: "The folder logs will be stored in."
-		);
-		Option<bool?> timestampedLogFiles = new(
-			name: "--keepLogs",
-			description: "Uses timestamps for log filenames."
-		);
-		Option<string?> logPipeNameOption = new(
-			name: "--logPipeName"
-		)
-		{ IsHidden = true };
+		var vanillaOption = new Option<bool>("--vanilla", () => false, "Whether to run the vanilla game instead.") { Arity = ArgumentArity.ZeroOrOne };
+		var debugOption = new Option<bool?>("--debug", "Whether the game should be ran in debug mode.");
+		var saveInDebugOption = new Option<bool?>("--saveInDebug", "Whether the game should be auto-saved even in debug mode.");
+		var initSteamOption = new Option<bool?>("--initSteam", "Whether Steam integration should be enabled.");
+		var gamePathOption = new Option<FileInfo?>("--gamePath", "The path to CobaltCore.exe.");
+		var modsPathOption = new Option<DirectoryInfo?>("--modsPath", "The path containing the mods to load.");
+		var internalModsPathOption = new Option<DirectoryInfo?>("--internalModsPath", "The path containing the internal mods to load.");
+		var modStoragePathOption = new Option<DirectoryInfo?>("--modStoragePath", "The path containing mod data, like settings (ones that are fine to share).");
+		var privateModStoragePathOption = new Option<DirectoryInfo?>("--privateModStoragePath", "The path containing private mod data, like settings (ones that should never be shared).");
+		var savePathOption = new Option<DirectoryInfo?>("--savePath", "The path that will store the save data.");
+		var logPathOption = new Option<DirectoryInfo?>("--logPath", "The folder logs will be stored in.");
+		var timestampedLogFiles = new Option<bool?>("--keepLogs", "Uses timestamps for log filenames.");
+		var logPipeNameOption = new Option<string?>("--logPipeName") { IsHidden = true };
 
-		RootCommand rootCommand = new(NickelConstants.IntroMessage);
+		var rootCommand = new RootCommand(NickelConstants.IntroMessage);
 		rootCommand.AddOption(vanillaOption);
 		rootCommand.AddOption(debugOption);
 		rootCommand.AddOption(saveInDebugOption);
@@ -106,7 +68,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 		rootCommand.SetHandler(context =>
 		{
-			LaunchArguments launchArguments = new()
+			var launchArguments = new LaunchArguments
 			{
 				Vanilla = context.ParseResult.GetValueForOption(vanillaOption),
 				Debug = context.ParseResult.GetValueForOption(debugOption),
@@ -130,20 +92,35 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static int CreateAndStartInstance(LaunchArguments launchArguments, Stopwatch stopwatch)
 	{
+		var modStorageDirectory = launchArguments.ModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "ModStorage"));
+
+		Settings settings;
+		try
+		{
+			settings = SettingsUtilities.ReadSettings<Settings>(new DirectoryInfoImpl(modStorageDirectory), true) ?? throw new InvalidDataException();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(NickelConstants.IntroMessage);
+			Console.WriteLine($"ModStoragePath: {PathUtilities.SanitizePath(modStorageDirectory.FullName)}");
+			Console.WriteLine(ex);
+			return -1;
+		}
+		
 		var realOut = Console.Out;
 		var loggerFactory = LoggerFactory.Create(builder =>
 		{
 			if (string.IsNullOrEmpty(launchArguments.LogPipeName))
 			{
-				builder.SetMinimumLevel(LogLevel.Debug);
+				builder.SetMinimumLevel((LogLevel)Math.Min((int)settings.MinimumFileLogLevel, (int)settings.MinimumConsoleLogLevel));
 				var fileLogDirectory = launchArguments.LogPath ?? GetOrCreateDefaultLogDirectory();
 				var timestampedLogFiles = launchArguments.TimestampedLogFiles ?? false;
-				builder.AddProvider(FileLoggerProvider.CreateNewLog(LogLevel.Debug, fileLogDirectory, timestampedLogFiles));
-				builder.AddProvider(new ConsoleLoggerProvider(LogLevel.Information, realOut, disposeWriter: false));
+				builder.AddProvider(FileLoggerProvider.CreateNewLog(settings.MinimumFileLogLevel, fileLogDirectory, timestampedLogFiles));
+				builder.AddProvider(new ConsoleLoggerProvider(settings.MinimumConsoleLogLevel, realOut, disposeWriter: false));
 			}
 			else
 			{
-				builder.SetMinimumLevel(LogLevel.Trace);
+				builder.SetMinimumLevel((LogLevel)Math.Min((int)settings.MinimumFileLogLevel, (int)settings.MinimumConsoleLogLevel));
 				builder.AddProvider(new NamedPipeClientLoggerProvider(launchArguments.LogPipeName));
 			}
 		});
@@ -151,12 +128,23 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, realOut));
 		Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
+		
+		logger.LogInformation("ModStoragePath: {Path}", PathUtilities.SanitizePath(modStorageDirectory.FullName));
 
 		try
 		{
-			var instance = new Nickel(launchArguments);
+			if (launchArguments.Debug is { } debugArg)
+			{
+				if (debugArg)
+					settings.DebugMode = (launchArguments.SaveInDebug ?? true) ? DebugMode.EnabledWithSaving : DebugMode.Enabled;
+				else
+					settings.DebugMode = DebugMode.Disabled;
+			}
+			logger.LogInformation("DebugMode: {Value}", settings.DebugMode);
+			
+			var instance = new Nickel(launchArguments, settings);
 			Instance = instance;
-			return StartInstance(instance, launchArguments, loggerFactory, logger, stopwatch);
+			return StartInstance(instance, launchArguments, loggerFactory, logger, stopwatch, modStorageDirectory);
 		}
 		catch (Exception ex)
 		{
@@ -166,42 +154,62 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		}
 	}
 
-	private static int StartInstance(Nickel instance, LaunchArguments launchArguments, ILoggerFactory loggerFactory, ILogger logger, Stopwatch stopwatch)
+	private static int StartInstance(Nickel instance, LaunchArguments launchArguments, ILoggerFactory loggerFactory, ILogger logger, Stopwatch stopwatch, DirectoryInfo modStorageDirectory)
 	{
 		var steamCompatDataPath = Environment.GetEnvironmentVariable("STEAM_COMPAT_DATA_PATH");
 		if (!string.IsNullOrEmpty(steamCompatDataPath))
 			logger.LogInformation("SteamCompatDataPath: {Path}", steamCompatDataPath);
 		
-		var modStorageDirectory = launchArguments.ModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "ModStorage"));
-		logger.LogInformation("ModStoragePath: {Path}", PathUtilities.SanitizePath(modStorageDirectory.FullName));
-		
-		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
-		
 		ICobaltCoreResolver cobaltCoreResolver = launchArguments.GamePath is { } gamePath
-			? new SingleFileApplicationCobaltCoreResolver(gamePath, new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb")))
-			: new SteamCobaltCoreResolver((exe, pdb) => new SingleFileApplicationCobaltCoreResolver(exe, pdb));
+			? new SingleFileApplicationCobaltCoreResolver(
+				new FileInfoImpl(gamePath),
+				new FileInfoImpl(new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb"))),
+				logger
+			)
+			: new CompoundCobaltCoreResolver([
+				new RecursiveToRootDirectoryCobaltCoreResolver(
+					new DirectoryInfoImpl(new DirectoryInfo(Environment.CurrentDirectory)),
+					directory =>
+					{
+						var exePath = directory.GetRelativeFile(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "CobaltCore.exe" : "CobaltCore");
+						var pdbPath = directory.GetRelativeFile("CobaltCore.pdb");
+						return exePath is { Exists: true, IsFile: true }
+							? new SingleFileApplicationCobaltCoreResolver(exePath, pdbPath, logger)
+							: null;
+					},
+					logger
+				),
+				new SteamCobaltCoreResolver(
+					(exePath, pdbPath) => new SingleFileApplicationCobaltCoreResolver(exePath, pdbPath, logger),
+					logger
+				),
+			]);
 
 		var resolveResultOrError = cobaltCoreResolver.ResolveCobaltCore();
-		CobaltCoreResolveResult? nullableResolveResult = resolveResultOrError.IsT0 ? resolveResultOrError.AsT0 : null;
-		
-		if (resolveResultOrError.TryPickT1(out var error, out var resolveResult))
+		if (resolveResultOrError.TryPickT1(out var resolveError, out var resolveResult))
 		{
-			logger.LogCritical("Could not resolve Cobalt Core: {Error}", error.Value);
+			logger.LogCritical("Could not resolve Cobalt Core: {Error}", resolveError.Value);
 			return -1;
 		}
-
-		var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? resolveResult.WorkingDirectory;
-		logger.LogInformation("GameWorkingDirectory: {Path}", PathUtilities.SanitizePath(gameWorkingDirectory.FullName));
+		
+		logger.LogDebug("Resolved game EXE path: {Path}", PathUtilities.SanitizePath(resolveResult.ExePath.FullName));
+		logger.LogDebug("Resolved game working directory path: {Path}", PathUtilities.SanitizePath(resolveResult.WorkingDirectory.FullName));
 		
 		using (var exeStream = resolveResult.ExePath.OpenRead())
 			logger.LogDebug("Game EXE hash: {Hash}", Convert.ToHexString(MD5.HashData(exeStream)));
 
 		var extendableAssemblyDefinitionEditor = new ExtendableAssemblyDefinitionEditor(() => new CompoundAssemblyResolver([
-			new CobaltCoreAssemblyResolver(nullableResolveResult),
+			new CobaltCoreAssemblyResolver(resolveResult),
 			new PackageAssemblyResolver(launchArguments.Vanilla ? [] : instance.ModManager.ResolvedMods),
 			new DefaultAssemblyResolver(),
 		]));
-		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor());
+		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor(
+			() => instance.ModManager.ModLoaderPackage.Manifest,
+			() => instance.ModManager.ResolvedMods
+				.Select(p => p.Manifest.AsAssemblyModManifest())
+				.Where(m => m.IsT0)
+				.Select(m => m.AsT0)
+		));
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GamePublicizerDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new CardTraitStateCacheFieldDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new ModDataFieldDefinitionEditor());
@@ -255,12 +263,13 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 		var handler = new CobaltCoreHandler(logger, extendableAssemblyDefinitionEditor);
 		var handlerResultOrError = handler.SetupGame(resolveResult);
-		if (handlerResultOrError.TryPickT1(out error, out var handlerResult))
+		if (handlerResultOrError.TryPickT1(out var handlerError, out var handlerResult))
 		{
-			logger.LogCritical("Could not start the game: {Error}", error.Value);
+			logger.LogCritical("Could not start the game: {Error}", handlerError.Value);
 			return -2;
 		}
-
+		
+		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
 		var exitCode = ContinueAfterLoadingGameAssembly(instance, launchArguments, harmony, logger, gameLogger, handlerResult);
 		loggerFactory.Dispose();
 		return exitCode;
@@ -283,17 +292,14 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static int ContinueAfterLoadingGameAssembly(Nickel instance, LaunchArguments launchArguments, Harmony? harmony, ILogger logger, ILogger gameLogger, CobaltCoreHandlerResult handlerResult)
 	{
-		if (launchArguments.Debug is { } debugArg)
-		{
-			if (debugArg)
-				instance.DebugMode = (launchArguments.SaveInDebug ?? true) ? DebugMode.EnabledWithSaving : DebugMode.Enabled;
-			else
-				instance.DebugMode = DebugMode.Disabled;
-		}
-		logger.LogInformation("DebugMode: {Value}", instance.DebugMode);
-		
 		var version = GetVanillaVersion();
 		logger.LogInformation("Game version: {Version}", version);
+
+		if (NickelConstants.MinimumGameVersion is { } minimumGameVersion && version < minimumGameVersion)
+		{
+			logger.LogCritical("{ModLoaderName}'s minimum supported game version is {MinimumGameVersion}, but the game is at version {GameVersion}; aborting.", NickelConstants.Name, NickelConstants.MinimumGameVersion, version);
+			return -5;
+		}
 
 		if (!launchArguments.Vanilla)
 		{
@@ -320,11 +326,15 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 			FeatureFlags.OverrideSaveLocation = savePath.FullName;
 		}
-		FeatureFlags.Modded = instance.DebugMode != DebugMode.Disabled || !launchArguments.Vanilla;
+		FeatureFlags.Modded = instance.Settings.DebugMode != DebugMode.Disabled || !launchArguments.Vanilla;
 
 		var oldWorkingDirectory = Directory.GetCurrentDirectory();
-		var gameWorkingDirectory = launchArguments.GamePath?.Directory ?? handlerResult.WorkingDirectory;
+		var gameWorkingDirectory = handlerResult.WorkingDirectory;
 		Directory.SetCurrentDirectory(gameWorkingDirectory.FullName);
+		
+		// Steam fails to init otherwise on Mac
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			File.WriteAllBytes("steam_appid.txt", Encoding.UTF8.GetBytes(NickelConstants.GameSteamAppId));
 
 #pragma warning disable CA2254 // Template should be a static expression
 		logger.LogInformation(
@@ -337,7 +347,7 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 		try
 		{
 			List<string> gameArguments = [];
-			if (instance.DebugMode != DebugMode.Disabled)
+			if (instance.Settings.DebugMode != DebugMode.Disabled)
 				gameArguments.Add("--debug");
 			gameArguments.AddRange(launchArguments.UnmatchedArguments);
 
@@ -477,7 +487,12 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static DirectoryInfo GetOrCreateDefaultModLibraryDirectory()
 	{
-		var directoryInfo = new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModLibrary"));
+		DirectoryInfo directoryInfo;
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			directoryInfo = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), NickelConstants.Name, "ModLibrary"));
+		else
+			directoryInfo = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ModLibrary"));
+		
 		if (!directoryInfo.Exists)
 			directoryInfo.Create();
 		return directoryInfo;
@@ -485,7 +500,12 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private static DirectoryInfo GetOrCreateDefaultLogDirectory()
 	{
-		var directoryInfo = new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
+		DirectoryInfo directoryInfo;
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			directoryInfo = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), NickelConstants.Name, "Logs"));
+		else
+			directoryInfo = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
+		
 		if (!directoryInfo.Exists)
 			directoryInfo.Create();
 		return directoryInfo;
@@ -493,14 +513,13 @@ internal sealed partial class Nickel(LaunchArguments launchArguments)
 
 	private void OnSettingsUpdate()
 	{
-		this.DebugMode = this.Settings.DebugMode;
 		if (AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == "CobaltCore"))
 			this.OnSettingsUpdateAfterGameLoaded();
 	}
 
 	private void OnSettingsUpdateAfterGameLoaded()
 	{
-		FeatureFlags.Debug = this.DebugMode != DebugMode.Disabled;
+		FeatureFlags.Debug = this.Settings.DebugMode != DebugMode.Disabled;
 
 		// ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
 		if (MG.inst?.g is not { } g)

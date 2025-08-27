@@ -1,13 +1,16 @@
-**/.vs/**
-**/.idea/**
-*/bin/**
-*/obj/**
-**/.bin/**
-**/.obj/**
-*/.release/**
-packages/**
-**/*.zip
+# IDEs
+.idea
+.vs
+
+# user configs
 *.user
-*.user.*
+/*/Properties/PublishProfiles
+
+# build artifacts
+.bin
+.obj
+/*/release
+/_Publish
+
+# proprietary
 CobaltCore.dll
-*/Properties/**

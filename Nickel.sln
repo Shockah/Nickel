@@ -13,6 +13,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Configuration.props.user = Configuration.props.user
 		Directory.Build.props = Directory.Build.props
 		FindModLoaderPath.targets = FindModLoaderPath.targets
+		Version.txt = Version.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{DFCFAAC8-927B-4237-800D-D0FD584DA8D6}"
+	ProjectSection(SolutionItems) = preProject
+		docs\mod-build-config-release-notes.md = docs\mod-build-config-release-notes.md
+		docs\player-guide.md = docs\player-guide.md
+		docs\README.md = docs\README.md
+		docs\release-notes.md = docs\release-notes.md
+		docs\update-checks.md = docs\update-checks.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nickel", "Nickel\Nickel.csproj", "{B11A6D4A-E91B-48BF-BA1E-18AC40EFFA0A}"
@@ -26,8 +36,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginManager.Cecil", "PluginManager.Cecil\PluginManager.Cecil.csproj", "{0267A231-613F-45B5-8171-6FBB242F30AC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModBuildConfig", "ModBuildConfig\ModBuildConfig.csproj", "{9240D306-36C9-4245-90BD-1954A31994C8}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModding.Definitions", "LegacyModLoader\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj", "{C27B6030-7813-4B04-8398-E8C7347E01AB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginManager.Tests", "PluginManager.Tests\PluginManager.Tests.csproj", "{28D842D3-14DC-49CB-AE43-1918A25286C4}"
 EndProject
@@ -48,6 +56,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nickel.Bugfixes", "Nickel.Bugfixes\Nickel.Bugfixes.csproj", "{68F68D60-0939-4BBC-8C6A-CFFA5A01378F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nickel.UpdateChecks.UI", "Nickel.UpdateChecks.UI\Nickel.UpdateChecks.UI.csproj", "{D88F2151-D399-437B-8008-6C5A2A5FC77D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModBuildConfig.ReferenceAssembly", "ModBuildConfig.ReferenceAssembly\ModBuildConfig.ReferenceAssembly.csproj", "{E86CC0D0-8278-4739-9B05-B7A20CE53018}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NickelMacLauncher", "NickelMacLauncher\NickelMacLauncher.csproj", "{6F394CDD-C36E-46A3-8444-DC209D247A61}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -79,10 +91,6 @@ Global
 		{9240D306-36C9-4245-90BD-1954A31994C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9240D306-36C9-4245-90BD-1954A31994C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9240D306-36C9-4245-90BD-1954A31994C8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C27B6030-7813-4B04-8398-E8C7347E01AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C27B6030-7813-4B04-8398-E8C7347E01AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C27B6030-7813-4B04-8398-E8C7347E01AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C27B6030-7813-4B04-8398-E8C7347E01AB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{28D842D3-14DC-49CB-AE43-1918A25286C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{28D842D3-14DC-49CB-AE43-1918A25286C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{28D842D3-14DC-49CB-AE43-1918A25286C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -123,11 +131,22 @@ Global
 		{D88F2151-D399-437B-8008-6C5A2A5FC77D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D88F2151-D399-437B-8008-6C5A2A5FC77D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D88F2151-D399-437B-8008-6C5A2A5FC77D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E86CC0D0-8278-4739-9B05-B7A20CE53018}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E86CC0D0-8278-4739-9B05-B7A20CE53018}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E86CC0D0-8278-4739-9B05-B7A20CE53018}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E86CC0D0-8278-4739-9B05-B7A20CE53018}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F394CDD-C36E-46A3-8444-DC209D247A61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F394CDD-C36E-46A3-8444-DC209D247A61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F394CDD-C36E-46A3-8444-DC209D247A61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F394CDD-C36E-46A3-8444-DC209D247A61}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EC90FEA3-909D-4BA8-BC7A-19A848FC4567}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DFCFAAC8-927B-4237-800D-D0FD584DA8D6} = {22CED42A-3C4C-4282-BB23-2B999492A3F5}
 	EndGlobalSection
 EndGlobal

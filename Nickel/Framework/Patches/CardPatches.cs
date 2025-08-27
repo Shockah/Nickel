@@ -78,7 +78,6 @@ internal static class CardPatches
 					ILMatches.Stloc<Deck>(originalMethod),
 					ILMatches.Ldloc<Deck>(originalMethod),
 					ILMatches.Instruction(OpCodes.Switch),
-					ILMatches.Br,
 				])
 				.Find([
 					ILMatches.Ldflda("color"),
@@ -133,7 +132,7 @@ internal static class CardPatches
 		}
 		catch (Exception ex)
 		{
-			Nickel.Instance.ModManager.Logger.LogCritical("Could not patch method {Method} - {ModLoaderName} probably won't work.\nReason: {Exception}", originalMethod, NickelConstants.Name, ex);
+			Nickel.Instance.ModManager.Logger.LogCritical("Could not patch method {DeclaringType}::{Method} - {ModLoaderName} probably won't work.\nReason: {Exception}", originalMethod.DeclaringType, originalMethod, NickelConstants.Name, ex);
 			return instructions;
 		}
 	}
@@ -205,7 +204,7 @@ internal static class CardPatches
 		}
 		catch (Exception ex)
 		{
-			Nickel.Instance.ModManager.Logger.LogCritical("Could not patch method {Method} - {ModLoaderName} probably won't work.\nReason: {Exception}", originalMethod, NickelConstants.Name, ex);
+			Nickel.Instance.ModManager.Logger.LogCritical("Could not patch method {DeclaringType}::{Method} - {ModLoaderName} probably won't work.\nReason: {Exception}", originalMethod.DeclaringType, originalMethod, NickelConstants.Name, ex);
 			return instructions;
 		}
 	}

@@ -504,25 +504,6 @@ internal sealed class CharacterManager
 			this.RegisterCharacterAnimationV2(entry.ModOwner, $"{entry.UniqueName}::mini", miniAnimationConfiguration);
 		}
 
-		if (entry.V2.NeutralAnimation is null || entry.V2.MiniAnimation is null)
-		{
-			if (!DB.charAnimations.TryGetValue(entry.CharacterType, out var charAnimations))
-			{
-				this.LoggerProvider(entry.ModOwner).LogError("Could not inject character {Character}: the `neutral` and `mini` animations are not registered.", entry.UniqueName);
-				return;
-			}
-			if (!charAnimations.ContainsKey("neutral"))
-			{
-				this.LoggerProvider(entry.ModOwner).LogError("Could not inject character {Character}: the `neutral` animation is not registered.", entry.UniqueName);
-				return;
-			}
-			if (!charAnimations.ContainsKey("mini"))
-			{
-				this.LoggerProvider(entry.ModOwner).LogError("Could not inject character {Character}: the `mini` animation is not registered.", entry.UniqueName);
-				return;
-			}
-		}
-
 		DB.charPanels[entry.CharacterType] = entry.V2.BorderSprite;
 		
 		NewRunOptions.allChars = NewRunOptions.allChars
@@ -600,25 +581,6 @@ internal sealed class CharacterManager
 			this.RegisterCharacterAnimationV2(entry.ModOwner, $"{entry.UniqueName}::neutral", neutralAnimationConfiguration);
 		}
 
-		if (entry.V2.NeutralAnimation is null)
-		{
-			if (!DB.charAnimations.TryGetValue(entry.CharacterType, out var charAnimations))
-			{
-				this.LoggerProvider(entry.ModOwner).LogError("Could not inject character {Character}: the `neutral` and `mini` animations are not registered.", entry.UniqueName);
-				return;
-			}
-			if (!charAnimations.ContainsKey("neutral"))
-			{
-				this.LoggerProvider(entry.ModOwner).LogError("Could not inject character {Character}: the `neutral` animation is not registered.", entry.UniqueName);
-				return;
-			}
-			if (!charAnimations.ContainsKey("mini"))
-			{
-				this.LoggerProvider(entry.ModOwner).LogError("Could not inject character {Character}: the `mini` animation is not registered.", entry.UniqueName);
-				return;
-			}
-		}
-
 		if (entry.V2.BorderSprite is { } borderSprite)
 			DB.charPanels[entry.CharacterType] = borderSprite;
 
@@ -660,12 +622,46 @@ internal sealed class CharacterManager
 		localizations[$"char.{entry.CharacterType}.name"] = name;
 	}
 
+	private void Validate()
+	{
+		foreach (var entry in this.UniqueNameToPlayableCharacterEntry.Values)
+		{
+			if (!DB.charAnimations.TryGetValue(entry.CharacterType, out var animations))
+			{
+				this.LoggerProvider(entry.ModOwner).LogError("Validation error for character `{Character}`: no animations are registered.", entry.UniqueName);
+				continue;
+			}
+			
+			if (!animations.ContainsKey("neutral"))
+				this.LoggerProvider(entry.ModOwner).LogError("Validation error for character `{Character}`: the `neutral` animation is not registered.", entry.UniqueName);
+			if (!animations.ContainsKey("mini"))
+				this.LoggerProvider(entry.ModOwner).LogError("Validation error for character `{Character}`: the `mini` animation is not registered.", entry.UniqueName);
+			if (!animations.ContainsKey("squint"))
+				this.LoggerProvider(entry.ModOwner).LogWarning("Validation warning for character `{Character}`: the `squint` animation is not registered.", entry.UniqueName);
+			if (!animations.ContainsKey("gameover"))
+				this.LoggerProvider(entry.ModOwner).LogWarning("Validation warning for character `{Character}`: the `gameover` animation is not registered.", entry.UniqueName);
+		}
+		
+		foreach (var entry in this.UniqueNameToNonPlayableCharacterEntry.Values)
+		{
+			if (!DB.charAnimations.TryGetValue(entry.CharacterType, out var animations))
+			{
+				this.LoggerProvider(entry.ModOwner).LogError("Validation error for character `{Character}`: no animations are registered.", entry.UniqueName);
+				continue;
+			}
+			
+			if (!animations.ContainsKey("neutral"))
+				this.LoggerProvider(entry.ModOwner).LogError("Validation error for character `{Character}`: the `neutral` animation is not registered.", entry.UniqueName);
+		}
+	}
+
 	[EventPriority(double.MaxValue)]
 	private void OnModLoadPhaseFinished(object? _, ModLoadPhase phase)
 	{
 		if (phase != ModLoadPhase.AfterDbInit)
 			return;
 		this.SetupAfterDbInit();
+		this.Validate();
 	}
 
 	private static StarterDeck CreateDefaultSoloStarters(PlayableCharacterEntry entry)

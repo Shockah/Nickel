@@ -19,6 +19,14 @@ internal sealed class ModManifest : IModManifest
 	public IReadOnlySet<ModDependency> Dependencies { get; internal set; } = new HashSet<ModDependency>();
 
 	[JsonProperty]
+	[JsonConverter(typeof(SemanticVersionConverter))]
+	public SemanticVersion? MinimumGameVersion { get; internal set; }
+
+	[JsonProperty]
+	[JsonConverter(typeof(SemanticVersionConverter))]
+	public SemanticVersion? UnsupportedGameVersion { get; internal set; }
+
+	[JsonProperty]
 	public string? DisplayName { get; internal set; }
 
 	[JsonProperty]

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
 using System.Collections.Generic;
@@ -37,7 +37,6 @@ public sealed class ModEntry : SimpleMod
 	{
 		var harmony = this.Helper.Utilities.Harmony;
 
-		ArtifactCodexFixes.ApplyPatches(harmony);
 		BlendStateFixes.ApplyPatches(harmony);
 		CardActionRenderingFixes.ApplyPatches(harmony);
 		CardBrowseOrderFixes.ApplyPatches(harmony);
@@ -45,12 +44,11 @@ public sealed class ModEntry : SimpleMod
 		DebugMenuFixes.ApplyPatches(harmony);
 		DisabledActionSpriteFixes.ApplyPatches(harmony);
 		EnergyFragmentFixes.ApplyPatches(harmony);
-		ExhaustEntireHandActionFixes.ApplyPatches(harmony);
 		IsaacUnlockFixes.ApplyPatches(harmony);
 		RockFactoryFixes.ApplyPatches(harmony);
 		RunSummaryCardOrderFixes.ApplyPatches(harmony);
-		SecondOpinionsFixes.ApplyPatches(harmony);
 		SetStatusXFixes.ApplyPatches(harmony);
+		SoloRunFixes.ApplyPatches(harmony);
 		SurviveVulnerabilityFixes.ApplyPatches(harmony);
 		UnimplementedActionFeaturesFixes.ApplyPatches(harmony);
 

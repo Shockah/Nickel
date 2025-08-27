@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Nickel;
 
@@ -61,6 +62,7 @@ internal sealed class ModEventManager
 
 	private readonly Func<ModLoadPhaseState> CurrentModLoadPhaseProvider;
 	private readonly Func<IModManifest, ILogger> LoggerProvider;
+	private readonly ConditionalWeakTable<object /* State */, object /* List<Artifact> */> ArtifactCacheWithHookables = new();
 
 	public ModEventManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, Func<IModManifest, ILogger> loggerProvider, IModManifest modLoaderModManifest)
 	{
@@ -96,7 +98,7 @@ internal sealed class ModEventManager
 			var logger = this.LoggerProvider(mod);
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnSaveLoadedEvent), exception);
 		});
-		
+
 		StatePatches.OnEnumerateAllArtifactsBeforeAddingArtifacts += this.OnEnumerateAllArtifactsBeforeAddingArtifacts;
 		StatePatches.OnEnumerateAllArtifactsAfterAddingArtifacts += this.OnEnumerateAllArtifactsAfterAddingArtifacts;
 		ArtifactPatches.OnKey += this.OnArtifactKey;
@@ -144,10 +146,16 @@ internal sealed class ModEventManager
 	{
 		var subclass = new HookableSubclassGenerator().GenerateHookableSubclass<Artifact>(method =>
 		{
+			int? replaceSpawnedThingInitialValueIndex = null;
+			
 			if (method.Name == nameof(Artifact.ReplaceSpawnedThing))
 				return (
 					(_, _, newValue) => newValue,
-					args => args[method.GetParameters().ToList().FindIndex(p => p.Name == "thing")]
+					args =>
+					{
+						replaceSpawnedThingInitialValueIndex ??= method.GetParameters().ToList().FindIndex(p => p.Name == "thing");
+						return args[replaceSpawnedThingInitialValueIndex.Value];
+					}
 				);
 			if (method.ReturnType == typeof(bool))
 				return (

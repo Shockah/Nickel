@@ -29,7 +29,7 @@ public sealed class FileInfoImpl : FileSystemInfoImpl<FileInfo>, IWritableFileIn
 	public Stream OpenWrite()
 	{
 		this.Parent?.Create();
-		return this.FileSystemInfo.OpenWrite();
+		return new FileStream(this.FileSystemInfo.FullName, FileMode.Create, FileAccess.Write, FileShare.None);
 	}
 
 	/// <inheritdoc/>

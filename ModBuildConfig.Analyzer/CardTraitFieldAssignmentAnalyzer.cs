@@ -12,14 +12,13 @@ public sealed class CardTraitFieldAssignmentAnalyzer : DiagnosticAnalyzer
 {
 	public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
 
-	private readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(
+	private readonly DiagnosticDescriptor Rule = new(
 		id: "CardTraitFieldAssignment",
-		title: "Avoid direct game enum usage",
+		title: "Avoid direct card trait field assignment",
 		messageFormat: "Setting `Card.{0}` directly may cause issues with Nickel's card trait handling; consider using `IModCards.SetCardTraitOverride` instead",
 		category: "Nickel.CommonErrors",
 		defaultSeverity: DiagnosticSeverity.Info,
 		isEnabledByDefault: true
-		// helpLinkUri: "https://smapi.io/package/avoid-net-field"
 	);
 
 	private static readonly string[] CardTraitFieldNames = [
@@ -65,7 +64,7 @@ public sealed class CardTraitFieldAssignmentAnalyzer : DiagnosticAnalyzer
 			if (node is MemberAccessExpressionSyntax memberAccessExpression)
 			{
 				var declaringType = context.SemanticModel.GetTypeInfo(memberAccessExpression.Expression).Type;
-				if (declaringType?.Name == "Card" && declaringType.ContainingNamespace.IsGlobalNamespace && CardTraitFieldNames.Contains(memberAccessExpression.Name.ToString()))
+				if (declaringType?.Name == "Card" && declaringType.ContainingNamespace.IsGlobalNamespace && declaringType.ContainingAssembly.Name.StartsWith("CobaltCore") && CardTraitFieldNames.Contains(memberAccessExpression.Name.ToString()))
 					return memberAccessExpression.Name.ToString();
 			}
 			

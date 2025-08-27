@@ -6,7 +6,7 @@
 
 Note: Nickel requires Windows 10+.
 
-1. Download the latest version of Nickel from [GitHub](https://github.com/Shockah/Nickel/releases/latest) or [NexusMods](https://www.nexusmods.com/cobaltcore/mods/1).
+1. Download the latest version of Nickel from [GitHub](https://github.com/Shockah/Nickel/releases/latest) or [NexusMods](https://www.nexusmods.com/cobaltcore/mods/1). Make sure you get the Windows version.
 2. Extract the `.zip` file in the place where you would like to store Nickel (and by default also the mods and logs).
 	* While the actual place you extract to does not matter for playing mods, it is recommended to extract to the game's Steam folder (`C:\Program Files\Steam\steamapps\common\Cobalt Core` by default). This will help when debugging any potential issues, and will also help when creating mods of your own. Additionally, this is the path where the [Vortex mod manager for NexusMods](https://www.nexusmods.com/about/vortex/) will look for Nickel to be installed. Alternatively, if you are not interested in using Vortex, the game's application data folder (`%appdata%\CobaltCore`) is also a good spot for installing Nickel.
 3. Open the extracted Nickel folder.
@@ -18,7 +18,7 @@ Note: Nickel requires Windows 10+.
 This guide assumes you are already familiar with the Desktop mode of a Steam Deck, or some other environment you may be using on your Linux machine.
 
 1. [Steam Deck only] Switch from Gaming mode to Desktop mode, if you are not in it already.
-2. Download the latest version of Nickel from [GitHub](https://github.com/Shockah/Nickel/releases/latest) or [NexusMods](https://www.nexusmods.com/cobaltcore/mods/1).
+2. Download the latest version of Nickel from [GitHub](https://github.com/Shockah/Nickel/releases/latest) or [NexusMods](https://www.nexusmods.com/cobaltcore/mods/1). Make sure you get the Windows version. Yes, Windows.
 3. Extract the `.zip` file in the place where you would like to store Nickel (and by default also the mods and logs).
 4. Click on the Steam icon in your taskbar and choose "Library".
 5. In the bottom-left corner, click "Add a Game", then choose "Add a Non-Steam Game...".
@@ -34,6 +34,16 @@ This guide assumes you are already familiar with the Desktop mode of a Steam Dec
 12. From the list that appeared below the previous setting, choose the highest non-experimental version of Proton. At the moment of writing this guide, that was `Proton 9.0-2`, which was confirmed to work.
 13. Close the properties window.
 14. [Steam Deck only] Go back into Gaming mode.
+
+## Mac
+
+Note: Nickel requires macOS 10.15+ (Catalina or newer).
+
+1. Download the latest version of Nickel from [GitHub](https://github.com/Shockah/Nickel/releases/latest) or [NexusMods](https://www.nexusmods.com/cobaltcore/mods/1). Make sure you get the Mac version.
+2. Extract the `.zip` file in the place where you would like to store Nickel.
+	* While the actual place you extract to does not matter for playing mods, it is recommended to move the extracted `Nickel.app` to your `Applications` folder. This will help when debugging any potential issues, and will also help when creating mods of your own.
+3. Double-click `Nickel.app` to start Nickel to let it do its initial setup.
+	* If you get shown a prompt saying "Apple could not verify Nickel.app is free of malware that may harm your Mac or compromise your privacy.", follow these instructions: https://support.apple.com/en-us/102445#openanyway.
 
 ## `NickelLauncher.exe` vs `Nickel.exe`
 
@@ -56,6 +66,14 @@ After setting up Nickel, you can start adding mods. By default, Nickel comes wit
 
 To install a mod, put it into the `ModLibrary` folder. It is recommended to extract the mod and remove the `.zip` file, but mods *should* also work while still in `.zip` files.
 
+## Windows; Steam Deck / Linux (Proton)
+
+The default `ModLibrary` folder is contained in Nickel's folder.
+
+## Mac
+
+The default `ModLibrary` folder can be found at `~/Library/Application Support/Nickel/ModLibrary`.
+
 # Updating mods
 
 Nickel comes with pre-installed mods which do automatic update checks for your mods (including Nickel itself), but to make these work (correctly, or even at all, depending on the update source), they need to be configured.
@@ -64,13 +82,21 @@ Nickel comes with pre-installed mods which do automatic update checks for your m
 
 # Troubleshooting
 
-Nickel keeps two log files, by default stored in the `Logs` folder, which can be found in its own folder:
+Nickel keeps two log files, by default stored in the `Logs` folder:
 * `Nickel.log` is the log file for your currently ongoing or the last session.
 * `Nickel.prev.log` is the log file for your previous session. It is useful if the game crashed and you ran Nickel again by mistake without examining/sharing your log file first.
 
 If you are having any issues with the modded game, **always** include your log file. The file contains detailed information about your mod setup and anything that is going on. **Copy-pasting the text from the console that appears when running the game is *not* the same as sharing the log file.** The log file contains much more information than the console does.
 
 If you need help with your log file, you can jump into the [#cc-mod-discussion channel](https://discord.com/channels/806989214133780521/1210710707717275658) on the [Rocket Rat Games' (developers') Discord server](https://discord.gg/cncV5znGwA).
+
+## Windows; Steam Deck / Linux (Proton)
+
+The default `Logs` folder is contained in Nickel's folder.
+
+## Mac
+
+The default `Logs` folder can be found at `~/Library/Application Support/Nickel/Logs`.
 
 # Organizing the `ModLibrary`
 

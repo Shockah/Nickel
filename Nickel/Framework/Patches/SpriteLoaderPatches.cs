@@ -2,6 +2,7 @@ using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Nickel;
@@ -11,6 +12,7 @@ internal static class SpriteLoaderPatches
 	internal static RefEventHandler<GetTextureEventArgs>? OnGetTexture;
 
 	private static readonly HashSet<Spr> DynamicTextureSprites = [];
+	private static HashSet<Spr>? VanillaSprites;
 
 	internal static void Apply(Harmony harmony)
 		=> harmony.Patch(
@@ -21,9 +23,12 @@ internal static class SpriteLoaderPatches
 
 	private static bool Get_Prefix(Spr id, out Texture2D? __result)
 	{
+		__result = null;
+		VanillaSprites ??= Enum.GetValues<Spr>().ToHashSet();
+		if (VanillaSprites.Contains(id))
+			return true;
 		if (!DynamicTextureSprites.Contains(id) && SpriteLoader.textures.TryGetValue(id, out __result))
 			return false;
-		__result = null;
 		
 		var args = new GetTextureEventArgs
 		{

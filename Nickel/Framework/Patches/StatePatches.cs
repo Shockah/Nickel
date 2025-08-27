@@ -23,13 +23,13 @@ internal static class StatePatches
 	{
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.EnumerateAllArtifacts))
-				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.EnumerateAllArtifacts)}`"),
+			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.EnumerateAllArtifacts)}`"),
 			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(EnumerateAllArtifacts_Transpiler))
 		);
 		harmony.Patch(
 			original: typeof(State).GetNestedTypes(AccessTools.all).SelectMany(t => t.GetMethods(AccessTools.all)).First(m => m.Name.StartsWith("<PopulateRun>") && m.ReturnType == typeof(Route))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.<compiler-generated-type>.<PopulateRun>`"),
-			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(State_PopulateRun_Delegate_Transpiler))
+			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(PopulateRun_Delegate_Transpiler))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.SaveIfRelease))
@@ -100,7 +100,7 @@ internal static class StatePatches
 	}
 
 	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-	private static IEnumerable<CodeInstruction> State_PopulateRun_Delegate_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
+	private static IEnumerable<CodeInstruction> PopulateRun_Delegate_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
 		try
 		{
@@ -127,7 +127,7 @@ internal static class StatePatches
 		}
 		catch (Exception ex)
 		{
-			Nickel.Instance.ModManager.Logger.LogCritical("Could not patch method {Method} - {ModLoaderName} probably won't work.\nReason: {Exception}", originalMethod, NickelConstants.Name, ex);
+			Nickel.Instance.ModManager.Logger.LogCritical("Could not patch method {DeclaringType}::{Method} - {ModLoaderName} probably won't work.\nReason: {Exception}", originalMethod.DeclaringType, originalMethod, NickelConstants.Name, ex);
 			return instructions;
 		}
 	}
@@ -145,7 +145,7 @@ internal static class StatePatches
 
 	private static void SaveIfRelease_Postfix(State __instance)
 	{
-		if (Nickel.Instance.DebugMode != DebugMode.EnabledWithSaving)
+		if (Nickel.Instance.Settings.DebugMode != DebugMode.EnabledWithSaving)
 			return;
 		if (FeatureFlags.Debug)
 			__instance.Save();

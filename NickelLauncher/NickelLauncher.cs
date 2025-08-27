@@ -1,62 +1,67 @@
 using Microsoft.Extensions.Logging;
+using Nanoray.PluginManager;
 using Nickel.Common;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Nickel.Launcher;
 
-internal class NickelLauncher
+internal sealed class NickelLauncher
 {
 	internal static int Main(string[] args)
 	{
-		Option<FileInfo?> launchPathOption = new(
-			name: "--launchPath",
-			description: $"The path of the application to launch."
-		);
-		Option<DirectoryInfo?> logPathOption = new(
-			name: "--logPath",
-			description: "The folder logs will be stored in."
-		);
-		Option<bool?> timestampedLogFiles = new(
-			name: "--keepLogs",
-			description: "Uses timestamps for log filenames."
-		);
+		var launchPathOption = new Option<FileInfo?>("--launchPath", "The path of the application to launch.");
+		var logPathOption = new Option<DirectoryInfo?>("--logPath", "The folder logs will be stored in.");
+		var timestampedLogFiles = new Option<bool?>("--keepLogs", "Uses timestamps for log filenames.");
 
-		RootCommand rootCommand = new(NickelConstants.IntroMessage)
-		{
-			TreatUnmatchedTokensAsErrors = false
-		};
+		var rootCommand = new RootCommand(NickelConstants.IntroMessage) { TreatUnmatchedTokensAsErrors = false };
 		rootCommand.AddOption(launchPathOption);
 		rootCommand.AddOption(logPathOption);
 		rootCommand.AddOption(timestampedLogFiles);
 
 		rootCommand.SetHandler(context =>
 		{
-			LaunchArguments launchArguments = new()
+			var launchArguments = new LaunchArguments
 			{
 				LaunchPath = context.ParseResult.GetValueForOption(launchPathOption),
-				UnmatchedArguments = context.ParseResult.UnmatchedTokens,
 				LogPath = context.ParseResult.GetValueForOption(logPathOption),
 				TimestampedLogFiles = context.ParseResult.GetValueForOption(timestampedLogFiles),
+				UnmatchedArguments = context.ParseResult.UnmatchedTokens,
 			};
-			CreateAndStartInstance(launchArguments);
+			context.ExitCode = CreateAndStartInstance(launchArguments);
 		});
 		return rootCommand.Invoke(args);
 	}
 
-	private static void CreateAndStartInstance(LaunchArguments launchArguments)
+	private static int CreateAndStartInstance(LaunchArguments launchArguments)
 	{
+		var modStorageDirectory = launchArguments.ModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "ModStorage"));
+		
+		Settings settings;
+		try
+		{
+			settings = SettingsUtilities.ReadSettings<Settings>(new DirectoryInfoImpl(modStorageDirectory), false) ?? throw new InvalidDataException();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(NickelConstants.IntroMessage);
+			Console.WriteLine($"ModStoragePath: {PathUtilities.SanitizePath(modStorageDirectory.FullName)}");
+			Console.WriteLine(ex);
+			return -1;
+		}
+		
 		var realOut = Console.Out;
 		var loggerFactory = LoggerFactory.Create(builder =>
 		{
-			builder.SetMinimumLevel(LogLevel.Debug);
+			builder.SetMinimumLevel((LogLevel)Math.Min((int)settings.MinimumFileLogLevel, (int)settings.MinimumConsoleLogLevel));
 			var fileLogDirectory = launchArguments.LogPath ?? GetOrCreateDefaultLogDirectory();
 			var timestampedLogFiles = launchArguments.TimestampedLogFiles ?? false;
-			builder.AddProvider(FileLoggerProvider.CreateNewLog(LogLevel.Debug, fileLogDirectory, timestampedLogFiles));
-			builder.AddProvider(new ConsoleLoggerProvider(LogLevel.Information, realOut, disposeWriter: false));
+			builder.AddProvider(FileLoggerProvider.CreateNewLog(settings.MinimumFileLogLevel, fileLogDirectory, timestampedLogFiles));
+			builder.AddProvider(new ConsoleLoggerProvider(settings.MinimumConsoleLogLevel, realOut, disposeWriter: false));
 		});
 		var logger = loggerFactory.CreateLogger($"{NickelConstants.Name}Launcher");
 		Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, realOut));
@@ -64,9 +69,14 @@ internal class NickelLauncher
 		Dictionary<string, ILogger> categoryLoggers = [];
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
 
-		var launchPath = launchArguments.LaunchPath ?? new($"{NickelConstants.Name}.exe"); // TODO: this probably doesn't work on non-Windows machines; make sure it does
+		var launchPath = launchArguments.LaunchPath;
+		if (launchPath is null)
+		{
+			var executableName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? $"{NickelConstants.Name}.exe" : NickelConstants.Name;
+			launchPath = new FileInfo(Path.Combine(AppContext.BaseDirectory, executableName));
+		}
+		
 		var pipeName = Guid.NewGuid().ToString();
-
 		using var logNamedPipeServer = string.IsNullOrEmpty(pipeName) ? null : new LogNamedPipeServer(pipeName, logger, e =>
 		{
 			if (!categoryLoggers.TryGetValue(e.CategoryName, out var categoryLogger))
@@ -97,23 +107,27 @@ internal class NickelLauncher
 
 		try
 		{
-			StartAndLogProcess(psi, logger, loggerFactory);
+			return StartAndLogProcess(psi, logger, loggerFactory);
 		}
 		catch (Exception ex)
 		{
 			logger.LogCritical("{Name} threw an exception: {Exception}", NickelConstants.Name, ex);
+			return -1;
 		}
-		loggerFactory.Dispose();
+		finally
+		{
+			loggerFactory.Dispose();
+		}
 	}
 
-	private static void StartAndLogProcess(ProcessStartInfo psi, ILogger logger, ILoggerFactory loggerFactory)
+	private static int StartAndLogProcess(ProcessStartInfo psi, ILogger logger, ILoggerFactory loggerFactory)
 	{
 		var exitingLauncher = false;
 		var process = Process.Start(psi);
 		if (process is null)
 		{
 			logger.LogCritical("Could not start {ModLoaderName}: no process was started.", NickelConstants.Name);
-			return;
+			return -1;
 		}
 
 		logger.LogDebug("Launched Nickel with PID {PID}.", process.Id);
@@ -164,11 +178,17 @@ internal class NickelLauncher
 		launcherProcess.Exited -= OnExited;
 		Console.CancelKeyPress -= OnExited;
 		AppDomain.CurrentDomain.ProcessExit -= OnExited;
+		return process.ExitCode;
 	}
 
 	private static DirectoryInfo GetOrCreateDefaultLogDirectory()
 	{
-		var directoryInfo = new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
+		DirectoryInfo directoryInfo;
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			directoryInfo = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), NickelConstants.Name, "Logs"));
+		else
+			directoryInfo = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
+		
 		if (!directoryInfo.Exists)
 			directoryInfo.Create();
 		return directoryInfo;

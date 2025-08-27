@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Nickel;
 
-internal sealed class CobaltCoreAssemblyResolver(CobaltCoreResolveResult? resolveResult) : IAssemblyResolver
+internal sealed class CobaltCoreAssemblyResolver(CobaltCoreResolveResult resolveResult) : IAssemblyResolver
 {
 	private readonly Dictionary<string, AssemblyDefinition> AssemblyDefinitions = [];
 	
@@ -23,18 +23,16 @@ internal sealed class CobaltCoreAssemblyResolver(CobaltCoreResolveResult? resolv
 	{
 		if (this.AssemblyDefinitions.TryGetValue(name.Name, out var definition))
 			return definition;
-		if (resolveResult is null)
-			throw new AssemblyResolutionException(name);
 
 		Func<Stream> assemblyStreamProvider;
 		Func<Stream>? symbolsStreamProvider;
 
 		if (name.Name == "CobaltCore")
 		{
-			assemblyStreamProvider = resolveResult.Value.GameAssemblyDataStreamProvider;
-			symbolsStreamProvider = resolveResult.Value.GameSymbolsDataStreamProvider;
+			assemblyStreamProvider = resolveResult.GameAssemblyDataStreamProvider;
+			symbolsStreamProvider = resolveResult.GameSymbolsDataStreamProvider;
 		}
-		else if (resolveResult.Value.OtherDllDataStreamProviders.TryGetValue($"{name.Name}.dll", out var otherDllStreamProvider))
+		else if (resolveResult.OtherDllDataStreamProviders.TryGetValue($"{name.Name}.dll", out var otherDllStreamProvider))
 		{
 			assemblyStreamProvider = otherDllStreamProvider;
 			symbolsStreamProvider = null;

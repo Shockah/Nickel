@@ -6,6 +6,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 	<ItemGroup>
+		<ProjectReference Include="..\PluginManager\PluginManager.csproj" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" PrivateAssets="all" />

@@ -156,6 +156,31 @@ internal sealed class DictionaryModDataHandler<TRoot>(
 		return true;
 	}
 
+	public bool TryRemoveOwnedModDataDirectly(string modUniqueName, object o)
+	{
+		if (!this.CanHandleType(o.GetType()))
+			return false;
+		if (dictionaryGetter((TRoot)o) is not { } allObjectData)
+			return true;
+		
+		if (!allObjectData.Remove(modUniqueName))
+			return true;
+		if (allObjectData.Count == 0)
+			dictionarySetter((TRoot)o, null);
+		return true;
+	}
+
+	public bool TryRemoveAllModDataDirectly(object o)
+	{
+		if (!this.CanHandleType(o.GetType()))
+			return false;
+		if (dictionaryGetter((TRoot)o) is null)
+			return true;
+		
+		dictionarySetter((TRoot)o, null);
+		return true;
+	}
+
 	public IEnumerable<KeyValuePair<string, object?>> GetAllOwnedModData(string modUniqueName, object o)
 	{
 		if (!this.CanHandleType(o.GetType()))

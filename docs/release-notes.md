@@ -2,6 +2,91 @@
 
 # Release notes
 
+## 1.18.7
+Released 19 August 2025.
+
+* Updated for a stealth patch for Cobalt Core 1.2.5. Again.
+
+## 1.18.6
+Released 19 August 2025.
+
+* Updated for a stealth patch for Cobalt Core 1.2.5.
+
+## 1.18.5
+Released 18 August 2025.
+
+* Fixed file write operations merely overwriting existing bytes in files, instead of overwriting them as a whole, causing garbled files, most notably with settings.
+* Fixed the Debug option not staying on.
+* Updated the Harmony library to version 2.4.0, potentially fixing some macOS-specific issues.
+
+## 1.18.4
+Released 15 August 2025.
+
+* Fixed handling of additional Steam libraries.
+
+## 1.18.3
+Released 10 August 2025.
+
+### For everyone:
+* Changed the library Nickel uses for reading Steam library VDF files, which should fix some errors with finding Cobalt Core on some machine setups.
+* Added `MinimumFileLogLevel` and `MinimumConsoleLogLevel` to the `Nickel.json` settings file, allowing specifying which lines should be logged. Most importantly, `Trace` logs can now be logged.
+
+## 1.18.2
+Released 1 August 2025.
+
+### For everyone:
+* Fixed starter artifacts displaying on subscreens of the New Run screen (like the Daily Run Preview).
+* Fixed some paths at which Nickel looked for things (like mods) or stored things in (like logs) on Mac.
+
+### For developers:
+* The entries on the Combat Log tab of the debug menu are now selectable and inspectable.
+* Nickel now logs whenever a mod requests another mod's API.
+
+## 1.18.1
+Released 30 July 2025.
+
+### For everyone:
+* Fixed issues introduced after the Cobalt Core 1.2.5 update (relating to artifact hooks).
+* Fixed Steam initialization on Mac.
+
+### For developers:
+* `MethodsToStopInlining` will now by default log an error if they match no methods.
+
+## 1.18.0
+Released 29 July 2025.
+
+### For everyone:
+* Updated for Cobalt Core 1.2.5.
+* Improved error messages when Nickel or its internal mods fail to patch game methods.
+
+### For developers:
+* Assembly mods (aka most mods) can now declare methods they would like to stop from being inlined via the `MethodsToStopInlining` key in their manifests.
+
+## 1.17.0
+Released 21 July 2025.
+
+### For everyone:
+* Added an option to export a save file back into vanilla (while attempting to remove any modded data that could make it unreadable).
+* Fixed the character and ship selectors scrolling when scrolling in a submenu.
+
+### For developers:
+* Changed how/when Nickel validates character animations, and actually started validating `squint` and `gameover` animations.
+* Added APIs to change the font and height of button and checkbox mod settings.
+* Mods can now declare a minimum and an unsupported game version in their manifests via the `MinimumGameVersion` and `UnsupportedGameVersion` keys.
+* Slightly improved the card traits debug tab (thanks to [@Terria-K](https://github.com/Terria-K)!).
+
+## 1.16.3
+Released 25 June 2025.
+
+* Fixed errors introduced by the previous update.
+* Made the game's warmup code no longer run, as it could cause mod breakage, and which was unneeded on PC anyway.
+
+## 1.16.2
+Released 25 June 2025.
+
+* Nickel now looks for Cobalt Core in any parent directories relative to its location, before attempting to load from Steam's location.
+* Fixed solo runs removing custom ship starter cards.
+
 ## 1.16.1
 Released 11 May 2025.
 

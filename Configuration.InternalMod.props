@@ -4,9 +4,11 @@
 	<PropertyGroup>
 		<Version>$(NickelVersion)</Version>
 		<ModDeployModsPath>$(ModLoaderPath)\InternalModLibrary</ModDeployModsPath>
+		<EnableDllReference Condition="'$(EnableDllReference)' == ''">true</EnableDllReference>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Nickel.ModBuildConfig" Version="2.0.1" />
+		<PackageReference Include="Nickel.ModBuildConfig" Version="2.1.0" />
+		<PackageReference Condition="!'$(EnableDllReference)'" Include="Nickel.ModBuildConfig.ReferenceAssembly" Version="$(GameReferenceAssemblyVersion)" PrivateAssets="All" ExcludeAssets="runtime" />
 		<PackageReference Include="EnumByNameSourceGenerator" Version="1.1.2" PrivateAssets="All" ExcludeAssets="runtime" />
 	</ItemGroup>
 </Project>

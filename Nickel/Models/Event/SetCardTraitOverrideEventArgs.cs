@@ -1,7 +1,4 @@
-﻿using Nickel.Models.Content;
-using System.Collections.Generic;
-
-namespace Nickel;
+﻿namespace Nickel;
 
 /// <seealso cref="IModCards.OnSetCardTraitOverride"/>
 public readonly struct SetCardTraitOverrideEventArgs

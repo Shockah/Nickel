@@ -64,20 +64,6 @@ internal static class ShipSelection
 		);
 	}
 
-	public static IModSettingsApi.IModSetting MakeSettings(IModSettingsApi api)
-		=> api.MakeCheckbox(
-			title: () => ModEntry.Instance.Localizations.Localize(["crewSelection", "detailedCrewInfoSetting", "name"]),
-			getter: () => ModEntry.Instance.Settings.ProfileBased.Current.DetailedCrewInfo,
-			setter: (_, _, value) => ModEntry.Instance.Settings.ProfileBased.Current.DetailedCrewInfo = value
-		).SetTooltips(() => [
-			new GlossaryTooltip($"settings.{ModEntry.Instance.Package.Manifest.UniqueName}::{MethodBase.GetCurrentMethod()!.DeclaringType!.Name}::DetailedCrewInfoSetting")
-			{
-				TitleColor = Colors.textBold,
-				Title = ModEntry.Instance.Localizations.Localize(["crewSelection", "detailedCrewInfoSetting", "name"]),
-				Description = ModEntry.Instance.Localizations.Localize(["crewSelection", "detailedCrewInfoSetting", "description"])
-			}
-		]);
-
 	private static void NewRunOptions_OnEnter_Postfix()
 	{
 		// reset the scroll position to the very top
@@ -85,8 +71,10 @@ internal static class ShipSelection
 		ShowingShips = false;
 	}
 
-	private static void NewRunOptions_Render_Prefix()
+	private static void NewRunOptions_Render_Prefix(NewRunOptions __instance)
 	{
+		if (__instance.subRoute is not null)
+			return;
 		if (!ShowingShips)
 			return;
 		

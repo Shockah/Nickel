@@ -6,7 +6,8 @@
 		<Nullable>enable</Nullable>
 		<WarningsAsErrors>Nullable</WarningsAsErrors>
 		<CheckEolTargetFramework>false</CheckEolTargetFramework>
-		<NickelVersion>1.16.1</NickelVersion>
+		<NickelVersion>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\..\Version.txt').TrimEnd())</NickelVersion>
+		<GameReferenceAssemblyVersion>1.2.5.4</GameReferenceAssemblyVersion>
 	</PropertyGroup>
 	<ItemGroup>
 		<None Include="$(MSBuildProjectDirectory)\..\.editorconfig" Link=".editorconfig" />
