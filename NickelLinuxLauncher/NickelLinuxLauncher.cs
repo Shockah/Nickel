@@ -26,16 +26,20 @@ internal sealed class NickelLinuxLauncher
 			"--skipLauncher", () => false, $"Whether {NickelConstants.Name} should be ran directly, instead of {NickelConstants.Name}Launcher."
 			) { Arity = ArgumentArity.ZeroOrOne };
 
+		var terminalOption = new Option<string?>("--terminal", "A preferred terminal to run. Fallbacks to any supported terminal if it does not exists.");
 		var executablePathOption = new Option<FileInfo?>("--executablePath", "The path of the executable to run. Overrides `--skipLauncher`.");
 
 		var rootCommand = new RootCommand(NickelConstants.IntroMessage) { TreatUnmatchedTokensAsErrors = false };
 		rootCommand.AddOption(skipLauncherOption);
+		rootCommand.AddOption(executablePathOption);
+		rootCommand.AddOption(terminalOption);
 
 		rootCommand.SetHandler(context =>
 		{
 			var launchArguments = new LaunchArguments
 			{
 				SkipLauncher = context.ParseResult.GetValueForOption(skipLauncherOption),
+				Terminal = context.ParseResult.GetValueForOption(terminalOption),
 				ExecutablePath = context.ParseResult.GetValueForOption(executablePathOption),
 				UnmatchedArguments = context.ParseResult.UnmatchedTokens,
 			};
@@ -68,28 +72,46 @@ internal sealed class NickelLinuxLauncher
 	{
 		var executablePath = GetExecutablePath(arguments);
 
+		if (arguments.Terminal is not null && File.Exists("/usr/bin/" + arguments.Terminal))
+		{
+			return GetTerminalProcess(arguments.Terminal);
+		}
+
 		foreach (var term in supportedTerminals)
 		{
 			if (File.Exists("/usr/bin/" + term))
 			{
-				var psi = new ProcessStartInfo
-				{
-					CreateNoWindow = false,
-					ErrorDialog = true,
-					WorkingDirectory = AppContext.BaseDirectory,
-				};
-
-				psi.FileName = "/usr/bin/" + term;
-				psi.UseShellExecute = true;
-				psi.ArgumentList.Add("\"" + executablePath.FullName + "\"");
-
-				foreach (var unmatchedArgument in arguments.UnmatchedArguments)
-				{
-					psi.ArgumentList.Add(unmatchedArgument);
-				}
-
-				return psi;	
+				return GetTerminalProcess(term);
 			}
+		}
+
+		ProcessStartInfo GetTerminalProcess(string term)
+		{
+			var psi = new ProcessStartInfo
+			{
+				CreateNoWindow = false,
+				ErrorDialog = true,
+				WorkingDirectory = AppContext.BaseDirectory,
+				FileName = "/usr/bin/" + term,
+				UseShellExecute = true
+			};
+
+			// special case
+			if (term != "xdg-terminal-exec")
+			{
+				psi.ArgumentList.Add("-e");
+				psi.ArgumentList.Add("sh");
+				psi.ArgumentList.Add("-c");
+			}
+
+			psi.ArgumentList.Add("\"" + executablePath.FullName + "\"");
+
+			foreach (var unmatchedArgument in arguments.UnmatchedArguments)
+			{
+				psi.ArgumentList.Add(unmatchedArgument);
+			}
+
+			return psi;	
 		}
 
 		var psiNoTerm = new ProcessStartInfo
