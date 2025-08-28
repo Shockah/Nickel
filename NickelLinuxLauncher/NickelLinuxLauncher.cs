@@ -1,4 +1,3 @@
-#pragma warning disable IDE0130
 using System;
 using System.CommandLine;
 using System.Diagnostics;
@@ -9,15 +8,21 @@ namespace Nickel.LinuxLauncher;
 
 internal sealed class NickelLinuxLauncher
 {
-	private static string[] supportedTerminals = [
+	private static readonly string[] supportedTerminals = [
 		// the most recommended way to launch terminal, although user had to manually install it
 		"xdg-terminal-exec", 
-		// we only support desktop-shipped terminal
-		"cosmic-term", // Cosmic
+		"x-terminal-emulator",
+		// some popular terminal, mainly to served WM-users
+		"alacritty",
+		"kitty",
+		"wezterm",
+		// desktop terminals
 		"konsole", // KDE
+		"cosmic-term", // Cosmic
 		"gnome-terminal", // GNOME
 		"xfce4-terminal", // XFCE
-		"xterm" // ol' reliable
+		// if none work, I hope the user had this
+		"xterm"
 	];
 
 	internal static int Main(string[] args)
