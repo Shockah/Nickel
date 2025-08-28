@@ -15,6 +15,14 @@
 			<LogicalName>Icon.bmp</LogicalName>
 		</EmbeddedResource>
 	</ItemGroup>
+	
+	<ItemGroup>
+		<Content Include="NickelMap.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\NickelCommon\NickelCommon.csproj" />
 		<ProjectReference Include="..\Nickel\Nickel.csproj" ReferenceOutputAssembly="false" />
