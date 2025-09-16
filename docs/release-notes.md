@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Improved performance by a bit.
+
 ## 1.18.7
 Released 19 August 2025.
 

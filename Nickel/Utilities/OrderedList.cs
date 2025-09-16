@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Nickel;
 
@@ -12,7 +13,9 @@ namespace Nickel;
 /// </summary>
 /// <typeparam name="TElement">The type of elements in the list.</typeparam>
 /// <typeparam name="TOrderingValue">The assigned <see cref="IComparable{T}"/> value used for ordering purposes.</typeparam>
-public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TElement> where TOrderingValue : IComparable<TOrderingValue>
+public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TElement>
+	where TElement : notnull
+	where TOrderingValue : IComparable<TOrderingValue>
 {
 	/// <summary>
 	/// Represents a single entry in a <see cref="OrderedList{TElement,TOrderingValue}"/>.
@@ -28,7 +31,8 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 	public IEnumerable<Entry> Entries
 		=> this.EntryStorage;
 
-	private readonly List<Entry> EntryStorage = [];
+	private readonly List<Entry> EntryStorage;
+	private readonly Dictionary<TElement, List<TOrderingValue>> ElementToOrderingValues;
 
 	/// <summary>Whether the <see cref="OrderedList{TElement,TOrderingValue}"/> orders its elements by their assigned <see cref="IComparable{T}"/> ordering values in an ascending order (as opposed to a descending order).</summary>
 	public readonly bool Ascending;
@@ -45,6 +49,8 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 	public OrderedList(bool ascending)
 	{
 		this.Ascending = ascending;
+		this.EntryStorage = [];
+		this.ElementToOrderingValues = [];
 	}
 
 	/// <summary>
@@ -54,7 +60,11 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 	public OrderedList(OrderedList<TElement, TOrderingValue> anotherList)
 	{
 		this.Ascending = anotherList.Ascending;
-		this.EntryStorage.AddRange(anotherList.EntryStorage);
+		this.EntryStorage = anotherList.EntryStorage.ToList();
+		this.ElementToOrderingValues = anotherList.ElementToOrderingValues.ToDictionary(
+			kvp => kvp.Key,
+			kvp => kvp.Value.ToList()
+		);
 	}
 
 	/// <inheritdoc/>
@@ -77,7 +87,10 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 	/// Removes all elements from the <see cref="OrderedList{TElement,TOrderingValue}"/>.
 	/// </summary>
 	public void Clear()
-		=> this.EntryStorage.Clear();
+	{
+		this.EntryStorage.Clear();
+		this.ElementToOrderingValues.Clear();
+	}
 
 	/// <summary>
 	/// Checks whether the <see cref="OrderedList{TElement,TOrderingValue}"/> contains the given element.
@@ -85,7 +98,7 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 	/// <param name="item">The element to check.</param>
 	/// <returns>Whether the list contains the given element.</returns>
 	public bool Contains(TElement item)
-		=> this.EntryStorage.Any(e => Equals(e.Element, item));
+		=> this.ElementToOrderingValues.ContainsKey(item);
 
 	/// <summary>
 	/// Adds an element to the <see cref="OrderedList{TElement,TOrderingValue}"/>.
@@ -94,30 +107,101 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 	/// <param name="orderingValue">The <see cref="IComparable{T}"/> ordering value that will be used to order the element with in the collection.</param>
 	public void Add(TElement element, TOrderingValue orderingValue)
 	{
-		if (this.Ascending)
+		var entry = new Entry(element, orderingValue);
+		
+		ref var orderingValues = ref CollectionsMarshal.GetValueRefOrAddDefault(this.ElementToOrderingValues, element, out var orderingValuesExist);
+		if (!orderingValuesExist)
+			orderingValues = [];
+		
+		HandleOrderingValues(ref orderingValues!);
+		HandleEntries();
+		
+		void HandleOrderingValues(ref List<TOrderingValue> orderingValues)
 		{
-			for (var i = 0; i < this.EntryStorage.Count; i++)
+			if (orderingValues.Count == 0)
 			{
-				if (this.EntryStorage[i].OrderingValue.CompareTo(orderingValue) > 0)
+				orderingValues.Add(orderingValue);
+				return;
+			}
+			
+			if (this.Ascending)
+			{
+				if (orderingValues[^1].CompareTo(orderingValue) <= 0)
 				{
-					this.EntryStorage.Insert(i, new(element, orderingValue));
+					orderingValues.Add(orderingValue);
+					return;
+				}
+				
+				for (var i = orderingValues.Count - 2; i >= 0; i--)
+				{
+					if (orderingValues[i].CompareTo(orderingValue) > 0)
+						continue;
+					orderingValues.Insert(i, orderingValue);
 					return;
 				}
 			}
-		}
-		else
-		{
-			for (var i = 0; i < this.EntryStorage.Count; i++)
+			else
 			{
-				if (this.EntryStorage[i].OrderingValue.CompareTo(orderingValue) < 0)
+				if (orderingValues[^1].CompareTo(orderingValue) >= 0)
 				{
-					this.EntryStorage.Insert(i, new(element, orderingValue));
+					orderingValues.Add(orderingValue);
+					return;
+				}
+				
+				for (var i = orderingValues.Count - 2; i >= 0; i--)
+				{
+					if (orderingValues[i].CompareTo(orderingValue) < 0)
+						continue;
+					orderingValues.Insert(i, orderingValue);
 					return;
 				}
 			}
+
+			orderingValues.Insert(0, orderingValue);
 		}
 
-		this.EntryStorage.Add(new(element, orderingValue));
+		void HandleEntries()
+		{
+			if (this.EntryStorage.Count == 0)
+			{
+				this.EntryStorage.Add(entry);
+				return;
+			}
+			
+			if (this.Ascending)
+			{
+				if (this.EntryStorage[^1].OrderingValue.CompareTo(orderingValue) <= 0)
+				{
+					this.EntryStorage.Add(entry);
+					return;
+				}
+				
+				for (var i = this.EntryStorage.Count - 2; i >= 0; i--)
+				{
+					if (this.EntryStorage[i].OrderingValue.CompareTo(orderingValue) > 0)
+						continue;
+					this.EntryStorage.Insert(i, entry);
+				}
+			}
+			else
+			{
+				if (this.EntryStorage[^1].OrderingValue.CompareTo(orderingValue) >= 0)
+				{
+					this.EntryStorage.Add(entry);
+					return;
+				}
+				
+				for (var i = this.EntryStorage.Count - 2; i >= 0; i--)
+				{
+					if (this.EntryStorage[i].OrderingValue.CompareTo(orderingValue) < 0)
+						continue;
+					this.EntryStorage.Insert(i, entry);
+					return;
+				}
+			}
+
+			this.EntryStorage.Insert(0, entry);
+		}
 	}
 
 	/// <summary>
@@ -127,14 +211,21 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 	/// <returns>Whether the collection actually contained the element and it was removed.</returns>
 	public bool Remove(TElement element)
 	{
-		for (var i = 0; i < this.EntryStorage.Count; i++)
+		if (!this.ElementToOrderingValues.TryGetValue(element, out var orderingValues))
+			return false;
+		
+		orderingValues.RemoveAt(orderingValues.Count - 1);
+		if (orderingValues.Count == 0)
+			this.ElementToOrderingValues.Remove(element);
+
+		for (var i = this.ElementToOrderingValues.Count - 1; i >= 0; i--)
 		{
-			if (Equals(this.EntryStorage[i].Element, element))
-			{
-				this.EntryStorage.RemoveAt(i);
-				return true;
-			}
+			if (!Equals(this.EntryStorage[i].Element, element))
+				continue;
+			this.EntryStorage.RemoveAt(i);
+			return true;
 		}
+		
 		return false;
 	}
 
@@ -146,14 +237,13 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 	/// <returns>Whether the collection actually contained the element and retrieving the ordering value succeeded.</returns>
 	public bool TryGetOrderingValue(TElement element, [MaybeNullWhen(false)] out TOrderingValue orderingValue)
 	{
-		foreach (var entry in this.EntryStorage)
+		if (!this.ElementToOrderingValues.TryGetValue(element, out var orderingValues))
 		{
-			if (!Equals(entry.Element, element))
-				continue;
-			orderingValue = entry.OrderingValue;
-			return true;
+			orderingValue = default;
+			return false;
 		}
-		orderingValue = default;
-		return false;
+		
+		orderingValue = orderingValues[0];
+		return true;
 	}
 }

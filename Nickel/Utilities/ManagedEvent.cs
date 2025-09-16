@@ -23,7 +23,7 @@ public sealed class ManagedEvent<TEventArgs>
 	/// <seealso cref="ModifyEventArgsBetweenSubscribersDelegate"/>
 	public ModifyEventArgsBetweenSubscribersDelegate? ModifyEventArgsBetweenSubscribers { get; init; }
 
-	private readonly OrderedList<ManagedEventHandler, double> Handlers = [];
+	private readonly OrderedList<ManagedEventHandler, double> Handlers = new(ascending: false);
 	private readonly List<(ManagedEventsModification, ManagedEventHandler)> AwaitingModifications = [];
 	private readonly Action<EventHandler<TEventArgs>, IModManifest, Exception>? ExceptionHandler;
 	private bool IsRaising;
@@ -59,7 +59,7 @@ public sealed class ManagedEvent<TEventArgs>
 		lock (this.Handlers)
 		{
 			var priority = handler.Handler.Method.GetCustomAttribute<EventPriorityAttribute>()?.Priority ?? 0;
-			this.Handlers.Add(handler, -priority);
+			this.Handlers.Add(handler, priority);
 		}
 	}
 
