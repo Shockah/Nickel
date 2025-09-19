@@ -181,6 +181,7 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 					if (this.EntryStorage[i].OrderingValue.CompareTo(orderingValue) > 0)
 						continue;
 					this.EntryStorage.Insert(i, entry);
+					return;
 				}
 			}
 			else

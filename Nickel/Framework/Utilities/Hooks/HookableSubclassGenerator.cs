@@ -485,10 +485,10 @@ file sealed class HookSubclassGlue(HookSubclassStaticGlue staticGlue)
 
 		ref var compiledDelegates = ref CollectionsMarshal.GetValueRefOrAddDefault(this.CompiledDelegates, method, out var compiledDelegatesExists);
 		if (!compiledDelegatesExists)
-			compiledDelegates = [];
+			compiledDelegates = new(ascending: false);
 
 		originalToCompiledDelegates![hookDelegate] = compiledDelegate;
-		compiledDelegates!.Add(objectifiedDelegate, -priority);
+		compiledDelegates!.Add(objectifiedDelegate, priority);
 	}
 
 	public void RegisterMethodHook<THookDelegate>(MethodInfo method, THookDelegate hookDelegate, double priority)

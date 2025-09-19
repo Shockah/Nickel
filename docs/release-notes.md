@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed wild issues caused by the recent performance improvements.
+
 ## 1.18.8
 Released 16 September 2025.
 
