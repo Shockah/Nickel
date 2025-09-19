@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.18.9
+Released 19 September 2025.
 
 * Fixed wild issues caused by the recent performance improvements.
 
