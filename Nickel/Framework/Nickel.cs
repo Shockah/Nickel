@@ -48,6 +48,10 @@ internal sealed partial class Nickel(
 		var privateModStoragePathOption = new Option<DirectoryInfo?>("--privateModStoragePath", "The path containing private mod data, like settings (ones that should never be shared).");
 		var savePathOption = new Option<DirectoryInfo?>("--savePath", "The path that will store the save data.");
 		var logPathOption = new Option<DirectoryInfo?>("--logPath", "The folder logs will be stored in.");
+		var attachDebuggerBeforeModOption = new Option<string?>("--attachDebuggerBeforeMod", "The mod loader will attempt to attach a debugger before the given mod loads.");
+		var attachDebuggerAfterModOption = new Option<string?>("--attachDebuggerAfterMod", "The mod loader will attempt to attach a debugger after the given mod loads.");
+		var attachDebuggerBeforeModLoadPhaseOption = new Option<string?>("--attachDebuggerBeforeModLoadPhase", "The mod loader will attempt to attach a debugger before mods from the given mod load phase start loading.");
+		var attachDebuggerAfterModLoadPhaseOption = new Option<string?>("--attachDebuggerAfterModLoadPhase", "The mod loader will attempt to attach a debugger after mods from the given mod load phase finish loading.");
 		var timestampedLogFiles = new Option<bool?>("--keepLogs", "Uses timestamps for log filenames.");
 		var logPipeNameOption = new Option<string?>("--logPipeName") { IsHidden = true };
 
@@ -63,6 +67,10 @@ internal sealed partial class Nickel(
 		rootCommand.AddOption(privateModStoragePathOption);
 		rootCommand.AddOption(savePathOption);
 		rootCommand.AddOption(logPathOption);
+		rootCommand.AddOption(attachDebuggerBeforeModOption);
+		rootCommand.AddOption(attachDebuggerAfterModOption);
+		rootCommand.AddOption(attachDebuggerBeforeModLoadPhaseOption);
+		rootCommand.AddOption(attachDebuggerAfterModLoadPhaseOption);
 		rootCommand.AddOption(timestampedLogFiles);
 		rootCommand.AddOption(logPipeNameOption);
 
@@ -82,6 +90,10 @@ internal sealed partial class Nickel(
 				SavePath = context.ParseResult.GetValueForOption(savePathOption),
 				LogPath = context.ParseResult.GetValueForOption(logPathOption),
 				TimestampedLogFiles = context.ParseResult.GetValueForOption(timestampedLogFiles),
+				AttachDebuggerBeforeMod = context.ParseResult.GetValueForOption(attachDebuggerBeforeModOption),
+				AttachDebuggerAfterMod = context.ParseResult.GetValueForOption(attachDebuggerAfterModOption),
+				AttachDebuggerBeforeModLoadPhase = context.ParseResult.GetValueForOption(attachDebuggerBeforeModLoadPhaseOption),
+				AttachDebuggerAfterModLoadPhase = context.ParseResult.GetValueForOption(attachDebuggerAfterModLoadPhaseOption),
 				LogPipeName = context.ParseResult.GetValueForOption(logPipeNameOption),
 				UnmatchedArguments = context.ParseResult.UnmatchedTokens
 			};
@@ -234,6 +246,27 @@ internal sealed partial class Nickel(
 			var privateModStorageDirectory = launchArguments.PrivateModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "PrivateModStorage"));
 			logger.LogInformation("PrivateModStoragePath: {Path}", PathUtilities.SanitizePath(privateModStorageDirectory.FullName));
 
+			var attachDebuggerBeforeMod = launchArguments.AttachDebuggerBeforeMod;
+			var attachDebuggerAfterMod = launchArguments.AttachDebuggerAfterMod;
+			ModLoadPhase? attachDebuggerBeforeModLoadPhase = null;
+			ModLoadPhase? attachDebuggerAfterModLoadPhase = null;
+
+			if (launchArguments.AttachDebuggerBeforeModLoadPhase is not null)
+			{
+				if (Enum.TryParse<ModLoadPhase>(launchArguments.AttachDebuggerBeforeModLoadPhase, out var result))
+					attachDebuggerBeforeModLoadPhase = result;
+				else
+					logger.LogError("The `--attachDebuggerBeforeModLoadPhase` has an invalid value. Ignoring.");
+			}
+
+			if (launchArguments.AttachDebuggerAfterModLoadPhase is not null)
+			{
+				if (Enum.TryParse<ModLoadPhase>(launchArguments.AttachDebuggerAfterModLoadPhase, out var result))
+					attachDebuggerAfterModLoadPhase = result;
+				else
+					logger.LogError("The `--attachDebuggerAfterModLoadPhase` has an invalid value. Ignoring.");
+			}
+
 			instance.ModManager = new(
 				internalModsDirectory,
 				modsDirectory,
@@ -242,7 +275,8 @@ internal sealed partial class Nickel(
 				loggerFactory,
 				logger,
 				extendableAssemblyDefinitionEditor,
-				stopwatch
+				stopwatch,
+				attachDebuggerBeforeMod, attachDebuggerAfterMod, attachDebuggerBeforeModLoadPhase, attachDebuggerAfterModLoadPhase
 			);
 
 			var helper = instance.ModManager.ObtainModHelper(instance.ModManager.ModLoaderPackage);

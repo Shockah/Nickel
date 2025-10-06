@@ -2,6 +2,11 @@
 
 # Release notes
 
+## Upcoming release
+
+### For developers:
+* Added `--attachDebuggerBeforeMod`, `--attachDebuggerAfterMod`, `--attachDebuggerBeforeModLoadPhase` and `--attachDebuggerAfterModLoadPhase` commandline arguments.
+
 ## 1.18.9
 Released 19 September 2025.
 

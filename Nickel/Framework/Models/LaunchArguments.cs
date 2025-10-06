@@ -16,6 +16,10 @@ internal readonly struct LaunchArguments
 	public DirectoryInfo? PrivateModStoragePath { get; init; }
 	public DirectoryInfo? SavePath { get; init; }
 	public DirectoryInfo? LogPath { get; init; }
+	public string? AttachDebuggerBeforeMod { get; init; }
+	public string? AttachDebuggerAfterMod { get; init; }
+	public string? AttachDebuggerBeforeModLoadPhase { get; init; }
+	public string? AttachDebuggerAfterModLoadPhase { get; init; }
 	public bool? TimestampedLogFiles { get; init; }
 	public string? LogPipeName { get; init; }
 	public IReadOnlyList<string> UnmatchedArguments { get; init; }

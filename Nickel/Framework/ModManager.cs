@@ -34,6 +34,10 @@ internal sealed class ModManager
 	private readonly EnumCasePool EnumCasePool;
 	private readonly DelayedHarmonyManager DelayedHarmonyManager;
 	private readonly Stopwatch Stopwatch;
+	private readonly string? AttachDebuggerBeforeMod;
+	private readonly string? AttachDebuggerAfterMod;
+	private readonly ModLoadPhase? AttachDebuggerBeforeModLoadPhase;
+	private readonly ModLoadPhase? AttachDebuggerAfterModLoadPhase;
 
 	internal readonly IPluginPackage<IModManifest> ModLoaderPackage;
 	private ModLoadPhaseState CurrentModLoadPhase = new(ModLoadPhase.BeforeGameAssembly, IsDone: false);
@@ -62,7 +66,11 @@ internal sealed class ModManager
 		ILoggerFactory loggerFactory,
 		ILogger logger,
 		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor,
-		Stopwatch stopwatch
+		Stopwatch stopwatch,
+		string? attachDebuggerBeforeMod,
+		string? attachDebuggerAfterMod,
+		ModLoadPhase? attachDebuggerBeforeModLoadPhase,
+		ModLoadPhase? attachDebuggerAfterModLoadPhase
 	)
 	{
 		this.InternalModsDirectory = internalModsDirectory;
@@ -72,6 +80,10 @@ internal sealed class ModManager
 		this.LoggerFactory = loggerFactory;
 		this.Logger = logger;
 		this.Stopwatch = stopwatch;
+		this.AttachDebuggerBeforeMod = attachDebuggerBeforeMod;
+		this.AttachDebuggerAfterMod = attachDebuggerAfterMod;
+		this.AttachDebuggerBeforeModLoadPhase = attachDebuggerBeforeModLoadPhase;
+		this.AttachDebuggerAfterModLoadPhase = attachDebuggerAfterModLoadPhase;
 
 		this.ModLoaderPackage = new FakePluginPackage(
 			manifest: new ModManifest
@@ -396,6 +408,12 @@ internal sealed class ModManager
 			{
 				var displayName = manifest.GetDisplayName(@long: false);
 				this.Logger.LogDebug("Loading mod {DisplayName} from {Package}...", displayName, package.PackageRoot);
+				
+				if (this.AttachDebuggerBeforeMod == package.Manifest.UniqueName && !Debugger.IsAttached)
+				{
+					this.Logger.LogDebug("Attaching debugger...");
+					Debugger.Launch();
+				}
 
 				if (manifest.MinimumGameVersion is { } minimumGameVersion)
 				{
@@ -510,6 +528,14 @@ internal sealed class ModManager
 					this.FailedMods.Add(manifest);
 					this.Logger.LogError("Could not load {DisplayName}: {ex}", displayName, ex);
 				}
+				finally
+				{
+					if (this.AttachDebuggerAfterMod == package.Manifest.UniqueName && !Debugger.IsAttached)
+					{
+						this.Logger.LogDebug("Attaching debugger...");
+						Debugger.Launch();
+					}
+				}
 				return result;
 			});
 		}
@@ -549,6 +575,12 @@ internal sealed class ModManager
 		this.Logger.LogInformation("Loading {Phase} phase mods...", phase);
 		this.CurrentModLoadPhase = new(phase, IsDone: false);
 
+		if (this.AttachDebuggerBeforeModLoadPhase == phase && !Debugger.IsAttached)
+		{
+			this.Logger.LogDebug("Attaching debugger...");
+			Debugger.Launch();
+		}
+
 		var successfulMods = this.GetLoadModsSteps(phase).Select(step => step.Step()).OfType<Mod>().ToList();
 		this.CurrentModLoadPhase = new(this.CurrentModLoadPhase.Phase, IsDone: true);
 		this.Logger.LogInformation("Loaded {Count} mods.", successfulMods.Count);
@@ -558,6 +590,12 @@ internal sealed class ModManager
 
 	private void AfterModLoadPhaseFinished(ModLoadPhase phase)
 	{
+		if (this.AttachDebuggerAfterModLoadPhase == phase && !Debugger.IsAttached)
+		{
+			this.Logger.LogDebug("Attaching debugger...");
+			Debugger.Launch();
+		}
+		
 		if (phase != ModLoadPhase.AfterDbInit)
 			return;
 		
