@@ -23,6 +23,27 @@ public sealed class ApiImplementation : IUpdateChecksApi
 		ModEntry.Instance.AwaitingUpdateInfo.Add(() => this.AwaitUpdateInfo(mod, callback));
 	}
 
+	public void AwaitAllUpdateInfo(Action<IReadOnlyDictionary<IModManifest, List<UpdateDescriptor>>> callback)
+	{
+		var updates = new Dictionary<IModManifest, List<UpdateDescriptor>>();
+		
+		foreach (var resolvedMod in ModEntry.Instance.Helper.ModRegistry.ResolvedMods.Values)
+		{
+			if (!this.TryGetUpdateInfo(resolvedMod, out var update))
+			{
+				ModEntry.Instance.AwaitingUpdateInfo.Add(() => this.AwaitAllUpdateInfo(callback));
+				return;
+			}
+
+			if (update.Count == 0)
+				continue;
+
+			updates[resolvedMod] = update;
+		}
+
+		callback(updates);
+	}
+
 	public void RequestUpdateInfo(IUpdateSource source)
 		=> ModEntry.Instance.ParseManifestsAndRequestUpdateInfo(source);
 

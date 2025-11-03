@@ -61,6 +61,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModBuildConfig.ReferenceAss
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NickelMacLauncher", "NickelMacLauncher\NickelMacLauncher.csproj", "{6F394CDD-C36E-46A3-8444-DC209D247A61}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nickel.InfoScreens", "Nickel.InfoScreens\Nickel.InfoScreens.csproj", "{73672E3A-A3FE-4778-88F9-7B7574D12ED0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -139,6 +141,10 @@ Global
 		{6F394CDD-C36E-46A3-8444-DC209D247A61}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F394CDD-C36E-46A3-8444-DC209D247A61}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F394CDD-C36E-46A3-8444-DC209D247A61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73672E3A-A3FE-4778-88F9-7B7574D12ED0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73672E3A-A3FE-4778-88F9-7B7574D12ED0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73672E3A-A3FE-4778-88F9-7B7574D12ED0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73672E3A-A3FE-4778-88F9-7B7574D12ED0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

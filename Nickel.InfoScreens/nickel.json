@@ -1,0 +1,10 @@
+﻿{
+	"UniqueName": "Nickel.InfoScreens",
+	"Version": "{{ModVersion}}",
+	"DisplayName": "Nickel: Info Screens",
+	"Description": "Provides a system of fullscreen info screens to mods.",
+	"Author": "Nickel",
+	"MinimumGameVersion": "1.2.5",
+	"RequiredApiVersion": "{{ModVersion}}",
+	"EntryPointAssembly": "Nickel.InfoScreens.dll"
+}
