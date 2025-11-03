@@ -4,6 +4,9 @@
 
 ## Upcoming release
 
+### For everyone:
+* Fixed additional problems caused by the recent performance improvements (technical: related to `OrderedList`).
+
 ### For developers:
 * Added `--attachDebuggerBeforeMod`, `--attachDebuggerAfterMod`, `--attachDebuggerBeforeModLoadPhase` and `--attachDebuggerAfterModLoadPhase` commandline arguments.
 

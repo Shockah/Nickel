@@ -126,33 +126,21 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 			
 			if (this.Ascending)
 			{
-				if (orderingValues[^1].CompareTo(orderingValue) <= 0)
-				{
-					orderingValues.Add(orderingValue);
-					return;
-				}
-				
-				for (var i = orderingValues.Count - 2; i >= 0; i--)
+				for (var i = orderingValues.Count - 1; i >= 0; i--)
 				{
 					if (orderingValues[i].CompareTo(orderingValue) > 0)
 						continue;
-					orderingValues.Insert(i, orderingValue);
+					orderingValues.Insert(i + 1, orderingValue);
 					return;
 				}
 			}
 			else
 			{
-				if (orderingValues[^1].CompareTo(orderingValue) >= 0)
-				{
-					orderingValues.Add(orderingValue);
-					return;
-				}
-				
-				for (var i = orderingValues.Count - 2; i >= 0; i--)
+				for (var i = orderingValues.Count - 1; i >= 0; i--)
 				{
 					if (orderingValues[i].CompareTo(orderingValue) < 0)
 						continue;
-					orderingValues.Insert(i, orderingValue);
+					orderingValues.Insert(i + 1, orderingValue);
 					return;
 				}
 			}
@@ -170,33 +158,21 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 			
 			if (this.Ascending)
 			{
-				if (this.EntryStorage[^1].OrderingValue.CompareTo(orderingValue) <= 0)
-				{
-					this.EntryStorage.Add(entry);
-					return;
-				}
-				
-				for (var i = this.EntryStorage.Count - 2; i >= 0; i--)
+				for (var i = this.EntryStorage.Count - 1; i >= 0; i--)
 				{
 					if (this.EntryStorage[i].OrderingValue.CompareTo(orderingValue) > 0)
 						continue;
-					this.EntryStorage.Insert(i, entry);
+					this.EntryStorage.Insert(i + 1, entry);
 					return;
 				}
 			}
 			else
 			{
-				if (this.EntryStorage[^1].OrderingValue.CompareTo(orderingValue) >= 0)
-				{
-					this.EntryStorage.Add(entry);
-					return;
-				}
-				
-				for (var i = this.EntryStorage.Count - 2; i >= 0; i--)
+				for (var i = this.EntryStorage.Count - 1; i >= 0; i--)
 				{
 					if (this.EntryStorage[i].OrderingValue.CompareTo(orderingValue) < 0)
 						continue;
-					this.EntryStorage.Insert(i, entry);
+					this.EntryStorage.Insert(i + 1, entry);
 					return;
 				}
 			}
@@ -219,7 +195,7 @@ public sealed class OrderedList<TElement, TOrderingValue> : IReadOnlyList<TEleme
 		if (orderingValues.Count == 0)
 			this.ElementToOrderingValues.Remove(element);
 
-		for (var i = this.ElementToOrderingValues.Count - 1; i >= 0; i--)
+		for (var i = this.EntryStorage.Count - 1; i >= 0; i--)
 		{
 			if (!Equals(this.EntryStorage[i].Element, element))
 				continue;
