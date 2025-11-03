@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using FSPRO;
+using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
 using Nanoray.Pintail;
@@ -6,6 +7,7 @@ using Nanoray.PluginManager;
 using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
 using Nickel.Common;
+using Nickel.InfoScreens;
 using Nickel.ModSettings;
 using System;
 using System.Collections.Generic;
@@ -54,6 +56,54 @@ public sealed class ModEntry : SimpleMod
 			api.OverrideModSettingsTitle(updateChecksMod?.DisplayName ?? updateChecksMod?.UniqueName);
 			api.RegisterModSettings(this.MakeUpdateListModSetting());
 		});
+
+		if (helper.ModRegistry.GetApi<IInfoScreensApi>("Nickel.InfoScreens") is { } infoScreensApi)
+		{
+			helper.Events.OnModLoadPhaseFinished += (_, phase) =>
+			{
+				if (phase != ModLoadPhase.AfterDbInit)
+					return;
+				
+				this.UpdateChecksApi.AwaitAllUpdateInfo(_ =>
+				{
+					var pendingUpdates = this.GetPendingModUpdates().ToList();
+					if (pendingUpdates.Count == 0)
+						return;
+				
+					var route = infoScreensApi.CreateBasicInfoScreenRoute();
+					route.Paragraphs = [
+						infoScreensApi.CreateBasicInfoScreenParagraph("Updates available!").SetFont(DB.thicket),
+						infoScreensApi.CreateBasicInfoScreenParagraph(
+							pendingUpdates.Join(e => $"<c=textFaint>{this.UpdateChecksApi.GetModNameForUpdatePurposes(e.Mod)}</c> <c=textBold>{e.Mod.Version}</c> -> <c=boldPink>{e.Version}</c>", "\n")
+						),
+					];
+					route.Actions = [
+						infoScreensApi.CreateBasicInfoScreenAction("REMIND\nLATER", args =>
+						{
+							Audio.Play(Event.Click);
+							args.G.CloseRoute(args.Route);
+						}),
+						infoScreensApi.CreateBasicInfoScreenAction("REMIND\nLATER", args =>
+						{
+							Audio.Play(Event.Click);
+							args.G.CloseRoute(args.Route);
+						}),
+						infoScreensApi.CreateBasicInfoScreenAction("REMIND\nTOMORROW", args =>
+						{
+							Audio.Play(Event.Click);
+							args.G.CloseRoute(args.Route);
+						}),
+						infoScreensApi.CreateBasicInfoScreenAction("IGNORE", args =>
+						{
+							Audio.Play(Event.Click);
+							args.G.CloseRoute(args.Route);
+						}).SetColor(Colors.redd),
+					];
+
+					infoScreensApi.RequestInfoScreen("UpdatesAvailable", route.AsRoute, 1_000);
+				});
+			};
+		}
 		
 		var harmony = this.Helper.Utilities.Harmony;
 		

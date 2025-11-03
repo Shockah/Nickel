@@ -34,6 +34,13 @@ public interface IUpdateChecksApi
 	/// <remarks>The <see cref="callback"/> will be invoked right away if the update checks are already done by the time this method is called.</remarks>
 	void AwaitUpdateInfo(IModManifest mod, Action<IModManifest, List<UpdateDescriptor>> callback);
 
+	/// <summary>
+	/// Awaits for the update info for all mods to finish.
+	/// </summary>
+	/// <param name="callback">The callback to be invoked when update checks are done.</param>
+	/// <remarks>The <see cref="callback"/> will be invoked right away if the update checks are already done by the time this method is called.</remarks>
+	void AwaitAllUpdateInfo(Action<IReadOnlyDictionary<IModManifest, List<UpdateDescriptor>>> callback);
+
 	IEnumerable<KeyValuePair<string, IUpdateSource>> UpdateSources { get; }
 
 	IUpdateSource? LookupUpdateSourceByKey(string sourceKey);
