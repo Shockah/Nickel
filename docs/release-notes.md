@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.19.0
+Released 3 November 2025.
 
 ### For everyone:
 * Fixed additional problems caused by the recent performance improvements (technical: related to `OrderedList`).
