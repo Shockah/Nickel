@@ -36,6 +36,8 @@ internal static class LogbookReplacement
 		var runCounts = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<Deck, int>>(__instance, "RunCounts");
 		var winCounts = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<Deck, int>>(__instance, "WinCounts");
 		var highestWins = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<HashSet<Deck>, int?>>(__instance, "HighestWins");
+		var allCombos = ModEntry.Instance.Helper.ModData.ObtainModData<List<HashSet<Deck>>>(__instance, "AllCombos");
+		var currentCombos = ModEntry.Instance.Helper.ModData.GetOptionalModData<List<HashSet<Deck>>>(__instance, "CurrentCombos");
 		var lastGpKey = ModEntry.Instance.Helper.ModData.GetModDataOrDefault<UIKey?>(__instance, "LastGpKey");
 		var subroute = ModEntry.Instance.Helper.ModData.GetOptionalModData<Route>(__instance, "Subroute");
 		var unlockedChars = g.state.storyVars.GetUnlockedChars();
@@ -49,14 +51,14 @@ internal static class LogbookReplacement
 		ScrollUtils.ReadScrollInputAndUpdate(g.dt, (int)__instance.maxY - MG.inst.PIX_H - 30, ref __instance.scroll, ref __instance.scrollTarget);
 		SharedArt.DrawEngineering(g);
 
-		var margin = 82;
-		var characterWidth = 35;
-		var characterHeight = 33;
-		var cardWidth = 6;
-		var cardHeight = 8;
-		var comboWidth = 8;
-		var comboHeight = 17;
-		var sectionSpacing = 8;
+		const int margin = 82;
+		const int characterWidth = 35;
+		const int characterHeight = 33;
+		const int cardWidth = 6;
+		const int cardHeight = 8;
+		const int comboWidth = 8;
+		const int comboHeight = 17;
+		const int sectionSpacing = 8;
 		
 		var width = MG.inst.PIX_W - margin * 2;
 		var box = g.Push(rect: new(margin, 12 + (int)__instance.scroll, width), onInputPhase: __instance);
@@ -169,6 +171,9 @@ internal static class LogbookReplacement
 								selectedCharacters.RemoveAt(0);
 							selectedCharacters.Add(deck);
 						}
+
+						currentCombos = null;
+						ModEntry.Instance.Helper.ModData.RemoveModData(__instance, "CurrentCombos");
 					}), overrideKey: characterUiKey);
 				}
 			}
@@ -242,7 +247,7 @@ internal static class LogbookReplacement
 		int RenderCombos()
 		{
 			var perRow = (width + 1) / (comboWidth + 1);
-			var rows = GetCombos().Chunk(perRow).ToList();
+			var rows = GetCurrentCombos().Chunk(perRow).ToList();
 			
 			for (var y = 0; y < rows.Count; y++)
 			{
@@ -278,6 +283,9 @@ internal static class LogbookReplacement
 
 		IEnumerable<HashSet<Deck>> GetAllCombos()
 		{
+			if (allCombos.Count != 0)
+				return allCombos;
+			
 			var unlockedCharacters = NewRunOptions.allChars.Where(unlockedChars.Contains).ToList();
 			var combo0 = new HashSet<Deck>();
 			var combos = new List<HashSet<Deck>> { combo0 };
@@ -300,18 +308,31 @@ internal static class LogbookReplacement
 				}
 			}
 
-			return combos
-				.OrderBy(combo => combo.Count);
+			allCombos.Clear();
+			allCombos = combos
+				.OrderBy(combo => combo.Count)
+				.ToList();
+
+			return allCombos;
 		}
 
-		IEnumerable<HashSet<Deck>> GetCombos()
-			=> GetAllCombos()
+		IEnumerable<HashSet<Deck>> GetCurrentCombos()
+		{
+			if (currentCombos is not null)
+				return currentCombos;
+
+			currentCombos = GetAllCombos()
 				.Where(combo =>
 				{
 					if (selectedCharacters.Count == 0)
 						return ObtainHighestWinForExactCombo(combo) is not null;
 					return combo.Count == 3 && selectedCharacters.All(combo.Contains);
-				});
+				})
+				.ToList();
+			ModEntry.Instance.Helper.ModData.SetOptionalModData(__instance, "CurrentCombos", currentCombos);
+
+			return currentCombos;
+		}
 	}
 
 	private static void Route_TryCloseSubRoute_Postfix(Route __instance, Route r, ref bool __result)
