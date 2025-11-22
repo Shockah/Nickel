@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed the save import feature crashing.
+
 ## 1.19.0
 Released 3 November 2025.
 

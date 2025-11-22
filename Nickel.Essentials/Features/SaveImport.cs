@@ -316,7 +316,7 @@ internal static class SaveImport
 			foreach (var filePath in Directory.EnumerateFiles(vanillaSavePath, "*", SearchOption.AllDirectories))
 			{
 				var file = new FileInfo(filePath);
-				if (file.Name == "Save.json")
+				if (file.Name is "Save.json" or "BigStats.json")
 					continue;
 
 				var relativePath = Path.GetRelativePath(vanillaSavePath, filePath);
