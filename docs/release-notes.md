@@ -2,11 +2,13 @@
 
 # Release notes
 
-## Upcoming release
+## 1.19.1
+Released 22 November 2025.
 
 * General improvements to the modded logbook replacement, including some compatibility for non-trio runs.
 * Fixed the save import feature crashing.
-* Fixed the save recovery feature losing all stats from a save file.
+* Fixed the save import feature losing all stats. This fix unfortunately is not retroactive.
+* Fixed the save recovery feature losing all stats from a save file. This fix unfortunately is not retroactive.
 * Fixed the logbook replacement not displaying some entries.
 
 ## 1.19.0
