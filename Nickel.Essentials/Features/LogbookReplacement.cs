@@ -10,6 +10,25 @@ namespace Nickel.Essentials;
 
 internal static class LogbookReplacement
 {
+	internal readonly struct DeckCombo(HashSet<Deck> values) : IEquatable<DeckCombo>
+	{
+		public readonly HashSet<Deck> Values = values;
+
+		public override bool Equals(object? obj)
+			=> obj is DeckCombo other && this.Equals(other);
+
+		public bool Equals(DeckCombo other)
+			=> this.Values.SetEquals(other.Values);
+
+		public override int GetHashCode()
+			=> this.Values.Sum(deck => (int)deck);
+
+		public string GetDisplayName(State state)
+			=> this.Values.Count == 0
+				? ModEntry.Instance.Localizations.Localize(["logbookReplacement", "unmanned"])
+				: string.Join(", ", this.Values.OrderBy(deck => NewRunOptions.allChars.IndexOf(deck)).Select(deck => Character.GetDisplayName(deck, state))); // TODO: localize
+	}
+	
 	private static readonly UK SelectCharacterKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 	private static readonly Dictionary<string, Card?> CardKeyToInstance = [];
 
@@ -33,11 +52,11 @@ internal static class LogbookReplacement
 			return true;
 		
 		var selectedCharacters = ModEntry.Instance.Helper.ModData.ObtainModData<List<Deck>>(__instance, "SelectedCharacters");
-		var runCounts = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<Deck, int>>(__instance, "RunCounts");
-		var winCounts = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<Deck, int>>(__instance, "WinCounts");
-		var highestWins = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<HashSet<Deck>, int?>>(__instance, "HighestWins");
-		var allCombos = ModEntry.Instance.Helper.ModData.ObtainModData<List<HashSet<Deck>>>(__instance, "AllCombos");
-		var currentCombos = ModEntry.Instance.Helper.ModData.GetOptionalModData<List<HashSet<Deck>>>(__instance, "CurrentCombos");
+		var runCounts = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<DeckCombo, int>>(__instance, "RunCounts");
+		var winCounts = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<DeckCombo, int>>(__instance, "WinCounts");
+		var highestWins = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<DeckCombo, int?>>(__instance, "HighestWins");
+		var allCombos = ModEntry.Instance.Helper.ModData.ObtainModData<List<DeckCombo>>(__instance, "AllCombos");
+		var currentCombos = ModEntry.Instance.Helper.ModData.GetOptionalModData<List<DeckCombo>>(__instance, "CurrentCombos");
 		var lastGpKey = ModEntry.Instance.Helper.ModData.GetModDataOrDefault<UIKey?>(__instance, "LastGpKey");
 		var subroute = ModEntry.Instance.Helper.ModData.GetOptionalModData<Route>(__instance, "Subroute");
 		var unlockedChars = g.state.storyVars.GetUnlockedChars();
@@ -94,27 +113,27 @@ internal static class LogbookReplacement
 		
 		return false;
 
-		int ObtainRunCount(Deck deck)
+		int ObtainRunCount(DeckCombo combo)
 		{
-			ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(runCounts, deck, out var valueExists);
+			ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(runCounts, combo, out var valueExists);
 			if (!valueExists)
 				value = g.state.bigStats.combos
-					.Where(kvp => BigStats.ParseComboKey(kvp.Key)?.decks.Contains(deck) == true)
+					.Where(kvp => BigStats.ParseComboKey(kvp.Key) is { } parsedStats && combo.Values.All(deck => parsedStats.decks.Contains(deck)))
 					.Sum(kvp => kvp.Value.runs);
 			return value;
 		}
 
-		int ObtainWinCount(Deck deck)
+		int ObtainWinCount(DeckCombo combo)
 		{
-			ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(winCounts, deck, out var valueExists);
+			ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(winCounts, combo, out var valueExists);
 			if (!valueExists)
 				value = g.state.bigStats.combos
-					.Where(kvp => BigStats.ParseComboKey(kvp.Key)?.decks.Contains(deck) == true)
+					.Where(kvp => BigStats.ParseComboKey(kvp.Key) is { } parsedStats && combo.Values.All(deck => parsedStats.decks.Contains(deck)))
 					.Sum(kvp => kvp.Value.wins);
 			return value;
 		}
 
-		int? ObtainHighestWinForExactCombo(HashSet<Deck> combo)
+		int? ObtainHighestWinForExactCombo(DeckCombo combo)
 		{
 			ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(highestWins, combo, out var valueExists);
 			if (!valueExists)
@@ -125,7 +144,7 @@ internal static class LogbookReplacement
 							return false;
 						if (BigStats.ParseComboKey(kvp.Key) is not { } parsedKey)
 							return false;
-						if (!combo.SetEquals(parsedKey.decks))
+						if (!combo.Values.SetEquals(parsedKey.decks))
 							return false;
 						return true;
 					})
@@ -185,16 +204,22 @@ internal static class LogbookReplacement
 		{
 			if (selectedCharacters.Count == 0)
 				return null;
-			
+
+			var comboSet = new HashSet<Deck>();
 			for (var i = 0; i < selectedCharacters.Count; i++)
 			{
 				var deck = selectedCharacters[i];
+				comboSet.Add(deck);
 				var character = new Character { deckType = deck, type = deck.Key() };
-				character.Render(g, i * 88, totalHeight, mini: true, autoFocus: true, showTooltips: false);
-				Draw.Text(Character.GetDisplayName(deck.Key(), g.state), box.rect.x + 38.0 + i * 88, box.rect.y + totalHeight + 5.0, color: Colors.textBold, font: DB.pinch);
-				Draw.Text($"{ObtainWinCount(deck)} {Loc.T("logBook.charWins", "Wins")}", box.rect.x + 38.0 + i * 88, box.rect.y + totalHeight + 14.0, null, Colors.textMain);
-				Draw.Text($"{ObtainRunCount(deck)} {Loc.T("logBook.charRuns", "Runs")}", box.rect.x + 38.0 + i * 88, box.rect.y + totalHeight + 23.0, null, Colors.textFaint);
+				character.Render(g, i * 37, totalHeight, mini: true, autoFocus: true, showTooltips: false);
 			}
+			var combo = new DeckCombo(comboSet);
+
+			var textX = box.rect.x + selectedCharacters.Count * 37 + 2;
+			Draw.Text(combo.GetDisplayName(g.state), textX, box.rect.y + totalHeight + 5.0, color: Colors.textBold, font: DB.pinch);
+			Draw.Text($"{ObtainWinCount(combo)} {Loc.T("logBook.charWins", "Wins")}", textX, box.rect.y + totalHeight + 14.0, null, Colors.textMain);
+			Draw.Text($"{ObtainRunCount(combo)} {Loc.T("logBook.charRuns", "Runs")}", textX, box.rect.y + totalHeight + 23.0, null, Colors.textFaint);
+			
 			return characterHeight;
 		}
 
@@ -256,7 +281,7 @@ internal static class LogbookReplacement
 				{
 					var combo = row[x];
 					var highestWin = ObtainHighestWinForExactCombo(combo);
-					var sortedCombo = combo.OrderBy(d => NewRunOptions.allChars.IndexOf(d)).ToList();
+					var sortedCombo = combo.Values.OrderBy(d => NewRunOptions.allChars.IndexOf(d)).ToList();
 					
 					var uiKey = new UIKey(StableUK.logbook_combo, 0, string.Join(",", sortedCombo.Select(d => d.Key())));
 					var box = g.Push(uiKey, new(x * (comboWidth + 1), totalHeight + y * (comboHeight + 3), comboWidth, comboHeight));
@@ -281,28 +306,28 @@ internal static class LogbookReplacement
 			return rows.Count * (comboHeight + 3) - 3;
 		}
 
-		IEnumerable<HashSet<Deck>> GetAllCombos()
+		IEnumerable<DeckCombo> GetAllCombos()
 		{
 			if (allCombos.Count != 0)
 				return allCombos;
 			
 			var unlockedCharacters = NewRunOptions.allChars.Where(unlockedChars.Contains).ToList();
-			var combo0 = new HashSet<Deck>();
-			var combos = new List<HashSet<Deck>> { combo0 };
+			var combo0 = new DeckCombo([]);
+			var combos = new List<DeckCombo> { combo0 };
 
 			for (var i = 0; i < unlockedCharacters.Count; i++)
 			{
-				var combo1 = new HashSet<Deck> { unlockedCharacters[i] }; 
+				var combo1 = new DeckCombo([unlockedCharacters[i]]); 
 				combos.Add(combo1);
 				
 				for (var j = i + 1; j < unlockedCharacters.Count; j++)
 				{
-					var combo2 = new HashSet<Deck> { unlockedCharacters[i], unlockedCharacters[j] };
+					var combo2 = new DeckCombo([unlockedCharacters[i], unlockedCharacters[j]]);
 					combos.Add(combo2);
 					
 					for (var k = j + 1; k < unlockedCharacters.Count; k++)
 					{
-						var combo3 = new HashSet<Deck> { unlockedCharacters[i], unlockedCharacters[j], unlockedCharacters[k] };
+						var combo3 = new DeckCombo([unlockedCharacters[i], unlockedCharacters[j], unlockedCharacters[k]]);
 						combos.Add(combo3);
 					}
 				}
@@ -310,13 +335,13 @@ internal static class LogbookReplacement
 
 			allCombos.Clear();
 			allCombos = combos
-				.OrderBy(combo => combo.Count)
+				.OrderBy(combo => combo.Values.Count)
 				.ToList();
 
 			return allCombos;
 		}
 
-		IEnumerable<HashSet<Deck>> GetCurrentCombos()
+		IEnumerable<DeckCombo> GetCurrentCombos()
 		{
 			if (currentCombos is not null)
 				return currentCombos;
@@ -326,7 +351,7 @@ internal static class LogbookReplacement
 				{
 					if (selectedCharacters.Count == 0)
 						return ObtainHighestWinForExactCombo(combo) is not null;
-					return combo.Count == 3 && selectedCharacters.All(combo.Contains);
+					return combo.Values.Count == 3 && selectedCharacters.All(combo.Values.Contains);
 				})
 				.ToList();
 			ModEntry.Instance.Helper.ModData.SetOptionalModData(__instance, "CurrentCombos", currentCombos);
