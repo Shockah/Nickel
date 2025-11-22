@@ -121,6 +121,7 @@ internal sealed class SaveManager
 			typeof(State).GetField(nameof(State.dailyDay))?.SetValue(recoveredState, null);
 			recoveredState.route = new NewRunOptions();
 			recoveredState.slot = e.Slot;
+			recoveredState.bigStats = BigStats.Load(e.Slot) ?? new();
 
 			e.Data.state = recoveredState;
 			e.Data.isCorrupted = false;

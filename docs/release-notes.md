@@ -5,6 +5,7 @@
 ## Upcoming release
 
 * Fixed the save import feature crashing.
+* Fixed the save recovery feature losing all stats from a save file.
 
 ## 1.19.0
 Released 3 November 2025.
