@@ -309,8 +309,9 @@ internal static class SaveImport
 			g.settings.Save();
 			PFX.ClearAll();
 			g.state = state;
+			g.state.bigStats.isDirty = true;
 			Cheevos.CheckOnLoad(g.state);
-			g.state.SaveIfRelease();
+			g.state.Save();
 			g.metaRoute = new MainMenu();
 
 			foreach (var filePath in Directory.EnumerateFiles(vanillaSavePath, "*", SearchOption.AllDirectories))
