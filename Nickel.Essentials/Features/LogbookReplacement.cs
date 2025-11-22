@@ -35,7 +35,7 @@ internal static class LogbookReplacement
 		var selectedCharacters = ModEntry.Instance.Helper.ModData.ObtainModData<List<Deck>>(__instance, "SelectedCharacters");
 		var runCounts = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<Deck, int>>(__instance, "RunCounts");
 		var winCounts = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<Deck, int>>(__instance, "WinCounts");
-		var highestWins = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<(Deck, Deck, Deck), int?>>(__instance, "HighestWins");
+		var highestWins = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<HashSet<Deck>, int?>>(__instance, "HighestWins");
 		var lastGpKey = ModEntry.Instance.Helper.ModData.GetModDataOrDefault<UIKey?>(__instance, "LastGpKey");
 		var subroute = ModEntry.Instance.Helper.ModData.GetOptionalModData<Route>(__instance, "Subroute");
 		var unlockedChars = g.state.storyVars.GetUnlockedChars();
@@ -112,19 +112,24 @@ internal static class LogbookReplacement
 			return value;
 		}
 
-		int? ObtainHighestWin(Deck first, Deck second, Deck third)
+		int? ObtainHighestWinForExactCombo(HashSet<Deck> combo)
 		{
-			ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(highestWins, (first, second, third), out var valueExists);
+			ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(highestWins, combo, out var valueExists);
 			if (!valueExists)
 				value = g.state.bigStats.combos
-					.Where(kvp => kvp.Value.maxDifficultyWin is not null)
-					.OrderByDescending(kvp => kvp.Value.maxDifficultyWin!.Value)
-					.FirstOrNull(kvp =>
+					.Where(kvp =>
 					{
+						if (kvp.Value.maxDifficultyWin is null)
+							return false;
 						if (BigStats.ParseComboKey(kvp.Key) is not { } parsedKey)
 							return false;
-						return parsedKey.decks.Contains(first) && parsedKey.decks.Contains(second) && parsedKey.decks.Contains(third);
-					})?.Value.maxDifficultyWin;
+						if (!combo.SetEquals(parsedKey.decks))
+							return false;
+						return true;
+					})
+					.Select(kvp => kvp.Value.maxDifficultyWin!.Value)
+					.OrderDescending()
+					.FirstOrNull();
 			return value;
 		}
 
@@ -245,20 +250,20 @@ internal static class LogbookReplacement
 				for (var x = 0; x < row.Length; x++)
 				{
 					var combo = row[x];
-					var highestWin = ObtainHighestWin(combo.Item1, combo.Item2, combo.Item3);
+					var highestWin = ObtainHighestWinForExactCombo(combo);
+					var sortedCombo = combo.OrderBy(d => NewRunOptions.allChars.IndexOf(d)).ToList();
 					
-					var uiKey = new UIKey(StableUK.logbook_combo, 0, $"{combo.Item1.Key()},{combo.Item2.Key()},{combo.Item3.Key()}");
+					var uiKey = new UIKey(StableUK.logbook_combo, 0, string.Join(",", sortedCombo.Select(d => d.Key())));
 					var box = g.Push(uiKey, new(x * (comboWidth + 1), totalHeight + y * (comboHeight + 3), comboWidth, comboHeight));
 
 					if (highestWin is not null)
 						Draw.Sprite(StableSpr.miscUI_combo_difficulty, box.rect.x, box.rect.y, color: NewRunOptions.GetDifficultyColorLogbook(highestWin.Value));
-					Draw.Sprite(StableSpr.miscUI_combo_bar, box.rect.x, box.rect.y + 3, color: DB.decks[combo.Item1].color.gain(highestWin is null ? 0.35 : 1.0));
-					Draw.Sprite(StableSpr.miscUI_combo_bar, box.rect.x, box.rect.y + 8, color: DB.decks[combo.Item2].color.gain(highestWin is null ? 0.35 : 1.0));
-					Draw.Sprite(StableSpr.miscUI_combo_bar, box.rect.x, box.rect.y + 13, color: DB.decks[combo.Item3].color.gain(highestWin is null ? 0.35 : 1.0));
+					for (var i = 0; i < Math.Min(sortedCombo.Count, 3); i++)
+						Draw.Sprite(StableSpr.miscUI_combo_bar, box.rect.x, box.rect.y + 3 + i * 5, color: DB.decks[sortedCombo[i]].color.gain(highestWin is null ? 0.35 : 1.0));
 
 					if (box.IsHover())
 					{
-						var text = $"{Character.GetDisplayName(combo.Item1, g.state)}, {Character.GetDisplayName(combo.Item2, g.state)}, {Character.GetDisplayName(combo.Item3, g.state)}";
+						var text = string.Join(", ",sortedCombo.Select(d => Character.GetDisplayName(d, g.state)));
 						if (highestWin is not null && NewRunOptions.difficulties.FirstOrDefault(difficulty => difficulty.level == highestWin.Value) is { } difficulty)
 							text = $"<c={NewRunOptions.GetDifficultyColorLogbook(highestWin.Value).normalize().gain(1.5)}>{Loc.T(difficulty.locKey)}</c>\n{text}";
 						g.tooltips.Add(box.rect.xy + new Vec(10.0, 10.0), new TTText { text = text });
@@ -271,39 +276,42 @@ internal static class LogbookReplacement
 			return rows.Count * (comboHeight + 3) - 3;
 		}
 
-		IEnumerable<(Deck, Deck, Deck)> GetCombos()
+		IEnumerable<HashSet<Deck>> GetAllCombos()
 		{
-			var maybeFirstSelection = selectedCharacters.Count > 0 ? selectedCharacters[0] : (Deck?)null;
-			var maybeSecondSelection = selectedCharacters.Count > 1 ? selectedCharacters[1] : (Deck?)null;
-			var maybeThirdSelection = selectedCharacters.Count > 2 ? selectedCharacters[2] : (Deck?)null;
 			var unlockedCharacters = NewRunOptions.allChars.Where(unlockedChars.Contains).ToList();
+			var combo0 = new HashSet<Deck>();
+			var combos = new List<HashSet<Deck>> { combo0 };
 
 			for (var i = 0; i < unlockedCharacters.Count; i++)
 			{
-				var deck1 = unlockedCharacters[i];
+				var combo1 = new HashSet<Deck> { unlockedCharacters[i] }; 
+				combos.Add(combo1);
 				
 				for (var j = i + 1; j < unlockedCharacters.Count; j++)
 				{
-					var deck2 = unlockedCharacters[j];
-				
+					var combo2 = new HashSet<Deck> { unlockedCharacters[i], unlockedCharacters[j] };
+					combos.Add(combo2);
+					
 					for (var k = j + 1; k < unlockedCharacters.Count; k++)
 					{
-						var deck3 = unlockedCharacters[k];
-				
-						if (maybeFirstSelection is { } firstSelection && deck1 != firstSelection && deck2 != firstSelection && deck3 != firstSelection)
-							continue;
-						if (maybeSecondSelection is { } secondSelection && deck1 != secondSelection && deck2 != secondSelection && deck3 != secondSelection)
-							continue;
-						if (maybeThirdSelection is { } thirdSelection && deck1 != thirdSelection && deck2 != thirdSelection && deck3 != thirdSelection)
-							continue;
-						if (maybeFirstSelection is null && maybeSecondSelection is null && maybeThirdSelection is null && ObtainHighestWin(deck1, deck2, deck3) is null)
-							continue;
-
-						yield return (deck1, deck2, deck3);
+						var combo3 = new HashSet<Deck> { unlockedCharacters[i], unlockedCharacters[j], unlockedCharacters[k] };
+						combos.Add(combo3);
 					}
 				}
 			}
+
+			return combos
+				.OrderBy(combo => combo.Count);
 		}
+
+		IEnumerable<HashSet<Deck>> GetCombos()
+			=> GetAllCombos()
+				.Where(combo =>
+				{
+					if (selectedCharacters.Count == 0)
+						return ObtainHighestWinForExactCombo(combo) is not null;
+					return combo.Count == 3 && selectedCharacters.All(combo.Contains);
+				});
 	}
 
 	private static void Route_TryCloseSubRoute_Postfix(Route __instance, Route r, ref bool __result)

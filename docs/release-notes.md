@@ -6,6 +6,7 @@
 
 * Fixed the save import feature crashing.
 * Fixed the save recovery feature losing all stats from a save file.
+* Fixed the logbook replacement not displaying some entries, and added some compatibility for non-trio runs.
 
 ## 1.19.0
 Released 3 November 2025.
