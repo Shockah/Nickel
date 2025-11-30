@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed deck filtering buttons in the Codex not being aligned with the cards.
+
 ## 1.19.1
 Released 22 November 2025.
 

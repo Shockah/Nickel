@@ -12,6 +12,9 @@ namespace Nickel.Essentials;
 internal static partial class CardCodexFiltering
 {
 	private static readonly UK DeckFilterKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
+	
+	private static ISpriteEntry DeckFilterButtonSprite = null!;
+	private static ISpriteEntry DeckFilterButtonOnSprite = null!;
 
 	private static List<Deck> DeckTypes = [];
 	private static readonly HashSet<Deck> FilteredOutDecks = [];
@@ -21,6 +24,9 @@ internal static partial class CardCodexFiltering
 
 	public static void ApplyPatches(IHarmony harmony)
 	{
+		DeckFilterButtonSprite = ModEntry.Instance.Helper.Content.Sprites.RegisterSprite(ModEntry.Instance.Package.PackageRoot.GetRelativeFile("assets/DeckFilterButton.png"));
+		DeckFilterButtonOnSprite = ModEntry.Instance.Helper.Content.Sprites.RegisterSprite(ModEntry.Instance.Package.PackageRoot.GetRelativeFile("assets/DeckFilterButtonOn.png"));
+		
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(CardBrowse), nameof(CardBrowse.GetCardList)),
 			postfix: new HarmonyMethod(typeof(CardCodexFiltering), nameof(CardBrowse_GetCardList_Postfix))
@@ -101,11 +107,10 @@ internal static partial class CardCodexFiltering
 		if (__instance.subRoute is not null)
 			return;
 
-		const int topOffset = 54;
+		const int topOffset = 53;
 		const int bottomOffset = 62;
-		const double scale = 0.875;
 		
-		var preferredHeightOnScreen = MG.inst.PIX_H - topOffset - bottomOffset;
+		var preferredHeightOnScreen = g.mg.PIX_H - topOffset - bottomOffset;
 		var maxFilterScroll = Math.Max((DeckTypes.Count + 1) / 2 * 16 - preferredHeightOnScreen, 0);
 
 		for (var i = 0; i < DeckTypes.Count; i++)
@@ -118,7 +123,7 @@ internal static partial class CardCodexFiltering
 
 			var box = g.Push(
 				new UIKey(DeckFilterKey, i),
-				new Rect(i % 2 * 56 + 4, topOffset + i / 2 * 16 + (int)FilterScroll, 48 / scale, 16),
+				new Rect(i % 2 * 56 + 4, topOffset + i / 2 * 16 + (int)FilterScroll, 53, 15),
 				onMouseDown: new MouseDownHandler(() =>
 				{
 					Audio.Play(Event.Click);
@@ -152,14 +157,14 @@ internal static partial class CardCodexFiltering
 					}
 				})
 			);
-			var sprite = FilteredOutDecks.Contains(deck) ? StableSpr.buttons_select_gray : StableSpr.buttons_select_gray_on;
-			Draw.Sprite(sprite, box.rect.x, box.rect.y, scale: new Vec(scale, scale), color: Colors.buttonBoxNormal);
+			var sprite = (FilteredOutDecks.Contains(deck) ? DeckFilterButtonSprite : DeckFilterButtonOnSprite).Sprite;
+			Draw.Sprite(sprite, box.rect.x, box.rect.y, color: Colors.buttonBoxNormal);
 			Draw.Text(
 				$"<c={DB.decks[deck].color}>{niceName}</c>",
-				box.rect.x + box.rect.w / 2,
-				box.rect.y + 4.5 + (niceName.Length >= 12 ? 1 : 0),
+				box.rect.x + box.rect.w / 2 + 1,
+				box.rect.y + 4 + (niceName.Length >= 12 ? 1 : 0),
 				align: TAlign.Center,
-				extraScale: niceName.Length >= 12 ? 0.75 : 1
+				outline: Colors.black
 			);
 			if (Input.gamepadIsActiveInput && Equals(box.key, Input.currentGpKey))
 			{
