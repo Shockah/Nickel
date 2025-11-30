@@ -5,6 +5,7 @@
 ## Upcoming release
 
 * Fixed deck filtering buttons in the Codex not being aligned with the cards.
+* Fixed scrolling of the deck filtering buttons in the Codex being a bit off-sync from the cards being scrolled.
 
 ## 1.19.1
 Released 22 November 2025.

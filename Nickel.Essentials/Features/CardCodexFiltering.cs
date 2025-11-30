@@ -112,6 +112,7 @@ internal static partial class CardCodexFiltering
 		
 		var preferredHeightOnScreen = g.mg.PIX_H - topOffset - bottomOffset;
 		var maxFilterScroll = Math.Max((DeckTypes.Count + 1) / 2 * 16 - preferredHeightOnScreen, 0);
+		ScrollUtils.ReadScrollInputAndUpdate(g.dt, maxFilterScroll, ref FilterScroll, ref FilterScrollTarget);
 
 		for (var i = 0; i < DeckTypes.Count; i++)
 		{
@@ -175,8 +176,6 @@ internal static partial class CardCodexFiltering
 			}
 			g.Pop();
 		}
-
-		ScrollUtils.ReadScrollInputAndUpdate(g.dt, maxFilterScroll, ref FilterScroll, ref FilterScrollTarget);
 	}
 
 	[GeneratedRegex("\\w+$")]
