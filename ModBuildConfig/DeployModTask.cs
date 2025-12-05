@@ -12,7 +12,7 @@ namespace Nickel.ModBuildConfig;
 
 public sealed class DeployModTask : Task
 {
-	private const string ManifestFileName = "nickel.json";
+	private const string MANIFEST_FILE_NAME = "nickel.json";
 
 	[Required]
 	public string ModName { get; set; } = null!;
@@ -42,7 +42,7 @@ public sealed class DeployModTask : Task
 
 	public string IncludedModProjectPaths { get; set; } = "";
 
-	public string ModVersionValidation { get; set; } = Enum.GetName(typeof(ModVersionValidation), ModBuildConfig.ModVersionValidation.Error)!;
+	public string ModVersionValidation { get; set; } = nameof(ModBuildConfig.ModVersionValidation.Error);
 
 	public override bool Execute()
 	{
@@ -59,9 +59,9 @@ public sealed class DeployModTask : Task
 
 		var modFiles = this.GetModFiles(this.TargetDir, this.ProjectDir).ToList();
 		
-		if (modFiles.FirstOrNull(e => e.Info.Name == ManifestFileName) is not { } manifestFile || !manifestFile.Info.Exists)
+		if (modFiles.FirstOrNull(e => e.Info.Name == MANIFEST_FILE_NAME) is not { } manifestFile || !manifestFile.Info.Exists)
 		{
-			this.Log.LogError($"The required `{ManifestFileName}` file is missing.");
+			this.Log.LogError($"The required `{MANIFEST_FILE_NAME}` file is missing.");
 			return false;
 		}
 
@@ -77,9 +77,9 @@ public sealed class DeployModTask : Task
 	{
 		var projectDirUri = new Uri(projectDir);
 
-		var manifestFile = new FileInfo(Path.Combine(projectDir, ManifestFileName));
+		var manifestFile = new FileInfo(Path.Combine(projectDir, MANIFEST_FILE_NAME));
 		if (manifestFile.Exists)
-			yield return (Info: manifestFile, RelativeName: "nickel.json");
+			yield return (Info: manifestFile, RelativeName: MANIFEST_FILE_NAME);
 
 		foreach (var file in GetAllFilesFromDirectory(new(targetDir)))
 			if (!ShouldIgnore(file.Info))
@@ -183,7 +183,7 @@ public sealed class DeployModTask : Task
 	private bool ModifyFile(FileInfo info, string relativeName, ModVersionValidation modVersionValidation, out MemoryStream? resultStream)
 	{
 		resultStream = null;
-		if (relativeName != ManifestFileName)
+		if (relativeName != MANIFEST_FILE_NAME)
 			return true;
 
 		var properties = new Dictionary<string, string>
@@ -201,7 +201,7 @@ public sealed class DeployModTask : Task
 		
 		if (json is not JObject)
 		{
-			this.Log.LogError($"The `{ManifestFileName}` file is not a valid JSON file.");
+			this.Log.LogError($"The `{MANIFEST_FILE_NAME}` file is not a valid JSON file.");
 			return false;
 		}
 
@@ -210,12 +210,12 @@ public sealed class DeployModTask : Task
 		
 		if (json.Value<string>("Version") is not { } manifestVersion)
 		{
-			this.Log.LogError($"The `{ManifestFileName}` file does is missing a required `Version` field.");
+			this.Log.LogError($"The `{MANIFEST_FILE_NAME}` file does is missing a required `Version` field.");
 			return false;
 		}
 		if (manifestVersion.Trim() != this.ModVersion.Trim())
 		{
-			var message = $"The `{ManifestFileName}` file specifies a `Version` of `{manifestVersion.Trim()}` which does not match the `ModVersion` property of `{this.ModVersion.Trim()}`.";
+			var message = $"The `{MANIFEST_FILE_NAME}` file specifies a `Version` of `{manifestVersion.Trim()}` which does not match the `ModVersion` property of `{this.ModVersion.Trim()}`.";
 			switch (modVersionValidation)
 			{
 				case ModBuildConfig.ModVersionValidation.Warning:
