@@ -4,6 +4,7 @@
 
 ## Upcoming release
 
+* Fixed the tooltip order of modded card traits.
 * Fixed deck filtering buttons in the Codex not being aligned with the cards.
 * Fixed scrolling of the deck filtering buttons in the Codex being a bit off-sync from the cards being scrolled.
 

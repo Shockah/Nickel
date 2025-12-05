@@ -13,7 +13,7 @@ namespace Nickel;
 internal static class CardPatches
 {
 	internal static RefEventHandler<KeyEventArgs>? OnKey;
-	internal static RefEventHandler<TooltipsEventArgs>? OnGetTooltips;
+	internal static EventHandler<TooltipsEventArgs>? OnGetTooltips;
 	internal static RefEventHandler<ModifyShineColorEventArgs>? OnModifyShineColor;
 	internal static RefEventHandler<TraitRenderEventArgs>? OnRenderTraits;
 	internal static EventHandler<GettingDataWithOverridesEventArgs>? OnGettingDataWithOverrides;
@@ -35,7 +35,7 @@ internal static class CardPatches
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Card), nameof(Card.GetAllTooltips))
 				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Card)}.{nameof(Card.GetAllTooltips)}`"),
-			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetAllTooltips_Postfix))
+			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(GetAllTooltips_Transpiler))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(Card), nameof(Card.GetDataWithOverrides))
@@ -161,19 +161,44 @@ internal static class CardPatches
 		OnRenderTraits?.Invoke(null, ref args);
 		cardTraitIndex = args.CardTraitIndex;
 	}
-
-	private static void GetAllTooltips_Postfix(Card __instance, State s, bool showCardTraits, ref IEnumerable<Tooltip> __result)
+	
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+	private static IEnumerable<CodeInstruction> GetAllTooltips_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
 	{
-		var args = new TooltipsEventArgs
+		try
 		{
-			Card = __instance,
-			State = s,
-			ShowCardTraits = showCardTraits,
-			TooltipsEnumerator = __result,
-		};
-		OnGetTooltips?.Invoke(null, ref args);
-		__result = args.TooltipsEnumerator;
+			return new SequenceBlockMatcher<CodeInstruction>(instructions)
+				.Find([
+					ILMatches.Ldloc<List<Tooltip>>(originalMethod).GetLocalIndex(out var tooltipsLocalIndex).SelectElement(out var returnLabel, i => i.labels[0]),
+					ILMatches.Instruction(OpCodes.Ret)
+				])
+				.Find(SequenceBlockMatcherFindOccurence.First, SequenceMatcherRelativeBounds.WholeSequence, [
+					new ElementMatch<CodeInstruction>($"{{brfalse(.s) to label {returnLabel.Value}}}", i => ILMatches.Brfalse.Matches(i) && Equals(i.operand, returnLabel.Value)),
+				])
+				.PointerMatcher(SequenceMatcherRelativeElement.AfterLast)
+				.ExtractLabels(out var labels)
+				.Insert(SequenceMatcherPastBoundsDirection.Before, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
+					new CodeInstruction(OpCodes.Ldarg_0).WithLabels(labels),
+					new CodeInstruction(OpCodes.Ldarg_2),
+					new CodeInstruction(OpCodes.Ldloc, tooltipsLocalIndex.Value),
+					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(CardPatches), nameof(GetAllTooltips_Transpiler_ModifyTraitTooltips)))
+				])
+				.AllElements();
+		}
+		catch (Exception ex)
+		{
+			Nickel.Instance.ModManager.Logger.LogCritical("Could not patch method {DeclaringType}::{Method} - {ModLoaderName} probably won't work.\nReason: {Exception}", originalMethod.DeclaringType, originalMethod, NickelConstants.Name, ex);
+			return instructions;
+		}
 	}
+
+	private static void GetAllTooltips_Transpiler_ModifyTraitTooltips(Card card, State state, List<Tooltip> tooltips)
+		=> OnGetTooltips?.Invoke(null, new TooltipsEventArgs
+		{
+			Card = card,
+			State = state,
+			Tooltips = tooltips,
+		});
 
 	private static void GetDataWithOverrides_Prefix(Card __instance, State state)
 		=> OnGettingDataWithOverrides?.Invoke(null, new GettingDataWithOverridesEventArgs
@@ -235,8 +260,7 @@ internal static class CardPatches
 	{
 		public required Card Card { get; init; }
 		public required State State { get; init; }
-		public required bool ShowCardTraits { get; init; }
-		public required IEnumerable<Tooltip> TooltipsEnumerator;
+		public required List<Tooltip> Tooltips { get; init; }
 	}
 
 	internal struct ModifyShineColorEventArgs

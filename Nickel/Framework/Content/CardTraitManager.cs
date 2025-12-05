@@ -413,16 +413,13 @@ internal class CardTraitManager
 		}
 	}
 
-	private void OnGetCardTooltips(object? sender, ref CardPatches.TooltipsEventArgs e)
+	private void OnGetCardTooltips(object? sender, CardPatches.TooltipsEventArgs e)
 	{
 		var state = e.State;
 		var card = e.Card;
 		
-		e.TooltipsEnumerator = e.TooltipsEnumerator.Concat(
-			this.GetActiveCardTraits(e.State, e.Card)
-				.Where(t => t is not VanillaEntry)
-				.SelectMany(t => t.Configuration.Tooltips?.Invoke(state, card) ?? [])
-		);
+		foreach (var trait in this.GetActiveCardTraits(e.State, e.Card).Where(t => t is not VanillaEntry).Reverse())
+			e.Tooltips.AddRange(trait.Configuration.Tooltips?.Invoke(state, card) ?? []);
 	}
 
 	private void OnGettingDataWithOverrides(object? sender, CardPatches.GettingDataWithOverridesEventArgs e)
