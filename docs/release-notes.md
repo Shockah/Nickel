@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.19.2
+Released 5 December 2025.
 
 * Updated the Pintail library, fixing an issue with cross-mod interactions.
 * Fixed the tooltip order of modded card traits.
