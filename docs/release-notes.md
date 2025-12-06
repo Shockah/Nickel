@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Improved legacy mod compatibility with Nickel mods: legacy mods can now query for Nickel mods the same way they do for other legacy mods.
+
 ## 1.19.2
 Released 5 December 2025.
 

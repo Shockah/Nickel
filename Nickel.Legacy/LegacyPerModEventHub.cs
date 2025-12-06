@@ -2,7 +2,7 @@ using CobaltCoreModding.Definitions.ModContactPoints;
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace Nickel;
+namespace Nickel.Legacy;
 
 internal sealed class LegacyPerModEventHub(LegacyEventHub hub, ILogger logger) : ICustomEventHub
 {

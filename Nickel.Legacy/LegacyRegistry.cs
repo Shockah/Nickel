@@ -8,7 +8,7 @@ using System.Linq;
 using System.Reflection;
 using ILegacyManifest = CobaltCoreModding.Definitions.ModManifests.IManifest;
 
-namespace Nickel;
+namespace Nickel.Legacy;
 
 internal sealed class LegacyRegistry
 	: IModLoaderContact, IPrelaunchContactPoint,
@@ -22,7 +22,17 @@ internal sealed class LegacyRegistry
 		=> typeof(DB).Assembly;
 
 	public IEnumerable<ILegacyManifest> LoadedManifests
-		=> this.Database.LegacyManifests;
+	{
+		get
+		{
+			var loadedNames = this.Database.LegacyManifests.Select(m => m.Name).ToHashSet();
+			return this.Database.LegacyManifests.Concat(
+				this.Helper.ModRegistry.LoadedMods.Values
+					.Where(m => !loadedNames.Contains(m.UniqueName))
+					.Select(m => new NewToLegacyManifestStub(m, () => this.Helper.ModRegistry.GetLogger(m)))
+			);
+		}
+	}
 
 	internal LegacyEventHub GlobalEventHub
 		=> this.Database.GlobalEventHub;
@@ -55,7 +65,13 @@ internal sealed class LegacyRegistry
 		=> this.Helper.ModRegistry.GetApi<TApi>(modName);
 
 	public ILegacyManifest LookupManifest(string globalName)
-		=> this.LoadedManifests.FirstOrDefault(m => m.Name == globalName) ?? throw new KeyNotFoundException();
+	{
+		if (this.LoadedManifests.FirstOrDefault(m => m.Name == globalName) is { } legacyMod)
+			return legacyMod;
+		if (this.Helper.ModRegistry.LoadedMods.TryGetValue(globalName, out var nickelMod))
+			return new NewToLegacyManifestStub(nickelMod, () => this.Helper.ModRegistry.GetLogger(nickelMod));
+		throw new KeyNotFoundException();
+	}
 
 	public ExternalSprite LookupSprite(string globalName)
 		=> this.Database.GetSprite(globalName);

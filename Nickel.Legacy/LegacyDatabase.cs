@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using ILegacyManifest = CobaltCoreModding.Definitions.ModManifests.IManifest;
 
-namespace Nickel;
+namespace Nickel.Legacy;
 
 internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvider)
 {

@@ -1,4 +1,3 @@
-using CobaltCoreModding.Definitions;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
@@ -8,7 +7,7 @@ using System.IO;
 using System.Linq;
 using ILegacyManifest = CobaltCoreModding.Definitions.ModManifests.IManifest;
 
-namespace Nickel;
+namespace Nickel.Legacy;
 
 internal sealed class LegacyModWrapper : Mod
 {
@@ -43,40 +42,6 @@ internal sealed class LegacyModWrapper : Mod
 			return null;
 
 		var legacyRequestingManifest = this.Registry.LoadedManifests.FirstOrDefault(m => m.Name == requestingMod.UniqueName);
-		return apiProvider.GetApi(legacyRequestingManifest ?? new NewToLegacyManifestStub(requestingMod));
-	}
-
-	private sealed class NewToLegacyManifestStub : ILegacyManifest
-	{
-		public string Name
-			=> this.ModManifest.UniqueName;
-
-		public IEnumerable<DependencyEntry> Dependencies
-			=> [];
-
-		public DirectoryInfo? GameRootFolder
-		{
-			get => null;
-			set { }
-		}
-
-		public DirectoryInfo? ModRootFolder
-		{
-			get => null;
-			set { }
-		}
-
-		public ILogger? Logger
-		{
-			get => null;
-			set { }
-		}
-
-		private readonly IModManifest ModManifest;
-
-		public NewToLegacyManifestStub(IModManifest modManifest)
-		{
-			this.ModManifest = modManifest;
-		}
+		return apiProvider.GetApi(legacyRequestingManifest ?? new NewToLegacyManifestStub(requestingMod, () => this.Helper.ModRegistry.GetLogger(requestingMod)));
 	}
 }

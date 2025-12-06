@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace Nickel;
+namespace Nickel.Legacy;
 
 internal sealed class LegacyEventHub
 {
