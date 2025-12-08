@@ -365,9 +365,16 @@ internal sealed partial class Nickel(
 		var oldWorkingDirectory = Directory.GetCurrentDirectory();
 		var gameWorkingDirectory = handlerResult.WorkingDirectory;
 		Directory.SetCurrentDirectory(gameWorkingDirectory.FullName);
+
+		// setting current directory isn't enough to get the dll map to change its context.
+		// we need to point it out to the game itself
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+		{
+			DllMap.Register(gameWorkingDirectory);
+		}
 		
-		// Steam fails to init otherwise on Mac
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+		// Steam fails to init otherwise on Mac and Linux
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			File.WriteAllBytes("steam_appid.txt", Encoding.UTF8.GetBytes(NickelConstants.GameSteamAppId));
 
 #pragma warning disable CA2254 // Template should be a static expression

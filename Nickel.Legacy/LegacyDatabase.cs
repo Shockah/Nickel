@@ -218,7 +218,6 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 
 	public void RegisterSprite(IModManifest mod, ExternalSprite value)
 	{
-
 		var entry = helperProvider(mod).Content.Sprites.RegisterSprite(value.GlobalName, GetStreamProvider());
 		value.Id = (int)entry.Sprite;
 		this.GlobalNameToSprite[value.GlobalName] = value;
@@ -228,7 +227,32 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 			if (value.virtual_location is { } provider)
 				return provider;
 			if (value.physical_location is { } path)
-				return () => path.OpenRead().ToMemoryStream();
+			{
+				return () => {
+					try 
+					{
+						return path.OpenRead().ToMemoryStream();
+					}
+					// handle case sensitive pathing
+					catch (FileNotFoundException)
+					{
+						var targetPath = path.FullName;
+						var targetFileName = Path.GetFileName(targetPath);
+						var files = Directory.GetFiles(Path.GetDirectoryName(targetPath)!);
+
+						foreach (var file in files)
+						{
+							var filename = Path.GetFileName(file);
+							if (filename.Equals(targetFileName, StringComparison.InvariantCultureIgnoreCase))
+							{
+								return File.OpenRead(file).ToMemoryStream();
+							}
+						}
+
+						throw;
+					}
+				};
+			}
 			throw new ArgumentException("Unsupported ExternalSprite");
 		}
 	}

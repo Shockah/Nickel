@@ -1,0 +1,6 @@
+<configuration>
+    <dllmap dll="steam_api64" target="libsteam_api64.so"/>
+    <dllmap dll="cimgui" target="libcimgui.so"/>
+    <dllmap dll="fmod" target="libfmod.so.13"/>
+    <dllmap dll="fmodstudio" target="libfmodstudio.so.13"/>
+</configuration>

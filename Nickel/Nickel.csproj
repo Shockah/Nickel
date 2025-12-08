@@ -49,6 +49,7 @@
 	<!-- trying to set GameDllPath and GameExePath based on the found game path -->
 	<PropertyGroup Condition="Exists('$(_GamePath)')">
 		<GameExePath Condition="!Exists('$(GameExePath)')">$(_GamePath)\CobaltCore.exe</GameExePath>
+		<GameExePath Condition="!Exists('$(GameExePath)')">$(_GamePath)\CobaltCore</GameExePath>
 		<GameDllPath Condition="!Exists('$(GameDllPath)')">$(MSBuildProjectDirectory)\..\CobaltCore.dll</GameDllPath>
 	</PropertyGroup>
 
