@@ -33,7 +33,10 @@ internal sealed class PartManager
 	}
 
 	internal void InjectQueuedEntries()
-		=> this.PartInstanceManager.InjectQueuedEntries();
+	{
+		this.PartInstanceManager.InjectQueuedEntries();
+		this.PartTypeManager.InjectQueuedEntries();
+	}
 
 	public IPartTypeEntry RegisterPartType(IModManifest owner, string name, PartTypeConfiguration configuration)
 	{
@@ -71,8 +74,24 @@ internal sealed class PartManager
 		return this.UniqueNameToPartInstanceEntry.TryGetValue(uniqueName, out var typedEntry);
 	}
 
-	private static void Inject(PartTypeEntry entry)
+	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
+		foreach (var entry in this.UniqueNameToPartTypeEntry.Values)
+			this.InjectLocalization(locale, localizations, entry);
+	}
+
+	private void Inject(PartTypeEntry entry)
+    {
+        this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
+    }
+
+	private void InjectLocalization(string locale, Dictionary<string, string> localizations, PartTypeEntry entry)
+	{	
+		var key = entry.PartType.Key();
+		if (entry.Configuration.Name.Localize(locale) is { } name)
+			localizations[$"part.{key}.name"] = name;
+		if (entry.Configuration.Description.Localize(locale) is { } description)
+			localizations[$"part.{key}.desc"] = description;
 	}
 
 	private static void Inject(PartEntry entry)
