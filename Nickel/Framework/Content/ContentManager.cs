@@ -90,6 +90,7 @@ internal sealed class ContentManager
 		this.Cards.InjectLocalizations(locale, localizations);
 		this.Artifacts.InjectLocalizations(locale, localizations);
 		this.Characters.InjectLocalizations(locale, localizations);
+		this.Parts.InjectLocalizations(locale, localizations);
 		this.Ships.InjectLocalizations(locale, localizations);
 		this.Enemies.InjectLocalizations(locale, localizations);
 	}
