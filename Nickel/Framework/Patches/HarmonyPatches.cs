@@ -1,47 +1,19 @@
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using Nanoray.Shrike;
-using Nanoray.Shrike.Harmony;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 
 namespace Nickel;
 
 internal static class HarmonyPatches
 {
 	private static PatchInfo? CurrentPatchInfo;
-#pragma warning disable CS0618 // Type or member is obsolete
-	internal static readonly Stack<(DelayedHarmony Harmony, string MemberName, string SourceFilePath, int SourceLineNumber)> DelayedManagerStack = [];
-#pragma warning restore CS0618 // Type or member is obsolete
-
-	private static readonly Lazy<Type> PatchJobsMethodInfoJobType = new(() => AccessTools.Inner(typeof(Harmony).Assembly.GetType("HarmonyLib.PatchJobs")!.MakeGenericType(typeof(MethodInfo)), "Job"));
-	private static readonly Lazy<Func<object, MethodBase>> GetOriginal = new(() => CreateFieldGetter<MethodBase>(PatchJobsMethodInfoJobType.Value, "original"));
-	private static readonly Lazy<Func<object, List<HarmonyMethod>>> GetPrefixes = new(() => CreateFieldGetter<List<HarmonyMethod>>(PatchJobsMethodInfoJobType.Value, "prefixes"));
-	private static readonly Lazy<Func<object, List<HarmonyMethod>>> GetPostfixes = new(() => CreateFieldGetter<List<HarmonyMethod>>(PatchJobsMethodInfoJobType.Value, "postfixes"));
-	private static readonly Lazy<Func<object, List<HarmonyMethod>>> GetTranspilers = new(() => CreateFieldGetter<List<HarmonyMethod>>(PatchJobsMethodInfoJobType.Value, "transpilers"));
-	private static readonly Lazy<Func<object, List<HarmonyMethod>>> GetFinalizers = new(() => CreateFieldGetter<List<HarmonyMethod>>(PatchJobsMethodInfoJobType.Value, "finalizers"));
-
-	private static Func<object, T> CreateFieldGetter<T>(Type type, string fieldName)
-	{
-		var field = AccessTools.DeclaredField(type, fieldName);
-		var method = new DynamicMethod($"get_{fieldName}", typeof(T), [type]);
-		var il = method.GetILGenerator();
-		il.Emit(OpCodes.Ldarg_0);
-		il.Emit(OpCodes.Ldfld, field);
-		il.Emit(OpCodes.Ret);
-		return method.CreateDelegate<Func<object, T>>();
-	}
 
 	internal static void Apply(Harmony harmony, ILogger logger)
 	{
 		logger.LogDebug("Preparing Harmony for mod usage...");
 		PatchUpdateWrapper();
 		PatchCreateDynamicMethod();
-		PatchClassProcessorProcessPatchJob();
 
 		void PatchUpdateWrapper()
 		{
@@ -69,20 +41,6 @@ internal static class HarmonyPatches
 			harmony.Patch(
 				original: originalMethod,
 				prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(MethodPatcherTools_CreateDynamicMethod_Prefix))
-			);
-		}
-
-		void PatchClassProcessorProcessPatchJob()
-		{
-			if (AccessTools.DeclaredMethod(typeof(Harmony).Assembly.GetType("HarmonyLib.PatchClassProcessor"), "ProcessPatchJob") is not { } originalMethod)
-			{
-				logger.LogError("Could not patch Harmony methods for batching up patches: missing method.");
-				return;
-			}
-
-			harmony.Patch(
-				original: originalMethod,
-				transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(PatchClassProcessor_ProcessPatchJob_Transpiler))
 			);
 		}
 	}
@@ -113,53 +71,5 @@ internal static class HarmonyPatches
 		}
 
 		suffix = $"_Patch_{string.Join("_", owners.Select(o => $"<{o}>"))}";
-	}
-
-	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-	private static IEnumerable<CodeInstruction> PatchClassProcessor_ProcessPatchJob_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
-	{
-		try
-		{
-			return new SequenceBlockMatcher<CodeInstruction>(instructions)
-				.Find([
-					ILMatches.Call("RunMethod"),
-					ILMatches.Stloc<bool>(originalMethod).GetLocalIndex(out var individualPrepareResultLocalIndex),
-				])
-				.Find([
-					ILMatches.Ldloc(individualPrepareResultLocalIndex),
-					ILMatches.Brfalse,
-				])
-				.Insert(SequenceMatcherPastBoundsDirection.Before, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
-					new CodeInstruction(OpCodes.Ldarg_1),
-					new CodeInstruction(OpCodes.Ldloca, individualPrepareResultLocalIndex.Value),
-					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(PatchClassProcessor_ProcessPatchJob_Transpiler_ModifyIndividualPrepareResult)))
-				])
-				.AllElements();
-		}
-		catch (Exception ex)
-		{
-			Nickel.Instance.ModManager.Logger.LogCritical("Could not patch method {DeclaringType}::{Method} - {ModLoaderName} probably won't work.\nReason: {Exception}", originalMethod.DeclaringType, originalMethod, NickelConstants.Name, ex);
-			return instructions;
-		}
-	}
-
-	private static void PatchClassProcessor_ProcessPatchJob_Transpiler_ModifyIndividualPrepareResult(object job, ref bool individualPrepareResult)
-	{
-		if (!DelayedManagerStack.TryPeek(out var entry))
-			return;
-
-		var original = GetOriginal.Value(job);
-		
-		// ReSharper disable ExplicitCallerInfoArgument
-		foreach (var prefix in GetPrefixes.Value(job))
-			entry.Harmony.Patch(original, prefix: prefix, memberName: entry.MemberName, sourceFilePath: entry.SourceFilePath, sourceLineNumber: entry.SourceLineNumber);
-		foreach (var postfix in GetPostfixes.Value(job))
-			entry.Harmony.Patch(original, postfix: postfix, memberName: entry.MemberName, sourceFilePath: entry.SourceFilePath, sourceLineNumber: entry.SourceLineNumber);
-		foreach (var transpiler in GetTranspilers.Value(job))
-			entry.Harmony.Patch(original, transpiler: transpiler, memberName: entry.MemberName, sourceFilePath: entry.SourceFilePath, sourceLineNumber: entry.SourceLineNumber);
-		foreach (var finalizer in GetFinalizers.Value(job))
-			entry.Harmony.Patch(original, finalizer: finalizer, memberName: entry.MemberName, sourceFilePath: entry.SourceFilePath, sourceLineNumber: entry.SourceLineNumber);
-		// ReSharper restore ExplicitCallerInfoArgument
-		individualPrepareResult = false;
 	}
 }
