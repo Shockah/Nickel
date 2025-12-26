@@ -38,21 +38,4 @@ public interface IModUtilities
 	/// The <see cref="Harmony"/> instance for this mod, used for patching methods.
 	/// </summary>
 	IHarmony Harmony { get; }
-	
-#pragma warning disable CS0618 // Type or member is obsolete
-	/// <summary>
-	/// The delayed <see cref="Harmony"/> instance for this mod, used for patching methods.<br/>
-	/// All patches will be delayed until the <see cref="ModLoadPhase.AfterDbInit"/> phase finishes loading, or until a mod calls <see cref="ApplyDelayedHarmonyPatches"/>.
-	/// </summary>
-	[Obsolete($"`{nameof(DelayedHarmony)}` is no longer supported due to issues with inlining methods. Use `{nameof(IHarmony)}` or `{nameof(Harmony)}` directly.")]
-	IHarmony DelayedHarmony { get; }
-#pragma warning restore CS0618 // Type or member is obsolete
-
-#pragma warning disable CS0618 // Type or member is obsolete
-	/// <summary>
-	/// Apply any delayed <see cref="Harmony"/> patches done via the <see cref="DelayedHarmony"/> instance.
-	/// </summary>
-	[Obsolete($"`{nameof(DelayedHarmony)}` is no longer supported due to issues with inlining methods. Use `{nameof(IHarmony)}` or `{nameof(Harmony)}` directly.")]
-	void ApplyDelayedHarmonyPatches();
-#pragma warning restore CS0618 // Type or member is obsolete
 }

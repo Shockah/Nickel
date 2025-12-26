@@ -32,7 +32,6 @@ internal sealed class ModManager
 	internal readonly IModDataHandler ModDataHandler;
 	private readonly ModStorageManager ModStorageManager;
 	private readonly EnumCasePool EnumCasePool;
-	private readonly DelayedHarmonyManager DelayedHarmonyManager;
 	private readonly Stopwatch Stopwatch;
 	private readonly string? AttachDebuggerBeforeMod;
 	private readonly string? AttachDebuggerAfterMod;
@@ -107,7 +106,6 @@ internal sealed class ModManager
 		]);
 		this.ModStorageManager = new(this.CreateContractResolver);
 		this.EnumCasePool = new();
-		this.DelayedHarmonyManager = new();
 
 		var moduleBuilders = new Dictionary<UnorderedPair<string>, ModuleBuilder>();
 		this.ProxyManager = new ProxyManager<string>(
@@ -599,9 +597,7 @@ internal sealed class ModManager
 		if (phase != ModLoadPhase.AfterDbInit)
 			return;
 		
-		this.DelayedHarmonyManager.ApplyDelayedPatches();
 		this.LogHarmonyPatchesOnce();
-		
 		this.Logger.LogInformation("Finished loading in {Seconds:#.##}s.", this.Stopwatch.Elapsed.TotalSeconds);
 	}
 
@@ -764,7 +760,6 @@ internal sealed class ModManager
 				new ModUtilities(
 					this.EnumCasePool,
 					this.ProxyManager,
-					this.DelayedHarmonyManager,
 					new Harmony(package.Manifest.UniqueName)
 				),
 				() => this.CurrentModLoadPhase
