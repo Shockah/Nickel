@@ -1,6 +1,4 @@
-using System;
-
-namespace Nickel.Models.Content;
+namespace Nickel;
 
 /// <summary>
 /// Describes the full state of a single card trait on a single card.
@@ -18,11 +16,6 @@ public readonly record struct CardTraitState(
 	bool? FinalDynamicOverride
 )
 {
-	/// <summary>A "volatile" override for the trait, done via the <see cref="IModCards.OnGetVolatileCardTraitOverrides"/> event.</summary>
-	[Obsolete($"Use `{nameof(DynamicInnateOverride)}` instead.")]
-	public bool? VolatileOverride
-		=> this.DynamicInnateOverride;
-
 	/// <summary>Whether this card trait is currently active.</summary>
 	public bool IsActive
 		=> this.FinalDynamicOverride ?? this.TemporaryOverride ?? this.PermanentOverride ?? this.DynamicInnateOverride ?? this.Innate;

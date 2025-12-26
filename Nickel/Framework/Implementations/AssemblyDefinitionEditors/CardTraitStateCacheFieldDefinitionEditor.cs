@@ -1,7 +1,6 @@
 ﻿using Mono.Cecil;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
-using Nickel.Models.Content;
 using System;
 using System.Collections.Generic;
 using System.Text;

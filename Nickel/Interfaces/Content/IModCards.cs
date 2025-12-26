@@ -1,4 +1,3 @@
-using Nickel.Models.Content;
 using System;
 using System.Collections.Generic;
 
