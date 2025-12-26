@@ -186,7 +186,7 @@ internal static class ModDescriptions
 		if (g.boxes.FirstOrDefault(b => b.key == key) is not { } box || !box.IsHover())
 			return;
 		
-		var entry = ModEntry.Instance.Helper.Content.Characters.V2.LookupByCharacterType(__instance.type);
+		var entry = ModEntry.Instance.Helper.Content.Characters.LookupByCharacterType(__instance.type);
 		if (!ShouldShowModDescription(entry))
 			return;
 		
@@ -241,7 +241,7 @@ internal static class ModDescriptions
 
 	private static void Character_Render_Transpiler_AddModTooltipIfNeeded(Character character, G g, Vec pos)
 	{
-		var entry = ModEntry.Instance.Helper.Content.Characters.V2.LookupByCharacterType(character.type);
+		var entry = ModEntry.Instance.Helper.Content.Characters.LookupByCharacterType(character.type);
 		if (!ShouldShowModDescription(entry))
 			return;
 		

@@ -128,7 +128,7 @@ public sealed class ModEntry : SimpleMod
 
 			foreach (var deck in NewRunOptions.allChars)
 			{
-				if (this.Helper.Content.Characters.V2.LookupByDeck(deck) is { } deckEntry)
+				if (this.Helper.Content.Characters.LookupByDeck(deck) is { } deckEntry)
 				{
 					if (deckEntry.Configuration.ExeCardType is { } entryExeType)
 					{
