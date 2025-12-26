@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using Nickel.Common;
 
 namespace Nickel;
 

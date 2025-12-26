@@ -1,4 +1,3 @@
-using Nickel.Common;
 using System;
 using System.Reflection;
 

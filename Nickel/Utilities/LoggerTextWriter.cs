@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Text;
 
-namespace Nickel.Common;
+namespace Nickel;
 
 /// <summary>
 /// Implements a <see cref="TextWriter"/> which outputs to an <see cref="ILogger"/>.

@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using Nickel.Common;
 using System.Collections.Generic;
 using System.Linq;
 

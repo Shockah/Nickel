@@ -16,7 +16,6 @@
 		</EmbeddedResource>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\NickelCommon\NickelCommon.csproj" />
 		<ProjectReference Include="..\Nickel\Nickel.csproj" ReferenceOutputAssembly="false" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
