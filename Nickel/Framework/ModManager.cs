@@ -608,7 +608,6 @@ internal sealed class ModManager
 		{
 			this.Logger.LogError("Error while writing cached assembly entries: {Exception}", ex);
 		}
-		
 		this.LogHarmonyPatchesOnce();
 		this.Logger.LogInformation("Finished loading in {Seconds:#.##}s.", this.Stopwatch.Elapsed.TotalSeconds);
 	}
