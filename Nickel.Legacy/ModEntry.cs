@@ -3,7 +3,6 @@ using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
-using Nickel.Common;
 using OneOf.Types;
 using System;
 using System.Collections.Generic;

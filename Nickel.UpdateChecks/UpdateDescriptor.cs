@@ -1,5 +1,3 @@
-using Nickel.Common;
-
 namespace Nickel.UpdateChecks;
 
 /// <summary>

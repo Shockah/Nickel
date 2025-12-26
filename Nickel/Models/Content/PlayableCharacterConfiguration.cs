@@ -21,11 +21,11 @@ public readonly struct PlayableCharacterConfiguration
 	public StarterDeck? SoloStarters { get; init; }
 	
 	/// <summary>The neutral (default) animation for this character.</summary>
-	/// <remarks>Either this property has to be set, or a corresponding call to <see cref="IModCharactersV2.RegisterCharacterAnimation(CharacterAnimationConfiguration)"/> has to be done prior to registering the character, but <b>not both</b>.</remarks>
+	/// <remarks>Either this property has to be set, or a corresponding call to <see cref="IModCharacters.RegisterCharacterAnimation(CharacterAnimationConfiguration)"/> has to be done prior to registering the character, but <b>not both</b>.</remarks>
 	public CharacterAnimationConfiguration? NeutralAnimation { get; init; }
 	
 	/// <summary>The mini animation for this character, which appears on various non-combat screens.</summary>
-	/// <remarks>Either this property has to be set, or a corresponding call to <see cref="IModCharactersV2.RegisterCharacterAnimation(CharacterAnimationConfiguration)"/> has to be done prior to registering the character, but <b>not both</b>.</remarks>
+	/// <remarks>Either this property has to be set, or a corresponding call to <see cref="IModCharacters.RegisterCharacterAnimation(CharacterAnimationConfiguration)"/> has to be done prior to registering the character, but <b>not both</b>.</remarks>
 	public CharacterAnimationConfiguration? MiniAnimation { get; init; }
 	
 	/// <summary>Whether the playable <see cref="Character"/> should start locked.</summary>

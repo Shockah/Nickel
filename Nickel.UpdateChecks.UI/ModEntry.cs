@@ -5,7 +5,6 @@ using Nanoray.Pintail;
 using Nanoray.PluginManager;
 using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
-using Nickel.Common;
 using Nickel.ModSettings;
 using System;
 using System.Collections.Generic;

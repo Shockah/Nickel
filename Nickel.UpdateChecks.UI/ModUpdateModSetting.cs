@@ -1,5 +1,4 @@
 ﻿using FSPRO;
-using Nickel.Common;
 using Nickel.ModSettings;
 using System;
 using System.Collections.Generic;
