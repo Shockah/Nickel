@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Nickel.Common;
 using Nickel.InfoScreens;
 using Nickel.ModSettings;
 using Nickel.UpdateChecks.UI;

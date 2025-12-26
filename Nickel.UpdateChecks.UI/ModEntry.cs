@@ -3,7 +3,6 @@ using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Nanoray.Pintail;
 using Nanoray.PluginManager;
-using Nickel.Common;
 using Nickel.InfoScreens;
 using Nickel.ModSettings;
 using System;
