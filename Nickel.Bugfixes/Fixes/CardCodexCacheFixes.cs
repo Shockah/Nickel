@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using Nickel.Models.Content;
 using System;
 using System.Collections.Generic;
 using System.Linq;

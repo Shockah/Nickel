@@ -5,7 +5,7 @@ namespace Nickel;
 /// <summary>
 /// Describes all aspects of a playable <see cref="Character"/>.
 /// </summary>
-public readonly struct PlayableCharacterConfigurationV2
+public readonly struct PlayableCharacterConfiguration
 {
 	/// <summary>The deck this playable <see cref="Character"/> is assigned to.</summary>
 	public required Deck Deck { get; init; }
@@ -21,12 +21,12 @@ public readonly struct PlayableCharacterConfigurationV2
 	public StarterDeck? SoloStarters { get; init; }
 	
 	/// <summary>The neutral (default) animation for this character.</summary>
-	/// <remarks>Either this property has to be set, or a corresponding call to <see cref="IModCharactersV2.RegisterCharacterAnimation(CharacterAnimationConfigurationV2)"/> has to be done prior to registering the character, but <b>not both</b>.</remarks>
-	public CharacterAnimationConfigurationV2? NeutralAnimation { get; init; }
+	/// <remarks>Either this property has to be set, or a corresponding call to <see cref="IModCharactersV2.RegisterCharacterAnimation(CharacterAnimationConfiguration)"/> has to be done prior to registering the character, but <b>not both</b>.</remarks>
+	public CharacterAnimationConfiguration? NeutralAnimation { get; init; }
 	
 	/// <summary>The mini animation for this character, which appears on various non-combat screens.</summary>
-	/// <remarks>Either this property has to be set, or a corresponding call to <see cref="IModCharactersV2.RegisterCharacterAnimation(CharacterAnimationConfigurationV2)"/> has to be done prior to registering the character, but <b>not both</b>.</remarks>
-	public CharacterAnimationConfigurationV2? MiniAnimation { get; init; }
+	/// <remarks>Either this property has to be set, or a corresponding call to <see cref="IModCharactersV2.RegisterCharacterAnimation(CharacterAnimationConfiguration)"/> has to be done prior to registering the character, but <b>not both</b>.</remarks>
+	public CharacterAnimationConfiguration? MiniAnimation { get; init; }
 	
 	/// <summary>Whether the playable <see cref="Character"/> should start locked.</summary>
 	public bool StartLocked { get; init; }
@@ -56,17 +56,17 @@ public readonly struct PlayableCharacterConfigurationV2
 	}
 
 	/// <summary>
-	/// Describes amends to a playable <see cref="Character"/>'s <see cref="PlayableCharacterConfigurationV2">configuration</see>.
+	/// Describes amends to a playable <see cref="Character"/>'s <see cref="PlayableCharacterConfiguration">configuration</see>.
 	/// </summary>
 	public struct Amends
 	{
-		/// <inheritdoc cref="PlayableCharacterConfigurationV2.SoloStarters" />
+		/// <inheritdoc cref="PlayableCharacterConfiguration.SoloStarters" />
 		public ContentConfigurationValueAmend<StarterDeck?>? SoloStarters { get; set; }
 		
-		/// <inheritdoc cref="PlayableCharacterConfigurationV2.ExeCardType" />
+		/// <inheritdoc cref="PlayableCharacterConfiguration.ExeCardType" />
 		public ContentConfigurationValueAmend<Type?>? ExeCardType { get; set; }
 		
-		/// <inheritdoc cref="PlayableCharacterConfigurationV2.Babble" />
+		/// <inheritdoc cref="PlayableCharacterConfiguration.Babble" />
 		public ContentConfigurationValueAmend<CharacterBabbleConfiguration?>? Babble { get; set; }
 	}
 }

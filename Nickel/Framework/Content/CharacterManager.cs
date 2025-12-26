@@ -25,7 +25,7 @@ internal sealed class CharacterManager
 	private readonly Dictionary<string, PlayableCharacterEntry> UniqueNameToPlayableCharacterEntry = [];
 	private readonly Dictionary<string, NonPlayableCharacterEntry> UniqueNameToNonPlayableCharacterEntry = [];
 	private readonly Dictionary<Deck, PlayableCharacterEntry> DeckToCharacterEntry = [];
-	private readonly Dictionary<string, ICharacterEntryV2> CharacterTypeToCharacterEntry = [];
+	private readonly Dictionary<string, ICharacterEntry> CharacterTypeToCharacterEntry = [];
 	private readonly List<string> VanillaPlayableCharacterDeckNames;
 
 	public CharacterManager(
@@ -105,33 +105,7 @@ internal sealed class CharacterManager
 		var result = new PlayableCharacterEntry(
 			modOwner: this.VanillaModManifest,
 			uniqueName: key,
-			v1: new()
-			{
-				Deck = deck,
-				BorderSprite = borderSprite,
-				Starters = starters,
-				NeutralAnimation = new()
-				{
-					Deck = deck,
-					LoopTag = "neutral",
-					Frames = neutralAnimationFrames
-				},
-				MiniAnimation = new()
-				{
-					Deck = deck,
-					LoopTag = "mini",
-					Frames = miniAnimationFrames
-				},
-				StartLocked = startLocked,
-				MissingStatus = new()
-				{
-					Color = missingStatusColor,
-					Sprite = missingStatusSprite
-				},
-				ExeCardType = exeCardType,
-				Description = description
-			},
-			v2: new()
+			configuration: new()
 			{
 				Deck = deck,
 				BorderSprite = borderSprite,
@@ -210,27 +184,19 @@ internal sealed class CharacterManager
 			Description = locale => $"The next {{0}} <c={color}>{deckEntry.Configuration.Name?.Invoke(locale)}</c> cards you play do nothing.", // TODO: localize
 		});
 	}
-	
-	#region V1
-	public ICharacterAnimationEntry RegisterCharacterAnimation(IModManifest owner, string name, CharacterAnimationConfiguration v1)
+
+	public ICharacterAnimationEntry RegisterCharacterAnimation(IModManifest owner, string name, CharacterAnimationConfiguration configuration)
 	{
-		var v2 = new CharacterAnimationConfigurationV2
-		{
-			CharacterType = v1.Deck.Key(),
-			LoopTag = v1.LoopTag,
-			Frames = v1.Frames
-		};
-		
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToAnimationEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A character animation with the unique name `{uniqueName}` is already registered", nameof(name));
-		var entry = new AnimationEntry(owner, uniqueName, v1, v2);
+		var entry = new AnimationEntry(owner, uniqueName, configuration);
 		this.UniqueNameToAnimationEntry[entry.UniqueName] = entry;
 		this.AnimationManager.QueueOrInject(entry);
 		return entry;
 	}
 
-	public ICharacterEntry? LookupByDeck(Deck deck)
+	public IPlayableCharacterEntry? LookupByDeck(Deck deck)
 	{
 		if (this.DeckToCharacterEntry.TryGetValue(deck, out var entry))
 			return entry;
@@ -239,86 +205,7 @@ internal sealed class CharacterManager
 		return this.CreateForVanilla(deck);
 	}
 
-	public ICharacterEntry? LookupByUniqueName(string uniqueName)
-	{
-		if (this.UniqueNameToPlayableCharacterEntry.TryGetValue(uniqueName, out var entry))
-			return entry;
-
-		if (this.VanillaPlayableCharacterDeckNames.Contains(uniqueName))
-		{
-			var deck = Enum.Parse<Deck>(uniqueName);
-			return this.CreateForVanilla(deck);
-		}
-
-		return null;
-	}
-
-	public PlayableCharacterEntry RegisterCharacter(IModManifest owner, string name, CharacterConfiguration v1)
-	{
-#pragma warning disable CS0618 // Type or member is obsolete
-		if (v1.Starters is not null && (v1.StarterCardTypes is not null || v1.StarterArtifactTypes is not null))
-			throw new ArgumentException($"A character should only have `{nameof(CharacterConfiguration.Starters)}` or `{nameof(CharacterConfiguration.StarterCardTypes)}`/`{nameof(CharacterConfiguration.StarterArtifactTypes)}` defined, but not both");
-		
-		var v2 = new PlayableCharacterConfigurationV2
-		{
-			Deck = v1.Deck,
-			BorderSprite = v1.BorderSprite,
-			Starters = v1.Starters ?? new()
-			{
-				artifacts = v1.StarterArtifactTypes?.Select(t => (Artifact)Activator.CreateInstance(t)!).ToList() ?? [],
-				cards = v1.StarterCardTypes?.Select(t => (Card)Activator.CreateInstance(t)!).ToList() ?? []
-			},
-			NeutralAnimation = v1.NeutralAnimation is { } v1NeutralAnimation
-				? new()
-				{
-					CharacterType = v1.Deck.Key(),
-					LoopTag = v1NeutralAnimation.LoopTag,
-					Frames = v1NeutralAnimation.Frames
-				} : null,
-			MiniAnimation = v1.MiniAnimation is { } v1MiniAnimation
-				? new()
-				{
-					CharacterType = v1.Deck.Key(),
-					LoopTag = v1MiniAnimation.LoopTag,
-					Frames = v1MiniAnimation.Frames
-				} : null,
-			StartLocked = v1.StartLocked,
-			MissingStatus = new()
-			{
-				Color = v1.MissingStatus.Color,
-				Sprite = v1.MissingStatus.Sprite
-			},
-			ExeCardType = v1.ExeCardType,
-			Description = v1.Description
-		};
-#pragma warning restore CS0618 // Type or member is obsolete
-
-		return this.RegisterPlayableCharacterV2(owner, name, v2, v1);
-	}
-	#endregion
-
-	#region V2
-	public ICharacterAnimationEntryV2 RegisterCharacterAnimationV2(IModManifest owner, string name, CharacterAnimationConfigurationV2 v2)
-	{
-		var uniqueName = $"{owner.UniqueName}::{name}";
-		if (this.UniqueNameToAnimationEntry.ContainsKey(uniqueName))
-			throw new ArgumentException($"A character animation with the unique name `{uniqueName}` is already registered", nameof(name));
-		var entry = new AnimationEntry(owner, uniqueName, null, v2);
-		this.UniqueNameToAnimationEntry[entry.UniqueName] = entry;
-		this.AnimationManager.QueueOrInject(entry);
-		return entry;
-	}
-
-	public IPlayableCharacterEntryV2? LookupByDeckV2(Deck deck)
-	{
-		if (this.DeckToCharacterEntry.TryGetValue(deck, out var entry))
-			return entry;
-		if (deck is not (Deck.dizzy or Deck.riggs or Deck.peri or Deck.goat or Deck.eunice or Deck.hacker or Deck.shard or Deck.colorless))
-			return null;
-		return this.CreateForVanilla(deck);
-	}
-
-	public ICharacterEntryV2? LookupByCharacterTypeV2(string characterType)
+	public ICharacterEntry? LookupByCharacterType(string characterType)
 	{
 		if (this.CharacterTypeToCharacterEntry.TryGetValue(characterType, out var entry))
 			return entry;
@@ -326,21 +213,21 @@ internal sealed class CharacterManager
 		switch (characterType)
 		{
 			case "dizzy":
-				return this.LookupByDeckV2(Deck.dizzy);
+				return this.LookupByDeck(Deck.dizzy);
 			case "riggs":
-				return this.LookupByDeckV2(Deck.riggs);
+				return this.LookupByDeck(Deck.riggs);
 			case "peri":
-				return this.LookupByDeckV2(Deck.peri);
+				return this.LookupByDeck(Deck.peri);
 			case "goat":
-				return this.LookupByDeckV2(Deck.goat);
+				return this.LookupByDeck(Deck.goat);
 			case "eunice":
-				return this.LookupByDeckV2(Deck.eunice);
+				return this.LookupByDeck(Deck.eunice);
 			case "hacker":
-				return this.LookupByDeckV2(Deck.hacker);
+				return this.LookupByDeck(Deck.hacker);
 			case "shard":
-				return this.LookupByDeckV2(Deck.shard);
+				return this.LookupByDeck(Deck.shard);
 			case "comp":
-				return this.LookupByDeckV2(Deck.colorless);
+				return this.LookupByDeck(Deck.colorless);
 			default:
 				if (!DB.currentLocale.strings.ContainsKey($"char.{characterType}"))
 					return null;
@@ -365,7 +252,7 @@ internal sealed class CharacterManager
 		}
 	}
 
-	public ICharacterEntryV2? LookupByUniqueNameV2(string uniqueName)
+	public ICharacterEntry? LookupByUniqueName(string uniqueName)
 	{
 		if (this.UniqueNameToPlayableCharacterEntry.TryGetValue(uniqueName, out var entry))
 			return entry;
@@ -379,73 +266,43 @@ internal sealed class CharacterManager
 		return null;
 	}
 	
-	public PlayableCharacterEntry RegisterPlayableCharacterV2(IModManifest owner, string localName, PlayableCharacterConfigurationV2 v2, CharacterConfiguration? maybeV1 = null)
+	public PlayableCharacterEntry RegisterPlayableCharacter(IModManifest owner, string localName, PlayableCharacterConfiguration configuration)
 	{
-		if (this.Decks.LookupByDeck(v2.Deck) is not { } deckEntry)
+		if (this.Decks.LookupByDeck(configuration.Deck) is not { } deckEntry)
 			throw new ArgumentException("Invalid character `Deck`");
 		
 		var uniqueName = $"{owner.UniqueName}::{localName}";
 		if (this.UniqueNameToPlayableCharacterEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A character with the unique name `{uniqueName}` is already registered", nameof(localName));
 		
-		if (v2.ExeCardType is { } exeCardType && this.Cards.LookupByCardType(exeCardType) is { } exeCardEntry && exeCardEntry.Configuration.Meta.deck != Deck.colorless)
+		if (configuration.ExeCardType is { } exeCardType && this.Cards.LookupByCardType(exeCardType) is { } exeCardEntry && exeCardEntry.Configuration.Meta.deck != Deck.colorless)
 			this.LoggerProvider(owner).LogWarning(
 				"Registering a playable character `{Character}` with an EXE card `{Card}` for deck `{Deck}`, but EXE cards should use the `{CatDeck}` deck instead.",
 				uniqueName, exeCardEntry.UniqueName, exeCardEntry.Configuration.Meta.deck.Key(), Deck.colorless.Key()
 			);
 		
-		var v1 = maybeV1 ?? new CharacterConfiguration
-		{
-			Deck = v2.Deck,
-			BorderSprite = v2.BorderSprite,
-			Starters = v2.Starters,
-			NeutralAnimation = v2.NeutralAnimation is { } v2NeutralAnimation
-				? new()
-				{
-					Deck = v2.Deck,
-					LoopTag = v2NeutralAnimation.LoopTag,
-					Frames = v2NeutralAnimation.Frames
-				} : null,
-			MiniAnimation = v2.MiniAnimation is { } v2MiniAnimation
-				? new()
-				{
-					Deck = v2.Deck,
-					LoopTag = v2MiniAnimation.LoopTag,
-					Frames = v2MiniAnimation.Frames
-				} : null,
-			StartLocked = v2.StartLocked,
-			MissingStatus = new()
-			{
-				Color = v2.MissingStatus.Color,
-				Sprite = v2.MissingStatus.Sprite
-			},
-			ExeCardType = v2.ExeCardType,
-			Description = v2.Description
-		};
-		
-		var missingStatus = this.RegisterMissingStatus(owner, $"{localName}::MissingStatus", deckEntry, v2.MissingStatus.Color, v2.MissingStatus.Sprite);
-		var entry = new PlayableCharacterEntry(owner, uniqueName, v1, v2, missingStatus, this.Amend);
+		var missingStatus = this.RegisterMissingStatus(owner, $"{localName}::MissingStatus", deckEntry, configuration.MissingStatus.Color, configuration.MissingStatus.Sprite);
+		var entry = new PlayableCharacterEntry(owner, uniqueName, configuration, missingStatus, this.Amend);
 		this.UniqueNameToPlayableCharacterEntry[entry.UniqueName] = entry;
-		this.DeckToCharacterEntry[entry.V2.Deck] = entry;
+		this.DeckToCharacterEntry[entry.Configuration.Deck] = entry;
 		this.CharacterTypeToCharacterEntry[entry.CharacterType] = entry;
 		this.PlayableCharacterManager.QueueOrInject(entry);
 		return entry;
 	}
 	
-	public INonPlayableCharacterEntryV2 RegisterNonPlayableCharacterV2(IModManifest owner, string name, NonPlayableCharacterConfigurationV2 v2)
+	public INonPlayableCharacterEntry RegisterNonPlayableCharacter(IModManifest owner, string name, NonPlayableCharacterConfiguration configuration)
 	{
 		var uniqueName = $"{owner.UniqueName}::{name}";
 		if (this.UniqueNameToPlayableCharacterEntry.ContainsKey(uniqueName))
 			throw new ArgumentException($"A character with the unique name `{uniqueName}` is already registered", nameof(name));
 		
-		var characterType = $"{owner.UniqueName}::{v2.CharacterType}";
-		var entry = new NonPlayableCharacterEntry(owner, uniqueName, characterType, v2, this.Amend);
+		var characterType = $"{owner.UniqueName}::{configuration.CharacterType}";
+		var entry = new NonPlayableCharacterEntry(owner, uniqueName, characterType, configuration, this.Amend);
 		this.UniqueNameToNonPlayableCharacterEntry[entry.UniqueName] = entry;
 		this.CharacterTypeToCharacterEntry[entry.CharacterType] = entry;
 		this.NonPlayableCharacterManager.QueueOrInject(entry);
 		return entry;
 	}
-	#endregion
 
 	public bool TryGetCharacterAnimationByUniqueName(string uniqueName, [MaybeNullWhen(false)] out ICharacterAnimationEntry entry)
 	{
@@ -477,37 +334,37 @@ internal sealed class CharacterManager
 
 	private static void Inject(AnimationEntry entry)
 	{
-		ref var characterAnimations = ref CollectionsMarshal.GetValueRefOrAddDefault(DB.charAnimations, entry.V2.CharacterType, out var characterAnimationsExists);
+		ref var characterAnimations = ref CollectionsMarshal.GetValueRefOrAddDefault(DB.charAnimations, entry.Configuration.CharacterType, out var characterAnimationsExists);
 		if (!characterAnimationsExists)
 			characterAnimations = [];
-		characterAnimations![entry.V2.LoopTag] = entry.V2.Frames.ToList();
+		characterAnimations![entry.Configuration.LoopTag] = entry.Configuration.Frames.ToList();
 	}
 
 	private void Inject(PlayableCharacterEntry entry)
 	{
-		if (entry.V2.NeutralAnimation is { } neutralAnimationConfiguration)
+		if (entry.Configuration.NeutralAnimation is { } neutralAnimationConfiguration)
 		{
 			if (neutralAnimationConfiguration.LoopTag != "neutral")
 			{
 				this.LoggerProvider(entry.ModOwner).LogError($"Could not inject character {{Character}}: `{nameof(CharacterConfiguration.NeutralAnimation)}` is not tagged `neutral`.", entry.UniqueName);
 				return;
 			}
-			this.RegisterCharacterAnimationV2(entry.ModOwner, $"{entry.UniqueName}::neutral", neutralAnimationConfiguration);
+			this.RegisterCharacterAnimation(entry.ModOwner, $"{entry.UniqueName}::neutral", neutralAnimationConfiguration);
 		}
-		if (entry.V2.MiniAnimation is { } miniAnimationConfiguration)
+		if (entry.Configuration.MiniAnimation is { } miniAnimationConfiguration)
 		{
 			if (miniAnimationConfiguration.LoopTag != "mini")
 			{
 				this.LoggerProvider(entry.ModOwner).LogError($"Could not inject character {{Character}}: `{nameof(CharacterConfiguration.MiniAnimation)}` is not tagged `mini`.", entry.UniqueName);
 				return;
 			}
-			this.RegisterCharacterAnimationV2(entry.ModOwner, $"{entry.UniqueName}::mini", miniAnimationConfiguration);
+			this.RegisterCharacterAnimation(entry.ModOwner, $"{entry.UniqueName}::mini", miniAnimationConfiguration);
 		}
 
-		DB.charPanels[entry.CharacterType] = entry.V2.BorderSprite;
+		DB.charPanels[entry.CharacterType] = entry.Configuration.BorderSprite;
 		
 		NewRunOptions.allChars = NewRunOptions.allChars
-			.Append(entry.V2.Deck)
+			.Append(entry.Configuration.Deck)
 			.Select(this.Decks.LookupByDeck)
 			.Where(e => e is not null)
 			.Select(e => e!)
@@ -515,18 +372,18 @@ internal sealed class CharacterManager
 			.Select(e => e.Deck)
 			.ToList();
 		
-		StarterDeck.starterSets[entry.V2.Deck] = entry.V2.Starters;
-		StatusMeta.deckToMissingStatus[entry.V2.Deck] = entry.MissingStatus.Status;
+		StarterDeck.starterSets[entry.Configuration.Deck] = entry.Configuration.Starters;
+		StatusMeta.deckToMissingStatus[entry.Configuration.Deck] = entry.MissingStatus.Status;
 
-		if (entry.V2.SoloStarters is { } soloStarters)
-			SoloStarterDeck.soloStarterSets[entry.V2.Deck] = soloStarters;
+		if (entry.Configuration.SoloStarters is { } soloStarters)
+			SoloStarterDeck.soloStarterSets[entry.Configuration.Deck] = soloStarters;
 
 		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 
 		entry.IsInjected = true;
 	}
 	
-	private void Amend(PlayableCharacterEntry entry, PlayableCharacterConfigurationV2.Amends amends)
+	private void Amend(PlayableCharacterEntry entry, PlayableCharacterConfiguration.Amends amends)
 	{
 		if (!this.UniqueNameToPlayableCharacterEntry.ContainsKey(entry.UniqueName))
 			throw new ArgumentException($"A character with the unique name `{entry.UniqueName}` is not registered");
@@ -541,14 +398,14 @@ internal sealed class CharacterManager
 		{
 			if (soloStarters.Value is null)
 			{
-				if (SoloStarterDeck.soloStarterSets.ContainsKey(entry.V2.Deck))
-					SoloStarterDeck.soloStarterSets[entry.V2.Deck] = CreateDefaultSoloStarters(entry);
+				if (SoloStarterDeck.soloStarterSets.ContainsKey(entry.Configuration.Deck))
+					SoloStarterDeck.soloStarterSets[entry.Configuration.Deck] = CreateDefaultSoloStarters(entry);
 				else
-					SoloStarterDeck.soloStarterSets.Remove(entry.V2.Deck);
+					SoloStarterDeck.soloStarterSets.Remove(entry.Configuration.Deck);
 			}
 			else
 			{
-				SoloStarterDeck.soloStarterSets[entry.V2.Deck] = soloStarters.Value;
+				SoloStarterDeck.soloStarterSets[entry.Configuration.Deck] = soloStarters.Value;
 			}
 		}
 
@@ -557,58 +414,55 @@ internal sealed class CharacterManager
 		void Finish()
 		{
 			if (amends.SoloStarters is { } soloStarters)
-				entry.V2 = entry.V2 with { SoloStarters = soloStarters.Value };
+				entry.Configuration = entry.Configuration with { SoloStarters = soloStarters.Value };
 			if (amends.Babble is { } babble)
-				entry.V2 = entry.V2 with { Babble = babble.Value };
+				entry.Configuration = entry.Configuration with { Babble = babble.Value };
 			
 			if (amends.ExeCardType is { } exeCardType)
-			{
-				entry.V2 = entry.V2 with { ExeCardType = exeCardType.Value };
-				entry.V1 = entry.V1 with { ExeCardType = exeCardType.Value };
-			}
+				entry.Configuration = entry.Configuration with { ExeCardType = exeCardType.Value };
 		}
 	}
 	
 	private void Inject(NonPlayableCharacterEntry entry)
 	{
-		if (entry.V2.NeutralAnimation is { } neutralAnimationConfiguration)
+		if (entry.Configuration.NeutralAnimation is { } neutralAnimationConfiguration)
 		{
 			if (neutralAnimationConfiguration.LoopTag != "neutral")
 			{
 				this.LoggerProvider(entry.ModOwner).LogError($"Could not inject character {{Character}}: `{nameof(CharacterConfiguration.NeutralAnimation)}` is not tagged `neutral`.", entry.UniqueName);
 				return;
 			}
-			this.RegisterCharacterAnimationV2(entry.ModOwner, $"{entry.UniqueName}::neutral", neutralAnimationConfiguration);
+			this.RegisterCharacterAnimation(entry.ModOwner, $"{entry.UniqueName}::neutral", neutralAnimationConfiguration);
 		}
 
-		if (entry.V2.BorderSprite is { } borderSprite)
+		if (entry.Configuration.BorderSprite is { } borderSprite)
 			DB.charPanels[entry.CharacterType] = borderSprite;
 
 		this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 	}
 	
-	private void Amend(NonPlayableCharacterEntry entry, NonPlayableCharacterConfigurationV2.Amends amends)
+	private void Amend(NonPlayableCharacterEntry entry, NonPlayableCharacterConfiguration.Amends amends)
 	{
 		if (!this.UniqueNameToNonPlayableCharacterEntry.ContainsKey(entry.UniqueName))
 			throw new ArgumentException($"A character with the unique name `{entry.UniqueName}` is not registered");
 
 		if (amends.Babble is { } babble)
-			entry.V2 = entry.V2 with { Babble = babble.Value };
+			entry.Configuration = entry.Configuration with { Babble = babble.Value };
 	}
 
 	private void InjectLocalization(string locale, Dictionary<string, string> localizations, PlayableCharacterEntry entry)
 	{
 		if (entry.ModOwner == this.VanillaModManifest)
 			return;
-		if (entry.V2.Description.Localize(locale) is { } description)
+		if (entry.Configuration.Description.Localize(locale) is { } description)
 		{
-			localizations[$"char.{entry.V2.Deck.Key()}.desc"] = description;
-			localizations[$"char.{entry.V2.Deck}.desc"] = description;
+			localizations[$"char.{entry.Configuration.Deck.Key()}.desc"] = description;
+			localizations[$"char.{entry.Configuration.Deck}.desc"] = description;
 		}
-		if (this.Decks.LookupByDeck(entry.V2.Deck) is { } deckEntry)
+		if (this.Decks.LookupByDeck(entry.Configuration.Deck) is { } deckEntry)
 		{
 			var characterName = deckEntry.Configuration.Name?.Invoke(locale);
-			localizations[$"char.{entry.V2.Deck}.desc.missing"] = $"<c={deckEntry.Configuration.Definition.color}>{characterName?.ToUpper()}..?</c>\n{characterName} is missing.";
+			localizations[$"char.{entry.Configuration.Deck}.desc.missing"] = $"<c={deckEntry.Configuration.Definition.color}>{characterName?.ToUpper()}..?</c>\n{characterName} is missing.";
 		}
 	}
 
@@ -616,7 +470,7 @@ internal sealed class CharacterManager
 	{
 		if (entry.ModOwner == this.VanillaModManifest)
 			return;
-		if (entry.V2.Name.Localize(locale) is not { } name)
+		if (entry.Configuration.Name.Localize(locale) is not { } name)
 			return;
 		localizations[$"char.{entry.CharacterType}"] = name;
 		localizations[$"char.{entry.CharacterType}.name"] = name;
@@ -670,20 +524,20 @@ internal sealed class CharacterManager
 
 		return new()
 		{
-			artifacts = entry.V2.Starters.artifacts.ToList(),
+			artifacts = entry.Configuration.Starters.artifacts.ToList(),
 			cards =
 			[
-				.. entry.V2.Starters.cards,
+				.. entry.Configuration.Starters.cards,
 				.. DB.cardMetas
-					.Where(kvp => kvp.Value.deck == entry.V2.Deck && kvp.Value is { unreleased: false, dontOffer: false, rarity: Rarity.common })
-					.Where(kvp => entry.V2.Starters.cards.All(card => card.Key() != kvp.Key))
+					.Where(kvp => kvp.Value.deck == entry.Configuration.Deck && kvp.Value is { unreleased: false, dontOffer: false, rarity: Rarity.common })
+					.Where(kvp => entry.Configuration.Starters.cards.All(card => card.Key() != kvp.Key))
 					.OrderBy(kvp => kvp.Key)
 					// ReSharper disable once MultipleOrderBy
 					.OrderBy(_ => random.NextInt())
 					.Select(kvp => kvp.Key)
 					.Select(key => DB.cards.GetValueOrDefault(key))
 					.OfType<Type>()
-					.Take(4 - entry.V2.Starters.cards.Count)
+					.Take(4 - entry.Configuration.Starters.cards.Count)
 					.Select(cardType => (Card)Activator.CreateInstance(cardType)!),
 				new CannonColorless(),
 				new DodgeColorless(),
@@ -711,8 +565,8 @@ internal sealed class CharacterManager
 	private void SetupAfterDbInit()
 	{
 		foreach (var entry in this.UniqueNameToPlayableCharacterEntry.Values)
-			if (!SoloStarterDeck.soloStarterSets.ContainsKey(entry.V2.Deck))
-				SoloStarterDeck.soloStarterSets[entry.V2.Deck] = CreateDefaultSoloStarters(entry);
+			if (!SoloStarterDeck.soloStarterSets.ContainsKey(entry.Configuration.Deck))
+				SoloStarterDeck.soloStarterSets[entry.Configuration.Deck] = CreateDefaultSoloStarters(entry);
 	}
 
 	private static void OnCrystallizedFriendEvent(object? _, List<Choice> choices)
@@ -764,11 +618,9 @@ internal sealed class CharacterManager
 	{
 		foreach (var character in this.UniqueNameToPlayableCharacterEntry.Values)
 		{
-			var configurationV2 = ((IPlayableCharacterEntryV2)character).Configuration;
-			
-			if (configurationV2.ExeCardType is not { } exeCardType)
+			if (character.Configuration.ExeCardType is not { } exeCardType)
 				continue;
-			if (e.Characters.Contains(configurationV2.Deck))
+			if (e.Characters.Contains(character.Configuration.Deck))
 				continue;
 			if (e.ExeCards.Any(c => c.GetType() == exeCardType))
 				continue;
@@ -783,11 +635,8 @@ internal sealed class CharacterManager
 				unlockedCharacters.Remove(deck);
 
 		foreach (var entry in this.UniqueNameToPlayableCharacterEntry.Values)
-		{
-			var configurationV2 = ((IPlayableCharacterEntryV2)entry).Configuration;
-			if (!configurationV2.StartLocked)
-				unlockedCharacters.Add(configurationV2.Deck);
-		}
+			if (!entry.Configuration.StartLocked)
+				unlockedCharacters.Add(entry.Configuration.Deck);
 	}
 
 	private void OnGetAssignableStatuses(object? _, ref WizardPatches.GetAssignableStatusesEventArgs e)
@@ -797,7 +646,7 @@ internal sealed class CharacterManager
 		{
 			if (character.deckType is not { } deck)
 				continue;
-			if (this.UniqueNameToPlayableCharacterEntry.Values.FirstOrDefault(e => e.V2.Deck == deck) is not { } entry)
+			if (this.UniqueNameToPlayableCharacterEntry.Values.FirstOrDefault(e => e.Configuration.Deck == deck) is not { } entry)
 				continue;
 			e.Statuses.Add(entry.MissingStatus.Status);
 		}
@@ -806,19 +655,13 @@ internal sealed class CharacterManager
 	private sealed class AnimationEntry(
 		IModManifest modOwner,
 		string uniqueName,
-		CharacterAnimationConfiguration? v1,
-		CharacterAnimationConfigurationV2 v2
-	) : ICharacterAnimationEntry, ICharacterAnimationEntryV2
+		CharacterAnimationConfiguration configuration
+	) : ICharacterAnimationEntry
 	{
-		internal CharacterAnimationConfiguration? V1 { get; } = v1;
-		internal CharacterAnimationConfigurationV2 V2 { get; } = v2;
+		public CharacterAnimationConfiguration Configuration { get; } = configuration;
 		
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
-
-		CharacterAnimationConfiguration ICharacterAnimationEntry.Configuration => this.V1 ?? throw new InvalidOperationException();
-		
-		CharacterAnimationConfigurationV2 ICharacterAnimationEntryV2.Configuration => this.V2;
 
 		public override string ToString()
 			=> this.UniqueName;
@@ -830,27 +673,21 @@ internal sealed class CharacterManager
 	public sealed class PlayableCharacterEntry(
 		IModManifest modOwner,
 		string uniqueName,
-		CharacterConfiguration v1,
-		PlayableCharacterConfigurationV2 v2,
+		PlayableCharacterConfiguration configuration,
 		IStatusEntry missingStatus,
-		Action<PlayableCharacterEntry, PlayableCharacterConfigurationV2.Amends> amendDelegate
-	) : ICharacterEntry, IPlayableCharacterEntryV2
+		Action<PlayableCharacterEntry, PlayableCharacterConfiguration.Amends> amendDelegate
+	) : IPlayableCharacterEntry
 	{
-		internal CharacterConfiguration V1 { get; set; } = v1;
-		internal PlayableCharacterConfigurationV2 V2 { get; set; } = v2;
+		public PlayableCharacterConfiguration Configuration { get; set; } = configuration;
 		internal bool IsInjected;
 		
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
 		public IStatusEntry MissingStatus { get; } = missingStatus;
 
-		public string CharacterType => this.V2.Deck == Deck.colorless ? "comp" : this.V2.Deck.Key();
-		public CharacterBabbleConfiguration? Babble => this.V2.Babble;
-
-		CharacterConfiguration ICharacterEntry.Configuration => this.V1;
-		
-		PlayableCharacterConfigurationV2 IPlayableCharacterEntryV2.Configuration => this.V2;
-		Spr? ICharacterEntryV2.BorderSprite => this.V2.BorderSprite;
+		public string CharacterType => this.Configuration.Deck == Deck.colorless ? "comp" : this.Configuration.Deck.Key();
+		public CharacterBabbleConfiguration? Babble => this.Configuration.Babble;
+		public Spr? BorderSprite => this.Configuration.BorderSprite;
 
 		public override string ToString()
 			=> this.UniqueName;
@@ -858,7 +695,7 @@ internal sealed class CharacterManager
 		public override int GetHashCode()
 			=> this.UniqueName.GetHashCode();
 		
-		public void Amend(PlayableCharacterConfigurationV2.Amends amends)
+		public void Amend(PlayableCharacterConfiguration.Amends amends)
 			=> amendDelegate(this, amends);
 	}
 
@@ -866,19 +703,18 @@ internal sealed class CharacterManager
 		IModManifest modOwner,
 		string uniqueName,
 		string characterType,
-		NonPlayableCharacterConfigurationV2 v2,
-		Action<NonPlayableCharacterEntry, NonPlayableCharacterConfigurationV2.Amends> amendDelegate
-	) : INonPlayableCharacterEntryV2
+		NonPlayableCharacterConfiguration configuration,
+		Action<NonPlayableCharacterEntry, NonPlayableCharacterConfiguration.Amends> amendDelegate
+	) : INonPlayableCharacterEntry
 	{
-		internal NonPlayableCharacterConfigurationV2 V2 { get; set; } = v2;
+		public NonPlayableCharacterConfiguration Configuration { get; set; } = configuration;
 		
 		public IModManifest ModOwner { get; } = modOwner;
 		public string UniqueName { get; } = uniqueName;
 		public string CharacterType { get; } = characterType;
-		public CharacterBabbleConfiguration? Babble => this.V2.Babble;
 		
-		NonPlayableCharacterConfigurationV2 INonPlayableCharacterEntryV2.Configuration => this.V2;
-		Spr? ICharacterEntryV2.BorderSprite => this.V2.BorderSprite;
+		public CharacterBabbleConfiguration? Babble => this.Configuration.Babble;
+		public Spr? BorderSprite => this.Configuration.BorderSprite;
 
 		public override string ToString()
 			=> this.UniqueName;
@@ -886,7 +722,7 @@ internal sealed class CharacterManager
 		public override int GetHashCode()
 			=> this.UniqueName.GetHashCode();
 		
-		public void Amend(NonPlayableCharacterConfigurationV2.Amends amends)
+		public void Amend(NonPlayableCharacterConfiguration.Amends amends)
 			=> amendDelegate(this, amends);
 	}
 }

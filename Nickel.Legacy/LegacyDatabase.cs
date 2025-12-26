@@ -334,9 +334,9 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 
 	public void RegisterAnimation(IModManifest mod, ExternalAnimation value)
 	{
-		CharacterAnimationConfiguration configuration = new()
+		var configuration = new CharacterAnimationConfiguration
 		{
-			Deck = (Deck)value.Deck.Id!.Value,
+			CharacterType = ((Deck)value.Deck.Id!.Value).Key(),
 			LoopTag = value.Tag,
 			Frames = value.Frames.Select(s => (Spr)s.Id!.Value).ToList()
 		};
@@ -349,7 +349,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 
 	public void RegisterCharacter(IModManifest mod, ExternalCharacter value)
 	{
-		PlayableCharacterConfigurationV2 configuration = new()
+		var configuration = new PlayableCharacterConfiguration
 		{
 			Deck = (Deck)value.Deck.Id!.Value,
 			BorderSprite = (Spr)value.CharPanelSpr.Id!.Value,
@@ -360,7 +360,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 			}
 		};
 
-		helperProvider(mod).Content.Characters.V2.RegisterPlayableCharacter(value.GlobalName, configuration);
+		helperProvider(mod).Content.Characters.RegisterPlayableCharacter(value.GlobalName, configuration);
 		this.GlobalNameToCharacter[value.GlobalName] = value;
 	}
 
