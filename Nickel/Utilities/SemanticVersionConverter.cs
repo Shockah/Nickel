@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 
-namespace Nickel.Common;
+namespace Nickel;
 
 /// <summary>
 /// A <see cref="JsonConverter"/> capable of (de)serializing of <see cref="SemanticVersion"/> values.

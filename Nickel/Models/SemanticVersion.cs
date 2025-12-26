@@ -1,6 +1,6 @@
 using System;
 
-namespace Nickel.Common;
+namespace Nickel;
 
 /// <summary>
 /// Describes a <a href="https://semver.org">Semantic Version</a> with an optional prerelease tag.

@@ -1,12 +1,11 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Nickel.Common;
 using System;
 using System.IO;
 using System.IO.Pipes;
 using System.Threading.Tasks;
 
-namespace Nickel.Launcher;
+namespace Nickel;
 
 internal sealed class LogNamedPipeServer : IDisposable
 {

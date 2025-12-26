@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Nickel.Common;
 using System;
 using System.IO;
 using System.Text;

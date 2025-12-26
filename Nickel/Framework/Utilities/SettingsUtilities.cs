@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.IO;
 
-namespace Nickel.Common;
+namespace Nickel;
 
 internal static class SettingsUtilities
 {

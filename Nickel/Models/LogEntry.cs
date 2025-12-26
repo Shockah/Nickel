@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace Nickel.Common;
+namespace Nickel;
 
 /// <summary>
 /// Describes a single serializable logged message.

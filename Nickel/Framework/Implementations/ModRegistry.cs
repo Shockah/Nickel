@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 using Nanoray.Pintail;
 using Nanoray.PluginManager;
 using Nanoray.Shrike;
-using Nickel.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;

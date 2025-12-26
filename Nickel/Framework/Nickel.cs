@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Mono.Cecil;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
-using Nickel.Common;
 using Nickel.ModSettings;
 using System;
 using System.Collections.Generic;
@@ -37,26 +36,28 @@ internal sealed partial class Nickel(
 	{
 		var stopwatch = Stopwatch.StartNew();
 		
-		var vanillaOption = new Option<bool>("--vanilla", () => false, "Whether to run the vanilla game instead.") { Arity = ArgumentArity.ZeroOrOne };
+		var vanillaOption = new Option<bool?>("--vanilla", () => false, "Whether to run the vanilla game instead.") { Arity = ArgumentArity.ZeroOrOne };
+		var wrapLaunchOption = new Option<bool?>("--wrap-launch", "Whether the mod loader should wrap another instance of it, allowing catching fatal exceptions.");
 		var debugOption = new Option<bool?>("--debug", "Whether the game should be ran in debug mode.");
-		var saveInDebugOption = new Option<bool?>("--saveInDebug", "Whether the game should be auto-saved even in debug mode.");
-		var initSteamOption = new Option<bool?>("--initSteam", "Whether Steam integration should be enabled.");
-		var gamePathOption = new Option<FileInfo?>("--gamePath", "The path to CobaltCore.exe.");
-		var modsPathOption = new Option<DirectoryInfo?>("--modsPath", "The path containing the mods to load.");
-		var internalModsPathOption = new Option<DirectoryInfo?>("--internalModsPath", "The path containing the internal mods to load.");
-		var modStoragePathOption = new Option<DirectoryInfo?>("--modStoragePath", "The path containing mod data, like settings (ones that are fine to share).");
-		var privateModStoragePathOption = new Option<DirectoryInfo?>("--privateModStoragePath", "The path containing private mod data, like settings (ones that should never be shared).");
-		var savePathOption = new Option<DirectoryInfo?>("--savePath", "The path that will store the save data.");
-		var logPathOption = new Option<DirectoryInfo?>("--logPath", "The folder logs will be stored in.");
-		var attachDebuggerBeforeModOption = new Option<string?>("--attachDebuggerBeforeMod", "The mod loader will attempt to attach a debugger before the given mod loads.");
-		var attachDebuggerAfterModOption = new Option<string?>("--attachDebuggerAfterMod", "The mod loader will attempt to attach a debugger after the given mod loads.");
-		var attachDebuggerBeforeModLoadPhaseOption = new Option<string?>("--attachDebuggerBeforeModLoadPhase", "The mod loader will attempt to attach a debugger before mods from the given mod load phase start loading.");
-		var attachDebuggerAfterModLoadPhaseOption = new Option<string?>("--attachDebuggerAfterModLoadPhase", "The mod loader will attempt to attach a debugger after mods from the given mod load phase finish loading.");
-		var timestampedLogFiles = new Option<bool?>("--keepLogs", "Uses timestamps for log filenames.");
-		var logPipeNameOption = new Option<string?>("--logPipeName") { IsHidden = true };
+		var saveInDebugOption = new Option<bool?>("--save-in-debug", "Whether the game should be auto-saved even in debug mode.");
+		var initSteamOption = new Option<bool?>("--init-steam", "Whether Steam integration should be enabled.");
+		var gamePathOption = new Option<FileInfo?>("--game-path", "The path to CobaltCore.exe.");
+		var modsPathOption = new Option<DirectoryInfo?>("--mods-path", "The path containing the mods to load.");
+		var internalModsPathOption = new Option<DirectoryInfo?>("--internal-mods-path", "The path containing the internal mods to load.");
+		var modStoragePathOption = new Option<DirectoryInfo?>("--mod-storage-path", "The path containing mod data, like settings (ones that are fine to share).");
+		var privateModStoragePathOption = new Option<DirectoryInfo?>("--private-mod-storage-path", "The path containing private mod data, like settings (ones that should never be shared).");
+		var savePathOption = new Option<DirectoryInfo?>("--save-path", "The path that will store the save data.");
+		var logPathOption = new Option<DirectoryInfo?>("--log-path", "The folder logs will be stored in.");
+		var attachDebuggerBeforeModOption = new Option<string?>("--attach-debugger-before-mod", "The mod loader will attempt to attach a debugger before the given mod loads.");
+		var attachDebuggerAfterModOption = new Option<string?>("--attach-debugger-after-mod", "The mod loader will attempt to attach a debugger after the given mod loads.");
+		var attachDebuggerBeforeModLoadPhaseOption = new Option<string?>("--attach-debugger-before-mod-load-phase", "The mod loader will attempt to attach a debugger before mods from the given mod load phase start loading.");
+		var attachDebuggerAfterModLoadPhaseOption = new Option<string?>("--attach-debugger-after-mod-load-phase", "The mod loader will attempt to attach a debugger after mods from the given mod load phase finish loading.");
+		var timestampedLogFiles = new Option<bool?>("--keep-logs", "Uses timestamps for log filenames.");
+		var logPipeNameOption = new Option<string?>("--log-pipe-name") { IsHidden = true };
 
 		var rootCommand = new RootCommand(NickelConstants.IntroMessage);
 		rootCommand.AddOption(vanillaOption);
+		rootCommand.AddOption(wrapLaunchOption);
 		rootCommand.AddOption(debugOption);
 		rootCommand.AddOption(saveInDebugOption);
 		rootCommand.AddOption(initSteamOption);
@@ -78,7 +79,8 @@ internal sealed partial class Nickel(
 		{
 			var launchArguments = new LaunchArguments
 			{
-				Vanilla = context.ParseResult.GetValueForOption(vanillaOption),
+				Vanilla = context.ParseResult.GetValueForOption(vanillaOption) ?? false,
+				WrapLaunch = context.ParseResult.GetValueForOption(wrapLaunchOption),
 				Debug = context.ParseResult.GetValueForOption(debugOption),
 				SaveInDebug = context.ParseResult.GetValueForOption(saveInDebugOption),
 				InitSteam = context.ParseResult.GetValueForOption(initSteamOption),
@@ -97,12 +99,153 @@ internal sealed partial class Nickel(
 				LogPipeName = context.ParseResult.GetValueForOption(logPipeNameOption),
 				UnmatchedArguments = context.ParseResult.UnmatchedTokens
 			};
-			context.ExitCode = CreateAndStartInstance(launchArguments, stopwatch);
+
+			var wrapLaunch = launchArguments.WrapLaunch ?? true;
+			context.ExitCode = wrapLaunch ? CreateAndStartWrapperInstance(launchArguments, args) : CreateAndStartRealInstance(launchArguments, stopwatch);
 		});
 		return rootCommand.Invoke(args);
 	}
 
-	private static int CreateAndStartInstance(LaunchArguments launchArguments, Stopwatch stopwatch)
+	private static int CreateAndStartWrapperInstance(LaunchArguments launchArguments, string[] args)
+	{
+		var modStorageDirectory = launchArguments.ModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "ModStorage"));
+		
+		Settings settings;
+		try
+		{
+			settings = SettingsUtilities.ReadSettings<Settings>(new DirectoryInfoImpl(modStorageDirectory), false) ?? throw new InvalidDataException();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(NickelConstants.IntroMessage);
+			Console.WriteLine($"ModStoragePath: {PathUtilities.SanitizePath(modStorageDirectory.FullName)}");
+			Console.WriteLine(ex);
+			return -1;
+		}
+		
+		var realOut = Console.Out;
+		var loggerFactory = LoggerFactory.Create(builder =>
+		{
+			builder.SetMinimumLevel((LogLevel)Math.Min((int)settings.MinimumFileLogLevel, (int)settings.MinimumConsoleLogLevel));
+			var fileLogDirectory = launchArguments.LogPath ?? GetOrCreateDefaultLogDirectory();
+			var timestampedLogFiles = launchArguments.TimestampedLogFiles ?? false;
+			builder.AddProvider(FileLoggerProvider.CreateNewLog(settings.MinimumFileLogLevel, fileLogDirectory, timestampedLogFiles));
+			builder.AddProvider(new ConsoleLoggerProvider(settings.MinimumConsoleLogLevel, realOut, disposeWriter: false));
+		});
+		var logger = loggerFactory.CreateLogger($"{NickelConstants.Name}Launcher");
+		Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, realOut));
+		Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));
+		Dictionary<string, ILogger> categoryLoggers = [];
+		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
+
+		var launchPath = new FileInfo(Environment.ProcessPath!);
+		var pipeName = launchArguments.LogPipeName ?? Guid.NewGuid().ToString();
+		using var logNamedPipeServer = string.IsNullOrEmpty(pipeName) ? null : new LogNamedPipeServer(pipeName, logger, e =>
+		{
+			if (!categoryLoggers.TryGetValue(e.CategoryName, out var categoryLogger))
+			{
+				categoryLogger = loggerFactory.CreateLogger(e.CategoryName);
+				categoryLoggers[e.CategoryName] = categoryLogger;
+			}
+			categoryLogger.Log(e.LogLevel, "{Message}", e.Message);
+		});
+
+		var psi = new ProcessStartInfo
+		{
+			FileName = launchPath.FullName,
+			CreateNoWindow = true,
+			ErrorDialog = false,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+			WorkingDirectory = launchPath.Directory?.FullName,
+		};
+
+		foreach (var arg in args)
+			psi.ArgumentList.Add(arg);
+		
+		if (!string.IsNullOrEmpty(pipeName))
+		{
+			psi.ArgumentList.Add("--log-pipe-name");
+			psi.ArgumentList.Add(pipeName);
+		}
+
+		try
+		{
+			return StartWrapperAndLogProcess(psi, logger, loggerFactory);
+		}
+		catch (Exception ex)
+		{
+			logger.LogCritical("{Name} threw an exception: {Exception}", NickelConstants.Name, ex);
+			return -1;
+		}
+		finally
+		{
+			loggerFactory.Dispose();
+		}
+	}
+	
+	private static int StartWrapperAndLogProcess(ProcessStartInfo psi, ILogger logger, ILoggerFactory loggerFactory)
+	{
+		var exitingLauncher = false;
+		var process = Process.Start(psi);
+		if (process is null)
+		{
+			logger.LogCritical("Could not start {ModLoaderName}: no process was started.", NickelConstants.Name);
+			return -1;
+		}
+
+		logger.LogDebug("Launched Nickel with PID {PID}.", process.Id);
+
+		// Detect if parent process is killed
+		var launcherProcess = Process.GetCurrentProcess();
+		launcherProcess.EnableRaisingEvents = true;
+		launcherProcess.Exited += OnExited;
+		Console.CancelKeyPress += OnExited;
+		AppDomain.CurrentDomain.ProcessExit += OnExited;
+
+		// Subscribe to logging
+		var launchedLogger = loggerFactory.CreateLogger(NickelConstants.Name);
+		process.OutputDataReceived += (_, e) =>
+		{
+			if (!string.IsNullOrEmpty(e.Data))
+				launchedLogger.LogInformation("{Message}", e.Data);
+		};
+		process.ErrorDataReceived += (_, e) =>
+		{
+			if (!string.IsNullOrEmpty(e.Data))
+				launchedLogger.LogError("{Message}", e.Data);
+		};
+		process.BeginErrorReadLine();
+		process.BeginOutputReadLine();
+
+		process.WaitForExit();
+		logger.Log(process.ExitCode == 0 ? LogLevel.Debug : LogLevel.Error, "{ModLoaderName} exited with code {Code}.", NickelConstants.Name, process.ExitCode);
+		if (process.ExitCode != 0 && !exitingLauncher)
+			Console.ReadLine();
+
+		// Unsubscribe
+		launcherProcess.Exited -= OnExited;
+		Console.CancelKeyPress -= OnExited;
+		AppDomain.CurrentDomain.ProcessExit -= OnExited;
+		return process.ExitCode;
+
+		void OnExited(object? _, EventArgs e)
+		{
+			exitingLauncher = true;
+			if (process.HasExited)
+				return;
+			logger.LogInformation("Attempting to close {ModLoaderName} gracefully.", NickelConstants.Name);
+			process.CloseMainWindow();
+			process.WaitForExit(1000);
+
+			if (process.HasExited)
+				return;
+			logger.LogInformation("Killing {ModLoaderName}.", NickelConstants.Name);
+			process.Kill();
+		}
+	}
+
+	private static int CreateAndStartRealInstance(LaunchArguments launchArguments, Stopwatch stopwatch)
 	{
 		var modStorageDirectory = launchArguments.ModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "ModStorage"));
 

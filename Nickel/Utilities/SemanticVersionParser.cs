@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-namespace Nickel.Common;
+namespace Nickel;
 
 /// <summary>
 /// A class providing the functionality of parsing <see cref="SemanticVersion"/> values from strings.

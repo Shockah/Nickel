@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
-using Nickel.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
