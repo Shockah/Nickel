@@ -17,7 +17,6 @@ internal sealed class ModCards(
 	
 	private readonly Dictionary<string, ICardEntry> RegisteredCardStorage = [];
 	private readonly Dictionary<string, ICardTraitEntry> RegisteredTraitStorage = [];
-	private readonly Dictionary<EventHandler<GetVolatileCardTraitOverridesEventArgs>, EventHandler<GetFinalDynamicCardTraitOverridesEventArgs>> ObsoleteVolatileToFinalEventHandlers = [];
 
 	public ICardEntry? LookupByCardType(Type cardType)
 		=> cardManagerProvider().LookupByCardType(cardType);
@@ -87,36 +86,6 @@ internal sealed class ModCards(
 
 	public void SetCardTraitOverride(State state, Card card, ICardTraitEntry trait, bool? overrideValue, bool permanent)
 		=> cardTraitManagerProvider().SetCardTraitOverride(state, card, trait, overrideValue, permanent);
-
-	public event EventHandler<GetVolatileCardTraitOverridesEventArgs> OnGetVolatileCardTraitOverrides
-	{
-		add
-		{
-			EventHandler<GetFinalDynamicCardTraitOverridesEventArgs> mappedHandler = (sender, args) =>
-			{
-				var mappedArgs = new GetVolatileCardTraitOverridesEventArgs
-				{
-					State = args.State,
-					Card = args.Card,
-					TraitStates = args.TraitStates,
-					VolatileOverrides = []
-				};
-				
-				value(sender, mappedArgs);
-				
-				foreach (var (overrideTrait, overrideValue) in mappedArgs.VolatileOverrides)
-					args.SetOverride(overrideTrait, overrideValue);
-			};
-			this.ObsoleteVolatileToFinalEventHandlers[value] = mappedHandler;
-			this.OnGetFinalDynamicCardTraitOverrides += mappedHandler;
-		}
-		remove
-		{
-			if (!this.ObsoleteVolatileToFinalEventHandlers.TryGetValue(value, out var mappedHandler))
-				return;
-			this.OnGetFinalDynamicCardTraitOverrides -= mappedHandler;
-		}
-	}
 
 	public event EventHandler<GetDynamicInnateCardTraitOverridesEventArgs> OnGetDynamicInnateCardTraitOverrides
 	{
