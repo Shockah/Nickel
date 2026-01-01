@@ -6,7 +6,7 @@ internal sealed class InfoScreenReplacementRoute(InfoScreenEntry entry, Route ro
 	
 	public override bool TryCloseSubRoute(G g, Route r, object? arg)
 	{
-		if (r.TryCloseSubRoute(g, r, arg))
+		if (route.TryCloseSubRoute(g, r, arg))
 			return true;
 		if (r != route)
 			return false;

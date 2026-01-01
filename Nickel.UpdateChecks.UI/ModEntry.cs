@@ -24,6 +24,7 @@ public sealed class ModEntry : SimpleMod
 	internal static ModEntry Instance { get; private set; } = null!;
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 	internal readonly IUpdateChecksApi UpdateChecksApi;
+	internal readonly IModSettingsApi ModSettingsApi;
 
 	internal readonly Content Content;
 
@@ -39,6 +40,7 @@ public sealed class ModEntry : SimpleMod
 			)
 		);
 		this.UpdateChecksApi = helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!;
+		this.ModSettingsApi = helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings")!;
 		
 		this.Content = new()
 		{
@@ -50,12 +52,9 @@ public sealed class ModEntry : SimpleMod
 			DefaultVisitWebsiteOnIcon = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/DefaultVisitWebsiteOnIcon.png")),
 		};
 		
-		helper.ModRegistry.AwaitApi<IModSettingsApi>("Nickel.ModSettings", api =>
-		{
-			var updateChecksMod = helper.ModRegistry.LoadedMods.GetValueOrDefault("Nickel.UpdateChecks");
-			api.OverrideModSettingsTitle(updateChecksMod?.DisplayName ?? updateChecksMod?.UniqueName);
-			api.RegisterModSettings(this.MakeUpdateListModSetting());
-		});
+		var updateChecksMod = helper.ModRegistry.LoadedMods.GetValueOrDefault("Nickel.UpdateChecks");
+		this.ModSettingsApi.OverrideModSettingsTitle(updateChecksMod?.DisplayName ?? updateChecksMod?.UniqueName);
+		this.ModSettingsApi.RegisterModSettings(this.MakeUpdateListModSetting());
 
 		if (helper.ModRegistry.GetApi<IInfoScreensApi>("Nickel.InfoScreens") is { } infoScreensApi)
 		{
@@ -64,7 +63,7 @@ public sealed class ModEntry : SimpleMod
 				if (phase != ModLoadPhase.AfterDbInit)
 					return;
 				
-				this.UpdateChecksApi.AwaitAllUpdateInfo(_ =>
+				this.UpdateChecksApi.AwaitAllUpdateInfo(updates =>
 				{
 					var pendingUpdates = this.GetPendingModUpdates().ToList();
 					if (pendingUpdates.Count == 0)
@@ -81,17 +80,23 @@ public sealed class ModEntry : SimpleMod
 						infoScreensApi.CreateBasicInfoScreenAction(this.Localizations.Localize(["infoScreen", "actions", "details"]), args =>
 						{
 							Audio.Play(Event.Click);
-							args.G.CloseRoute(args.Route);
+							args.Route.RouteOverride = this.ModSettingsApi.MakeModSettingsRouteForMod(package.Manifest);
 						}),
 						infoScreensApi.CreateBasicInfoScreenAction(this.Localizations.Localize(["infoScreen", "actions", "remindLater"]), args =>
 						{
 							Audio.Play(Event.Click);
-							args.G.CloseRoute(args.Route);
+							args.G.CloseRoute(args.Route.AsRoute);
 						}).SetControllerKeybind(Btn.B),
 						infoScreensApi.CreateBasicInfoScreenAction(this.Localizations.Localize(["infoScreen", "actions", "ignore"]), args =>
 						{
 							Audio.Play(Event.Click);
-							args.G.CloseRoute(args.Route);
+							
+							foreach (var kvp in updates)
+								if (kvp.Value is not null && kvp.Value.Count != 0)
+									this.UpdateChecksApi.SetIgnoredUpdateForMod(kvp.Key, kvp.Value.Select(u => u.Version).Max());
+							this.UpdateChecksApi.SaveSettings();
+							
+							args.G.CloseRoute(args.Route.AsRoute);
 						}).SetColor(Colors.redd).SetRequiresConfirmation(true),
 					];
 

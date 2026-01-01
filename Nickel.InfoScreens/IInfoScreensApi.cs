@@ -48,11 +48,21 @@ public interface IInfoScreensApi
 		/// <summary>Returns the actual <see cref="Route"/> object for use with the rest of the code.</summary>
 		Route AsRoute { get; }
 		
+		/// <summary>A route that temporarily overrides this route.</summary>
+		Route? RouteOverride { get; set; }
+		
 		/// <summary>The list of paragraphs to display.</summary>
 		IList<IParagraph> Paragraphs { get; set; }
 		
 		/// <summary>The list of actions to display.</summary>
 		IList<IAction> Actions { get; set; }
+		
+		/// <summary>
+		/// Sets <see cref="RouteOverride"/>.
+		/// </summary>
+		/// <param name="value">The new value.</param>
+		/// <returns>This object after the change.</returns>
+		IBasicInfoScreenRoute SetRouteOverride(Route? value);
 		
 		/// <summary>
 		/// Sets <see cref="Paragraphs"/>.
@@ -175,7 +185,7 @@ public interface IInfoScreensApi
 				G G { get; }
 				
 				/// <summary>The basic info screen route.</summary>
-				Route Route { get; }
+				IBasicInfoScreenRoute Route { get; }
 			}
 		}
 	}

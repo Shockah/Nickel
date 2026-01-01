@@ -12,15 +12,37 @@ public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScre
 	public Route AsRoute
 		=> this;
 
+	public Route? RouteOverride { get; set; }
+
 	public IList<IInfoScreensApi.IBasicInfoScreenRoute.IParagraph> Paragraphs { get; set; } = [];
 
 	public IList<IInfoScreensApi.IBasicInfoScreenRoute.IAction> Actions { get; set; } = [];
 
 	private int? ConfirmingActionIndex;
 	private double ConfirmingTime;
+	
+	public override bool TryCloseSubRoute(G g, Route r, object? arg)
+	{
+		if (this.RouteOverride?.TryCloseSubRoute(g, r, arg) ?? false)
+			return true;
+		
+		if (r == this.RouteOverride)
+		{
+			this.RouteOverride = null;
+			return true;
+		}
+		
+		return base.TryCloseSubRoute(g, r, arg);
+	}
 
 	public override void Render(G g)
 	{
+		if (this.RouteOverride is not null)
+		{
+			this.RouteOverride.Render(g);
+			return;
+		}
+		
 		const int sectionSpacing = 16;
 		const int paragraphSpacing = 8;
 		const int actionWidth = 61;
@@ -119,7 +141,8 @@ public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScre
 					textColor: action.Color,
 					boxColor: action.Color,
 					onMouseDown: this,
-					autoFocus: true
+					autoFocus: true,
+					platformButtonHint: action.ControllerKeybind
 				);
 			}
 		}
@@ -168,6 +191,12 @@ public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScre
 		{
 			ModEntry.Instance.ArgsPool.Return(args);
 		}
+	}
+
+	public IInfoScreensApi.IBasicInfoScreenRoute SetRouteOverride(Route? value)
+	{
+		this.RouteOverride = value;
+		return this;
 	}
 
 	public IInfoScreensApi.IBasicInfoScreenRoute SetParagraphs(IReadOnlyList<IInfoScreensApi.IBasicInfoScreenRoute.IParagraph> value)
