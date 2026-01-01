@@ -30,10 +30,11 @@ internal sealed class NoInliningDefinitionEditor(
 	{
 		var modLoaderManifest = modLoaderManifestProvider();
 		List<StopInliningDefinition> modLoaderDefinitions = [
-			new() { TypeName = nameof(Artifact), MethodName = nameof(Artifact.Key) },
 			new() { TypeName = nameof(Artifact), MethodName = nameof(Artifact.GetMeta) },
-			new() { TypeName = nameof(Card), MethodName = nameof(Card.Key) },
+			new() { TypeName = nameof(Artifact), MethodName = nameof(Artifact.Key) },
+			new() { TypeName = nameof(Card), MethodName = nameof(Card.CopyWithNewId) },
 			new() { TypeName = nameof(Card), MethodName = nameof(Card.GetMeta) },
+			new() { TypeName = nameof(Card), MethodName = nameof(Card.Key) },
 			new() { TypeName = nameof(CardAction), MethodName = nameof(CardAction.Key) },
 			new() { TypeName = nameof(FightModifier), MethodName = nameof(FightModifier.Key) },
 			new() { TypeName = nameof(Log), MethodName = nameof(Log.Line) },
