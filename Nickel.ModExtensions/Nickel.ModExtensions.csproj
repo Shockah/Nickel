@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\Configuration.props" />
+	<PropertyGroup>
+		<RootNamespace>Nickel.ModExtensions</RootNamespace>
+		<Version>$(NickelVersion)</Version>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Nickel\Nickel.csproj" Private="false" />
+		<PackageReference Include="Nickel.ModBuildConfig.ReferenceAssembly" Version="1.2.5.4" PrivateAssets="All" />
+	</ItemGroup>
+</Project>
