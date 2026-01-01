@@ -47,7 +47,7 @@ public sealed class ModEntry : SimpleMod
 
 	internal readonly Dictionary<string, IUpdateSource> UpdateSourceKeyToSource = [];
 	internal readonly Dictionary<IUpdateSource, string> UpdateSourceToKey = [];
-	internal readonly Dictionary<IModManifest, List<UpdateDescriptor>> UpdatesAvailable = [];
+	internal readonly Dictionary<IModManifest, List<UpdateDescriptor>?> UpdatesAvailable = [];
 	internal readonly ConcurrentQueue<Action> ToRunInGameLoop = [];
 	internal readonly List<Action> AwaitingUpdateInfo = [];
 	internal readonly Settings Settings;
@@ -210,6 +210,9 @@ public sealed class ModEntry : SimpleMod
 
 		foreach (var availableUpdate in this.UpdatesAvailable)
 		{
+			if (availableUpdate.Value is null)
+				continue;
+			
 			availableUpdate.Value.RemoveAll(d => updateSourceToMod.Keys.Select(s => this.UpdateSourceToKey.GetValueOrDefault(s)).Contains(d.SourceKey));
 			if (availableUpdate.Value.Count == 0)
 				this.UpdatesAvailable.Remove(availableUpdate.Key);

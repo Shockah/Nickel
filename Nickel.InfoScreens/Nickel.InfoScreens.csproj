@@ -3,4 +3,7 @@
 	<PropertyGroup>
 		<RootNamespace>Nickel.InfoScreens</RootNamespace>
 	</PropertyGroup>
+	<ItemGroup>
+		<ModFiles Include="i18n/**" />
+	</ItemGroup>
 </Project>

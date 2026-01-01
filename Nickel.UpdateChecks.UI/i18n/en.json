@@ -5,6 +5,14 @@
 		"warning": "Update Warning",
 		"info": "Update Info"
 	},
+	"infoScreen": {
+		"title": "Updates available!",
+		"actions": {
+			"details": "SHOW\nDETAILS",
+			"remindLater": "REMIND\nLATER",
+			"ignore": "IGNORE"
+		}
+	},
 	"settings": {
 		"paste": "PASTE",
 		"clear": "CLEAR",

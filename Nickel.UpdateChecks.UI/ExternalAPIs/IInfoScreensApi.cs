@@ -124,10 +124,16 @@ public interface IInfoScreensApi
 			
 			/// <summary>The color of the action. Defaults to <c>null</c>, which tells the route to use the default color for actions.</summary>
 			Color? Color { get; set; }
+
+			/// <summary>Whether the action requires pressing the button for a while before it triggers.</summary>
+			bool RequiresConfirmation { get; set; }
+			
+			/// <summary>The controller button that will activate this action, without hovering over it.</summary>
+			Btn? ControllerKeybind { get; set; }
 			
 			/// <summary>The action delegate to call when the user clicks on the button.</summary>
 			Action<IArgs> Action { get; set; }
-			
+
 			/// <summary>
 			/// Sets <see cref="Title"/>.
 			/// </summary>
@@ -141,6 +147,27 @@ public interface IInfoScreensApi
 			/// <param name="value">The new value.</param>
 			/// <returns>This object after the change.</returns>
 			IAction SetColor(Color? value);
+			
+			/// <summary>
+			/// Sets <see cref="RequiresConfirmation"/>.
+			/// </summary>
+			/// <param name="value">The new value.</param>
+			/// <returns>This object after the change.</returns>
+			IAction SetRequiresConfirmation(bool value);
+			
+			/// <summary>
+			/// Sets <see cref="ControllerKeybind"/>.
+			/// </summary>
+			/// <param name="value">The new value.</param>
+			/// <returns>This object after the change.</returns>
+			IAction SetControllerKeybind(Btn? value);
+			
+			/// <summary>
+			/// Sets <see cref="Action"/>.
+			/// </summary>
+			/// <param name="value">The new value.</param>
+			/// <returns>This object after the change.</returns>
+			IAction SetAction(Action<IArgs> value);
 
 			interface IArgs
 			{

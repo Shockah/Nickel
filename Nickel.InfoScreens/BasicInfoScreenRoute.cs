@@ -1,10 +1,11 @@
 ﻿using daisyowl.text;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Nickel.InfoScreens;
 
-public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScreenRoute, OnMouseDown
+public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScreenRoute, OnMouseDown, OnInputPhase
 {
 	private static readonly UK ActionKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 	
@@ -15,17 +16,8 @@ public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScre
 
 	public IList<IInfoScreensApi.IBasicInfoScreenRoute.IAction> Actions { get; set; } = [];
 
-	public IInfoScreensApi.IBasicInfoScreenRoute SetParagraphs(IReadOnlyList<IInfoScreensApi.IBasicInfoScreenRoute.IParagraph> value)
-	{
-		this.Paragraphs = value.ToList();
-		return this;
-	}
-
-	public IInfoScreensApi.IBasicInfoScreenRoute SetActions(IReadOnlyList<IInfoScreensApi.IBasicInfoScreenRoute.IAction> value)
-	{
-		this.Actions = value.ToList();
-		return this;
-	}
+	private int? ConfirmingActionIndex;
+	private double ConfirmingTime;
 
 	public override void Render(G g)
 	{
@@ -34,6 +26,37 @@ public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScre
 		const int actionWidth = 61;
 		const int actionHeight = 25;
 		const int interActionSpacing = 16;
+
+		if (this.ConfirmingActionIndex is { } actionIndex)
+		{
+			var action = this.Actions[actionIndex];
+			var controllerButton = action.ControllerKeybind ?? Btn.A;
+
+			if (!Input.mouseLeft && !Input.GetGpHeld(controllerButton))
+			{
+				this.ConfirmingActionIndex = null;
+				this.ConfirmingTime = 0;
+			}
+			else
+			{
+				this.ConfirmingTime += g.dt;
+
+				if (this.ConfirmingTime > 3)
+				{
+					var args = ModEntry.Instance.ArgsPool.Get<BasicInfoScreenRouteActionArgs>();
+					try
+					{
+						args.G = g;
+						args.Route = this;
+						action.Action(args);
+					}
+					finally
+					{
+						ModEntry.Instance.ArgsPool.Return(args);
+					}
+				}
+			}
+		}
 		
 		#region Sizing
 		var totalHeight = 0;
@@ -78,11 +101,21 @@ public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScre
 			for (var i = 0; i < this.Actions.Count; i++)
 			{
 				var action = this.Actions[i];
+				var text = action.Title;
+
+				if (this.ConfirmingActionIndex == i)
+				{
+					var confirmingPercent = this.ConfirmingTime / 3;
+					var confirmingFullText = ModEntry.Instance.Localizations.Localize(["actionConfirmationText"]);
+					var confirmingPartialText = confirmingFullText[..(int)Math.Ceiling(Math.Min(confirmingPercent, 1) * confirmingFullText.Length)];
+					text = $"{text}\n{confirmingPartialText}";
+				}
+				
 				SharedArt.ButtonText(
 					g,
 					new Vec(g.mg.PIX_W / 2 - totalActionsWidth / 2 + (actionWidth + interActionSpacing) * i, topY + offsetY),
 					new(ActionKey, i),
-					action.Title,
+					text,
 					textColor: action.Color,
 					boxColor: action.Color,
 					onMouseDown: this,
@@ -97,20 +130,55 @@ public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScre
 	{
 		if (b.key?.k != ActionKey)
 			return;
+		
+		this.InvokeAction(g, b.key.Value.v);
+	}
+
+	public void OnInputPhase(G g, Box b)
+	{
+		if (this.ConfirmingActionIndex is not { } actionIndex)
+			return;
+		
+		var action = this.Actions[actionIndex];
+		if (action.ControllerKeybind is null)
+			return;
+		if (!Input.GetGpDown(action.ControllerKeybind.Value))
+			return;
+		
+		this.InvokeAction(g, actionIndex);
+	}
+
+	private void InvokeAction(G g, int actionIndex)
+	{
+		var action = this.Actions[actionIndex];
+		if (action.RequiresConfirmation)
+		{
+			this.ConfirmingActionIndex = actionIndex;
+			return;
+		}
 
 		var args = ModEntry.Instance.ArgsPool.Get<BasicInfoScreenRouteActionArgs>();
-
 		try
 		{
 			args.G = g;
 			args.Route = this;
-			
-			var action = this.Actions[b.key.Value.v];
 			action.Action(args);
 		}
 		finally
 		{
 			ModEntry.Instance.ArgsPool.Return(args);
 		}
+	}
+
+	public IInfoScreensApi.IBasicInfoScreenRoute SetParagraphs(IReadOnlyList<IInfoScreensApi.IBasicInfoScreenRoute.IParagraph> value)
+	{
+		this.Paragraphs = value.ToList();
+		return this;
+	}
+
+	public IInfoScreensApi.IBasicInfoScreenRoute SetActions(IReadOnlyList<IInfoScreensApi.IBasicInfoScreenRoute.IAction> value)
+	{
+		this.Actions = value.ToList();
+		return this;
 	}
 }

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -10,6 +11,7 @@ namespace Nickel.InfoScreens;
 public sealed class ModEntry : SimpleMod
 {
 	internal static ModEntry Instance { get; private set; } = null!;
+	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 	internal readonly MultiPool ArgsPool = new();
 	internal readonly OrderedList<IInfoScreensApi.IInfoScreenEntry, double> RequestedInfoScreens = new(false);
 	private InfoScreenEntry? CurrentInfoScreen;
@@ -17,6 +19,14 @@ public sealed class ModEntry : SimpleMod
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
 		Instance = this;
+		this.Localizations = new MissingPlaceholderLocalizationProvider<IReadOnlyList<string>>(
+			new CurrentLocaleOrEnglishLocalizationProvider<IReadOnlyList<string>>(
+				new JsonLocalizationProvider(
+					tokenExtractor: new SimpleLocalizationTokenExtractor(),
+					localeStreamFunction: locale => package.PackageRoot.GetRelativeFile($"i18n/{locale}.json").OpenRead()
+				)
+			)
+		);
 		
 		helper.Utilities.Harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(G), nameof(G.Render))

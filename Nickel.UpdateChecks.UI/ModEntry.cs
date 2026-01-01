@@ -72,32 +72,27 @@ public sealed class ModEntry : SimpleMod
 				
 					var route = infoScreensApi.CreateBasicInfoScreenRoute();
 					route.Paragraphs = [
-						infoScreensApi.CreateBasicInfoScreenParagraph("Updates available!").SetFont(DB.thicket),
+						infoScreensApi.CreateBasicInfoScreenParagraph(this.Localizations.Localize(["infoScreen", "title"])).SetFont(DB.thicket),
 						infoScreensApi.CreateBasicInfoScreenParagraph(
 							pendingUpdates.Join(e => $"<c=textFaint>{this.UpdateChecksApi.GetModNameForUpdatePurposes(e.Mod)}</c> <c=textBold>{e.Mod.Version}</c> -> <c=boldPink>{e.Version}</c>", "\n")
 						),
 					];
 					route.Actions = [
-						infoScreensApi.CreateBasicInfoScreenAction("REMIND\nLATER", args =>
+						infoScreensApi.CreateBasicInfoScreenAction(this.Localizations.Localize(["infoScreen", "actions", "details"]), args =>
 						{
 							Audio.Play(Event.Click);
 							args.G.CloseRoute(args.Route);
 						}),
-						infoScreensApi.CreateBasicInfoScreenAction("REMIND\nLATER", args =>
+						infoScreensApi.CreateBasicInfoScreenAction(this.Localizations.Localize(["infoScreen", "actions", "remindLater"]), args =>
 						{
 							Audio.Play(Event.Click);
 							args.G.CloseRoute(args.Route);
-						}),
-						infoScreensApi.CreateBasicInfoScreenAction("REMIND\nTOMORROW", args =>
+						}).SetControllerKeybind(Btn.B),
+						infoScreensApi.CreateBasicInfoScreenAction(this.Localizations.Localize(["infoScreen", "actions", "ignore"]), args =>
 						{
 							Audio.Play(Event.Click);
 							args.G.CloseRoute(args.Route);
-						}),
-						infoScreensApi.CreateBasicInfoScreenAction("IGNORE", args =>
-						{
-							Audio.Play(Event.Click);
-							args.G.CloseRoute(args.Route);
-						}).SetColor(Colors.redd),
+						}).SetColor(Colors.redd).SetRequiresConfirmation(true),
 					];
 
 					infoScreensApi.RequestInfoScreen("UpdatesAvailable", route.AsRoute, 1_000);
