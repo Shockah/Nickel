@@ -1,24 +1,29 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Nickel;
 
 internal sealed class PartManager
 {
+	private readonly IModManifest VanillaModManifest;
 	private readonly AfterDbInitManager<PartTypeEntry> PartTypeManager;
 	private readonly AfterDbInitManager<PartEntry> PartInstanceManager;
 	private readonly EnumCasePool EnumCasePool;
 	private readonly Dictionary<string, PartTypeEntry> UniqueNameToPartTypeEntry = [];
 	private readonly Dictionary<string, PartEntry> UniqueNameToPartInstanceEntry = [];
+	private readonly Dictionary<string, PType> VanillaPartTypes;
 
-	public PartManager(EnumCasePool enumCasePool, Func<ModLoadPhaseState> currentModLoadPhaseProvider)
+	public PartManager(EnumCasePool enumCasePool, Func<ModLoadPhaseState> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
 	{
+		this.VanillaModManifest = vanillaModManifest;
 		this.PartTypeManager = new(currentModLoadPhaseProvider, Inject);
 		this.PartInstanceManager = new(currentModLoadPhaseProvider, Inject);
 		this.EnumCasePool = enumCasePool;
+		
 		ArtifactRewardPatches.OnGetBlockedArtifacts += this.OnGetBlockedArtifacts;
+
+		this.VanillaPartTypes = Enum.GetValues<PType>().ToDictionary(v => Enum.GetName(v)!, v => v);
 	}
 
 	private void OnGetBlockedArtifacts(object? _, ArtifactRewardPatches.GetBlockedArtifactsEventArgs e)
@@ -62,30 +67,36 @@ internal sealed class PartManager
 		return entry;
 	}
 
-	public bool TryGetPartTypeByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IPartTypeEntry entry)
+	public IPartTypeEntry? LookupPartTypeByUniqueName(string uniqueName)
 	{
-		entry = null;
-		return this.UniqueNameToPartTypeEntry.TryGetValue(uniqueName, out var typedEntry);
-	}
+		if (this.UniqueNameToPartTypeEntry.TryGetValue(uniqueName, out var entry))
+			return entry;
+		
+		if (this.VanillaPartTypes.TryGetValue(uniqueName, out var partType))
+		{
+			entry = new PartTypeEntry(this.VanillaModManifest, uniqueName, partType, new()
+			{
+				Name = _ => Loc.T($"part.{uniqueName}.name"),
+				Description = _ => Loc.T($"part.{uniqueName}.desc"),
+			});
 
-	public bool TryGetPartByUniqueName(string uniqueName, [MaybeNullWhen(false)] out IPartEntry entry)
-	{
-		entry = null;
-		return this.UniqueNameToPartInstanceEntry.TryGetValue(uniqueName, out var typedEntry);
+			this.UniqueNameToPartTypeEntry[uniqueName] = entry;
+			return entry;
+		}
+		
+		return null;
 	}
 
 	internal void InjectLocalizations(string locale, Dictionary<string, string> localizations)
 	{
 		foreach (var entry in this.UniqueNameToPartTypeEntry.Values)
-			this.InjectLocalization(locale, localizations, entry);
+			InjectLocalization(locale, localizations, entry);
 	}
 
-	private void Inject(PartTypeEntry entry)
-    {
-        this.InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
-    }
+	private static void Inject(PartTypeEntry entry)
+		=> InjectLocalization(DB.currentLocale.locale, DB.currentLocale.strings, entry);
 
-	private void InjectLocalization(string locale, Dictionary<string, string> localizations, PartTypeEntry entry)
+	private static void InjectLocalization(string locale, Dictionary<string, string> localizations, PartTypeEntry entry)
 	{	
 		var key = entry.PartType.Key();
 		if (entry.Configuration.Name.Localize(locale) is { } name)

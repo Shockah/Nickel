@@ -63,7 +63,7 @@ internal sealed class ContentManager
 		var cards = new CardManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
 		var artifacts = new ArtifactManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
 		var characters = new CharacterManager(currentModLoadPhaseProvider, loggerProvider, eventManager, sprites, audio, decks, statuses, cards, vanillaModManifest, modLoaderModManifest);
-		var parts = new PartManager(enumCasePool, currentModLoadPhaseProvider);
+		var parts = new PartManager(enumCasePool, currentModLoadPhaseProvider, vanillaModManifest);
 		var ships = new ShipManager(currentModLoadPhaseProvider, vanillaModManifest);
 		var cardTraits = new CardTraitManager(loggerProvider, vanillaModManifest, modLoaderModManifest, modDataHandler);
 		var enemies = new EnemyManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
