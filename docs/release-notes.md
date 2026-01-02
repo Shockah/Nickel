@@ -4,7 +4,11 @@
 
 ## Upcoming release
 
+### For everyone:
 * Added new screens for setting up NexusMods and GitHub update checks, as well as informing about available updates.
+
+### For developers:
+* Added `IModEvents.ModLoadPhaseState`.
 
 ## 1.19.3
 Released 6 December 2025.
