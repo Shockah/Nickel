@@ -4,8 +4,15 @@ using System.Reflection;
 
 namespace Nickel;
 
-internal sealed class ModEvents(IModManifest modManifest, ModEventManager eventManager) : IModEvents
+internal sealed class ModEvents(
+	IModManifest modManifest,
+	ModEventManager eventManager,
+	Func<ModLoadPhaseState> currentModLoadPhaseProvider
+) : IModEvents
 {
+	public ModLoadPhaseState ModLoadPhaseState
+		=> currentModLoadPhaseProvider();
+
 	public event EventHandler<ModLoadPhase> OnModLoadPhaseFinished
 	{
 		add => eventManager.OnModLoadPhaseFinishedEvent.Add(value, modManifest);

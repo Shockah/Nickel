@@ -9,6 +9,9 @@ namespace Nickel;
 /// </summary>
 public interface IModEvents
 {
+	/// <summary>The current state of the mod loading process.</summary>
+	ModLoadPhaseState ModLoadPhaseState { get; }
+	
 	/// <summary>An event fired whenever any mod load phase finishes.</summary>
 	event EventHandler<ModLoadPhase> OnModLoadPhaseFinished;
 	

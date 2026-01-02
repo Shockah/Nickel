@@ -47,7 +47,7 @@ public sealed class ModEntry : SimpleMod
 
 	internal readonly Dictionary<string, IUpdateSource> UpdateSourceKeyToSource = [];
 	internal readonly Dictionary<IUpdateSource, string> UpdateSourceToKey = [];
-	internal readonly Dictionary<IModManifest, List<UpdateDescriptor>> UpdatesAvailable = [];
+	internal readonly Dictionary<IModManifest, List<UpdateDescriptor>?> UpdatesAvailable = [];
 	internal readonly ConcurrentQueue<Action> ToRunInGameLoop = [];
 	internal readonly List<Action> AwaitingUpdateInfo = [];
 	internal readonly Settings Settings;
@@ -210,10 +210,15 @@ public sealed class ModEntry : SimpleMod
 
 		foreach (var availableUpdate in this.UpdatesAvailable)
 		{
+			if (availableUpdate.Value is null)
+				continue;
+			
 			availableUpdate.Value.RemoveAll(d => updateSourceToMod.Keys.Select(s => this.UpdateSourceToKey.GetValueOrDefault(s)).Contains(d.SourceKey));
 			if (availableUpdate.Value.Count == 0)
 				this.UpdatesAvailable.Remove(availableUpdate.Key);
 		}
+		
+		var resolvedMods = this.Helper.ModRegistry.ResolvedMods.Values.ToList();
 
 		var token = new CancellationTokenSource();
 		this.CurrentUpdateCheckTask = (
@@ -221,12 +226,12 @@ public sealed class ModEntry : SimpleMod
 			{
 				var updateSourceToModVersion = (await Task.WhenAll(updateSourceToMod.Select(kvp => Task.Run(async () => (Source: kvp.Key, Versions: await kvp.Key.GetLatestVersionsAsync(kvp.Value)), token.Token)))).ToDictionary();
 
-				var allMods = updateSourceToMod
+				var allModsWithUpdateSources = updateSourceToMod
 					.SelectMany(kvp => kvp.Value)
 					.Select(e => e.Mod)
 					.ToHashSet();
 
-				var modToVersion = allMods
+				var modToVersion = allModsWithUpdateSources
 					.Select(m =>
 					{
 						var versions = updateSourceToModVersion
@@ -250,6 +255,15 @@ public sealed class ModEntry : SimpleMod
 					.Where(e => e.Descriptors.Count != 0)
 					.ToDictionary(e => e.Mod, e => e.Descriptors);
 
+				this.ToRunInGameLoop.Enqueue(() =>
+				{
+					foreach (var resolvedMod in resolvedMods)
+					{
+						if (allModsWithUpdateSources.Contains(resolvedMod))
+							continue;
+						this.UpdatesAvailable[resolvedMod] = [];
+					}
+				});
 				this.ToRunInGameLoop.Enqueue(() => this.ReportUpdates(modToVersion));
 			}, token.Token),
 			Token: token
@@ -284,7 +298,7 @@ public sealed class ModEntry : SimpleMod
 			this.Logger.LogInformation("All mods up to date.");
 
 		var callbacks = this.AwaitingUpdateInfo.ToList();
-		callbacks.Clear();
+		this.AwaitingUpdateInfo.Clear();
 		foreach (var callback in callbacks)
 			callback();
 	}

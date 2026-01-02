@@ -11,9 +11,19 @@
 			"name": "Open the guide"
 		}
 	},
-	"message": {
-		"missingApiKey": "NexusMods API key is not provided in mod settings. It is <c=redd>required</c> for Nickel to be able to perform update checks for mods hosted on NexusMods.",
-		"unauthorized": "There was a problem authorizing with NexusMods - is your provided API key revoked? Update it in mod settings."
+	"infoScreen": {
+		"title": "Update checks: NexusMods",
+		"description": {
+			"setup": [
+				"Your mod library contains mods published on <c=textBold>NexusMods</c>.",
+				"Nickel can automatically check for updates to these mods, if you have a <c=textBold>NexusMods</c> account."
+			]
+		},
+		"actions": {
+			"details": "SHOW DETAILS",
+			"remindLater": "REMIND LATER",
+			"disable": "DISABLE"
+		}
 	},
 	"visitWebsite": {
 		"title": "Open NexusMods",

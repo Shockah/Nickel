@@ -1,7 +1,6 @@
 using Nickel.Common;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Nickel.UpdateChecks;
 
@@ -10,10 +9,10 @@ public sealed class ApiImplementation : IUpdateChecksApi
 	public string GetModNameForUpdatePurposes(IModManifest mod)
 		=> ModEntry.GetModNameForUpdatePurposes(mod);
 	
-	public bool TryGetUpdateInfo(IModManifest mod, [MaybeNullWhen(false)] out List<UpdateDescriptor> descriptors)
+	public bool TryGetUpdateInfo(IModManifest mod, out List<UpdateDescriptor>? descriptors)
 		=> ModEntry.Instance.UpdatesAvailable.TryGetValue(mod, out descriptors);
 
-	public void AwaitUpdateInfo(IModManifest mod, Action<IModManifest, List<UpdateDescriptor>> callback)
+	public void AwaitUpdateInfo(IModManifest mod, Action<IModManifest, List<UpdateDescriptor>?> callback)
 	{
 		if (this.TryGetUpdateInfo(mod, out var update))
 		{
@@ -21,6 +20,24 @@ public sealed class ApiImplementation : IUpdateChecksApi
 			return;
 		}
 		ModEntry.Instance.AwaitingUpdateInfo.Add(() => this.AwaitUpdateInfo(mod, callback));
+	}
+
+	public void AwaitAllUpdateInfo(Action<IReadOnlyDictionary<IModManifest, List<UpdateDescriptor>?>> callback)
+	{
+		var updates = new Dictionary<IModManifest, List<UpdateDescriptor>?>();
+		
+		foreach (var resolvedMod in ModEntry.Instance.Helper.ModRegistry.ResolvedMods.Values)
+		{
+			if (!this.TryGetUpdateInfo(resolvedMod, out var update))
+			{
+				ModEntry.Instance.AwaitingUpdateInfo.Add(() => this.AwaitAllUpdateInfo(callback));
+				return;
+			}
+			
+			updates[resolvedMod] = update;
+		}
+
+		callback(updates);
 	}
 
 	public void RequestUpdateInfo(IUpdateSource source)

@@ -12,6 +12,15 @@
 		{
 			"UniqueName": "Nickel.UpdateChecks",
 			"Version": "{{ModVersion}}"
+		},
+		{
+			"UniqueName": "Nickel.ModSettings",
+			"Version": "{{ModVersion}}"
+		},
+		{
+			"UniqueName": "Nickel.InfoScreens",
+			"Version": "{{ModVersion}}",
+			"IsRequired": false
 		}
 	]
 }

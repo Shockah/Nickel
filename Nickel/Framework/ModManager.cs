@@ -722,8 +722,12 @@ internal sealed class ModManager
 		ref var helper = ref CollectionsMarshal.GetValueRefOrAddDefault(this.UniqueNameToHelper, package.Manifest.UniqueName, out var exists);
 		if (!exists)
 		{
-			var modEvents = new ModEvents(package.Manifest, this.EventManager);
 			var logger = this.ObtainLogger(package.Manifest);
+			var modEvents = new ModEvents(
+				package.Manifest,
+				this.EventManager,
+				() => this.CurrentModLoadPhase
+			);
 			
 			helper = new ModHelper(
 				new ModRegistry(

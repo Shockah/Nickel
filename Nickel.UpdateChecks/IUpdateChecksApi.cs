@@ -1,7 +1,6 @@
 using Nickel.Common;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Nickel.UpdateChecks;
 
@@ -24,7 +23,7 @@ public interface IUpdateChecksApi
 	/// <param name="descriptors">The retrieved update descriptors, if succeeded.</param>
 	/// <returns>Whether there was any update info for the given mod.</returns>
 	/// <remarks>This method returns the update info right away, even if update checks are still in progress. If you want to wait until update checks are done, use <see cref="AwaitUpdateInfo"/> instead.</remarks>
-	bool TryGetUpdateInfo(IModManifest mod, [MaybeNullWhen(false)] out List<UpdateDescriptor> descriptors);
+	bool TryGetUpdateInfo(IModManifest mod, out List<UpdateDescriptor>? descriptors);
 	
 	/// <summary>
 	/// Awaits for the update info for the given mod.
@@ -32,7 +31,14 @@ public interface IUpdateChecksApi
 	/// <param name="mod">The mod to get the update info for.</param>
 	/// <param name="callback">The callback to be invoked when update checks are done.</param>
 	/// <remarks>The <see cref="callback"/> will be invoked right away if the update checks are already done by the time this method is called.</remarks>
-	void AwaitUpdateInfo(IModManifest mod, Action<IModManifest, List<UpdateDescriptor>> callback);
+	void AwaitUpdateInfo(IModManifest mod, Action<IModManifest, List<UpdateDescriptor>?> callback);
+
+	/// <summary>
+	/// Awaits for the update info for all mods to finish.
+	/// </summary>
+	/// <param name="callback">The callback to be invoked when update checks are done.</param>
+	/// <remarks>The <see cref="callback"/> will be invoked right away if the update checks are already done by the time this method is called.</remarks>
+	void AwaitAllUpdateInfo(Action<IReadOnlyDictionary<IModManifest, List<UpdateDescriptor>?>> callback);
 
 	IEnumerable<KeyValuePair<string, IUpdateSource>> UpdateSources { get; }
 
