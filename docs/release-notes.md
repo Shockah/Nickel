@@ -6,6 +6,7 @@
 
 ### For everyone:
 * Added new screens for setting up NexusMods and GitHub update checks, as well as informing about available updates.
+* Improved loading times by caching modified DLL files between launches.
 
 ### For developers:
 * Added `IModEvents.ModLoadPhaseState`.

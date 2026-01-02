@@ -48,6 +48,7 @@ internal sealed partial class Nickel(
 		var privateModStoragePathOption = new Option<DirectoryInfo?>("--privateModStoragePath", "The path containing private mod data, like settings (ones that should never be shared).");
 		var savePathOption = new Option<DirectoryInfo?>("--savePath", "The path that will store the save data.");
 		var logPathOption = new Option<DirectoryInfo?>("--logPath", "The folder logs will be stored in.");
+		var assemblyCachePathOption = new Option<DirectoryInfo?>("--assemblyCachePath", "The path that will store cached assemblies.");
 		var attachDebuggerBeforeModOption = new Option<string?>("--attachDebuggerBeforeMod", "The mod loader will attempt to attach a debugger before the given mod loads.");
 		var attachDebuggerAfterModOption = new Option<string?>("--attachDebuggerAfterMod", "The mod loader will attempt to attach a debugger after the given mod loads.");
 		var attachDebuggerBeforeModLoadPhaseOption = new Option<string?>("--attachDebuggerBeforeModLoadPhase", "The mod loader will attempt to attach a debugger before mods from the given mod load phase start loading.");
@@ -67,6 +68,7 @@ internal sealed partial class Nickel(
 		rootCommand.AddOption(privateModStoragePathOption);
 		rootCommand.AddOption(savePathOption);
 		rootCommand.AddOption(logPathOption);
+		rootCommand.AddOption(assemblyCachePathOption);
 		rootCommand.AddOption(attachDebuggerBeforeModOption);
 		rootCommand.AddOption(attachDebuggerAfterModOption);
 		rootCommand.AddOption(attachDebuggerBeforeModLoadPhaseOption);
@@ -89,6 +91,7 @@ internal sealed partial class Nickel(
 				PrivateModStoragePath = context.ParseResult.GetValueForOption(privateModStoragePathOption),
 				SavePath = context.ParseResult.GetValueForOption(savePathOption),
 				LogPath = context.ParseResult.GetValueForOption(logPathOption),
+				AssemblyCachePath = context.ParseResult.GetValueForOption(assemblyCachePathOption),
 				TimestampedLogFiles = context.ParseResult.GetValueForOption(timestampedLogFiles),
 				AttachDebuggerBeforeMod = context.ParseResult.GetValueForOption(attachDebuggerBeforeModOption),
 				AttachDebuggerAfterMod = context.ParseResult.GetValueForOption(attachDebuggerAfterModOption),
@@ -230,6 +233,36 @@ internal sealed partial class Nickel(
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new V1_2_MapNodeContents_MakeRoute_DefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new V1_2_CardReward_GetUpgrade_DefinitionEditor());
 
+		var assemblyCacheDirectory = launchArguments.AssemblyCachePath ?? GetOrCreateDefaultAssemblyCacheDirectory();
+		logger.LogInformation("AssemblyCachePath: {Path}", PathUtilities.SanitizePath(assemblyCacheDirectory.FullName));
+
+		var fileCachingAssemblyEditor = new FileCachingAssemblyEditor(
+			extendableAssemblyDefinitionEditor,
+			new DirectoryInfoImpl(assemblyCacheDirectory)
+		);
+		fileCachingAssemblyEditor.ReadEntries();
+
+		AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+		{
+			try
+			{
+				fileCachingAssemblyEditor.CleanupEntries();
+			}
+			catch (Exception ex)
+			{
+				logger.LogError("Error while cleaning up cached assemblies: {Exception}", ex);
+			}
+			
+			try
+			{
+				fileCachingAssemblyEditor.WriteEntries();
+			}
+			catch (Exception ex)
+			{
+				logger.LogError("Error while writing cached assembly entries: {Exception}", ex);
+			}
+		};
+
 		Harmony? harmony = null;
 		if (!launchArguments.Vanilla)
 		{
@@ -274,6 +307,7 @@ internal sealed partial class Nickel(
 				privateModStorageDirectory,
 				loggerFactory,
 				logger,
+				fileCachingAssemblyEditor,
 				extendableAssemblyDefinitionEditor,
 				stopwatch,
 				attachDebuggerBeforeMod, attachDebuggerAfterMod, attachDebuggerBeforeModLoadPhase, attachDebuggerAfterModLoadPhase
@@ -539,6 +573,19 @@ internal sealed partial class Nickel(
 			directoryInfo = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), NickelConstants.Name, "Logs"));
 		else
 			directoryInfo = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
+		
+		if (!directoryInfo.Exists)
+			directoryInfo.Create();
+		return directoryInfo;
+	}
+
+	private static DirectoryInfo GetOrCreateDefaultAssemblyCacheDirectory()
+	{
+		DirectoryInfo directoryInfo;
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			directoryInfo = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), NickelConstants.Name, "AssemblyCache"));
+		else
+			directoryInfo = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AssemblyCache"));
 		
 		if (!directoryInfo.Exists)
 			directoryInfo.Create();

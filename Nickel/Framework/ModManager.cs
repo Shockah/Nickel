@@ -30,6 +30,7 @@ internal sealed class ModManager
 	internal readonly ILogger Logger;
 	internal readonly ModEventManager EventManager;
 	internal readonly IModDataHandler ModDataHandler;
+	private readonly FileCachingAssemblyEditor FileCachingAssemblyEditor;
 	private readonly ModStorageManager ModStorageManager;
 	private readonly EnumCasePool EnumCasePool;
 	private readonly DelayedHarmonyManager DelayedHarmonyManager;
@@ -65,6 +66,7 @@ internal sealed class ModManager
 		DirectoryInfo privateModStorageDirectory,
 		ILoggerFactory loggerFactory,
 		ILogger logger,
+		FileCachingAssemblyEditor fileCachingAssemblyEditor,
 		ExtendableAssemblyDefinitionEditor extendableAssemblyDefinitionEditor,
 		Stopwatch stopwatch,
 		string? attachDebuggerBeforeMod,
@@ -79,6 +81,7 @@ internal sealed class ModManager
 		this.PrivateModStorageDirectory = privateModStorageDirectory;
 		this.LoggerFactory = loggerFactory;
 		this.Logger = logger;
+		this.FileCachingAssemblyEditor = fileCachingAssemblyEditor;
 		this.Stopwatch = stopwatch;
 		this.AttachDebuggerBeforeMod = attachDebuggerBeforeMod;
 		this.AttachDebuggerAfterMod = attachDebuggerAfterMod;
@@ -132,7 +135,7 @@ internal sealed class ModManager
 
 		var loadContextProvider = new AssemblyModLoadContextProvider(
 			AssemblyLoadContext.GetLoadContext(this.GetType().Assembly) ?? AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default,
-			extendableAssemblyDefinitionEditor,
+			fileCachingAssemblyEditor,
 			logger
 		);
 
@@ -598,6 +601,15 @@ internal sealed class ModManager
 		
 		if (phase != ModLoadPhase.AfterDbInit)
 			return;
+		
+		try
+		{
+			this.FileCachingAssemblyEditor.WriteEntries();
+		}
+		catch (Exception ex)
+		{
+			this.Logger.LogError("Error while writing cached assembly entries: {Exception}", ex);
+		}
 		
 		this.DelayedHarmonyManager.ApplyDelayedPatches();
 		this.LogHarmonyPatchesOnce();

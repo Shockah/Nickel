@@ -16,6 +16,7 @@ internal readonly struct LaunchArguments
 	public DirectoryInfo? PrivateModStoragePath { get; init; }
 	public DirectoryInfo? SavePath { get; init; }
 	public DirectoryInfo? LogPath { get; init; }
+	public DirectoryInfo? AssemblyCachePath { get; init; }
 	public string? AttachDebuggerBeforeMod { get; init; }
 	public string? AttachDebuggerAfterMod { get; init; }
 	public string? AttachDebuggerBeforeModLoadPhase { get; init; }
