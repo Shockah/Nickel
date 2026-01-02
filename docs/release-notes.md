@@ -9,6 +9,7 @@
 
 ### For developers:
 * Added `IModEvents.ModLoadPhaseState`.
+* Added `PartTypeConfiguration.Name` and `PartTypeConfiguration.Description` (thanks to [@Terria-K](https://github.com/Terria-K)!).
 
 ## 1.19.3
 Released 6 December 2025.
