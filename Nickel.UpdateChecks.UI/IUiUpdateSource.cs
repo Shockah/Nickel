@@ -5,12 +5,6 @@ namespace Nickel.UpdateChecks.UI;
 public interface IUiUpdateSource : IUpdateSource
 {
 	/// <summary>
-	/// Messages that should be presented to the user.
-	/// </summary>
-	IEnumerable<UpdateSourceMessage> Messages
-		=> [];
-	
-	/// <summary>
 	/// The display name of the update source.
 	/// </summary>
 	string Name { get; }

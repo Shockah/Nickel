@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Added new screens for setting up NexusMods and GitHub update checks, as well as informing about available updates.
+
 ## 1.19.3
 Released 6 December 2025.
 

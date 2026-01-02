@@ -270,20 +270,6 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 		return client;
 	}
-
-	[UsedImplicitly]
-	public IEnumerable<UpdateSourceMessage> Messages
-	{
-		get
-		{
-			if (!this.Database.IsEnabled)
-				yield break;
-			if (string.IsNullOrEmpty(this.Database.ApiKey))
-				yield return new(UpdateSourceMessageLevel.Error, this.Localizations.Localize(["message", "missingApiKey"]));
-			if (this.GotUnauthorized)
-				yield return new(UpdateSourceMessageLevel.Error, this.Localizations.Localize(["message", "unauthorized"]));
-		}
-	}
 	
 	[UsedImplicitly]
 	public string Name

@@ -385,20 +385,6 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 		return ParseVersionOrNull(model.TagName) ?? ParseVersionOrNull(model.Name);
 	}
-
-	[UsedImplicitly]
-	public IEnumerable<UpdateSourceMessage> Messages
-	{
-		get
-		{
-			if (!this.Database.IsEnabled)
-				yield break;
-			if (string.IsNullOrEmpty(this.Database.Token))
-				yield return new(UpdateSourceMessageLevel.Warning, this.Localizations.Localize(["message", "missingToken"]));
-			if (this.GotUnauthorized)
-				yield return new(UpdateSourceMessageLevel.Error, this.Localizations.Localize(["message", "unauthorized"]));
-		}
-	}
 	
 	[UsedImplicitly]
 	public string Name
