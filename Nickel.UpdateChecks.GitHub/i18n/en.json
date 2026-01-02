@@ -27,7 +27,7 @@
 		"actions": {
 			"details": "SHOW DETAILS",
 			"remindLater": "REMIND LATER",
-			"acknowledge": "THAT'S FINE",
+			"acknowledge": "OKAY",
 			"disable": "DISABLE"
 		}
 	},

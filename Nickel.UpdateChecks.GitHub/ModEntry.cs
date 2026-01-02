@@ -180,6 +180,8 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			return;
 		if (!string.IsNullOrEmpty(this.Database.Token))
 			return;
+		if (!this.Database.WarnOnNoToken)
+			return;
 		
 		if (this.ShownSetupInfoScreen)
 			return;
