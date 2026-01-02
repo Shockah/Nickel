@@ -67,7 +67,7 @@
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.2.1105" />
 
 		<!-- mod management -->
-		<PackageReference Include="Lib.Harmony.Thin" Version="2.4.1" />
+		<PackageReference Include="Lib.Harmony.Thin" Version="2.4.2" />
 		<PackageReference Include="Pintail" Version="2.9.1" />
 
 		<!-- mod utilities -->
