@@ -28,6 +28,7 @@ public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScre
 		
 		if (r == this.RouteOverride)
 		{
+			r.OnExit(g.state);
 			this.RouteOverride = null;
 			return true;
 		}
@@ -110,7 +111,7 @@ public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScre
 			if (i != 0)
 				offsetY += paragraphSpacing;
 			var paragraph = this.Paragraphs[i];
-			offsetY += (int)Draw.Text(paragraph.Text, g.mg.PIX_W / 2, topY + offsetY, paragraph.Font, maxWidth: paragraph.MaxWidth, align: TAlign.Center).h;
+			offsetY += (int)Draw.Text(paragraph.Text, g.mg.PIX_W / 2, topY + offsetY, paragraph.Font, paragraph.Color, maxWidth: paragraph.MaxWidth, align: TAlign.Center).h;
 		}
 
 		if (this.Actions.Count != 0)

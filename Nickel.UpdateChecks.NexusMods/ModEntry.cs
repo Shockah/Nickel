@@ -1,9 +1,11 @@
+using FSPRO;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Nickel.Common;
+using Nickel.InfoScreens;
 using Nickel.ModSettings;
 using Nickel.UpdateChecks.UI;
 using System;
@@ -29,12 +31,22 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 	private HttpClient? Client;
 	private bool GotUnauthorized;
+	private bool HasAnyMods;
 
 	private readonly SemaphoreSlim Semaphore = new(1, 1);
 	private readonly Database Database;
 
 	private object IconSpriteEntry = null!;
 	private object IconOnSpriteEntry = null!;
+
+	private readonly IUpdateChecksApi UpdateChecksApi;
+	private object? ModSettingsApi;
+	private object? InfoScreensApi;
+
+	private bool RequestedSetupInfoScreen;
+	private bool RequestedUnauthorizedInfoScreen;
+	private bool ShownSetupInfoScreen;
+	private object? SetupInfoScreenEntry;
 
 	public ModEntry(IPluginPackage<IModManifest> package, IModHelper helper, ILogger logger) : base(package, helper, logger)
 	{
@@ -50,7 +62,8 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		this.Database = helper.Storage.LoadJson<Database>(this.DatabaseFile);
 		this.Client = this.MakeHttpClient();
 		
-		helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!.RegisterUpdateSource(SourceKey, this);
+		this.UpdateChecksApi = this.Helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!;
+		this.UpdateChecksApi.RegisterUpdateSource(SourceKey, this);
 
 		helper.Events.OnModLoadPhaseFinished += (_, phase) =>
 		{
@@ -62,11 +75,13 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 
 	private void SetupAfterDbInit()
 	{
+		this.ModSettingsApi = this.Helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings");
+		this.InfoScreensApi = this.Helper.ModRegistry.GetApi<IInfoScreensApi>("Nickel.InfoScreens");
+		
 		this.IconSpriteEntry = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/ProviderIcon.png"));
 		this.IconOnSpriteEntry = this.Helper.Content.Sprites.RegisterSprite(this.Package.PackageRoot.GetRelativeFile("assets/ProviderIconOn.png"));
 		
-		var updateChecksApi = this.Helper.ModRegistry.GetApi<IUpdateChecksApi>("Nickel.UpdateChecks")!;
-		if (this.Helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
+		if (this.Helper.ModRegistry.LoadedMods.ContainsKey("Nickel.UpdateChecks.UI") && this.ModSettingsApi is IModSettingsApi settingsApi)
 			settingsApi.RegisterModSettings(
 				settingsApi.MakeList([
 					settingsApi.MakeCheckbox(
@@ -96,13 +111,151 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 						() => this.Localizations.Localize(["modSettings", "guide", "name"]),
 						(_, _) => MainMenu.TryOpenWebsiteLink("https://github.com/Shockah/Nickel/blob/master/docs/update-checks.md#nexusmods")
 					)
-				]).SubscribeToOnMenuClose(_ =>
+				]).SubscribeToOnMenuClose(g =>
 				{
-					this.Helper.Storage.SaveJson(this.DatabaseFile, this.Database);
+					this.SaveSettings();
+					if (!this.Database.IsEnabled || !string.IsNullOrEmpty(this.Database.ApiKey))
+						(this.SetupInfoScreenEntry as IInfoScreensApi.IInfoScreenEntry)?.Cancel(g);
+					
 					this.Client = this.MakeHttpClient();
-					updateChecksApi.RequestUpdateInfo(this);
+					this.UpdateChecksApi.RequestUpdateInfo(this);
 				})
 			);
+		
+		if (this.RequestedSetupInfoScreen)
+			this.FinallyShowSetupInfoScreen();
+		else
+			this.RequestSetupInfoScreen();
+		
+		if (this.RequestedUnauthorizedInfoScreen)
+			this.FinallyShowUnauthorizedInfoScreen();
+	}
+	
+	private void SaveSettings()
+		=> this.Helper.Storage.SaveJson(this.DatabaseFile, this.Database);
+
+	private void RequestSetupInfoScreen()
+	{
+		if (this.ShownSetupInfoScreen)
+			return;
+		
+		if (this.Helper.Events.ModLoadPhaseState is not { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
+		{
+			this.RequestedSetupInfoScreen = true;
+			return;
+		}
+		
+		this.FinallyShowSetupInfoScreen();
+	}
+
+	private void FinallyShowSetupInfoScreen()
+	{
+		if (!this.Helper.ModRegistry.LoadedMods.ContainsKey("Nickel.UpdateChecks.UI"))
+			return;
+		if (this.InfoScreensApi is not IInfoScreensApi infoScreensApi)
+			return;
+		if (this.ModSettingsApi is not IModSettingsApi modSettingsApi)
+			return;
+		if (!this.Database.IsEnabled)
+			return;
+		if (!this.HasAnyMods)
+			return;
+		if (!string.IsNullOrEmpty(this.Database.ApiKey))
+			return;
+		
+		if (this.ShownSetupInfoScreen)
+			return;
+		this.ShownSetupInfoScreen = true;
+		this.RequestedSetupInfoScreen = false;
+		
+		var route = infoScreensApi.CreateBasicInfoScreenRoute();
+		route.Paragraphs = [
+			infoScreensApi.CreateBasicInfoScreenParagraph(this.Localizations.Localize(["infoScreen", "title"])).SetFont(DB.thicket),
+			infoScreensApi.CreateBasicInfoScreenParagraph(this.Localizations.Localize(["infoScreen", "description", "setup"])).SetColor(Colors.textMain),
+		];
+		route.Actions = [
+			infoScreensApi.CreateBasicInfoScreenAction(this.Localizations.Localize(["infoScreen", "actions", "details"]), args =>
+			{
+				Audio.Play(Event.Click);
+				args.Route.RouteOverride = modSettingsApi.MakeModSettingsRouteForMod(this.Package.Manifest);
+			}),
+			infoScreensApi.CreateBasicInfoScreenAction(this.Localizations.Localize(["infoScreen", "actions", "remindLater"]), args =>
+			{
+				Audio.Play(Event.Click);
+				args.G.CloseRoute(args.Route.AsRoute);
+			}).SetControllerKeybind(Btn.B),
+			infoScreensApi.CreateBasicInfoScreenAction(this.Localizations.Localize(["infoScreen", "actions", "disable"]), args =>
+			{
+				Audio.Play(Event.Click);
+
+				this.Database.IsEnabled = false;
+				this.SaveSettings();
+
+				args.G.CloseRoute(args.Route.AsRoute);
+			}).SetColor(Colors.redd).SetRequiresConfirmation(true),
+		];
+
+		this.SetupInfoScreenEntry = infoScreensApi.RequestInfoScreen("Setup", route.AsRoute, 1_000);
+	}
+
+	private void RequestUnauthorizedInfoScreen()
+	{
+		if (this.Helper.Events.ModLoadPhaseState is not { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
+		{
+			this.RequestedUnauthorizedInfoScreen = true;
+			return;
+		}
+		
+		this.FinallyShowUnauthorizedInfoScreen();
+	}
+
+	private void FinallyShowUnauthorizedInfoScreen()
+	{
+		if (!this.Helper.ModRegistry.LoadedMods.ContainsKey("Nickel.UpdateChecks.UI"))
+			return;
+		if (this.InfoScreensApi is not IInfoScreensApi infoScreensApi)
+			return;
+		if (this.ModSettingsApi is not IModSettingsApi modSettingsApi)
+			return;
+		if (!this.Database.IsEnabled)
+			return;
+		if (!this.HasAnyMods)
+			return;
+		if (!string.IsNullOrEmpty(this.Database.ApiKey))
+			return;
+		if (!this.GotUnauthorized)
+			return;
+		
+		this.RequestedUnauthorizedInfoScreen = false;
+		
+		var route = infoScreensApi.CreateBasicInfoScreenRoute();
+		route.Paragraphs = [
+			infoScreensApi.CreateBasicInfoScreenParagraph(this.Localizations.Localize(["infoScreen", "title"])).SetFont(DB.thicket),
+			infoScreensApi.CreateBasicInfoScreenParagraph(this.Localizations.Localize(["infoScreen", "description", "unauthorized"])).SetColor(Colors.textMain),
+		];
+		route.Actions = [
+			infoScreensApi.CreateBasicInfoScreenAction(this.Localizations.Localize(["infoScreen", "actions", "details"]), args =>
+			{
+				Audio.Play(Event.Click);
+				args.Route.RouteOverride = modSettingsApi.MakeModSettingsRouteForMod(this.Package.Manifest);
+			}),
+			infoScreensApi.CreateBasicInfoScreenAction(this.Localizations.Localize(["infoScreen", "actions", "remindLater"]), args =>
+			{
+				Audio.Play(Event.Click);
+				args.G.CloseRoute(args.Route.AsRoute);
+			}).SetControllerKeybind(Btn.B),
+			infoScreensApi.CreateBasicInfoScreenAction(this.Localizations.Localize(["infoScreen", "actions", "disable"]), args =>
+			{
+				Audio.Play(Event.Click);
+
+				this.Database.IsEnabled = false;
+				this.SaveSettings();
+
+				args.G.CloseRoute(args.Route.AsRoute);
+			}).SetColor(Colors.redd).SetRequiresConfirmation(true),
+		];
+
+		infoScreensApi.RequestInfoScreen("Unauthorized", route.AsRoute, 1_000);
 	}
 
 	private HttpClient MakeHttpClient()
@@ -156,6 +309,11 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		manifestEntry = rawManifestEntry.ToObject<ManifestEntry>(this.Helper.Storage.JsonSerializer);
 		if (manifestEntry is null)
 			this.Logger.LogError("Cannot check NexusMods updates for mod {ModName}: invalid `UpdateChecks` structure.", mod.GetDisplayName(@long: false));
+		if (manifestEntry is not null && !this.HasAnyMods)
+		{
+			this.HasAnyMods = true;
+			this.RequestSetupInfoScreen();
+		}
 		return manifestEntry is not null;
 	}
 
@@ -326,7 +484,10 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		catch (Exception ex)
 		{
 			if (ex is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized })
+			{
 				this.GotUnauthorized = true;
+				this.RequestUnauthorizedInfoScreen();
+			}
 
 			this.Logger.LogDebug("Failed to retrieve latest added mods: {Error}", ex.Message);
 			throw;
@@ -346,7 +507,10 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		catch (Exception ex)
 		{
 			if (ex is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized })
+			{
 				this.GotUnauthorized = true;
+				this.RequestUnauthorizedInfoScreen();
+			}
 
 			this.Logger.LogDebug("Failed to retrieve latest updated mods: {Error}", ex.Message);
 			throw;
@@ -366,7 +530,10 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		catch (Exception ex)
 		{
 			if (ex is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized })
+			{
 				this.GotUnauthorized = true;
+				this.RequestUnauthorizedInfoScreen();
+			}
 
 			this.Logger.LogDebug("Failed to retrieve trending mods: {Error}", ex.Message);
 			throw;
@@ -393,7 +560,10 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		catch (Exception ex)
 		{
 			if (ex is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized })
+			{
 				this.GotUnauthorized = true;
+				this.RequestUnauthorizedInfoScreen();
+			}
 
 			this.Logger.LogDebug("Failed to retrieve updated mods in the {Period} period: {Error}", period, ex.Message);
 			throw;
@@ -413,7 +583,10 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 		catch (Exception ex)
 		{
 			if (ex is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized })
+			{
 				this.GotUnauthorized = true;
+				this.RequestUnauthorizedInfoScreen();
+			}
 
 			this.Logger.LogDebug("Failed to retrieve mod {ModId}: {Error}", id, ex.Message);
 			throw;

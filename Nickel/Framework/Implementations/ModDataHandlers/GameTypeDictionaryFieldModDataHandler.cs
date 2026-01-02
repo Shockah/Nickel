@@ -45,14 +45,14 @@ internal sealed class GameTypeDictionaryFieldModDataHandler : IModDataHandler
 
 	private IModDataHandler GetHandlerOrThrow()
 	{
-		if (!this.ModLoadPhaseStateProvider().IsGameAssemblyLoaded)
+		if (this.ModLoadPhaseStateProvider().Phase < ModLoadPhase.AfterGameAssembly)
 			throw new InvalidOperationException($"Cannot use `{nameof(GameTypeDictionaryFieldModDataHandler)}` before the game assembly is loaded");
 		return this.Handler.Value;
 	}
 	
 	public bool CanHandleType(Type type)
 	{
-		if (!this.ModLoadPhaseStateProvider().IsGameAssemblyLoaded)
+		if (this.ModLoadPhaseStateProvider().Phase < ModLoadPhase.AfterGameAssembly)
 			return false;
 		return this.Handler.Value.CanHandleType(type);
 	}
