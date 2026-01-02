@@ -20,8 +20,8 @@
 			]
 		},
 		"actions": {
-			"details": "SHOW\nDETAILS",
-			"remindLater": "REMIND\nLATER",
+			"details": "SHOW DETAILS",
+			"remindLater": "REMIND LATER",
 			"disable": "DISABLE"
 		}
 	},

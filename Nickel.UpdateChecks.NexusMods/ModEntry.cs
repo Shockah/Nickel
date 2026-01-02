@@ -255,7 +255,7 @@ public sealed class ModEntry : SimpleMod, IUpdateSource
 			}).SetColor(Colors.redd).SetRequiresConfirmation(true),
 		];
 
-		infoScreensApi.RequestInfoScreen("Unauthorized", route.AsRoute, 1_000);
+		infoScreensApi.RequestInfoScreen("Unauthorized", route.AsRoute, 999);
 	}
 
 	private HttpClient MakeHttpClient()
