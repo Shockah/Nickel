@@ -10,6 +10,7 @@ popd
 
 call :BuildInternalMod %1 %2 Nickel.Bugfixes
 call :BuildInternalMod %1 %2 Nickel.Essentials
+call :BuildInternalMod %1 %2 Nickel.InfoScreens
 call :BuildInternalMod %1 %2 Nickel.Legacy
 call :BuildInternalMod %1 %2 Nickel.ModSettings
 call :BuildInternalMod %1 %2 Nickel.UpdateChecks
