@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.20.0
+Released 3 January 2026.
 
 ### For everyone:
 * Added new screens for setting up NexusMods and GitHub update checks, as well as informing about available updates.
