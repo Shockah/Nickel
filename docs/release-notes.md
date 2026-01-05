@@ -2,9 +2,10 @@
 
 # Release notes
 
-## Upcoming release
+## 1.20.1
+Released 5 January 2026.
 
-* Fixed some more edge cases in the save export feature.
+* Fixed some edge cases in the save export feature, causing crashes and/or resulting in corrupted exported files.
 
 ## 1.20.0
 Released 3 January 2026.
