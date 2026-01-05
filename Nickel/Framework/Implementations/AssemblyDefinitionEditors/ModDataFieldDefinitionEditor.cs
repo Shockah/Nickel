@@ -32,6 +32,7 @@ internal sealed class ModDataFieldDefinitionEditor : IAssemblyDefinitionEditor
 	{
 		var fieldTypeReference = definition.MainModule.ImportReference(typeof(Dictionary<string, Dictionary<string, object?>>));
 		var stringTypeReference = definition.MainModule.ImportReference(typeof(string));
+		var defaultValueHandlingTypeReference = definition.MainModule.ImportReference(typeof(DefaultValueHandling));
 		var attributeCtor = definition.MainModule.ImportReference(typeof(JsonPropertyAttribute).GetConstructor([typeof(string)]));
 		
 		foreach (var typeName in TypeNamesToAddFieldTo)
@@ -41,6 +42,7 @@ internal sealed class ModDataFieldDefinitionEditor : IAssemblyDefinitionEditor
 
 			var attribute = new CustomAttribute(attributeCtor);
 			attribute.ConstructorArguments.Add(new CustomAttributeArgument(stringTypeReference, JsonPropertyName));
+			attribute.Properties.Add(new CustomAttributeNamedArgument(nameof(JsonPropertyAttribute.DefaultValueHandling), new CustomAttributeArgument(defaultValueHandlingTypeReference, (int)DefaultValueHandling.Ignore)));
 			field.CustomAttributes.Add(attribute);
 			
 			type.Fields.Add(field);
