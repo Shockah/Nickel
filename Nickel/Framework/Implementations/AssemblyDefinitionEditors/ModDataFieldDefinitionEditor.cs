@@ -20,6 +20,8 @@ internal sealed class ModDataFieldDefinitionEditor : IAssemblyDefinitionEditor
 		nameof(StuffBase),
 		nameof(Artifact),
 		nameof(State),
+		nameof(Ship),
+		nameof(Part),
 	];
 	
 	public byte[] AssemblyEditorDescriptor
