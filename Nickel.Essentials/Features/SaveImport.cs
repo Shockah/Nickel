@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -434,6 +435,7 @@ internal static class SaveImport
 				// ship
 				PurgeCustomTypesOrEnumValuesFromDictionaryKeys(stateCopy.ship.statusEffects);
 				PurgeCustomTypesOrEnumValuesFromDictionaryKeys(stateCopy.ship.statusEffectPulses);
+				PurgeCustomTypesOrEnumValuesFromSet(stateCopy.ship.pendingOneShotStatusAnimations);
 				
 				// combat
 				if (stateCopy.route is Combat combat)
@@ -446,6 +448,7 @@ internal static class SaveImport
 					// enemy ship
 					PurgeCustomTypesOrEnumValuesFromDictionaryKeys(combat.otherShip.statusEffects);
 					PurgeCustomTypesOrEnumValuesFromDictionaryKeys(combat.otherShip.statusEffectPulses);
+					PurgeCustomTypesOrEnumValuesFromSet(combat.otherShip.pendingOneShotStatusAnimations);
 				}
 			}
 		}
@@ -515,19 +518,29 @@ internal static class SaveImport
 
 		private static void RemoveAllModDataRecursively(object o, HashSet<object>? visitedObjects = null)
 		{
-			visitedObjects ??= [];
-			
 			var oType = o.GetType();
 			if (oType.IsValueType)
 				return;
 			
+			visitedObjects ??= [];
 			if (!visitedObjects.Add(o))
 				return;
-			ModEntry.Instance.Helper.ModData.RemoveAllModData(o);
 
-			foreach (var field in oType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-				if (field.GetValue(o) is { } fieldValue)
-					RemoveAllModDataRecursively(fieldValue, visitedObjects);
+			if (oType.IsArray)
+			{
+				var array = (Array)o;
+				for (var i = 0; i < array.Length; i++)
+					if (array.GetValue(i) is { } arrayElement)
+						RemoveAllModDataRecursively(arrayElement, visitedObjects);
+			}
+			else
+			{
+				ModEntry.Instance.Helper.ModData.RemoveAllModData(o);
+
+				foreach (var field in oType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+					if (field.GetValue(o) is { } fieldValue)
+						RemoveAllModDataRecursively(fieldValue, visitedObjects);
+			}
 		}
 	}
 }
