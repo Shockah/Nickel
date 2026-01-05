@@ -404,20 +404,22 @@ internal static class SaveImport
 				stateCopy.pendingRunSummary = null;
 				stateCopy.rewardsQueue = [];
 				stateCopy.runConfig.selectedShip = "artemis";
-				typeof(State).GetField(nameof(State.temporaryStoryVars))?.SetValue(stateCopy, null);
-				typeof(State).GetField(nameof(State.dailyDay))?.SetValue(stateCopy, null);
+				stateCopy.runConfig.selectedChars = [Deck.dizzy, Deck.riggs, Deck.peri];
+				stateCopy.temporaryStoryVars = null;
+				stateCopy.dailyDay = null;
 				stateCopy.map.Populate(stateCopy, stateCopy.rngZone);
 			}
 
 			void PurgeCustomData()
 			{
 				// story vars
-				PurgeCustomEnum(ref stateCopy.storyVars.whoDidThat);
-				PurgeCustomTypesOrEnumValuesFromSet(stateCopy.storyVars.unlockedChars);
-				PurgeCustomTypesOrEnumValuesFromSet(stateCopy.storyVars.statusesPlayerGainedThisTurn);
-				PurgeCustomTypesOrEnumValuesFromSet(stateCopy.storyVars.statusesEnemyGainedThisTurn);
-				PurgeCustomTypesOrEnumValuesFromList(stateCopy.storyVars.unlockedCharsToAnnounce);
-				PurgeCustomTypesOrEnumValuesFromDictionaryKeys(stateCopy.storyVars.memoryUnlockLevel);
+				PurgeCustomEnum(ref stateCopy.persistentStoryVars.whoDidThat);
+				PurgeCustomEnum(ref stateCopy.persistentStoryVars.runWinChar);
+				PurgeCustomTypesOrEnumValuesFromSet(stateCopy.persistentStoryVars.unlockedChars);
+				PurgeCustomTypesOrEnumValuesFromSet(stateCopy.persistentStoryVars.statusesPlayerGainedThisTurn);
+				PurgeCustomTypesOrEnumValuesFromSet(stateCopy.persistentStoryVars.statusesEnemyGainedThisTurn);
+				PurgeCustomTypesOrEnumValuesFromList(stateCopy.persistentStoryVars.unlockedCharsToAnnounce);
+				PurgeCustomTypesOrEnumValuesFromDictionaryKeys(stateCopy.persistentStoryVars.memoryUnlockLevel);
 				stateCopy.storyVars.cardsOwned.RemoveWhere(k => k.Contains("::"));
 				stateCopy.storyVars.artifactsOwned.RemoveWhere(k => k.Contains("::"));
 				

@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed some more edge cases in the save export feature.
+
 ## 1.20.0
 Released 3 January 2026.
 
