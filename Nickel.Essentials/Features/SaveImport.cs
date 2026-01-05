@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Input;
 using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -416,39 +415,39 @@ internal static class SaveImport
 				// story vars
 				PurgeCustomEnum(ref stateCopy.persistentStoryVars.whoDidThat);
 				PurgeCustomEnum(ref stateCopy.persistentStoryVars.runWinChar);
-				PurgeCustomTypesOrEnumValuesFromSet(stateCopy.persistentStoryVars.unlockedChars);
-				PurgeCustomTypesOrEnumValuesFromSet(stateCopy.persistentStoryVars.statusesPlayerGainedThisTurn);
-				PurgeCustomTypesOrEnumValuesFromSet(stateCopy.persistentStoryVars.statusesEnemyGainedThisTurn);
-				PurgeCustomTypesOrEnumValuesFromList(stateCopy.persistentStoryVars.unlockedCharsToAnnounce);
-				PurgeCustomTypesOrEnumValuesFromDictionaryKeys(stateCopy.persistentStoryVars.memoryUnlockLevel);
+				PurgeCustomTypesOrEnumValuesFromSet(ref stateCopy.persistentStoryVars.unlockedChars);
+				PurgeCustomTypesOrEnumValuesFromSet(ref stateCopy.persistentStoryVars.statusesPlayerGainedThisTurn);
+				PurgeCustomTypesOrEnumValuesFromSet(ref stateCopy.persistentStoryVars.statusesEnemyGainedThisTurn);
+				PurgeCustomTypesOrEnumValuesFromList(ref stateCopy.persistentStoryVars.unlockedCharsToAnnounce);
+				PurgeCustomTypesOrEnumValuesFromDictionaryKeys(ref stateCopy.persistentStoryVars.memoryUnlockLevel);
 				stateCopy.storyVars.cardsOwned.RemoveWhere(k => k.Contains("::"));
 				stateCopy.storyVars.artifactsOwned.RemoveWhere(k => k.Contains("::"));
 				
 				// state
 				stateCopy.characters = stateCopy.characters.Where(c => c.deckType is { } deckType && Enum.GetValues<Deck>().Contains(deckType)).ToList();
-				PurgeCustomTypesOrEnumValuesFromList(stateCopy.rewardsQueue);
-				PurgeCustomTypesOrEnumValuesFromList(stateCopy.deck);
-				PurgeCustomTypesOrEnumValuesFromList(stateCopy.artifacts);
+				PurgeCustomTypesOrEnumValuesFromList(ref stateCopy.rewardsQueue);
+				PurgeCustomTypesOrEnumValuesFromList(ref stateCopy.deck);
+				PurgeCustomTypesOrEnumValuesFromList(ref stateCopy.artifacts);
 				foreach (var character in stateCopy.characters)
-					PurgeCustomTypesOrEnumValuesFromList(character.artifacts);
+					PurgeCustomTypesOrEnumValuesFromList(ref character.artifacts);
 				
 				// ship
-				PurgeCustomTypesOrEnumValuesFromDictionaryKeys(stateCopy.ship.statusEffects);
-				PurgeCustomTypesOrEnumValuesFromDictionaryKeys(stateCopy.ship.statusEffectPulses);
-				PurgeCustomTypesOrEnumValuesFromSet(stateCopy.ship.pendingOneShotStatusAnimations);
+				PurgeCustomTypesOrEnumValuesFromDictionaryKeys(ref stateCopy.ship.statusEffects);
+				PurgeCustomTypesOrEnumValuesFromDictionaryKeys(ref stateCopy.ship.statusEffectPulses);
+				PurgeCustomTypesOrEnumValuesFromSet(ref stateCopy.ship.pendingOneShotStatusAnimations);
 				
 				// combat
 				if (stateCopy.route is Combat combat)
 				{
-					PurgeCustomTypesOrEnumValuesFromList(combat.hand);
-					PurgeCustomTypesOrEnumValuesFromList(combat.discard);
-					PurgeCustomTypesOrEnumValuesFromList(combat.exhausted);
-					PurgeCustomTypesOrEnumValuesFromList(combat.cardActions);
+					PurgeCustomTypesOrEnumValuesFromList(ref combat.hand);
+					PurgeCustomTypesOrEnumValuesFromList(ref combat.discard);
+					PurgeCustomTypesOrEnumValuesFromList(ref combat.exhausted);
+					PurgeCustomTypesOrEnumValuesFromList(ref combat.cardActions);
 					
 					// enemy ship
-					PurgeCustomTypesOrEnumValuesFromDictionaryKeys(combat.otherShip.statusEffects);
-					PurgeCustomTypesOrEnumValuesFromDictionaryKeys(combat.otherShip.statusEffectPulses);
-					PurgeCustomTypesOrEnumValuesFromSet(combat.otherShip.pendingOneShotStatusAnimations);
+					PurgeCustomTypesOrEnumValuesFromDictionaryKeys(ref combat.otherShip.statusEffects);
+					PurgeCustomTypesOrEnumValuesFromDictionaryKeys(ref combat.otherShip.statusEffectPulses);
+					PurgeCustomTypesOrEnumValuesFromSet(ref combat.otherShip.pendingOneShotStatusAnimations);
 				}
 			}
 		}
@@ -459,26 +458,20 @@ internal static class SaveImport
 		// private static void PurgeCustomEnum<T>(ref T current, T @default = default) where T : struct, Enum
 		// 	=> current = Enum.GetValues<T>().Contains(current) ? current : @default;
 
-		private static void PurgeCustomTypesOrEnumValuesFromDictionaryKeys<TKey, TValue>(Dictionary<TKey, TValue> dictionary) where TKey : notnull
-		{
-			foreach (var key in dictionary.Keys.ToList())
-				if (HasCustomTypesOrEnumValuesRecursively(key))
-					dictionary.Remove(key);
-		}
+		private static void PurgeCustomTypesOrEnumValuesFromDictionaryKeys<TKey, TValue>(ref Dictionary<TKey, TValue> dictionary) where TKey : notnull
+			=> dictionary = dictionary
+				.Where(kvp => !HasCustomTypesOrEnumValuesRecursively(kvp.Key))
+				.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-		private static void PurgeCustomTypesOrEnumValuesFromSet<T>(HashSet<T> set)
-		{
-			foreach (var value in set.ToList())
-				if (value is not null && HasCustomTypesOrEnumValuesRecursively(value))
-					set.Remove(value);
-		}
+		private static void PurgeCustomTypesOrEnumValuesFromSet<T>(ref HashSet<T> set)
+			=> set = set
+				.Where(e => e is null || !HasCustomTypesOrEnumValuesRecursively(e))
+				.ToHashSet();
 
-		private static void PurgeCustomTypesOrEnumValuesFromList<T>(List<T> list)
-		{
-			for (var i = list.Count - 1; i >= 0; i--)
-				if (list[i] is not null && HasCustomTypesOrEnumValuesRecursively(list[i]!))
-					list.RemoveAt(i);
-		}
+		private static void PurgeCustomTypesOrEnumValuesFromList<T>(ref List<T> list)
+			=> list = list
+				.Where(e => e is null || !HasCustomTypesOrEnumValuesRecursively(e))
+				.ToList();
 
 		private static bool HasCustomTypesOrEnumValuesRecursively(object o, HashSet<object>? visitedObjects = null)
 		{
@@ -494,10 +487,20 @@ internal static class SaveImport
 			if (IsCustomEnumValue())
 				return true;
 
-			foreach (var field in oType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-				if (field.GetValue(o) is { } fieldValue)
-					if (HasCustomTypesOrEnumValuesRecursively(fieldValue, visitedObjects))
+			if (oType.IsArray)
+			{
+				var array = (Array)o;
+				for (var i = 0; i < array.Length; i++)
+					if (array.GetValue(i) is { } arrayElement && HasCustomTypesOrEnumValuesRecursively(arrayElement, visitedObjects))
 						return true;
+			}
+			else
+			{
+				foreach (var field in oType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+					if (field.GetValue(o) is { } fieldValue)
+						if (HasCustomTypesOrEnumValuesRecursively(fieldValue, visitedObjects))
+							return true;
+			}
 
 			return false;
 
