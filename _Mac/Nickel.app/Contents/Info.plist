@@ -9,7 +9,7 @@
     <key>CFBundleIdentifier</key>
     <string>pl.shockah.nickel</string>
     <key>CFBundleVersion</key>
-    <string>1.7.0</string>
+    <string>{{Version}}</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleSignature</key>

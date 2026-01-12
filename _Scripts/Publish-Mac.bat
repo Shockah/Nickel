@@ -5,6 +5,7 @@ set /p Version=<"..\Version.txt"
 
 rmdir /q /s "..\_Publish\osx-x64"
 xcopy /E "..\_Mac\Nickel.app" "..\_Publish\osx-x64\Nickel.app\"
+fart "..\_Publish\osx-x64\Nickel.app\Contents\Info.plist" "{{Version}}" "!Version!"
 call Publish-Any.bat osx-x64 Nickel.app\Contents\MacOS
 
 pushd "..\NickelMacLauncher"
