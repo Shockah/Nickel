@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.20.2
+Released 12 January 2026.
 
 * Updated the Pintail library, fixing an issue with cross-mod interactions.
 
