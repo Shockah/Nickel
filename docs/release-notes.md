@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed a crash when loading a save file that was saved on a mod settings menu.
+
 ## 1.20.2
 Released 12 January 2026.
 

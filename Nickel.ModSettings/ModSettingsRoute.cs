@@ -14,7 +14,7 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 	public Route? Subroute;
 
 	[JsonIgnore]
-	public required IModSettingsApi.IModSetting Setting;
+	public required IModSettingsApi.IModSetting? Setting;
 
 	[JsonIgnore]
 	private double Scroll;
@@ -106,7 +106,7 @@ public sealed class ModSettingsRoute : Route, OnInputPhase, IModSettingsApi.IMod
 	public override void OnExit(State s)
 	{
 		this.RaisedOnOpen = false;
-		this.Setting.RaiseOnMenuClose(MG.inst.g);
+		this.Setting?.RaiseOnMenuClose(MG.inst.g);
 	}
 
 	public void OnInputPhase(G g, Box b)
