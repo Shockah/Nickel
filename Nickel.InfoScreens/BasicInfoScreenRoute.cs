@@ -111,7 +111,7 @@ public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScre
 			if (i != 0)
 				offsetY += paragraphSpacing;
 			var paragraph = this.Paragraphs[i];
-			offsetY += (int)Draw.Text(paragraph.Text, g.mg.PIX_W / 2, topY + offsetY, paragraph.Font, paragraph.Color, maxWidth: paragraph.MaxWidth, align: TAlign.Center).h;
+			offsetY += (int)Draw.Text(paragraph.Text, g.mg.PIX_W / 2, topY + offsetY, paragraph.Font, paragraph.Color ?? Colors.textMain, maxWidth: paragraph.MaxWidth, align: TAlign.Center).h;
 		}
 
 		if (this.Actions.Count != 0)
