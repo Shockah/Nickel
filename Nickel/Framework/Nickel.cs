@@ -230,8 +230,6 @@ internal sealed partial class Nickel(
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new ModDataFieldDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new DeepCopyViaMitosisDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GameFieldToPropertyDefinitionEditor());
-		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new V1_2_MapNodeContents_MakeRoute_DefinitionEditor());
-		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new V1_2_CardReward_GetUpgrade_DefinitionEditor());
 
 		var assemblyCacheDirectory = launchArguments.AssemblyCachePath ?? GetOrCreateDefaultAssemblyCacheDirectory();
 		logger.LogInformation("AssemblyCachePath: {Path}", PathUtilities.SanitizePath(assemblyCacheDirectory.FullName));
