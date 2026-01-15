@@ -20,7 +20,7 @@ internal sealed class CardTraitStateCacheFieldDefinitionEditor : IAssemblyDefini
 
 	public bool EditAssemblyDefinition(AssemblyDefinition definition, Action<AssemblyEditorResult.Message> logger)
 	{
-		var cardType = definition.MainModule.GetType("Card");
+		var cardType = definition.MainModule.GetType(nameof(Card));
 		
 		var cardTraitEntryToCardTraitStateDictionaryTypeReference = definition.MainModule.ImportReference(typeof(Dictionary<ICardTraitEntry, CardTraitState>));
 		var intTypeReference = definition.MainModule.ImportReference(typeof(int));

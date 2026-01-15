@@ -226,6 +226,7 @@ internal sealed partial class Nickel(
 				.Select(m => m.AsT0)
 		));
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GamePublicizerDefinitionEditor());
+		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new CardDataExtraTraitsFieldDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new CardTraitStateCacheFieldDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new ModDataFieldDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new DeepCopyViaMitosisDefinitionEditor());

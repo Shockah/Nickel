@@ -1,5 +1,6 @@
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
+using Nickel.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -318,7 +319,7 @@ internal class CardTraitManager
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnGetFinalDynamicCardTraitOverridesEvent), exception);
 		})
 		{
-			ModifyEventArgsBetweenSubscribers = (IModManifest? _, IModManifest? _, object? _, ref GetDynamicInnateCardTraitOverridesEventArgs args) =>
+			ModifyEventArgsBetweenSubscribers = (_, _, _, ref args) =>
 			{
 				if (args.Overrides.Count == 0)
 					return;
@@ -343,7 +344,7 @@ internal class CardTraitManager
 			logger.LogError("Mod failed in `{Event}`: {Exception}", nameof(this.OnGetFinalDynamicCardTraitOverridesEvent), exception);
 		})
 		{
-			ModifyEventArgsBetweenSubscribers = (IModManifest? _, IModManifest? _, object? _, ref GetFinalDynamicCardTraitOverridesEventArgs args) =>
+			ModifyEventArgsBetweenSubscribers = (_, _, _, ref args) =>
 			{
 				if (args.Overrides.Count == 0)
 					return;
@@ -601,7 +602,7 @@ internal class CardTraitManager
 		this.UpdateModDataFromFieldsIfNeeded(card, overrides);
 
 		var data = card.GetData(state);
-		var innateCustomTraits = ((card as IHasCustomCardTraits)?.GetInnateTraits(state).ToHashSet() ?? []);
+		var innateCustomTraits = data.ExtraTraits?.ToHashSet() ?? [];
 
 		var refResults = results;
 		foreach (var trait in this.SynthesizedVanillaEntries.Values)
