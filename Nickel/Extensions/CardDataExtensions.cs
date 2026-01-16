@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Nickel.Extensions;
+namespace Nickel;
 
 public static class CardDataExtensions
 {

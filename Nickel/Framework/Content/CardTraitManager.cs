@@ -1,6 +1,5 @@
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using Nickel.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
