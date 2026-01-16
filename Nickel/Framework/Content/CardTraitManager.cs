@@ -11,7 +11,7 @@ internal class CardTraitManager
 {
 	private interface IReadWriteCardTraitEntry : ICardTraitEntry
 	{
-		bool IsInnatelyActive(Card card, CardData data, HashSet<ICardTraitEntry> innateCustomTraits);
+		bool IsInnatelyActive(Card card, CardData data);
 
 		bool? GetPermanentOverride(Card card, OverridesModData overrides)
 			=> overrides.Permanent.TryGetValue(this.UniqueName, out var overrideValue) ? overrideValue : null;
@@ -39,8 +39,8 @@ internal class CardTraitManager
 		public override string ToString()
 			=> this.UniqueName;
 
-		public bool IsInnatelyActive(Card card, CardData data, HashSet<ICardTraitEntry> innateCustomTraits)
-			=> innateCustomTraits.Contains(this);
+		public bool IsInnatelyActive(Card card, CardData data)
+			=> data.ExtraTraits?.Contains(this) ?? false;
 		
 		public void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
 		{
@@ -85,7 +85,7 @@ internal class CardTraitManager
 		public override string ToString()
 			=> this.UniqueName;
 
-		public bool IsInnatelyActive(Card card, CardData data, HashSet<ICardTraitEntry> innateCustomTraits)
+		public bool IsInnatelyActive(Card card, CardData data)
 			=> this.GetDataValue.Value(data);
 
 		public virtual void SetPermanentOverride(Card card, OverridesModData overrides, bool? overrideValue)
@@ -601,7 +601,6 @@ internal class CardTraitManager
 		this.UpdateModDataFromFieldsIfNeeded(card, overrides);
 
 		var data = card.GetData(state);
-		var innateCustomTraits = data.ExtraTraits?.ToHashSet() ?? [];
 
 		var refResults = results;
 		foreach (var trait in this.SynthesizedVanillaEntries.Values)
@@ -643,7 +642,7 @@ internal class CardTraitManager
 			if (trait is not IReadWriteCardTraitEntry rwTrait)
 				throw new NotImplementedException($"Internal error: trait {trait.UniqueName} is supposed to implement the private interface {nameof(IReadWriteCardTraitEntry)}");
 
-			var isInnatelyActive = rwTrait.IsInnatelyActive(card, data, innateCustomTraits);
+			var isInnatelyActive = rwTrait.IsInnatelyActive(card, data);
 			if (isInnatelyActive)
 				innateTraits.Add(trait);
 
