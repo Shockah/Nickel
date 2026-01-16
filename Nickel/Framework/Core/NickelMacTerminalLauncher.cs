@@ -10,7 +10,7 @@ namespace Nickel;
 
 internal static class NickelMacTerminalLauncher
 {
-	internal static bool Run(ParseResult args)
+	internal static bool Run(ProgramRunInfo info)
 	{
 		if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 		{
@@ -18,7 +18,7 @@ internal static class NickelMacTerminalLauncher
 			return false;
 		}
 
-		var psi = PrepareTerminalStartInfo(args);
+		var psi = PrepareTerminalStartInfo(info.LaunchArgs);
 		var process = Process.Start(psi);
 		if (process is null)
 		{

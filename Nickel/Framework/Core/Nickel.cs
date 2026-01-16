@@ -7,7 +7,6 @@ using Nanoray.PluginManager.Cecil;
 using Nickel.ModSettings;
 using System;
 using System.Collections.Generic;
-using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -19,49 +18,33 @@ using System.Text.RegularExpressions;
 
 namespace Nickel;
 
-internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
+internal sealed partial class Nickel(ProgramRunInfo info)
 {
 	internal static Nickel Instance { get; private set; } = null!;
 	internal Harmony? Harmony { get; private set; }
 	internal ModManager ModManager { get; private set; } = null!;
-	internal readonly ParseResult LaunchArgs = launchArgs;
-	internal readonly Settings Settings = settings;
+	internal readonly ProgramRunInfo RunInfo = info;
 	
 	private SaveManager SaveManager = null!;
 
-	internal static bool Run(ParseResult args)
+	internal static bool Run(ProgramRunInfo info)
 	{
 		var stopwatch = Stopwatch.StartNew();
-		var modStorageDirectory = args.GetValueForOption(LaunchOptions.ModStoragePath) ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "ModStorage"));
-
-		Settings settings;
-		try
-		{
-			settings = SettingsUtilities.ReadSettings<Settings>(new DirectoryInfoImpl(modStorageDirectory), true) ?? throw new InvalidDataException();
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine(NickelConstants.IntroMessage);
-			Console.WriteLine($"ModStoragePath: {PathUtilities.SanitizePath(modStorageDirectory.FullName)}");
-			Console.WriteLine(ex);
-			return false;
-		}
-		
 		var realOut = Console.Out;
 		var loggerFactory = LoggerFactory.Create(builder =>
 		{
-			var logPipeName = args.GetValueForOption(LaunchOptions.LogPipeName);
+			var logPipeName = info.LaunchArgs.GetValueForOption(LaunchOptions.LogPipeName);
 			if (string.IsNullOrEmpty(logPipeName))
 			{
-				builder.SetMinimumLevel((LogLevel)Math.Min((int)settings.MinimumFileLogLevel, (int)settings.MinimumConsoleLogLevel));
-				var fileLogDirectory = args.GetValueForOption(LaunchOptions.LogPath) ?? Program.GetOrCreateDefaultLogDirectory();
-				var timestampedLogFiles = args.GetValueForOption(LaunchOptions.TimestampedLogFiles) ?? false;
-				builder.AddProvider(FileLoggerProvider.CreateNewLog(settings.MinimumFileLogLevel, fileLogDirectory, timestampedLogFiles));
-				builder.AddProvider(new ConsoleLoggerProvider(settings.MinimumConsoleLogLevel, realOut, disposeWriter: false));
+				builder.SetMinimumLevel((LogLevel)Math.Min((int)info.Settings.MinimumFileLogLevel, (int)info.Settings.MinimumConsoleLogLevel));
+				var fileLogDirectory = info.LaunchArgs.GetValueForOption(LaunchOptions.LogPath) ?? Program.GetOrCreateDefaultLogDirectory();
+				var timestampedLogFiles = info.LaunchArgs.GetValueForOption(LaunchOptions.TimestampedLogFiles) ?? false;
+				builder.AddProvider(FileLoggerProvider.CreateNewLog(info.Settings.MinimumFileLogLevel, fileLogDirectory, timestampedLogFiles));
+				builder.AddProvider(new ConsoleLoggerProvider(info.Settings.MinimumConsoleLogLevel, realOut, disposeWriter: false));
 			}
 			else
 			{
-				builder.SetMinimumLevel((LogLevel)Math.Min((int)settings.MinimumFileLogLevel, (int)settings.MinimumConsoleLogLevel));
+				builder.SetMinimumLevel((LogLevel)Math.Min((int)info.Settings.MinimumFileLogLevel, (int)info.Settings.MinimumConsoleLogLevel));
 				builder.AddProvider(new NamedPipeClientLoggerProvider(logPipeName));
 			}
 		});
@@ -70,22 +53,22 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 		Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
 		
-		logger.LogInformation("ModStoragePath: {Path}", PathUtilities.SanitizePath(modStorageDirectory.FullName));
+		logger.LogInformation("ModStoragePath: {Path}", PathUtilities.SanitizePath(info.ModStorageDirectory.FullName));
 
 		try
 		{
-			if (args.GetValueForOption(LaunchOptions.Debug) is { } debugArg)
+			if (info.LaunchArgs.GetValueForOption(LaunchOptions.Debug) is { } debugArg)
 			{
 				if (debugArg)
-					settings.DebugMode = (args.GetValueForOption(LaunchOptions.SaveInDebug) ?? true) ? DebugMode.EnabledWithSaving : DebugMode.Enabled;
+					info.Settings.DebugMode = (info.LaunchArgs.GetValueForOption(LaunchOptions.SaveInDebug) ?? true) ? DebugMode.EnabledWithSaving : DebugMode.Enabled;
 				else
-					settings.DebugMode = DebugMode.Disabled;
+					info.Settings.DebugMode = DebugMode.Disabled;
 			}
-			logger.LogInformation("DebugMode: {Value}", settings.DebugMode);
+			logger.LogInformation("DebugMode: {Value}", info.Settings.DebugMode);
 			
-			var instance = new Nickel(args, settings);
+			var instance = new Nickel(info);
 			Instance = instance;
-			return StartInstance(instance, args, loggerFactory, logger, stopwatch, modStorageDirectory);
+			return StartInstance(instance, loggerFactory, logger, stopwatch);
 		}
 		catch (Exception ex)
 		{
@@ -95,13 +78,13 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 		}
 	}
 
-	private static bool StartInstance(Nickel instance, ParseResult args, ILoggerFactory loggerFactory, ILogger logger, Stopwatch stopwatch, DirectoryInfo modStorageDirectory)
+	private static bool StartInstance(Nickel instance, ILoggerFactory loggerFactory, ILogger logger, Stopwatch stopwatch)
 	{
 		var steamCompatDataPath = Environment.GetEnvironmentVariable("STEAM_COMPAT_DATA_PATH");
 		if (!string.IsNullOrEmpty(steamCompatDataPath))
 			logger.LogInformation("SteamCompatDataPath: {Path}", steamCompatDataPath);
 		
-		ICobaltCoreResolver cobaltCoreResolver = args.GetValueForOption(LaunchOptions.GamePath) is { } gamePath
+		ICobaltCoreResolver cobaltCoreResolver = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.GamePath) is { } gamePath
 			? new SingleFileApplicationCobaltCoreResolver(
 				new FileInfoImpl(gamePath),
 				new FileInfoImpl(new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb"))),
@@ -158,7 +141,7 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new DeepCopyViaMitosisDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GameFieldToPropertyDefinitionEditor());
 
-		var assemblyCacheDirectory = args.GetValueForOption(LaunchOptions.AssemblyCachePath) ?? GetOrCreateDefaultAssemblyCacheDirectory();
+		var assemblyCacheDirectory = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.AssemblyCachePath) ?? GetOrCreateDefaultAssemblyCacheDirectory();
 		logger.LogInformation("AssemblyCachePath: {Path}", PathUtilities.SanitizePath(assemblyCacheDirectory.FullName));
 
 		var fileCachingAssemblyEditor = new FileCachingAssemblyEditor(
@@ -192,21 +175,21 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 		instance.Harmony = harmony;
 		HarmonyPatches.Apply(harmony, logger);
 
-		var internalModsDirectory = args.GetValueForOption(LaunchOptions.InternalModsPath) ?? GetOrCreateDefaultInternalModLibraryDirectory();
+		var internalModsDirectory = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.InternalModsPath) ?? GetOrCreateDefaultInternalModLibraryDirectory();
 		logger.LogInformation("InternalModsPath: {Path}", PathUtilities.SanitizePath(internalModsDirectory.FullName));
 
-		var modsDirectory = args.GetValueForOption(LaunchOptions.ModsPath) ?? GetOrCreateDefaultModLibraryDirectory();
+		var modsDirectory = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.ModsPath) ?? GetOrCreateDefaultModLibraryDirectory();
 		logger.LogInformation("ModsPath: {Path}", PathUtilities.SanitizePath(modsDirectory.FullName));
 
-		var privateModStorageDirectory = args.GetValueForOption(LaunchOptions.PrivateModStoragePath) ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "PrivateModStorage"));
+		var privateModStorageDirectory = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.PrivateModStoragePath) ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "PrivateModStorage"));
 		logger.LogInformation("PrivateModStoragePath: {Path}", PathUtilities.SanitizePath(privateModStorageDirectory.FullName));
 
-		var attachDebuggerBeforeMod = args.GetValueForOption(LaunchOptions.AttachDebuggerBeforeMod);
-		var attachDebuggerAfterMod = args.GetValueForOption(LaunchOptions.AttachDebuggerAfterMod);
+		var attachDebuggerBeforeMod = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.AttachDebuggerBeforeMod);
+		var attachDebuggerAfterMod = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.AttachDebuggerAfterMod);
 		ModLoadPhase? attachDebuggerBeforeModLoadPhase = null;
 		ModLoadPhase? attachDebuggerAfterModLoadPhase = null;
 
-		if (args.GetValueForOption(LaunchOptions.AttachDebuggerBeforeModLoadPhase) is { } attachDebuggerBeforeModLoadPhaseRaw)
+		if (instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.AttachDebuggerBeforeModLoadPhase) is { } attachDebuggerBeforeModLoadPhaseRaw)
 		{
 			if (Enum.TryParse<ModLoadPhase>(attachDebuggerBeforeModLoadPhaseRaw, out var result))
 				attachDebuggerBeforeModLoadPhase = result;
@@ -214,7 +197,7 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 				logger.LogError("The `--attach-debugger-before-mod-load-phase` has an invalid value. Ignoring.");
 		}
 
-		if (args.GetValueForOption(LaunchOptions.AttachDebuggerAfterModLoadPhase) is { } attachDebuggerAfterModLoadPhaseRaw)
+		if (instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.AttachDebuggerAfterModLoadPhase) is { } attachDebuggerAfterModLoadPhaseRaw)
 		{
 			if (Enum.TryParse<ModLoadPhase>(attachDebuggerAfterModLoadPhaseRaw, out var result))
 				attachDebuggerAfterModLoadPhase = result;
@@ -225,7 +208,7 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 		instance.ModManager = new(
 			internalModsDirectory,
 			modsDirectory,
-			modStorageDirectory,
+			instance.RunInfo.ModStorageDirectory,
 			privateModStorageDirectory,
 			loggerFactory,
 			logger,
@@ -255,7 +238,7 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 		}
 		
 		var gameLogger = loggerFactory.CreateLogger("CobaltCore");
-		var success = ContinueAfterLoadingGameAssembly(instance, args, harmony, logger, gameLogger, handlerResult);
+		var success = ContinueAfterLoadingGameAssembly(instance, harmony, logger, gameLogger, handlerResult);
 		loggerFactory.Dispose();
 		return success;
 	}
@@ -275,7 +258,7 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 			: NickelConstants.FallbackGameVersion;
 	}
 
-	private static bool ContinueAfterLoadingGameAssembly(Nickel instance, ParseResult args, Harmony? harmony, ILogger logger, ILogger gameLogger, CobaltCoreHandlerResult handlerResult)
+	private static bool ContinueAfterLoadingGameAssembly(Nickel instance, Harmony? harmony, ILogger logger, ILogger gameLogger, CobaltCoreHandlerResult handlerResult)
 	{
 		var version = GetVanillaVersion();
 		logger.LogInformation("Game version: {Version}", version);
@@ -296,14 +279,14 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 		instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderPackage.Manifest);
 		instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderPackage.Manifest);
 
-		var savePath = args.GetValueForOption(LaunchOptions.SavePath) ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "Saves"));
+		var savePath = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.SavePath) ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "Saves"));
 		logger.LogInformation("SavePath: {Path}", PathUtilities.SanitizePath(savePath.FullName));
 
 		if (harmony is not null)
 			ApplyHarmonyPatches(harmony);
 
 		LogPatches.OnLine += (_, obj) => gameLogger.LogDebug("{GameLogLine}", obj.ToString());
-		ProgramPatches.OnTryInitSteam += instance.OnTryInitSteam;
+		ProgramPatches.OnTryInitSteam += OnTryInitSteam;
 		instance.ModManager.EventManager.SetupAfterGameAssembly();
 		instance.ModManager.LoadMods(ModLoadPhase.AfterGameAssembly);
 
@@ -323,7 +306,7 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 		try
 		{
 			List<string> gameArguments = [];
-			if (instance.Settings.DebugMode != DebugMode.Disabled)
+			if (instance.RunInfo.Settings.DebugMode != DebugMode.Disabled)
 				gameArguments.Add("--debug");
 			// gameArguments.AddRange(launchArguments.UnmatchedArguments);
 
@@ -338,7 +321,7 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 			logger.LogCritical("Cobalt Core threw an exception: {e}", e);
 			instance.ModManager.LogHarmonyPatchesOnce();
 			instance.ModManager.EventManager.OnGameClosingEvent.Raise(null, e);
-			if (args.GetValueForOption(LaunchOptions.LogPipeName) is null)
+			if (instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.LogPipeName) is null)
 				Console.ReadLine();
 			return false;
 		}
@@ -402,26 +385,26 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 				settingsApi.MakeConditional(
 					settingsApi.MakeCheckbox(
 						() => "Debug", // TODO: localize
-						() => this.Settings.DebugMode != DebugMode.Disabled,
+						() => this.RunInfo.Settings.DebugMode != DebugMode.Disabled,
 						setter: (_, _, value) =>
 						{
-							this.Settings.DebugMode = value ? DebugMode.EnabledWithSaving : DebugMode.Disabled;
+							this.RunInfo.Settings.DebugMode = value ? DebugMode.EnabledWithSaving : DebugMode.Disabled;
 							this.OnSettingsUpdate();
 						}
 					),
-					() => Instance.LaunchArgs.GetValueForOption(LaunchOptions.Debug) is null
+					() => Instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.Debug) is null
 				),
 				settingsApi.MakeConditional(
 					settingsApi.MakeCheckbox(
 						() => "Enabled debug auto-saving", // TODO: localize
-						() => this.Settings.DebugMode == DebugMode.EnabledWithSaving,
+						() => this.RunInfo.Settings.DebugMode == DebugMode.EnabledWithSaving,
 						setter: (_, _, value) =>
 						{
-							this.Settings.DebugMode = value ? DebugMode.EnabledWithSaving : DebugMode.Enabled;
+							this.RunInfo.Settings.DebugMode = value ? DebugMode.EnabledWithSaving : DebugMode.Enabled;
 							this.OnSettingsUpdate();
 						}
 					),
-					() => Instance.LaunchArgs.GetValueForOption(LaunchOptions.Debug) is null && this.Settings.DebugMode != DebugMode.Disabled
+					() => Instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.Debug) is null && this.RunInfo.Settings.DebugMode != DebugMode.Disabled
 				),
 				settingsApi.MakeConditional(
 					setting: settingsApi.MakeButton(
@@ -433,11 +416,11 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 								editor.isActive = !editor.isActive;
 						}
 					),
-					isVisible: () => this.Settings.DebugMode != DebugMode.Disabled
+					isVisible: () => this.RunInfo.Settings.DebugMode != DebugMode.Disabled
 				)
 			]).SubscribeToOnMenuClose(_ =>
 			{
-				helper.Storage.SaveJson(helper.Storage.GetMainStorageFile("json"), this.Settings);
+				helper.Storage.SaveJson(helper.Storage.GetMainStorageFile("json"), this.RunInfo.Settings);
 				this.OnSettingsUpdate();
 			}));
 	}
@@ -446,8 +429,8 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 	private void OnLoadStringsForLocale(object? _, LoadStringsForLocaleEventArgs e)
 		=> this.ModManager.ContentManager?.InjectLocalizations(e.Locale, e.Localizations);
 
-	private void OnTryInitSteam(object? _, ref bool initSteam)
-		=> initSteam = Instance.LaunchArgs.GetValueForOption(LaunchOptions.InitSteam) ?? true;
+	private static void OnTryInitSteam(object? _, ref bool initSteam)
+		=> initSteam = Instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.InitSteam) ?? true;
 
 	private static DirectoryInfo GetOrCreateDefaultInternalModLibraryDirectory()
 	{
@@ -491,7 +474,7 @@ internal sealed partial class Nickel(ParseResult launchArgs, Settings settings)
 
 	private void OnSettingsUpdateAfterGameLoaded()
 	{
-		FeatureFlags.Debug = this.Settings.DebugMode != DebugMode.Disabled;
+		FeatureFlags.Debug = this.RunInfo.Settings.DebugMode != DebugMode.Disabled;
 
 		// ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
 		if (MG.inst?.g is not { } g)

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Nanoray.PluginManager;
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
@@ -11,31 +10,16 @@ namespace Nickel;
 
 internal static class NickelLauncher
 {
-	internal static bool Run(ParseResult args)
+	internal static bool Run(ProgramRunInfo info)
 	{
-		var modStorageDirectory = args.GetValueForOption(LaunchOptions.ModStoragePath) ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "ModStorage"));
-		
-		Settings settings;
-		try
-		{
-			settings = SettingsUtilities.ReadSettings<Settings>(new DirectoryInfoImpl(modStorageDirectory), false) ?? throw new InvalidDataException();
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine(NickelConstants.IntroMessage);
-			Console.WriteLine($"ModStoragePath: {PathUtilities.SanitizePath(modStorageDirectory.FullName)}");
-			Console.WriteLine(ex);
-			return false;
-		}
-		
 		var realOut = Console.Out;
 		var loggerFactory = LoggerFactory.Create(builder =>
 		{
-			builder.SetMinimumLevel((LogLevel)Math.Min((int)settings.MinimumFileLogLevel, (int)settings.MinimumConsoleLogLevel));
-			var fileLogDirectory = args.GetValueForOption(LaunchOptions.LogPath) ?? Program.GetOrCreateDefaultLogDirectory();
-			var timestampedLogFiles = args.GetValueForOption(LaunchOptions.TimestampedLogFiles) ?? false;
-			builder.AddProvider(FileLoggerProvider.CreateNewLog(settings.MinimumFileLogLevel, fileLogDirectory, timestampedLogFiles));
-			builder.AddProvider(new ConsoleLoggerProvider(settings.MinimumConsoleLogLevel, realOut, disposeWriter: false));
+			builder.SetMinimumLevel((LogLevel)Math.Min((int)info.Settings.MinimumFileLogLevel, (int)info.Settings.MinimumConsoleLogLevel));
+			var fileLogDirectory = info.LaunchArgs.GetValueForOption(LaunchOptions.LogPath) ?? Program.GetOrCreateDefaultLogDirectory();
+			var timestampedLogFiles = info.LaunchArgs.GetValueForOption(LaunchOptions.TimestampedLogFiles) ?? false;
+			builder.AddProvider(FileLoggerProvider.CreateNewLog(info.Settings.MinimumFileLogLevel, fileLogDirectory, timestampedLogFiles));
+			builder.AddProvider(new ConsoleLoggerProvider(info.Settings.MinimumConsoleLogLevel, realOut, disposeWriter: false));
 		});
 		var logger = loggerFactory.CreateLogger($"{NickelConstants.Name}Launcher");
 		Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, realOut));
@@ -44,7 +28,7 @@ internal static class NickelLauncher
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
 
 		var launchPath = new FileInfo(Environment.ProcessPath!);
-		var pipeName = args.GetValueForOption(LaunchOptions.LogPipeName);
+		var pipeName = info.LaunchArgs.GetValueForOption(LaunchOptions.LogPipeName);
 		if (string.IsNullOrEmpty(pipeName))
 			pipeName = Guid.NewGuid().ToString();
 		
@@ -68,7 +52,7 @@ internal static class NickelLauncher
 			WorkingDirectory = launchPath.Directory?.FullName ?? "",
 		};
 		
-		foreach (var optionResult in args.CommandResult.Children.OfType<OptionResult>())
+		foreach (var optionResult in info.LaunchArgs.CommandResult.Children.OfType<OptionResult>())
 		{
 			if (optionResult.Option == LaunchOptions.LogPipeName)
 				continue;
@@ -90,7 +74,7 @@ internal static class NickelLauncher
 		psi.ArgumentList.Add(LaunchOptions.LogPipeName.Aliases.MaxBy(alias => alias.Length)!);
 		psi.ArgumentList.Add(pipeName);
 
-		foreach (var unmatchedToken in args.UnmatchedTokens)
+		foreach (var unmatchedToken in info.LaunchArgs.UnmatchedTokens)
 			psi.ArgumentList.Add(unmatchedToken);
 
 		try
