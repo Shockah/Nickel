@@ -102,7 +102,7 @@ internal static class CardPatches
 				.Insert(SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
 					new CodeInstruction(OpCodes.Ldarg_0),
 					ldlocState,
-					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(CardPatches), nameof(Render_Transpiler_ModifyShineColor))),
+					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Render_Transpiler_ModifyShineColor))),
 				])
 				.Find([
 					ILMatches.Ldflda("color"),
@@ -115,7 +115,7 @@ internal static class CardPatches
 				.Insert(SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
 					new CodeInstruction(OpCodes.Ldarg_0),
 					ldlocState,
-					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(CardPatches), nameof(Render_Transpiler_ModifyShineColor))),
+					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Render_Transpiler_ModifyShineColor))),
 				])
 				.Find([
 					ILMatches.Ldloc<CardData>(originalMethod).ExtractLabels(out var labels).Anchor(out var findAnchor),
@@ -138,7 +138,7 @@ internal static class CardPatches
 					ldlocState,
 					ldlocaCardTraitIndex,
 					ldlocVec,
-					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(CardPatches), nameof(Render_Transpiler_RenderTraits)))
+					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Render_Transpiler_RenderTraits)))
 				])
 				.AllElements();
 		}

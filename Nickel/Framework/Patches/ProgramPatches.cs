@@ -18,15 +18,15 @@ internal static class ProgramPatches
 	internal static void Apply(Harmony harmony)
 	{
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(Program), nameof(Program.TryInitSteam))
-			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Program)}.{nameof(Program.TryInitSteam)}`"),
+			original: AccessTools.DeclaredMethod(typeof(global::Program), nameof(global::Program.TryInitSteam))
+			          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Program)}.{nameof(global::Program.TryInitSteam)}`"),
 			transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(TryInitSteam_Transpiler))
 		);
 
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 			harmony.Patch(
-				original: AccessTools.DeclaredMethod(typeof(Program), nameof(Program.Main))
-				          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Program)}.{nameof(Program.Main)}`"),
+				original: AccessTools.DeclaredMethod(typeof(global::Program), nameof(global::Program.Main))
+				          ?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(Program)}.{nameof(global::Program.Main)}`"),
 				transpiler: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(Mac_Main_Transpiler))
 			);
 	}
@@ -39,7 +39,7 @@ internal static class ProgramPatches
 			return new SequenceBlockMatcher<CodeInstruction>(instructions)
 				.Find(ILMatches.Call("get_InitSteam"))
 				.Insert(SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
-					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(ProgramPatches), nameof(TryInitSteam_Transpiler_ModifyInitSteam)))
+					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(TryInitSteam_Transpiler_ModifyInitSteam)))
 				])
 				.AllElements();
 		}
