@@ -290,13 +290,11 @@ public sealed class ModEntry : Mod
 				UniqueName = name,
 				RequiredApiVersion = this.Manifest.AsAssemblyModManifest().AsT0.RequiredApiVersion,
 				Version = version,
-				Dependencies = new List<ModDependency>
-				{
-					new(this.Manifest.UniqueName, this.Manifest.Version, isRequired: true)
-				}
-					.Concat(requiredDependencies.Select(d => new ModDependency(d.DependencyName, isRequired: true)))
-					.Concat(optionalDependencies.Select(d => new ModDependency(d.DependencyName, isRequired: false)))
-					.ToHashSet()
+				Dependencies = new ReadOnlySetFromList<ModDependency>([
+					new(this.Manifest.UniqueName, this.Manifest.Version, isRequired: true),
+					.. requiredDependencies.Select(d => new ModDependency(d.DependencyName, isRequired: true)),
+					.. optionalDependencies.Select(d => new ModDependency(d.DependencyName, isRequired: false)),
+				]),
 			};
 
 			var serializer = JsonSerializer.Create(new()

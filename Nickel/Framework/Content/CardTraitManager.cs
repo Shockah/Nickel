@@ -505,10 +505,12 @@ internal class CardTraitManager
 	}
 
 	public IReadOnlySet<ICardTraitEntry> GetActiveCardTraits(State state, Card card)
-		=> this.GetAllCardTraits(state, card)
-			.Where(kvp => kvp.Value.IsActive)
-			.Select(kvp => kvp.Key)
-			.ToHashSet();
+		=> new ReadOnlySetFromList<ICardTraitEntry>(
+			this.GetAllCardTraits(state, card)
+				.Where(kvp => kvp.Value.IsActive)
+				.Select(kvp => kvp.Key)
+				.ToList()
+		);
 
 	public IReadOnlyDictionary<ICardTraitEntry, CardTraitState> GetAllCardTraits(State state, Card card)
 		=> this.ObtainCardTraitStates(state, card);
@@ -596,7 +598,7 @@ internal class CardTraitManager
 
 	private void PopulateCardTraitStates(State state, Card card, Dictionary<ICardTraitEntry, CardTraitState> results)
 	{
-		HashSet<ICardTraitEntry> innateTraits = [];
+		SetFromList<ICardTraitEntry> innateTraits = new([]);
 		var overrides = this.ModDataHandler.ObtainModData<OverridesModData>(this.ModLoaderModManifest.UniqueName, card, "CustomTraitOverrides");
 		this.UpdateModDataFromFieldsIfNeeded(card, overrides);
 

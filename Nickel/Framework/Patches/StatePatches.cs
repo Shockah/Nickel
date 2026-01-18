@@ -136,7 +136,7 @@ internal static class StatePatches
 	{
 		var args = new ModifyPotentialExeCardsEventArgs
 		{
-			Characters = chars.ToHashSet(),
+			Characters = chars.ToList(),
 			ExeCards = cards,
 		};
 		OnModifyPotentialExeCards?.Invoke(null, ref args);
@@ -173,7 +173,7 @@ internal static class StatePatches
 
 	internal struct ModifyPotentialExeCardsEventArgs
 	{
-		public required HashSet<Deck> Characters { get; init; }
+		public required List<Deck> Characters { get; init; }
 		public required List<Card> ExeCards;
 	}
 

@@ -21,7 +21,7 @@ internal sealed class CardDataExtraTraitsFieldDefinitionEditor : IAssemblyDefini
 	{
 		var cardDataType = definition.MainModule.GetType(nameof(CardData));
 		
-		var cardTraitEntryListTypeReference = definition.MainModule.ImportReference(typeof(HashSet<ICardTraitEntry>));
+		var cardTraitEntryListTypeReference = definition.MainModule.ImportReference(typeof(List<ICardTraitEntry>));
 		
 		var extraTraitsFieldField = new FieldDefinition(FieldName, FieldAttributes.Public, cardTraitEntryListTypeReference);
 		cardDataType.Fields.Add(extraTraitsFieldField);

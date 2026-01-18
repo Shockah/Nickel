@@ -151,7 +151,7 @@ public sealed class ModEntry : SimpleMod
 						newMap: new MapDemo(),
 						chars: NewRunOptions.allChars
 							.Where(d => d != deck && d != Deck.dizzy) // need at least 2 characters total, otherwise it will always throw
-							.ToHashSet(),
+							.ToList(),
 						giveRunStartRewards: true
 					);
 

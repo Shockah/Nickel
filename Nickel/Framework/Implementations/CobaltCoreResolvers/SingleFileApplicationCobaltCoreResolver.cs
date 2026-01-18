@@ -35,17 +35,18 @@ internal sealed class SingleFileApplicationCobaltCoreResolver(
 			if (cobaltCoreEntry is null)
 				return new Error<string>($"The single-file application at `{exePath.FullName}` does not contain a `{CobaltCoreResource}` resource.");
 
-			var otherDlls = reader.Bundle.Files.Where(e => e.RelativePath.EndsWith(".dll") && e.RelativePath != CobaltCoreResource).ToHashSet();
 			var gameAssemblyData = cobaltCoreEntry.AsStream().ToMemoryStream().ToArray();
 			var gameSymbolsData = pdbPath?.Exists == true ? pdbPath.OpenRead().ToMemoryStream().ToArray() : null;
-			var otherDllDataStreamProviders = otherDlls.ToDictionary(
-				e => e.RelativePath,
-				Func<Stream> (e) =>
-				{
-					var data = e.AsStream().ToMemoryStream().ToArray();
-					return () => new MemoryStream(data);
-				}
-			);
+			var otherDllDataStreamProviders = reader.Bundle.Files
+				.Where(e => e.RelativePath.EndsWith(".dll") && e.RelativePath != CobaltCoreResource)
+				.ToDictionary(
+					e => e.RelativePath,
+					Func<Stream> (e) =>
+					{
+						var data = e.AsStream().ToMemoryStream().ToArray();
+						return () => new MemoryStream(data);
+					}
+				);
 			foreach (var file in exePath.Parent!.Files.Where(f => f.Name.EndsWith(".dll") && f.Name != CobaltCoreResource))
 				otherDllDataStreamProviders[file.Name] = () => file.OpenRead();
 			

@@ -289,11 +289,11 @@ internal sealed class ModManager
 						{
 							UniqueName = p.UniqueName,
 							Version = p.Version,
-							Dependencies = p.Dependencies
-								.Select(
-									d => new PluginDependency<SemanticVersion>(d.UniqueName, d.Version, d.IsRequired)
-								)
-								.ToHashSet()
+							Dependencies = new ReadOnlySetFromList<PluginDependency<SemanticVersion>>(
+								p.Dependencies
+									.Select(d => new PluginDependency<SemanticVersion>(d.UniqueName, d.Version, d.IsRequired))
+									.ToList()
+							),
 						}
 				),
 				manifest => manifest.LoadPhase,

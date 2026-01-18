@@ -9,15 +9,15 @@ namespace Nickel;
 /// </summary>
 public static class CardDataExtensions
 {
-	private static readonly Lazy<AccessTools.StructFieldRef<CardData, HashSet<ICardTraitEntry>?>> ExtraTraitsFieldRef
-		= new(() => AccessTools.StructFieldRefAccess<CardData, HashSet<ICardTraitEntry>?>(AccessTools.DeclaredField(typeof(CardData), CardDataExtraTraitsFieldDefinitionEditor.FieldName)));
+	private static readonly Lazy<AccessTools.StructFieldRef<CardData, List<ICardTraitEntry>?>> ExtraTraitsFieldRef
+		= new(() => AccessTools.StructFieldRefAccess<CardData, List<ICardTraitEntry>?>(AccessTools.DeclaredField(typeof(CardData), CardDataExtraTraitsFieldDefinitionEditor.FieldName)));
 	
 	extension(CardData data)
 	{
 		/// <summary>
 		/// The extra (non-vanilla) card traits a card innately has.
 		/// </summary>
-		public HashSet<ICardTraitEntry>? ExtraTraits
+		public List<ICardTraitEntry>? ExtraTraits
 		{
 			get => ExtraTraitsFieldRef.Value(ref data);
 			set

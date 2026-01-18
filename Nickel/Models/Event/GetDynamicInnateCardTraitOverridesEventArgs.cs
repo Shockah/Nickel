@@ -14,7 +14,7 @@ public readonly struct GetDynamicInnateCardTraitOverridesEventArgs
 	/// <summary>The card data at the moment of requesting its card traits.</summary>
 	public required CardData CardData { get; init; }
 	
-	/// <summary>A dictionary containing the state of all known card traits on the card.</summary>
+	/// <summary>A set containing all innately active traits on the card.</summary>
 	public required IReadOnlySet<ICardTraitEntry> InnateTraits { get; init; }
 	
 	/// <summary>A dictionary containing the state of all known card traits on the card.</summary>

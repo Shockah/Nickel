@@ -420,7 +420,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 			Ship = ActualizeExternalStarterShip(value, this.ActualizeShip(value.ShipGlobalName)),
 			UnderChassisSprite = ship.ChassisUnderSprite is { } underChassisSprite ? (Spr)underChassisSprite.Id!.Value : null,
 			OverChassisSprite = ship.ChassisOverSprite is { } overChassisSprite ? (Spr)overChassisSprite.Id!.Value : null,
-			ExclusiveArtifactTypes = value.ExclusiveArtifacts.Select(a => a.ArtifactType).Concat(value.ExclusiveNativeArtifacts).ToHashSet(),
+			ExclusiveArtifactTypes = new ReadOnlySetFromList<Type>(value.ExclusiveArtifacts.Select(a => a.ArtifactType).Concat(value.ExclusiveNativeArtifacts).ToList()),
 			Name = locale =>
 			{
 				value.GetLocalisations(locale, out var localized, out _);
