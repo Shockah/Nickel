@@ -36,11 +36,12 @@ internal static class Program
 			return false;
 		}
 
-		var runInfo = new ProgramRunInfo(args, settings, modStorageDirectory);
+		var earlyLogs = LaunchOptions.ApplyToSettings(args, settings);
+		var runInfo = new ProgramRunInfo(args, settings, modStorageDirectory, earlyLogs);
 		
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && (args.GetValueForOption(LaunchOptions.RestartWithTerminal) ?? true))
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && settings.RestartWithTerminal)
 			return NickelMacTerminalLauncher.Run(runInfo);
-		if (args.GetValueForOption(LaunchOptions.WrapLaunch) ?? true)
+		if (settings.WrapLaunch)
 			return NickelLauncher.Run(runInfo);
 		return Nickel.Run(runInfo);
 	}

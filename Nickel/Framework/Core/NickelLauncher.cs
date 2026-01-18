@@ -15,11 +15,10 @@ internal static class NickelLauncher
 		var realOut = Console.Out;
 		var loggerFactory = LoggerFactory.Create(builder =>
 		{
-			builder.SetMinimumLevel((LogLevel)Math.Min((int)info.Settings.MinimumFileLogLevel, (int)info.Settings.MinimumConsoleLogLevel));
-			var fileLogDirectory = info.LaunchArgs.GetValueForOption(LaunchOptions.LogPath) ?? Program.GetOrCreateDefaultLogDirectory();
-			var timestampedLogFiles = info.LaunchArgs.GetValueForOption(LaunchOptions.TimestampedLogFiles) ?? false;
-			builder.AddProvider(FileLoggerProvider.CreateNewLog(info.Settings.MinimumFileLogLevel, fileLogDirectory, timestampedLogFiles));
-			builder.AddProvider(new ConsoleLoggerProvider(info.Settings.MinimumConsoleLogLevel, realOut, disposeWriter: false));
+			builder.SetMinimumLevel((LogLevel)Math.Min((int)info.Settings.Logging.MinimumFileLogLevel, (int)info.Settings.Logging.MinimumConsoleLogLevel));
+			var fileLogDirectory = info.Settings.Logging.LogPath ?? Program.GetOrCreateDefaultLogDirectory();
+			builder.AddProvider(FileLoggerProvider.CreateNewLog(info.Settings.Logging.MinimumFileLogLevel, fileLogDirectory, info.Settings.Logging.TimestampedLogFiles));
+			builder.AddProvider(new ConsoleLoggerProvider(info.Settings.Logging.MinimumConsoleLogLevel, realOut, disposeWriter: false));
 		});
 		var logger = loggerFactory.CreateLogger($"{NickelConstants.Name}Launcher");
 		Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, realOut));
@@ -69,9 +68,9 @@ internal static class NickelLauncher
 			}
 		}
 		
-		psi.ArgumentList.Add(LaunchOptions.WrapLaunch.Aliases.MaxBy(alias => alias.Length)!);
+		psi.ArgumentList.Add(LaunchOptions.WrapLaunch.LongestAlias);
 		psi.ArgumentList.Add(false.ToString());
-		psi.ArgumentList.Add(LaunchOptions.LogPipeName.Aliases.MaxBy(alias => alias.Length)!);
+		psi.ArgumentList.Add(LaunchOptions.LogPipeName.LongestAlias);
 		psi.ArgumentList.Add(pipeName);
 
 		foreach (var unmatchedToken in info.LaunchArgs.UnmatchedTokens)

@@ -1,4 +1,5 @@
-﻿using System.CommandLine.Parsing;
+﻿using System.Collections.Generic;
+using System.CommandLine.Parsing;
 using System.IO;
 
 namespace Nickel;
@@ -6,5 +7,6 @@ namespace Nickel;
 internal record ProgramRunInfo(
 	ParseResult LaunchArgs,
 	Settings Settings,
-	DirectoryInfo ModStorageDirectory
+	DirectoryInfo ModStorageDirectory,
+	List<LogEntry.Local> EarlyLogs
 );

@@ -66,17 +66,8 @@ internal sealed class NamedPipeClientLoggerProvider : ILoggerProvider
 		});
 	}
 
-	private sealed class Logger : ILogger
+	private sealed class Logger(string categoryName, Action<LogEntry> loggingFunction) : ILogger
 	{
-		private readonly string CategoryName;
-		private readonly Action<LogEntry> LoggingFunction;
-
-		public Logger(string categoryName, Action<LogEntry> loggingFunction)
-		{
-			this.CategoryName = categoryName;
-			this.LoggingFunction = loggingFunction;
-		}
-
 		public IDisposable? BeginScope<TState>(TState state) where TState : notnull
 			=> null;
 
@@ -84,6 +75,6 @@ internal sealed class NamedPipeClientLoggerProvider : ILoggerProvider
 			=> true;
 
 		public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-			=> this.LoggingFunction(new(this.CategoryName, logLevel, formatter(state, exception)));
+			=> loggingFunction(new(categoryName, logLevel, formatter(state, exception)));
 	}
 }

@@ -36,15 +36,14 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 			var logPipeName = info.LaunchArgs.GetValueForOption(LaunchOptions.LogPipeName);
 			if (string.IsNullOrEmpty(logPipeName))
 			{
-				builder.SetMinimumLevel((LogLevel)Math.Min((int)info.Settings.MinimumFileLogLevel, (int)info.Settings.MinimumConsoleLogLevel));
-				var fileLogDirectory = info.LaunchArgs.GetValueForOption(LaunchOptions.LogPath) ?? Program.GetOrCreateDefaultLogDirectory();
-				var timestampedLogFiles = info.LaunchArgs.GetValueForOption(LaunchOptions.TimestampedLogFiles) ?? false;
-				builder.AddProvider(FileLoggerProvider.CreateNewLog(info.Settings.MinimumFileLogLevel, fileLogDirectory, timestampedLogFiles));
-				builder.AddProvider(new ConsoleLoggerProvider(info.Settings.MinimumConsoleLogLevel, realOut, disposeWriter: false));
+				builder.SetMinimumLevel((LogLevel)Math.Min((int)info.Settings.Logging.MinimumFileLogLevel, (int)info.Settings.Logging.MinimumConsoleLogLevel));
+				var fileLogDirectory = info.Settings.Logging.LogPath ?? Program.GetOrCreateDefaultLogDirectory();
+				builder.AddProvider(FileLoggerProvider.CreateNewLog(info.Settings.Logging.MinimumFileLogLevel, fileLogDirectory, info.Settings.Logging.TimestampedLogFiles));
+				builder.AddProvider(new ConsoleLoggerProvider(info.Settings.Logging.MinimumConsoleLogLevel, realOut, disposeWriter: false));
 			}
 			else
 			{
-				builder.SetMinimumLevel((LogLevel)Math.Min((int)info.Settings.MinimumFileLogLevel, (int)info.Settings.MinimumConsoleLogLevel));
+				builder.SetMinimumLevel((LogLevel)Math.Min((int)info.Settings.Logging.MinimumFileLogLevel, (int)info.Settings.Logging.MinimumConsoleLogLevel));
 				builder.AddProvider(new NamedPipeClientLoggerProvider(logPipeName));
 			}
 		});
@@ -54,16 +53,12 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
 		
 		logger.LogInformation("ModStoragePath: {Path}", PathUtilities.SanitizePath(info.ModStorageDirectory.FullName));
+		
+		foreach (var log in info.EarlyLogs)
+			logger.Log(log.LogLevel, "{EarlyLog}", log.Message);
 
 		try
 		{
-			if (info.LaunchArgs.GetValueForOption(LaunchOptions.Debug) is { } debugArg)
-			{
-				if (debugArg)
-					info.Settings.DebugMode = (info.LaunchArgs.GetValueForOption(LaunchOptions.SaveInDebug) ?? true) ? DebugMode.EnabledWithSaving : DebugMode.Enabled;
-				else
-					info.Settings.DebugMode = DebugMode.Disabled;
-			}
 			logger.LogInformation("DebugMode: {Value}", info.Settings.DebugMode);
 			
 			var instance = new Nickel(info);
@@ -84,7 +79,7 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		if (!string.IsNullOrEmpty(steamCompatDataPath))
 			logger.LogInformation("SteamCompatDataPath: {Path}", steamCompatDataPath);
 		
-		ICobaltCoreResolver cobaltCoreResolver = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.GamePath) is { } gamePath
+		ICobaltCoreResolver cobaltCoreResolver = instance.RunInfo.Settings.GamePath is { } gamePath
 			? new SingleFileApplicationCobaltCoreResolver(
 				new FileInfoImpl(gamePath),
 				new FileInfoImpl(new FileInfo(Path.Combine(gamePath.Directory!.FullName, "CobaltCore.pdb"))),
@@ -141,7 +136,7 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new DeepCopyViaMitosisDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GameFieldToPropertyDefinitionEditor());
 
-		var assemblyCacheDirectory = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.AssemblyCachePath) ?? GetOrCreateDefaultAssemblyCacheDirectory();
+		var assemblyCacheDirectory = instance.RunInfo.Settings.AssemblyCachePath ?? GetOrCreateDefaultAssemblyCacheDirectory();
 		logger.LogInformation("AssemblyCachePath: {Path}", PathUtilities.SanitizePath(assemblyCacheDirectory.FullName));
 
 		var fileCachingAssemblyEditor = new FileCachingAssemblyEditor(
@@ -175,35 +170,14 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		instance.Harmony = harmony;
 		HarmonyPatches.Apply(harmony, logger);
 
-		var internalModsDirectory = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.InternalModsPath) ?? GetOrCreateDefaultInternalModLibraryDirectory();
+		var internalModsDirectory = instance.RunInfo.Settings.InternalModsPath ?? GetOrCreateDefaultInternalModLibraryDirectory();
 		logger.LogInformation("InternalModsPath: {Path}", PathUtilities.SanitizePath(internalModsDirectory.FullName));
 
-		var modsDirectory = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.ModsPath) ?? GetOrCreateDefaultModLibraryDirectory();
+		var modsDirectory = instance.RunInfo.Settings.ModsPath ?? GetOrCreateDefaultModLibraryDirectory();
 		logger.LogInformation("ModsPath: {Path}", PathUtilities.SanitizePath(modsDirectory.FullName));
 
-		var privateModStorageDirectory = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.PrivateModStoragePath) ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "PrivateModStorage"));
+		var privateModStorageDirectory = instance.RunInfo.Settings.PrivateModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "PrivateModStorage"));
 		logger.LogInformation("PrivateModStoragePath: {Path}", PathUtilities.SanitizePath(privateModStorageDirectory.FullName));
-
-		var attachDebuggerBeforeMod = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.AttachDebuggerBeforeMod);
-		var attachDebuggerAfterMod = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.AttachDebuggerAfterMod);
-		ModLoadPhase? attachDebuggerBeforeModLoadPhase = null;
-		ModLoadPhase? attachDebuggerAfterModLoadPhase = null;
-
-		if (instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.AttachDebuggerBeforeModLoadPhase) is { } attachDebuggerBeforeModLoadPhaseRaw)
-		{
-			if (Enum.TryParse<ModLoadPhase>(attachDebuggerBeforeModLoadPhaseRaw, out var result))
-				attachDebuggerBeforeModLoadPhase = result;
-			else
-				logger.LogError("The `--attach-debugger-before-mod-load-phase` has an invalid value. Ignoring.");
-		}
-
-		if (instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.AttachDebuggerAfterModLoadPhase) is { } attachDebuggerAfterModLoadPhaseRaw)
-		{
-			if (Enum.TryParse<ModLoadPhase>(attachDebuggerAfterModLoadPhaseRaw, out var result))
-				attachDebuggerAfterModLoadPhase = result;
-			else
-				logger.LogError("The `--attach-debugger-after-mod-load-phase` has an invalid value. Ignoring.");
-		}
 
 		instance.ModManager = new(
 			internalModsDirectory,
@@ -215,7 +189,10 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 			fileCachingAssemblyEditor,
 			extendableAssemblyDefinitionEditor,
 			stopwatch,
-			attachDebuggerBeforeMod, attachDebuggerAfterMod, attachDebuggerBeforeModLoadPhase, attachDebuggerAfterModLoadPhase
+			instance.RunInfo.Settings.AttachDebuggerBeforeMod,
+			instance.RunInfo.Settings.AttachDebuggerAfterMod,
+			instance.RunInfo.Settings.AttachDebuggerBeforeModLoadPhase,
+			instance.RunInfo.Settings.AttachDebuggerAfterModLoadPhase
 		);
 		
 		try
@@ -279,7 +256,7 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		instance.ModManager.EventManager.OnModLoadPhaseFinishedEvent.Add(instance.OnModLoadPhaseFinished, instance.ModManager.ModLoaderPackage.Manifest);
 		instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderPackage.Manifest);
 
-		var savePath = instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.SavePath) ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "Saves"));
+		var savePath = instance.RunInfo.Settings.SavePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "Saves"));
 		logger.LogInformation("SavePath: {Path}", PathUtilities.SanitizePath(savePath.FullName));
 
 		if (harmony is not null)
@@ -382,17 +359,14 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		var helper = this.ModManager.ObtainModHelper(this.ModManager.ModLoaderPackage);
 		if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
 			settingsApi.RegisterModSettings(settingsApi.MakeList([
-				settingsApi.MakeConditional(
-					settingsApi.MakeCheckbox(
-						() => "Debug", // TODO: localize
-						() => this.RunInfo.Settings.DebugMode != DebugMode.Disabled,
-						setter: (_, _, value) =>
-						{
-							this.RunInfo.Settings.DebugMode = value ? DebugMode.EnabledWithSaving : DebugMode.Disabled;
-							this.OnSettingsUpdate();
-						}
-					),
-					() => Instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.Debug) is null
+				settingsApi.MakeCheckbox(
+					() => "Debug", // TODO: localize
+					() => this.RunInfo.Settings.DebugMode != DebugMode.Disabled,
+					setter: (_, _, value) =>
+					{
+						this.RunInfo.Settings.DebugMode = value ? DebugMode.EnabledWithSaving : DebugMode.Disabled;
+						this.OnSettingsUpdate();
+					}
 				),
 				settingsApi.MakeConditional(
 					settingsApi.MakeCheckbox(
@@ -404,7 +378,7 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 							this.OnSettingsUpdate();
 						}
 					),
-					() => Instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.Debug) is null && this.RunInfo.Settings.DebugMode != DebugMode.Disabled
+					() => this.RunInfo.Settings.DebugMode != DebugMode.Disabled
 				),
 				settingsApi.MakeConditional(
 					setting: settingsApi.MakeButton(
@@ -430,7 +404,7 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		=> this.ModManager.ContentManager?.InjectLocalizations(e.Locale, e.Localizations);
 
 	private static void OnTryInitSteam(object? _, ref bool initSteam)
-		=> initSteam = Instance.RunInfo.LaunchArgs.GetValueForOption(LaunchOptions.InitSteam) ?? true;
+		=> initSteam = Instance.RunInfo.Settings.InitSteam;
 
 	private static DirectoryInfo GetOrCreateDefaultInternalModLibraryDirectory()
 	{

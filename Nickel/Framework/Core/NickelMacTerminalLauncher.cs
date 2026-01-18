@@ -70,7 +70,7 @@ internal static class NickelMacTerminalLauncher
 			}
 		}
 		
-		psi.ArgumentList.Add(LaunchOptions.RestartWithTerminal.Aliases.MaxBy(alias => alias.Length)!);
+		psi.ArgumentList.Add(LaunchOptions.RestartWithTerminal.LongestAlias);
 		psi.ArgumentList.Add(false.ToString());
 
 		foreach (var unmatchedToken in args.UnmatchedTokens)
