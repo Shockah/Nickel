@@ -53,9 +53,7 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
 		
 		logger.LogInformation("ModStoragePath: {Path}", PathUtilities.SanitizePath(info.ModStorageDirectory.FullName));
-		
-		foreach (var log in info.EarlyLogs)
-			logger.Log(log.LogLevel, "{EarlyLog}", log.Message);
+		info.PushEarlyLogsToLogger(logger);
 
 		try
 		{

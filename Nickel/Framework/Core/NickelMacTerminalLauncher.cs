@@ -14,6 +14,7 @@ internal static class NickelMacTerminalLauncher
 	{
 		if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 		{
+			info.PushEarlyLogsToConsole();
 			Console.WriteLine($"This launcher is only supported on macOS. Please run {NickelConstants.Name} instead.");
 			return false;
 		}
@@ -22,6 +23,7 @@ internal static class NickelMacTerminalLauncher
 		var process = Process.Start(psi);
 		if (process is null)
 		{
+			info.PushEarlyLogsToConsole();
 			Console.WriteLine($"Could not start {NickelConstants.Name}: no process was started.");
 			return false;
 		}
