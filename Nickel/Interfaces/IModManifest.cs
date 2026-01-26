@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text;
 
 namespace Nickel;
 
@@ -49,31 +48,4 @@ public interface IModManifest
 
 	/// <summary>Additional manifest data that couldn't be mapped.</summary>
 	IReadOnlyDictionary<string, object> ExtensionData { get; }
-}
-
-/// <summary>
-/// Hosts extension methods for mod manifests.
-/// </summary>
-public static class IModManifestExt
-{
-	/// <summary>
-	/// Builds an as-nice-as-possible description for a mod, to be presented to the user.
-	/// </summary>
-	/// <param name="manifest">The mod's manifest.</param>
-	/// <param name="long">Whether to build a long description, including the mod's author(s) and the <seealso cref="IModManifest.Description"/> field.</param>
-	/// <returns>The description to be presented to the user.</returns>
-	public static string GetDisplayName(this IModManifest manifest, bool @long)
-	{
-		var sb = new StringBuilder();
-		sb.Append(string.IsNullOrEmpty(manifest.DisplayName) ? manifest.UniqueName : $"{manifest.DisplayName} ({manifest.UniqueName})");
-		sb.Append($" {manifest.Version}");
-		if (@long)
-		{
-			if (!string.IsNullOrEmpty(manifest.Author))
-				sb.Append($" by {manifest.Author}");
-			if (!string.IsNullOrEmpty(manifest.Description))
-				sb.Append($": {manifest.Description}");
-		}
-		return sb.ToString();
-	}
 }

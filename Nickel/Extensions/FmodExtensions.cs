@@ -6,7 +6,7 @@ namespace Nickel;
 /// <summary>
 /// Hosts extensions for working with the FMOD library.
 /// </summary>
-public static class FmodExt
+public static class FmodExtensions
 {
 	/// <summary>
 	/// Converts an FMOD <see cref="GUID"/> value to a system <see cref="Guid"/> value.
@@ -24,8 +24,8 @@ public static class FmodExt
 	/// <summary>
 	/// Converts a system <see cref="Guid"/> value to an FMOD <see cref="GUID"/> value.
 	/// </summary>
-	/// <param name="guid"></param>
-	/// <returns></returns>
+	/// <param name="guid">The value to convert.</param>
+	/// <returns>The converted value.</returns>
 	public static GUID ToFmodGuid(this Guid guid)
 	{
 		var bytes = guid.ToByteArray();
