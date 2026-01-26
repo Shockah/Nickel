@@ -10,7 +10,8 @@
 		
 		<!-- hide real path names in debug symbols on Release builds -->
 		<DeterministicSourcePaths Condition="'$(Configuration)' == 'Release'">true</DeterministicSourcePaths>
-		<SourceRoot Condition="'$(Configuration)' == 'Release'">$([System.IO.Path]::GetFullPath('$(SolutionDir)'))</SourceRoot>
+		<SourceRoot Condition="'$(Configuration)' == 'Release' And '$(SolutionDir)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildProjectDir)/..'))/$(MSBuildProjectName)</SourceRoot>
+		<SourceRoot Condition="'$(Configuration)' == 'Release' And '$(SolutionDir)' != ''">$([System.IO.Path]::GetFullPath('$(SolutionDir)'))</SourceRoot>
 
 		<!-- Don't create the 'refs' folder (which isn't useful for mods) -->
 		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
