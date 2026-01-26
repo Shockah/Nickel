@@ -7,6 +7,10 @@
 		<!-- Enable line numbers in stack traces (needs to embedded for Linux/macOS: https://github.com/dotnet/runtime/issues/39987) -->
 		<DebugSymbols>true</DebugSymbols>
 		<DebugType>embedded</DebugType>
+		
+		<!-- hide real path names in debug symbols on Release builds -->
+		<DeterministicSourcePaths Condition="'$(Configuration)' == 'Release'">true</DeterministicSourcePaths>
+		<SourceRoot Condition="'$(Configuration)' == 'Release'">$([System.IO.Path]::GetFullPath('$(SolutionDir)'))</SourceRoot>
 
 		<!-- Don't create the 'refs' folder (which isn't useful for mods) -->
 		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>

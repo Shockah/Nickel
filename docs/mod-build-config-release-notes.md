@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Release mod builds now override the source path in debugging symbols to be relative to the solution.
+
 ## 2.1.0
 Released 8 July 2025.
 
