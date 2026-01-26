@@ -27,11 +27,11 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 	
 	private SaveManager SaveManager = null!;
 
-	internal static bool Run(ProgramRunInfo info)
+	internal static bool Run(ProgramRunInfo info, ILoggerFactory? loggerFactory = null)
 	{
 		var stopwatch = Stopwatch.StartNew();
 		var realOut = Console.Out;
-		var loggerFactory = LoggerFactory.Create(builder =>
+		loggerFactory ??= LoggerFactory.Create(builder =>
 		{
 			var logPipeName = info.LaunchArgs.GetValueForOption(LaunchOptions.LogPipeName);
 			if (string.IsNullOrEmpty(logPipeName))

@@ -2,6 +2,18 @@
 
 # Release notes
 
+## Upcoming release: 2.0.0
+
+### For everyone:
+* Combined Nickel, NickelLauncher and NickelMacLauncher into a single application.
+* Renamed all commandline arguments from --camelCase to --kebab-case.
+* All of the commandline arguments now have their equivalents in the Nickel's settings file. Passing in commandline arguments overrides the settings values.
+
+### For developers:
+* Removed deprecated code.
+* Removed `IHasCustomTraits` in favor of the new `CardData.ExtraTraits` extension property.
+* Changed namespaces of some classes that were mistakenly put in wrong ones.
+
 ## 1.21.3
 
 * Fixed Nickel's info screens feature serializing a mod manifest (ironic, isn't it).

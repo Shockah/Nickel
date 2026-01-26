@@ -10,6 +10,13 @@ namespace Nickel;
 
 internal static class NickelLauncher
 {
+	private enum StartWrapperAndLogProcessResult
+	{
+		EarlyFail,
+		LateFail,
+		Success,
+	}
+	
 	internal static bool Run(ProgramRunInfo info)
 	{
 		var realOut = Console.Out;
@@ -76,79 +83,86 @@ internal static class NickelLauncher
 		foreach (var unmatchedToken in info.LaunchArgs.UnmatchedTokens)
 			psi.ArgumentList.Add(unmatchedToken);
 
+		var result = StartWrapperAndLogProcess(psi, logger, loggerFactory);
+		if (result == StartWrapperAndLogProcessResult.Success)
+			return true;
+		if (result == StartWrapperAndLogProcessResult.LateFail)
+			return false;
+		
+		logger.LogWarning("Attempting to start {ModLoaderName} directly...", NickelConstants.Name);
+		return Nickel.Run(info, loggerFactory);
+	}
+
+	private static StartWrapperAndLogProcessResult StartWrapperAndLogProcess(ProcessStartInfo psi, ILogger logger, ILoggerFactory loggerFactory)
+	{
+		var failedEarly = true;
+		
 		try
 		{
-			return StartWrapperAndLogProcess(psi, logger, loggerFactory);
+			var exitingLauncher = false;
+			var process = Process.Start(psi);
+			if (process is null)
+			{
+				logger.LogCritical("Could not start {ModLoaderName}: no process was started.", NickelConstants.Name);
+				return StartWrapperAndLogProcessResult.EarlyFail;
+			}
+
+			logger.LogDebug("Launched Nickel with PID {PID}.", process.Id);
+
+			// Detect if parent process is killed
+			var launcherProcess = Process.GetCurrentProcess();
+			launcherProcess.EnableRaisingEvents = true;
+			launcherProcess.Exited += OnExited;
+			Console.CancelKeyPress += OnExited;
+			AppDomain.CurrentDomain.ProcessExit += OnExited;
+
+			// Subscribe to logging
+			var launchedLogger = loggerFactory.CreateLogger(NickelConstants.Name);
+			process.OutputDataReceived += (_, e) =>
+			{
+				if (!string.IsNullOrEmpty(e.Data))
+					launchedLogger.LogInformation("{Message}", e.Data);
+			};
+			process.ErrorDataReceived += (_, e) =>
+			{
+				if (!string.IsNullOrEmpty(e.Data))
+					launchedLogger.LogError("{Message}", e.Data);
+			};
+			process.BeginErrorReadLine();
+			process.BeginOutputReadLine();
+
+			failedEarly = false;
+
+			process.WaitForExit();
+			logger.Log(process.ExitCode == 0 ? LogLevel.Debug : LogLevel.Error, "{ModLoaderName} exited with code {Code}.", NickelConstants.Name, process.ExitCode);
+			if (process.ExitCode != 0 && !exitingLauncher)
+				Console.ReadLine();
+
+			// Unsubscribe
+			launcherProcess.Exited -= OnExited;
+			Console.CancelKeyPress -= OnExited;
+			AppDomain.CurrentDomain.ProcessExit -= OnExited;
+			return process.ExitCode == 0 ? StartWrapperAndLogProcessResult.Success : StartWrapperAndLogProcessResult.LateFail;
+
+			void OnExited(object? _, EventArgs e)
+			{
+				exitingLauncher = true;
+				if (process.HasExited)
+					return;
+				logger.LogInformation("Attempting to close {ModLoaderName} gracefully.", NickelConstants.Name);
+				process.CloseMainWindow();
+				process.WaitForExit(1000);
+
+				if (process.HasExited)
+					return;
+				logger.LogInformation("Killing {ModLoaderName}.", NickelConstants.Name);
+				process.Kill();
+			}
 		}
 		catch (Exception ex)
 		{
 			logger.LogCritical("{Name} threw an exception: {Exception}", NickelConstants.Name, ex);
-			return false;
-		}
-		finally
-		{
-			loggerFactory.Dispose();
-		}
-	}
-
-	private static bool StartWrapperAndLogProcess(ProcessStartInfo psi, ILogger logger, ILoggerFactory loggerFactory)
-	{
-		var exitingLauncher = false;
-		var process = Process.Start(psi);
-		if (process is null)
-		{
-			logger.LogCritical("Could not start {ModLoaderName}: no process was started.", NickelConstants.Name);
-			return false;
-		}
-
-		logger.LogDebug("Launched Nickel with PID {PID}.", process.Id);
-
-		// Detect if parent process is killed
-		var launcherProcess = Process.GetCurrentProcess();
-		launcherProcess.EnableRaisingEvents = true;
-		launcherProcess.Exited += OnExited;
-		Console.CancelKeyPress += OnExited;
-		AppDomain.CurrentDomain.ProcessExit += OnExited;
-
-		// Subscribe to logging
-		var launchedLogger = loggerFactory.CreateLogger(NickelConstants.Name);
-		process.OutputDataReceived += (_, e) =>
-		{
-			if (!string.IsNullOrEmpty(e.Data))
-				launchedLogger.LogInformation("{Message}", e.Data);
-		};
-		process.ErrorDataReceived += (_, e) =>
-		{
-			if (!string.IsNullOrEmpty(e.Data))
-				launchedLogger.LogError("{Message}", e.Data);
-		};
-		process.BeginErrorReadLine();
-		process.BeginOutputReadLine();
-
-		process.WaitForExit();
-		logger.Log(process.ExitCode == 0 ? LogLevel.Debug : LogLevel.Error, "{ModLoaderName} exited with code {Code}.", NickelConstants.Name, process.ExitCode);
-		if (process.ExitCode != 0 && !exitingLauncher)
-			Console.ReadLine();
-
-		// Unsubscribe
-		launcherProcess.Exited -= OnExited;
-		Console.CancelKeyPress -= OnExited;
-		AppDomain.CurrentDomain.ProcessExit -= OnExited;
-		return process.ExitCode == 0;
-
-		void OnExited(object? _, EventArgs e)
-		{
-			exitingLauncher = true;
-			if (process.HasExited)
-				return;
-			logger.LogInformation("Attempting to close {ModLoaderName} gracefully.", NickelConstants.Name);
-			process.CloseMainWindow();
-			process.WaitForExit(1000);
-
-			if (process.HasExited)
-				return;
-			logger.LogInformation("Killing {ModLoaderName}.", NickelConstants.Name);
-			process.Kill();
+			return failedEarly ? StartWrapperAndLogProcessResult.EarlyFail : StartWrapperAndLogProcessResult.LateFail;
 		}
 	}
 }
