@@ -14,6 +14,7 @@ internal static class CardPatches
 {
 	internal static RefEventHandler<KeyEventArgs>? OnKey;
 	internal static EventHandler<TooltipsEventArgs>? OnGetTooltips;
+	internal static RefEventHandler<ModifyFrameEventArgs>? OnModifyFrame;
 	internal static RefEventHandler<ModifyShineColorEventArgs>? OnModifyShineColor;
 	internal static RefEventHandler<TraitRenderEventArgs>? OnRenderTraits;
 	internal static EventHandler<GettingDataWithOverridesEventArgs>? OnGettingDataWithOverrides;
@@ -71,6 +72,17 @@ internal static class CardPatches
 					ILMatches.Ldarg(0),
 					ILMatches.Ldloc<State>(originalMethod).CreateLdlocInstruction(out var ldlocState),
 					ILMatches.Call("GetDataWithOverrides"),
+				])
+				.Find([
+					ILMatches.Ldsfld(nameof(DB.deckBorders)),
+					ILMatches.Ldloc<CardMeta>(originalMethod),
+					ILMatches.Ldfld(nameof(CardMeta.deck)),
+					ILMatches.Call("get_Item"),
+				])
+				.Insert(SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion, [
+					new CodeInstruction(OpCodes.Ldarg_0),
+					ldlocState,
+					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(CardPatches), nameof(Render_Transpiler_ModifyFrame))),
 				])
 				.Find([
 					ILMatches.Ldloc<CardMeta>(originalMethod),
@@ -135,6 +147,18 @@ internal static class CardPatches
 			Nickel.Instance.ModManager.Logger.LogCritical("Could not patch method {DeclaringType}::{Method} - {ModLoaderName} probably won't work.\nReason: {Exception}", originalMethod.DeclaringType, originalMethod, NickelConstants.Name, ex);
 			return instructions;
 		}
+	}
+
+	private static Spr Render_Transpiler_ModifyFrame(Spr cardFrameSprite, Card card, State state)
+	{
+		var args = new ModifyFrameEventArgs
+		{
+			Card = card,
+			State = state,
+			FrameSprite = cardFrameSprite,
+		};
+		OnModifyFrame?.Invoke(null, ref args);
+		return args.FrameSprite;
 	}
 
 	private static Color Render_Transpiler_ModifyShineColor(Color shineColor, Card card, State state)
@@ -261,6 +285,13 @@ internal static class CardPatches
 		public required Card Card { get; init; }
 		public required State State { get; init; }
 		public required List<Tooltip> Tooltips { get; init; }
+	}
+
+	internal struct ModifyFrameEventArgs
+	{
+		public required Card Card { get; init; }
+		public required State State { get; init; }
+		public required Spr FrameSprite;
 	}
 
 	internal struct ModifyShineColorEventArgs

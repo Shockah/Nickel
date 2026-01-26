@@ -28,6 +28,7 @@ internal sealed class DeckManager
 		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
 
+		CardPatches.OnModifyFrame += this.OnModifyFrame;
 		CardPatches.OnModifyShineColor += this.OnModifyShineColor;
 	}
 
@@ -178,6 +179,8 @@ internal sealed class DeckManager
 		if (!this.UniqueNameToEntry.ContainsKey(entry.UniqueName))
 			throw new ArgumentException($"A deck with the unique name `{entry.UniqueName}` is not registered");
 
+		if (amends.CardFrameOverride is { } cardFrameOverride)
+			entry.Configuration = entry.Configuration with { CardFrameOverride = cardFrameOverride.Value };
 		if (amends.ShineColorOverride is { } shineColorOverride)
 			entry.Configuration = entry.Configuration with { ShineColorOverride = shineColorOverride.Value };
 	}
@@ -191,6 +194,21 @@ internal sealed class DeckManager
 		var key = entry.Deck.Key();
 		localizations[$"char.{key}"] = name;
 		localizations[$"char.{key}.name"] = name;
+	}
+	
+	private void OnModifyFrame(object? _, ref CardPatches.ModifyFrameEventArgs e)
+	{
+		if (this.LookupByDeck(e.Card.GetMeta().deck) is not { } entry)
+			return;
+		if (entry.Configuration.CardFrameOverride is null)
+			return;
+		
+		e.FrameSprite = entry.Configuration.CardFrameOverride(new DeckConfiguration.CardFrameOverrideArgs
+		{
+			State = e.State,
+			Card = e.Card,
+			DefaultFrameSprite = e.FrameSprite,
+		});
 	}
 	
 	private void OnModifyShineColor(object? _, ref CardPatches.ModifyShineColorEventArgs e)

@@ -4,7 +4,11 @@
 
 ## Upcoming release
 
+### For everyone:
 * Fixed a potential softlock if there are too many mods with pending updates.
+
+### For developers:
+* Added `DeckConfiguration.CardFrameOverride`.
 
 ## 1.20.3
 Released 14 January 2026.
