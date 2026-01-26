@@ -15,6 +15,8 @@ namespace Nickel.UpdateChecks.UI;
 
 public sealed class ModEntry : SimpleMod
 {
+	private const int MaxUpdatesOnInfoScreen = 15;
+	
 	internal static ModEntry Instance { get; private set; } = null!;
 	internal readonly ILocaleBoundNonNullLocalizationProvider<IReadOnlyList<string>> Localizations;
 	internal readonly IUpdateChecksApi UpdateChecksApi;
@@ -62,13 +64,20 @@ public sealed class ModEntry : SimpleMod
 					var pendingUpdates = this.GetPendingModUpdates().ToList();
 					if (pendingUpdates.Count == 0)
 						return;
+
+					var adjustedMaxUpdatesOnInfoScreen = MaxUpdatesOnInfoScreen - (pendingUpdates.Count > MaxUpdatesOnInfoScreen ? 1 : 0);
+
+					var mainText = pendingUpdates
+						.Take(adjustedMaxUpdatesOnInfoScreen)
+						.Join(e => $"<c=textFaint>{this.UpdateChecksApi.GetModNameForUpdatePurposes(e.Mod)}</c> <c=textBold>{e.Mod.Version}</c> -> <c=boldPink>{e.Version}</c>", "\n");
+
+					if (pendingUpdates.Count > adjustedMaxUpdatesOnInfoScreen)
+						mainText = $"{mainText}\n{this.Localizations.Localize(["infoScreen", "more"], new { Count = pendingUpdates.Count - adjustedMaxUpdatesOnInfoScreen })}";
 				
 					var route = infoScreensApi.CreateBasicInfoScreenRoute();
 					route.Paragraphs = [
 						infoScreensApi.CreateBasicInfoScreenParagraph(this.Localizations.Localize(["infoScreen", "title"])).SetFont(DB.thicket),
-						infoScreensApi.CreateBasicInfoScreenParagraph(
-							pendingUpdates.Join(e => $"<c=textFaint>{this.UpdateChecksApi.GetModNameForUpdatePurposes(e.Mod)}</c> <c=textBold>{e.Mod.Version}</c> -> <c=boldPink>{e.Version}</c>", "\n")
-						),
+						infoScreensApi.CreateBasicInfoScreenParagraph(mainText),
 					];
 					route.Actions = [
 						infoScreensApi.CreateBasicInfoScreenAction(this.Localizations.Localize(["infoScreen", "actions", "details"]), args =>

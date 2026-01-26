@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed a potential softlock if there are too many mods with pending updates.
+
 ## 1.20.3
 Released 14 January 2026.
 
