@@ -22,6 +22,18 @@ internal sealed class Settings
 	
 		[JsonProperty]
 		public bool TimestampedLogFiles;
+	
+		[JsonProperty]
+		public bool SanitizeUserDirectoryPath;
+	
+		[JsonProperty]
+		public bool SanitizeUserName;
+	
+		[JsonProperty]
+		public bool? SanitizeFileLogs;
+	
+		[JsonProperty]
+		public bool? SanitizeConsoleLogs;
 	}
 
 	[JsonProperty]

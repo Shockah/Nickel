@@ -82,7 +82,7 @@ internal sealed class SteamCobaltCoreResolver(
 
 	private OneOf<CobaltCoreResolveResult, Error<string>>? HandleSteamPath(string steamPath, bool isWindows, bool isOsx)
 	{
-		logger.LogTrace("Potential Steam path: {SteamPath}", PathUtilities.SanitizePath(steamPath));
+		logger.LogTrace("Potential Steam path: {SteamPath}", steamPath);
 		
 		// This should be safe to delete
 		if (this.HandleSteamAppsPath(Path.Combine(steamPath, "steamapps"), isWindows, isOsx) is { } result)
@@ -93,7 +93,7 @@ internal sealed class SteamCobaltCoreResolver(
 		if (!File.Exists(libraryVdfPath))
 			return null;
 			
-		logger.LogTrace("Found Steam library VDF file: {Path}", PathUtilities.SanitizePath(libraryVdfPath));
+		logger.LogTrace("Found Steam library VDF file: {Path}", libraryVdfPath);
 
 		try
 		{
@@ -124,13 +124,13 @@ internal sealed class SteamCobaltCoreResolver(
 
 	private OneOf<CobaltCoreResolveResult, Error<string>>? HandleSteamAppsPath(string steamAppsPath, bool isWindows, bool isOsx)
 	{
-		logger.LogTrace("Potential SteamApps path: {SteamAppPath}", PathUtilities.SanitizePath(steamAppsPath));
+		logger.LogTrace("Potential SteamApps path: {SteamAppPath}", steamAppsPath);
 			
 		var potentialPath = Path.Combine(steamAppsPath, "common", "Cobalt Core");
 		if (isOsx)
 			potentialPath = Path.Combine(potentialPath, "Cobalt Core.app", "Contents", "MacOS");
 			
-		logger.LogTrace("Potential Cobalt Core path: {SteamAppPath}", PathUtilities.SanitizePath(potentialPath));
+		logger.LogTrace("Potential Cobalt Core path: {PotentialPath}", potentialPath);
 
 		var directory = new DirectoryInfo(potentialPath);
 		if (!directory.Exists)
@@ -140,13 +140,13 @@ internal sealed class SteamCobaltCoreResolver(
 		if (!singleFileApplicationPath.Exists)
 			return null;
 			
-		logger.LogTrace("Resolved Steam Cobalt Core path: {Path}", PathUtilities.SanitizePath(singleFileApplicationPath.FullName));
+		logger.LogTrace("Resolved Steam Cobalt Core path: {Path}", singleFileApplicationPath.FullName);
 
 		var pdbPath = new FileInfoImpl(new FileInfo(Path.Combine(directory.FullName, "CobaltCore.pdb")));
 		if (pdbPath.Exists != true)
 			pdbPath = null;
 			
-		logger.LogTrace("Resolved Steam Cobalt Core PDB path: {Path}", pdbPath is null ? "<null>" : PathUtilities.SanitizePath(pdbPath.FullName));
+		logger.LogTrace("Resolved Steam Cobalt Core PDB path: {Path}", pdbPath is null ? "<null>" : pdbPath.FullName);
 
 		var resolver = resolverFactory(singleFileApplicationPath, pdbPath);
 		return resolver.ResolveCobaltCore();

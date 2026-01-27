@@ -372,9 +372,7 @@ internal sealed class ModManager
 				ignoreDotNames: true,
 				allowPluginsInRoot: allowModsInRoot,
 				directoryResolverFactory: d => new PriorityPluginPackageResolver<IModManifest, double>(
-					resolver: new SanitizingPluginPackageResolver<IModManifest>(
-						new DirectoryPluginPackageResolver<IModManifest>(d, NickelConstants.ManifestFileName, pluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Empty)
-					),
+					resolver: new DirectoryPluginPackageResolver<IModManifest>(d, NickelConstants.ManifestFileName, pluginManifestLoader, SingleFilePluginPackageResolverNoManifestResult.Empty),
 					priority: extractedPriority
 				),
 				fileResolverFactory: f => f.Name.EndsWith(".zip")

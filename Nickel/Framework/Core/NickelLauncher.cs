@@ -20,13 +20,7 @@ internal static class NickelLauncher
 	internal static bool Run(ProgramRunInfo info)
 	{
 		var realOut = Console.Out;
-		var loggerFactory = LoggerFactory.Create(builder =>
-		{
-			builder.SetMinimumLevel((LogLevel)Math.Min((int)info.Settings.Logging.MinimumFileLogLevel, (int)info.Settings.Logging.MinimumConsoleLogLevel));
-			var fileLogDirectory = info.Settings.Logging.LogPath ?? Program.GetOrCreateDefaultLogDirectory();
-			builder.AddProvider(FileLoggerProvider.CreateNewLog(info.Settings.Logging.MinimumFileLogLevel, fileLogDirectory, info.Settings.Logging.TimestampedLogFiles));
-			builder.AddProvider(new ConsoleLoggerProvider(info.Settings.Logging.MinimumConsoleLogLevel, realOut, disposeWriter: false));
-		});
+		var loggerFactory = LoggerFactory.Create(builder => Program.SetupDefaultLogger(builder, info, realOut));
 		var logger = loggerFactory.CreateLogger($"{NickelConstants.Name}Launcher");
 		Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, realOut));
 		Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));

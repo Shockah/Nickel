@@ -25,6 +25,10 @@ internal static class LaunchOptions
 	private static readonly Option<LogLevel?> MinimumConsoleLogLevel = new("--minimum-console-log-level", "The minimum log level that will be logged to the console.");
 	private static readonly Option<DirectoryInfo?> LogPath = new("--log-path", "The folder logs will be stored in.");
 	private static readonly Option<bool?> TimestampedLogFiles = new("--keep-logs", "Uses timestamps for log filenames.");
+	private static readonly Option<bool?> SanitizeUserDirectoryPath = new("--sanitize-user-directory-path", "Whether user directory paths should be sanitized from logs, replacing them with `~`.");
+	private static readonly Option<bool?> SanitizeUserName = new("--sanitize-user-name", "Whether username should be sanitized from logs, replacing it with `%username%`.");
+	private static readonly Option<bool?> SanitizeFileLogs = new("--sanitize-file-logs", "Whether file logs should be sanitized.");
+	private static readonly Option<bool?> SanitizeConsoleLogs = new("--sanitize-console-logs", "Whether console logs should be sanitized.");
 	
 	public static readonly Option<bool?> WrapLaunch = new("--wrap-launch", "Whether the mod loader should wrap another instance of it, allowing catching fatal exceptions.");
 	public static readonly Option<string?> LogPipeName = new("--log-pipe-name") { IsHidden = true };
@@ -53,6 +57,10 @@ internal static class LaunchOptions
 		launchArgs.Apply(MinimumConsoleLogLevel, ref settings.Logging.MinimumConsoleLogLevel);
 		launchArgs.Apply(LogPath, ref settings.Logging.LogPath);
 		launchArgs.Apply(TimestampedLogFiles, ref settings.Logging.TimestampedLogFiles);
+		launchArgs.Apply(SanitizeUserDirectoryPath, ref settings.Logging.SanitizeUserDirectoryPath);
+		launchArgs.Apply(SanitizeUserName, ref settings.Logging.SanitizeUserName);
+		launchArgs.Apply(SanitizeFileLogs, ref settings.Logging.SanitizeFileLogs);
+		launchArgs.Apply(SanitizeConsoleLogs, ref settings.Logging.SanitizeConsoleLogs);
 		
 		launchArgs.Apply(WrapLaunch, ref settings.WrapLaunch);
 		launchArgs.Apply(RestartWithTerminal, ref settings.RestartWithTerminal);
@@ -85,7 +93,7 @@ internal static class LaunchOptions
 			if (Enum.TryParse<ModLoadPhase>(attachDebuggerBeforeModLoadPhaseRaw, out var result))
 				settings.AttachDebuggerBeforeModLoadPhase = result;
 			else
-				logs.Add(new(LogLevel.Error, $"The `{AttachDebuggerBeforeModLoadPhase.LongestAlias}` has an invalid value. Ignoring."));
+				logs.Add(new(LogLevel.Error, $"The `{AttachDebuggerBeforeModLoadPhase.LongestAlias}` commandline argument has an invalid value. Ignoring."));
 		}
 		
 		if (launchArgs.GetValueForOption(AttachDebuggerAfterModLoadPhase) is { } attachDebuggerAfterModLoadPhaseRaw)
@@ -93,7 +101,7 @@ internal static class LaunchOptions
 			if (Enum.TryParse<ModLoadPhase>(attachDebuggerAfterModLoadPhaseRaw, out var result))
 				settings.AttachDebuggerAfterModLoadPhase = result;
 			else
-				logs.Add(new(LogLevel.Error, $"The `{AttachDebuggerAfterModLoadPhase.LongestAlias}` has an invalid value. Ignoring."));
+				logs.Add(new(LogLevel.Error, $"The `{AttachDebuggerAfterModLoadPhase.LongestAlias}` commandline argument has an invalid value. Ignoring."));
 		}
 
 		return logs;
@@ -122,10 +130,10 @@ file static class LaunchOptionsStructExtensions
 				setting = value;
 		}
 		
-		// public void Apply<T>(Option<T?> option, ref T? setting) where T : struct
-		// {
-		// 	if (launchArgs.GetValueForOption(option) is { } value)
-		// 		setting = value;
-		// }
+		public void Apply<T>(Option<T?> option, ref T? setting) where T : struct
+		{
+			if (launchArgs.GetValueForOption(option) is { } value)
+				setting = value;
+		}
 	}
 }

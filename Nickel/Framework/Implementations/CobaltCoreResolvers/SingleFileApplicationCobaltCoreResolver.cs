@@ -19,7 +19,7 @@ internal sealed class SingleFileApplicationCobaltCoreResolver(
 
 	public OneOf<CobaltCoreResolveResult, Error<string>> ResolveCobaltCore()
 	{
-		logger.LogTrace("Attempting to resolve Cobalt Core from path: {Path}", PathUtilities.SanitizePath(exePath.FullName));
+		logger.LogTrace("Attempting to resolve Cobalt Core from path: {Path}", exePath.FullName);
 		if (!exePath.Exists)
 			return new Error<string>($"The file `{exePath.FullName}` does not exist.");
 
@@ -50,8 +50,8 @@ internal sealed class SingleFileApplicationCobaltCoreResolver(
 			foreach (var file in exePath.Parent!.Files.Where(f => f.Name.EndsWith(".dll") && f.Name != CobaltCoreResource))
 				otherDllDataStreamProviders[file.Name] = () => file.OpenRead();
 			
-			logger.LogTrace("Resolved Cobalt Core path: {Path}", PathUtilities.SanitizePath(exePath.FullName));
-			logger.LogTrace("Resolved Cobalt Core PDB path: {Path}", pdbPath is null ? "<null>" : PathUtilities.SanitizePath(pdbPath.FullName));
+			logger.LogTrace("Resolved Cobalt Core path: {Path}", exePath.FullName);
+			logger.LogTrace("Resolved Cobalt Core PDB path: {Path}", pdbPath is null ? "<null>" : pdbPath.FullName);
 
 			return new CobaltCoreResolveResult
 			{

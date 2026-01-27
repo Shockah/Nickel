@@ -85,7 +85,7 @@ public sealed class ModEntry : Mod
 								return null; // no need to copy
 							
 							var rootExtractedPath = new DirectoryInfoImpl(new DirectoryInfo(Path.Combine(tempModDirectory.FullName, package.Manifest.UniqueName)));
-							logger.LogInformation("Extracting mod {ModName} to {Path}.", package.Manifest.GetDisplayName(@long: false), PathUtilities.SanitizePath(rootExtractedPath.FullName));
+							logger.LogInformation("Extracting mod {ModName} to {Path}.", package.Manifest.GetDisplayName(@long: false), rootExtractedPath.FullName);
 							return rootExtractedPath;
 						}
 					),
@@ -264,7 +264,7 @@ public sealed class ModEntry : Mod
 
 		try
 		{
-			this.Logger.LogInformation("Generating a `{ManifestFileName}` file for a legacy mod that is missing one at `{Directory}`...", NickelConstants.ManifestFileName, PathUtilities.SanitizePath(directory.FullName));
+			this.Logger.LogInformation("Generating a `{ManifestFileName}` file for a legacy mod that is missing one at `{Directory}`...", NickelConstants.ManifestFileName, directory.FullName);
 
 			var manifests = manifestTypes
 				.Select(t => (ILegacyManifest)Activator.CreateInstance(t)!)
@@ -307,7 +307,7 @@ public sealed class ModEntry : Mod
 			using var streamWriter = new StreamWriter(stream);
 			serializer.Serialize(streamWriter, manifest);
 
-			this.Logger.LogWarning("Successfully generated a `{ManifestFileName}` file for a legacy mod at `{Directory}`. The mod will be loaded the next time you start {ModLoaderName}.", NickelConstants.ManifestFileName, PathUtilities.SanitizePath(directory.FullName), NickelConstants.Name);
+			this.Logger.LogWarning("Successfully generated a `{ManifestFileName}` file for a legacy mod at `{Directory}`. The mod will be loaded the next time you start {ModLoaderName}.", NickelConstants.ManifestFileName, directory.FullName, NickelConstants.Name);
 			return true;
 		}
 		catch (Exception ex)

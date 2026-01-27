@@ -18,7 +18,7 @@ internal sealed class RecursiveToRootDirectoryCobaltCoreResolver(
 		var currentDirectory = baseDirectory;
 		while (currentDirectory?.Exists ?? false)
 		{
-			logger.LogTrace("Attempting to resolve from path: {Path}", PathUtilities.SanitizePath(currentDirectory.FullName));
+			logger.LogTrace("Attempting to resolve from path: {Path}", currentDirectory.FullName);
 			if (resolverFactory(currentDirectory) is { } resolver)
 				return resolver.ResolveCobaltCore();
 			currentDirectory = currentDirectory.Parent;

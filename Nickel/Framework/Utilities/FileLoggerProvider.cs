@@ -5,21 +5,18 @@ using System.Text;
 
 namespace Nickel;
 
-/// <summary>
-/// An <see cref="ILoggerProvider"/> implementation which logs messages to files.
-/// </summary>
-/// <param name="level">The minimum log level to log. Messages at lower levels will be discarded.</param>
-/// <param name="filePath">The file to log messages to.</param>
-public sealed class FileLoggerProvider(LogLevel level, string filePath) : ILoggerProvider
+internal sealed class FileLoggerProvider(
+	LogLevel level,
+	string filePath,
+	Func<string, string>? mutator = null
+) : ILoggerProvider
 {
-	/// <summary>
-	/// Creates a <see cref="FileLoggerProvider"/> which keeps rolling logs.
-	/// </summary>
-	/// <param name="level">The minimum log level to log. Messages at lower levels will be discarded.</param>
-	/// <param name="directoryInfo">The directory that will store the log files.</param>
-	/// <param name="timestampedLogFiles">Whether the log file names should contain the current timestamp. If <c>false</c>, will only use two log files (current and previous).</param>
-	/// <returns></returns>
-	public static FileLoggerProvider CreateNewLog(LogLevel level, DirectoryInfo directoryInfo, bool timestampedLogFiles)
+	public static FileLoggerProvider CreateNewLog(
+		LogLevel level,
+		DirectoryInfo directoryInfo,
+		bool timestampedLogFiles,
+		Func<string, string>? mutator = null
+	)
 	{
 		if (timestampedLogFiles)
 		{
@@ -35,7 +32,7 @@ public sealed class FileLoggerProvider(LogLevel level, string filePath) : ILogge
 		if (File.Exists(currentFilePath))
 			File.Move(currentFilePath, prevFilePath, true);
 
-		return new FileLoggerProvider(level, currentFilePath);
+		return new FileLoggerProvider(level, currentFilePath, mutator);
 	}
 
 	private StreamWriter StreamWriter { get; } = new(
@@ -51,29 +48,32 @@ public sealed class FileLoggerProvider(LogLevel level, string filePath) : ILogge
 	)
 	{ AutoFlush = true };
 
-	/// <inheritdoc/>
 	public void Dispose()
 	{
 		this.StreamWriter.Flush();
 		this.StreamWriter.Dispose();
 	}
 
-	/// <inheritdoc/>
 	public ILogger CreateLogger(string categoryName) =>
 		new Logger(
 			level,
 			categoryName,
 			logEntry =>
 			{
+				var timeString = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 				lock (this)
 				{
-					var timeString = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-					this.StreamWriter.WriteLine($"[{timeString}][{logEntry.LogLevel}][{categoryName}] {logEntry.Message}");
+					var message = mutator is null ? logEntry.Message : mutator(logEntry.Message);
+					this.StreamWriter.WriteLine($"[{timeString}][{logEntry.LogLevel}][{logEntry.CategoryName}] {message}");
 				}
 			}
 		);
 
-	private sealed class Logger(LogLevel level, string categoryName, Action<LogEntry> loggingFunction) : ILogger
+	private sealed class Logger(
+		LogLevel level,
+		string categoryName,
+		Action<LogEntry> loggingFunction
+	) : ILogger
 	{
 		private string CategoryName { get; } = categoryName;
 		private Action<LogEntry> LoggingFunction { get; } = loggingFunction;

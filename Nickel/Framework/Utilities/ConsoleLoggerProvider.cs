@@ -4,15 +4,13 @@ using System.IO;
 
 namespace Nickel;
 
-/// <summary>
-/// An <see cref="ILoggerProvider"/> implementation which logs messages to the console.
-/// </summary>
-/// <param name="level">The minimum log level to log. Messages at lower levels will be discarded.</param>
-/// <param name="textWriter">The console <see cref="TextWriter"/> to log messages to.</param>
-/// <param name="disposeWriter">Whether the <c>textWriter</c> should be disposed when this provider is disposed.</param>
-public sealed class ConsoleLoggerProvider(LogLevel level, TextWriter textWriter, bool disposeWriter) : ILoggerProvider
+internal sealed class ConsoleLoggerProvider(
+	LogLevel level,
+	TextWriter textWriter,
+	bool disposeWriter,
+	Func<string, string>? mutator = null
+) : ILoggerProvider
 {
-	/// <inheritdoc/>
 	public void Dispose()
 	{
 		textWriter.Flush();
@@ -20,11 +18,16 @@ public sealed class ConsoleLoggerProvider(LogLevel level, TextWriter textWriter,
 			textWriter.Dispose();
 	}
 
-	/// <inheritdoc/>
-	public ILogger CreateLogger(string categoryName) =>
-		new Logger(this, level, textWriter, categoryName);
+	public ILogger CreateLogger(string categoryName)
+		=> new Logger(this, level, textWriter, categoryName, mutator);
 
-	private sealed class Logger(ConsoleLoggerProvider provider, LogLevel level, TextWriter textWriter, string categoryName) : ILogger
+	private sealed class Logger(
+		ConsoleLoggerProvider provider,
+		LogLevel level,
+		TextWriter textWriter,
+		string categoryName,
+		Func<string, string>? mutator = null
+	) : ILogger
 	{
 		public IDisposable? BeginScope<TState>(TState state) where TState : notnull
 			=> null;
@@ -40,6 +43,11 @@ public sealed class ConsoleLoggerProvider(LogLevel level, TextWriter textWriter,
 			Func<TState, Exception?, string> formatter
 		)
 		{
+			if (!this.IsEnabled(logLevel))
+				return;
+			var message = formatter(state, exception);
+			message = mutator is null ? message : mutator(message);
+			
 			lock (provider)
 			{
 				if (!this.IsEnabled(logLevel))
@@ -51,19 +59,15 @@ public sealed class ConsoleLoggerProvider(LogLevel level, TextWriter textWriter,
 				try
 				{
 					textWriter.Write('[');
-
 					Console.BackgroundColor = logColor.Background ?? oldBackgroundColor;
 					Console.ForegroundColor = logColor.Foreground ?? oldForegroundColor;
 					textWriter.Write(GetLogLevelString(logLevel));
-
 					Console.BackgroundColor = oldBackgroundColor;
 					Console.ForegroundColor = oldForegroundColor;
 					textWriter.Write(']');
 
-					textWriter.Write($"[{categoryName}]");
-					textWriter.Write($" {formatter(state, exception)}");
+					textWriter.Write($"[{categoryName}] {message}");
 					textWriter.WriteLine();
-
 				}
 				finally
 				{

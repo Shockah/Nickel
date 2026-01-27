@@ -36,23 +36,19 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 			var logPipeName = info.LaunchArgs.GetValueForOption(LaunchOptions.LogPipeName);
 			if (string.IsNullOrEmpty(logPipeName))
 			{
-				builder.SetMinimumLevel((LogLevel)Math.Min((int)info.Settings.Logging.MinimumFileLogLevel, (int)info.Settings.Logging.MinimumConsoleLogLevel));
-				var fileLogDirectory = info.Settings.Logging.LogPath ?? Program.GetOrCreateDefaultLogDirectory();
-				builder.AddProvider(FileLoggerProvider.CreateNewLog(info.Settings.Logging.MinimumFileLogLevel, fileLogDirectory, info.Settings.Logging.TimestampedLogFiles));
-				builder.AddProvider(new ConsoleLoggerProvider(info.Settings.Logging.MinimumConsoleLogLevel, realOut, disposeWriter: false));
+				Program.SetupDefaultLogger(builder, info, realOut);
+				return;
 			}
-			else
-			{
-				builder.SetMinimumLevel((LogLevel)Math.Min((int)info.Settings.Logging.MinimumFileLogLevel, (int)info.Settings.Logging.MinimumConsoleLogLevel));
-				builder.AddProvider(new NamedPipeClientLoggerProvider(logPipeName));
-			}
+			
+			builder.SetMinimumLevel((LogLevel)Math.Min((int)info.Settings.Logging.MinimumFileLogLevel, (int)info.Settings.Logging.MinimumConsoleLogLevel));
+			builder.AddProvider(new NamedPipeClientLoggerProvider(logPipeName));
 		});
 		var logger = loggerFactory.CreateLogger(NickelConstants.Name);
 		Console.SetOut(new LoggerTextWriter(logger, LogLevel.Information, realOut));
 		Console.SetError(new LoggerTextWriter(logger, LogLevel.Error, Console.Error));
 		logger.LogInformation("{IntroMessage}", NickelConstants.IntroMessage);
 		
-		logger.LogInformation("ModStoragePath: {Path}", PathUtilities.SanitizePath(info.ModStorageDirectory.FullName));
+		logger.LogInformation("ModStoragePath: {Path}", info.ModStorageDirectory.FullName);
 		info.PushEarlyLogsToLogger(logger);
 
 		try
@@ -109,8 +105,8 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 			return false;
 		}
 		
-		logger.LogDebug("Resolved game EXE path: {Path}", PathUtilities.SanitizePath(resolveResult.ExePath.FullName));
-		logger.LogDebug("Resolved game working directory path: {Path}", PathUtilities.SanitizePath(resolveResult.WorkingDirectory.FullName));
+		logger.LogDebug("Resolved game EXE path: {Path}", resolveResult.ExePath.FullName);
+		logger.LogDebug("Resolved game working directory path: {Path}", resolveResult.WorkingDirectory.FullName);
 		
 		using (var exeStream = resolveResult.ExePath.OpenRead())
 			logger.LogDebug("Game EXE hash: {Hash}", Convert.ToHexString(MD5.HashData(exeStream)));
@@ -135,7 +131,7 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GameFieldToPropertyDefinitionEditor());
 
 		var assemblyCacheDirectory = instance.RunInfo.Settings.AssemblyCachePath ?? GetOrCreateDefaultAssemblyCacheDirectory();
-		logger.LogInformation("AssemblyCachePath: {Path}", PathUtilities.SanitizePath(assemblyCacheDirectory.FullName));
+		logger.LogInformation("AssemblyCachePath: {Path}", assemblyCacheDirectory.FullName);
 
 		var fileCachingAssemblyEditor = new FileCachingAssemblyEditor(
 			extendableAssemblyDefinitionEditor,
@@ -169,13 +165,13 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		HarmonyPatches.Apply(harmony, logger);
 
 		var internalModsDirectory = instance.RunInfo.Settings.InternalModsPath ?? GetOrCreateDefaultInternalModLibraryDirectory();
-		logger.LogInformation("InternalModsPath: {Path}", PathUtilities.SanitizePath(internalModsDirectory.FullName));
+		logger.LogInformation("InternalModsPath: {Path}", internalModsDirectory.FullName);
 
 		var modsDirectory = instance.RunInfo.Settings.ModsPath ?? GetOrCreateDefaultModLibraryDirectory();
-		logger.LogInformation("ModsPath: {Path}", PathUtilities.SanitizePath(modsDirectory.FullName));
+		logger.LogInformation("ModsPath: {Path}", modsDirectory.FullName);
 
 		var privateModStorageDirectory = instance.RunInfo.Settings.PrivateModStoragePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "PrivateModStorage"));
-		logger.LogInformation("PrivateModStoragePath: {Path}", PathUtilities.SanitizePath(privateModStorageDirectory.FullName));
+		logger.LogInformation("PrivateModStoragePath: {Path}", privateModStorageDirectory.FullName);
 
 		instance.ModManager = new(
 			internalModsDirectory,
@@ -255,7 +251,7 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		instance.ModManager.EventManager.OnLoadStringsForLocaleEvent.Add(instance.OnLoadStringsForLocale, instance.ModManager.ModLoaderPackage.Manifest);
 
 		var savePath = instance.RunInfo.Settings.SavePath ?? new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CobaltCore", NickelConstants.Name, "Saves"));
-		logger.LogInformation("SavePath: {Path}", PathUtilities.SanitizePath(savePath.FullName));
+		logger.LogInformation("SavePath: {Path}", savePath.FullName);
 
 		if (harmony is not null)
 			ApplyHarmonyPatches(harmony);
