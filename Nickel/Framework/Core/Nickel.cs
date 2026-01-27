@@ -1,10 +1,8 @@
-using FSPRO;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Mono.Cecil;
 using Nanoray.PluginManager;
 using Nanoray.PluginManager.Cecil;
-using Nickel.ModSettings;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -344,53 +342,6 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		if (this.Harmony is not null)
 			ApplyLateHarmonyPatches(this.Harmony);
 		this.ModManager.ContentManager?.InjectQueuedEntries();
-
-		this.SetupModSettings();
-	}
-
-	private void SetupModSettings()
-	{
-		var helper = this.ModManager.ObtainModHelper(this.ModManager.ModLoaderPackage);
-		if (helper.ModRegistry.GetApi<IModSettingsApi>("Nickel.ModSettings") is { } settingsApi)
-			settingsApi.RegisterModSettings(settingsApi.MakeList([
-				settingsApi.MakeCheckbox(
-					() => "Debug", // TODO: localize
-					() => this.RunInfo.Settings.DebugMode != DebugMode.Disabled,
-					setter: (_, _, value) =>
-					{
-						this.RunInfo.Settings.DebugMode = value ? DebugMode.EnabledWithSaving : DebugMode.Disabled;
-						this.OnSettingsUpdate();
-					}
-				),
-				settingsApi.MakeConditional(
-					settingsApi.MakeCheckbox(
-						() => "Enabled debug auto-saving", // TODO: localize
-						() => this.RunInfo.Settings.DebugMode == DebugMode.EnabledWithSaving,
-						setter: (_, _, value) =>
-						{
-							this.RunInfo.Settings.DebugMode = value ? DebugMode.EnabledWithSaving : DebugMode.Enabled;
-							this.OnSettingsUpdate();
-						}
-					),
-					() => this.RunInfo.Settings.DebugMode != DebugMode.Disabled
-				),
-				settingsApi.MakeConditional(
-					setting: settingsApi.MakeButton(
-						title: () => "Toggle debug menu", // TODO: localize
-						(g, _) =>
-						{
-							Audio.Play(Event.Click);
-							if (g.e is { } editor)
-								editor.isActive = !editor.isActive;
-						}
-					),
-					isVisible: () => this.RunInfo.Settings.DebugMode != DebugMode.Disabled
-				)
-			]).SubscribeToOnMenuClose(_ =>
-			{
-				helper.Storage.SaveJson(helper.Storage.GetMainStorageFile("json"), this.RunInfo.Settings);
-				this.OnSettingsUpdate();
-			}));
 	}
 
 	[EventPriority(double.MaxValue)]
@@ -432,27 +383,6 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		if (!directoryInfo.Exists)
 			directoryInfo.Create();
 		return directoryInfo;
-	}
-
-	private void OnSettingsUpdate()
-	{
-		if (AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == "CobaltCore"))
-			this.OnSettingsUpdateAfterGameLoaded();
-	}
-
-	private void OnSettingsUpdateAfterGameLoaded()
-	{
-		FeatureFlags.Debug = this.RunInfo.Settings.DebugMode != DebugMode.Disabled;
-
-		// ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-		if (MG.inst?.g is not { } g)
-			return;
-
-		if (FeatureFlags.Debug && g.e is null)
-		{
-			g.e = new Editor();
-			g.e.IMGUI_Setup(MG.inst);
-		}
 	}
 
 	[GeneratedRegex(@"(\d+)\.(\d+)\.(\d+)(?: (.+))?")]

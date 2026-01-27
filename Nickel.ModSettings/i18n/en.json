@@ -2,6 +2,17 @@
 	"mainMenu": {
 		"buttonTitle": "MOD SETTINGS"
 	},
+	"ownSettings": {
+		"debug": {
+			"title": "Debug mode"
+		},
+		"debugAutoSave": {
+			"title": "Enabled debug auto-saving"
+		},
+		"toggleDebugMenu": {
+			"title": "Toggle debug menu"
+		}
+	},
 	"modSettings": {
 		"title": "MOD SETTINGS",
 		"back": "BACK",
