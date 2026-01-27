@@ -23,7 +23,7 @@ internal sealed class ModHelper(
 		get
 		{
 			if (this.CurrentModLoadPhaseProvider().Phase < ModLoadPhase.AfterGameAssembly)
-				throw new InvalidOperationException("Cannot access content before the game assembly is loaded.");
+				throw new InvalidOperationException("Cannot access content before the game assembly is loaded");
 			return this.ContentStorage.Value;
 		}
 	}

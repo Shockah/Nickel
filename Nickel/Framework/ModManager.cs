@@ -722,63 +722,65 @@ internal sealed class ModManager
 		return this.ObtainModHelper(package);
 	}
 
-	internal IModHelper ObtainModHelper(IPluginPackage<IModManifest> package)
+	private IModHelper ObtainModHelper(IPluginPackage<IModManifest> package)
 	{
 		ref var helper = ref CollectionsMarshal.GetValueRefOrAddDefault(this.UniqueNameToHelper, package.Manifest.UniqueName, out var exists);
-		if (!exists)
-		{
-			var logger = this.ObtainLogger(package.Manifest);
-			var modEvents = new ModEvents(
-				package.Manifest,
-				this.EventManager,
-				() => this.CurrentModLoadPhase
-			);
+		if (exists)
+			return helper!;
+		
+		var currentModLoadPhaseProvider = () => this.CurrentModLoadPhase;
+		var logger = this.ObtainLogger(package.Manifest);
+		var modEvents = new ModEvents(
+			package.Manifest,
+			this.EventManager,
+			currentModLoadPhaseProvider
+		);
 			
-			helper = new ModHelper(
-				new ModRegistry(
-					package.Manifest,
-					() => this.VanillaModManifest,
-					() => this.ModLoaderPackage.Manifest,
-					this.ModsDirectory,
-					this.UniqueNameToInstance,
-					this.UniqueNameToPackage,
-					this.ResolvedMods,
-					this.ProxyManager,
-					() => this.CurrentModLoadPhase,
-					modEvents,
-					this.ObtainModHelper,
-					this.ObtainLogger,
-					mod => this.UniqueNameToPackage[mod.UniqueName]
-				),
+		helper = new ModHelper(
+			new ModRegistry(
+				package.Manifest,
+				() => this.VanillaModManifest,
+				() => this.ModLoaderPackage.Manifest,
+				this.ModsDirectory,
+				this.UniqueNameToInstance,
+				this.UniqueNameToPackage,
+				this.ResolvedMods,
+				this.ProxyManager,
+				currentModLoadPhaseProvider,
 				modEvents,
-				() => new ModContent(
-					new ModSprites(package, () => this.ContentManager!.Sprites, logger),
-					new ModAudio(package, () => this.ContentManager!.Audio, logger),
-					new ModDecks(package.Manifest, () => this.ContentManager!.Decks),
-					new ModStatuses(package.Manifest, () => this.ContentManager!.Statuses),
-					new ModCards(package.Manifest, () => this.ContentManager!.Cards, () => this.ContentManager!.CardTraits),
-					new ModArtifacts(package.Manifest, () => this.ContentManager!.Artifacts),
-					new ModCharacters(package.Manifest, () => this.ContentManager!.Characters),
-					new ModShips(package.Manifest, () => this.ContentManager!.Ships, () => this.ContentManager!.Parts),
-					new ModEnemies(package.Manifest, () => this.ContentManager!.Enemies)
-				),
-				new ModData(package.Manifest, this.ModDataHandler),
-				new ModStorage(
-					package.Manifest,
-					() => this.ObtainLogger(package.Manifest),
-					new DirectoryInfoImpl(this.ModStorageDirectory),
-					new DirectoryInfoImpl(this.PrivateModStorageDirectory),
-					this.ModStorageManager
-				),
-				new ModUtilities(
-					this.EnumCasePool,
-					this.ProxyManager,
-					new Harmony(package.Manifest.UniqueName)
-				),
-				() => this.CurrentModLoadPhase
-			);
-		}
-		return helper!;
+				this.ObtainModHelper,
+				this.ObtainLogger,
+				mod => this.UniqueNameToPackage[mod.UniqueName]
+			),
+			modEvents,
+			() => new ModContent(
+				new ModSprites(package, () => this.ContentManager!.Sprites, logger),
+				new ModAudio(package, () => this.ContentManager!.Audio, logger),
+				new ModDecks(package.Manifest, () => this.ContentManager!.Decks),
+				new ModStatuses(package.Manifest, () => this.ContentManager!.Statuses),
+				new ModCards(package.Manifest, () => this.ContentManager!.Cards, () => this.ContentManager!.CardTraits),
+				new ModArtifacts(package.Manifest, () => this.ContentManager!.Artifacts),
+				new ModCharacters(package.Manifest, () => this.ContentManager!.Characters),
+				new ModShips(package.Manifest, () => this.ContentManager!.Ships, () => this.ContentManager!.Parts),
+				new ModEnemies(package.Manifest, () => this.ContentManager!.Enemies)
+			),
+			new ModData(package.Manifest, this.ModDataHandler),
+			new ModStorage(
+				package.Manifest,
+				() => this.ObtainLogger(package.Manifest),
+				new DirectoryInfoImpl(this.ModStorageDirectory),
+				new DirectoryInfoImpl(this.PrivateModStorageDirectory),
+				this.ModStorageManager,
+				currentModLoadPhaseProvider
+			),
+			new ModUtilities(
+				this.EnumCasePool,
+				this.ProxyManager,
+				new Harmony(package.Manifest.UniqueName)
+			),
+			currentModLoadPhaseProvider
+		);
+		return helper;
 	}
 
 	private sealed class FakePluginPackage(IModManifest manifest, IDirectoryInfo packageRoot) : IPluginPackage<IModManifest>

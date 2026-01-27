@@ -12,6 +12,7 @@
 ### For developers:
 * Removed deprecated code.
 * Removed `IHasCustomTraits` in favor of the new `CardData.ExtraTraits` extension property.
+* Added `IModStorage.ProfileStorageDirectory` and `IModStorage.GetMainProfileStorageFile`.
 * Changed namespaces of some classes that were mistakenly put in wrong ones.
 
 ## 1.21.3

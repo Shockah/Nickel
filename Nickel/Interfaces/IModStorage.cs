@@ -19,7 +19,7 @@ public interface IModStorage
 	
 	/// <summary>
 	/// Get a path to a writable file specific for this mod, within the directory that should be used to store mod data, like settings.
-	/// This directory is usually stored in the user's application data folder, which is synced to the Steam Cloud.
+	/// This file is usually stored in the user's application data folder, which is synced to the Steam Cloud.
 	/// </summary>
 	/// <param name="fileExtension">The extension of the settings file (usually <c>json</c>).</param>
 	/// <returns>The path to a writable file.</returns>
@@ -33,11 +33,26 @@ public interface IModStorage
 	
 	/// <summary>
 	/// Get a path to a writable file specific for this mod, within the directory that should be used to store private mod data, like settings.
-	/// This directory is usually stored in the user's application data folder, which is synced to the Steam Cloud. It is not meant to be shared.
+	/// This file is usually stored in the user's application data folder, which is synced to the Steam Cloud. It is not meant to be shared.
 	/// </summary>
 	/// <param name="fileExtension">The extension of the settings file (usually <c>json</c>).</param>
 	/// <returns>The path to a writable file.</returns>
 	IWritableFileInfo GetMainPrivateStorageFile(string fileExtension);
+	
+	/// <summary>
+	/// Gets a path to a writable subdirectory specific for this mod, within the directory that should be used to store profile-specific mod data, like settings.
+	/// This directory is stored in the profile folder, which is synced to the Steam Cloud.
+	/// </summary>
+	/// <remarks>This value can be <c>null</c> if no profile is currently active.</remarks>
+	IWritableDirectoryInfo? ProfileStorageDirectory { get; }
+	
+	/// <summary>
+	/// Get a path to a writable file specific for this mod, within the directory that should be used to store profile-specific mod data, like settings.
+	/// This file is stored in the profile folder, which is synced to the Steam Cloud.
+	/// </summary>
+	/// <param name="fileExtension">The extension of the settings file (usually <c>json</c>).</param>
+	/// <returns>The path to a writable file. This value can be <c>null</c> if no profile is currently active.</returns>
+	IWritableFileInfo? GetMainProfileStorageFile(string fileExtension);
 
 	/// <summary>
 	/// Allows globally modifying all mod setting serializers.

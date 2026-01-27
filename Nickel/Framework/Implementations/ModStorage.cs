@@ -12,7 +12,8 @@ internal sealed class ModStorage(
 	Func<ILogger> loggerProvider,
 	IWritableDirectoryInfo commonStorageDirectory,
 	IWritableDirectoryInfo commonPrivateStorageDirectory,
-	ModStorageManager modStorageManager
+	ModStorageManager modStorageManager,
+	Func<ModLoadPhaseState> currentModLoadPhaseProvider
 ) : IModStorage
 {
 	public IWritableDirectoryInfo StorageDirectory
@@ -26,6 +27,12 @@ internal sealed class ModStorage(
 
 	public IWritableFileInfo GetMainPrivateStorageFile(string fileExtension)
 		=> commonPrivateStorageDirectory.GetRelativeFile($"{modManifest.UniqueName}.{fileExtension}");
+
+	public IWritableDirectoryInfo? ProfileStorageDirectory
+		=> this.GetProfileModStorageRootDirectory()?.GetRelativeDirectory(modManifest.UniqueName);
+
+	public IWritableFileInfo? GetMainProfileStorageFile(string fileExtension)
+		=> this.GetProfileModStorageRootDirectory()?.GetRelativeFile($"{modManifest.UniqueName}.{fileExtension}");
 
 	public void ApplyGlobalJsonSerializerSettings(Action<JsonSerializerSettings> function, double priority = 0)
 		=> modStorageManager.ApplyGlobalJsonSerializerSettings(function, priority);
@@ -82,5 +89,18 @@ internal sealed class ModStorage(
 		{
 			loggerProvider().LogWarning("Failed to save the JSON settings file `{file}`: {ex}", file, ex);
 		}
+	}
+
+	private IWritableDirectoryInfo? GetProfileModStorageRootDirectory()
+	{
+		if (currentModLoadPhaseProvider().Phase < ModLoadPhase.AfterGameAssembly)
+			throw new InvalidOperationException("Cannot access profile-specific storage before the game assembly is loaded");
+		if (MG.inst.g?.state is not { slot: { } slot })
+			return null;
+
+		var saveFile = new FileInfo(Storage.SavePath(State.GetSavePath(slot)));
+		var saveDirectory = saveFile.Directory!;
+		var modStorageDirectory = new DirectoryInfo(Path.Combine(saveDirectory.FullName, "ModStorage"));
+		return new DirectoryInfoImpl(modStorageDirectory);
 	}
 }
