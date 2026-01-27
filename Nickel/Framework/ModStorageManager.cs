@@ -44,6 +44,8 @@ internal sealed class ModStorageManager(Func<IContractResolver?, IContractResolv
 			settings = new JsonSerializerSettings { Formatting = Formatting.Indented };
 			settings.Converters.Add(new StringEnumConverter());
 			settings.Converters.Add(new SemanticVersionConverter());
+			settings.Converters.Add(new DirectoryInfoConverter());
+			settings.Converters.Add(new FileInfoConverter());
 			
 			if (contractResolverFactory is not null)
 				settings.ContractResolver = contractResolverFactory(settings.ContractResolver);

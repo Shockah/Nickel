@@ -12,6 +12,8 @@ internal static class SettingsUtilities
 		var serializerSettings = new JsonSerializerSettings { Formatting = Formatting.Indented };
 		serializerSettings.Converters.Add(new StringEnumConverter());
 		serializerSettings.Converters.Add(new SemanticVersionConverter());
+		serializerSettings.Converters.Add(new DirectoryInfoConverter());
+		serializerSettings.Converters.Add(new FileInfoConverter());
 		var serializer = JsonSerializer.Create(serializerSettings);
 
 		var settings = new T();

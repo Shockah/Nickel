@@ -96,6 +96,7 @@ internal sealed class ModManager
 			},
 			packageRoot: new DirectoryInfoImpl(new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory))
 		);
+		this.UniqueNameToPackage[this.ModLoaderPackage.Manifest.UniqueName] = this.ModLoaderPackage;
 
 		this.EventManager = new(
 			() => this.CurrentModLoadPhase,
@@ -717,7 +718,7 @@ internal sealed class ModManager
 		if (this.UniqueNameToHelper.TryGetValue(manifest.UniqueName, out var helper))
 			return helper;
 		if (!this.UniqueNameToPackage.TryGetValue(manifest.UniqueName, out var package))
-			throw new InvalidOperationException();
+			throw new InvalidOperationException(manifest.UniqueName);
 		return this.ObtainModHelper(package);
 	}
 
