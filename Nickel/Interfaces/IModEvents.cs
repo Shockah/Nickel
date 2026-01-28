@@ -49,7 +49,7 @@ public interface IModEvents
 		where THookDelegate : Delegate;
 
 	/// <summary>
-	/// Unsubscribes from an artifact hook.<br/>
+	/// Unsubscribes from an artifact hook.
 	/// </summary>
 	/// <typeparam name="THookDelegate">The type of the subscribed event handler.</typeparam>
 	/// <param name="eventName">The name of the <see cref="Artifact"/> method to hook.</param>
@@ -58,7 +58,7 @@ public interface IModEvents
 		where THookDelegate : Delegate;
 
 	/// <summary>
-	/// Unsubscribes from an artifact hook.<br/>
+	/// Unsubscribes from an artifact hook.
 	/// </summary>
 	/// <typeparam name="THookDelegate">The type of the subscribed event handler.</typeparam>
 	/// <param name="method">The <see cref="Artifact"/> method to hook.</param>
@@ -87,7 +87,7 @@ public interface IModEvents
 		where THookDelegate : Delegate;
 
 	/// <summary>
-	/// Unsubscribes from an artifact hook.<br/>
+	/// Unsubscribes from an artifact hook.
 	/// </summary>
 	/// <typeparam name="THookDelegate">The type of the subscribed event handler.</typeparam>
 	/// <param name="eventName">The name of the <see cref="Artifact"/> method to hook.</param>
@@ -96,7 +96,7 @@ public interface IModEvents
 		where THookDelegate : Delegate;
 
 	/// <summary>
-	/// Unsubscribes from an artifact hook.<br/>
+	/// Unsubscribes from an artifact hook.
 	/// </summary>
 	/// <typeparam name="THookDelegate">The type of the subscribed event handler.</typeparam>
 	/// <param name="method">The <see cref="Artifact"/> method to hook.</param>
