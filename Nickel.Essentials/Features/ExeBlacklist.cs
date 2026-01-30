@@ -1,15 +1,10 @@
 using FSPRO;
 using HarmonyLib;
-using Microsoft.Extensions.Logging;
-using Nanoray.Shrike;
-using Nanoray.Shrike.Harmony;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 
 namespace Nickel.Essentials;
 
@@ -26,21 +21,15 @@ internal static class ExeBlacklist
 {
 	private static readonly UK CannotBlacklistWarningKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 
-	private static State? LastState;
 	private static double CannotBlacklistWarning;
-	private static readonly Dictionary<Deck, Card> ExeCache = [];
+	private static readonly Dictionary<string, Deck?> CardKeyToExeDeckCache = [];
 
 	public static void ApplyPatches(IHarmony harmony)
 	{
 		harmony.Patch(
-			original: AccessTools.DeclaredMethod(typeof(State), nameof(State.PopulateRun))
-				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.{nameof(State.PopulateRun)}`"),
-			prefix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(State_PopulateRun_Prefix))
-		);
-		harmony.Patch(
-			original: typeof(State).GetNestedTypes(AccessTools.all).SelectMany(t => t.GetMethods(AccessTools.all)).First(m => m.Name.StartsWith("<PopulateRun>") && m.ReturnType == typeof(Route))
-				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(State)}.<compiler-generated-type>.<PopulateRun>`"),
-			transpiler: new HarmonyMethod(AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(State_PopulateRun_Delegate_Transpiler)), priority: Priority.First)
+			original: typeof(DeckDef).GetNestedTypes(AccessTools.all).SelectMany(t => t.GetMethods(AccessTools.all)).First(m => m.Name.StartsWith("<CreateDeckDefs>") && m.ReturnType == typeof(Card))
+				?? throw new InvalidOperationException($"Could not patch game methods: missing method `{nameof(DeckDef)}.{nameof(DeckDef.CreateDeckDefs)}.delegate`"),
+			postfix: new HarmonyMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(DeckDef_CreateDeckDefs_Delegate_Postfix))
 		);
 		harmony.Patch(
 			original: AccessTools.DeclaredMethod(typeof(NewRunOptions), nameof(NewRunOptions.Render))
@@ -103,75 +92,66 @@ internal static class ExeBlacklist
 			},
 		]);
 
+	// private static Deck? ObtainExeDeck(Type cardType)
+	// {
+	// 	if (ModEntry.Instance.Helper.Content.Cards.LookupByCardType(cardType) is not { } entry)
+	// 		return null;
+	// 	return ObtainExeDeck(entry.UniqueName);
+	// }
+
+	private static Deck? ObtainExeDeck(Card card)
+		=> ObtainExeDeck(card.Key());
+
+	private static Deck? ObtainExeDeck(string cardKey)
+	{
+		if (CardKeyToExeDeckCache.TryGetValue(cardKey, out var exeDeck))
+			return exeDeck;
+		
+		foreach (var def in DB.decks.Values)
+		{
+			if (def.exeCard?.Key() != cardKey)
+				continue;
+				
+			exeDeck = def.deck;
+			CardKeyToExeDeckCache[cardKey] = exeDeck;
+			return exeDeck;
+		}
+		
+		CardKeyToExeDeckCache[cardKey] = null;
+		return null;
+	}
+
 	private static IEnumerable<Tooltip> GetExeCardTooltipsForCharacter(Deck deck)
 	{
-		if (!ExeCache.TryGetValue(deck, out var card))
-		{
-			if (ModEntry.Instance.Api.GetExeCardTypeForDeck(deck) is not { } cardType)
-				return [];
-			
-			card = (Card)Activator.CreateInstance(cardType)!;
-			ExeCache[deck] = card;
-		}
+		if (!DB.decks.TryGetValue(deck, out var def) || def.exeCard is null)
+			return [];
 		
 		return [
 			new TTDivider(),
-			new TTCard { card = card },
+			new TTCard { card = def.exeCard },
 		];
 	}
 
 	private static IEnumerable<Deck> GetAllExeCharacters()
-		=> NewRunOptions.allChars.Where(d => d != Deck.colorless && ModEntry.Instance.Api.GetExeCardTypeForDeck(d) is not null);
+		=> DB.decks.Values
+			.Where(def => def.exeCard is not null)
+			.Select(def => def.deck);
 
 	private static IEnumerable<Deck> GetNonBlacklistedExeCharacters()
 		=> GetAllExeCharacters().Where(d => !ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeStarters.Contains(d));
 
-	private static void State_PopulateRun_Prefix(State __instance)
-		=> LastState = __instance;
-
-	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-	private static IEnumerable<CodeInstruction> State_PopulateRun_Delegate_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase originalMethod)
+	private static void DeckDef_CreateDeckDefs_Delegate_Postfix(ref Card? __result)
 	{
-		try
-		{
-			return new SequenceBlockMatcher<CodeInstruction>(instructions)
-				.Find(
-					ILMatches.Ldarg(0),
-					ILMatches.Ldfld("chars"),
-					ILMatches.LdcI4((int)Deck.shard),
-					ILMatches.Call("Contains"),
-					ILMatches.Brtrue,
-					ILMatches.Ldloc<List<Card>>(originalMethod).CreateLdlocInstruction(out var ldlocCards),
-					ILMatches.Instruction(OpCodes.Newobj),
-					ILMatches.Call("Add")
-				)
-				.PointerMatcher(SequenceMatcherRelativeElement.AfterLast)
-				.ExtractLabels(out var labels)
-				.Insert(
-					SequenceMatcherPastBoundsDirection.Before, SequenceMatcherInsertionResultingBounds.IncludingInsertion,
-					ldlocCards.Value.WithLabels(labels),
-					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(MethodBase.GetCurrentMethod()!.DeclaringType!, nameof(State_PopulateRun_Delegate_Transpiler_ModifyPotentialExeCards)))
-				)
-				.AllElements();
-		}
-		catch (Exception ex)
-		{
-			ModEntry.Instance.Logger.LogError("Could not patch method {Method} - {Mod} probably won't work.\nReason: {Exception}", originalMethod, ModEntry.Instance.Package.Manifest.GetDisplayName(@long: false), ex);
-			return instructions;
-		}
-	}
-
-	private static void State_PopulateRun_Delegate_Transpiler_ModifyPotentialExeCards(List<Card> cards)
-	{
-		if (LastState is not { } state)
+		if (__result is null)
 			return;
-		if (ModEntry.Instance.Helper.ModData.TryGetModData(state, "RunningDataCollectingPopulateRun", out bool isRunningDataCollectingPopulateRun) && isRunningDataCollectingPopulateRun)
+		// if (ModEntry.Instance.Helper.ModData.TryGetModData(MG.inst.g.state, "RunningDataCollectingPopulateRun", out bool isRunningDataCollectingPopulateRun) && isRunningDataCollectingPopulateRun)
+		// 	return;
+		if (ObtainExeDeck(__result) is not { } exeDeck)
+			return;
+		if (!ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeStarters.Contains(exeDeck))
 			return;
 
-		for (var i = cards.Count - 1; i >= 0; i--)
-			if (ModEntry.Instance.Api.GetDeckForExeCardType(cards[i].GetType()) is { } exeDeck)
-				if (ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeStarters.Contains(exeDeck))
-					cards.RemoveAt(i);
+		__result = null;
 	}
 
 	private static void NewRunOptions_Render_Postfix(G g)
@@ -185,8 +165,9 @@ internal static class ExeBlacklist
 	{
 		if (!g.state.runConfig.selectedChars.Contains(Deck.colorless))
 			return true;
-		if (ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(g.state, Deck.colorless) == true)
-			return true;
+		// TODO: re-add alt starters support
+		// if (ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(g.state, Deck.colorless) == true)
+		// 	return true;
 		if (b.key != StableUK.newRun_continue)
 			return true;
 		if (GetNonBlacklistedExeCharacters().Count(d => !g.state.runConfig.selectedChars.Contains(d)) >= 2)
@@ -201,8 +182,8 @@ internal static class ExeBlacklist
 	{
 		if (!__instance.selectedChars.Contains(Deck.colorless))
 			return;
-		if (ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(g.state, Deck.colorless) == true)
-			return;
+		// if (ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(g.state, Deck.colorless) == true)
+		// 	return;
 		if (!__result)
 			return;
 		if (GetNonBlacklistedExeCharacters().Count(d => !__instance.selectedChars.Contains(d)) < 2)
@@ -213,7 +194,7 @@ internal static class ExeBlacklist
 	{
 		if (!__result)
 			return;
-		if (ModEntry.Instance.Api.GetDeckForExeCardType(c.GetType()) is not { } exeDeck)
+		if (ObtainExeDeck(c) is not { } exeDeck)
 			return;
 		if (!ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeOfferings.Contains(exeDeck))
 			return;

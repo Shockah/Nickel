@@ -104,8 +104,13 @@ internal sealed class ModEvents(
 	}
 }
 
-internal sealed class VanillaModEvents : IModEvents
+internal sealed class VanillaModEvents(
+	Func<ModLoadPhaseState> currentModLoadPhaseProvider
+) : IModEvents
 {
+	public ModLoadPhaseState ModLoadPhaseState
+		=> currentModLoadPhaseProvider();
+
 	public event EventHandler<ModLoadPhase>? OnModLoadPhaseFinished
 	{
 		add => throw new NotSupportedException();

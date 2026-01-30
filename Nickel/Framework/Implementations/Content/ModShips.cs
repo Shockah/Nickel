@@ -53,7 +53,8 @@ internal sealed class ModShips(
 
 internal sealed class VanillaModShips(
 	IModManifest modManifest,
-	Func<ShipManager> shipManagerProvider
+	Func<ShipManager> shipManagerProvider,
+	Func<PartManager> partManagerProvider
 ) : IModShips
 {
 	private readonly Lazy<Dictionary<string, IShipEntry>> LazyRegisteredShips = new(
@@ -66,16 +67,17 @@ internal sealed class VanillaModShips(
 	public IReadOnlyDictionary<string, IShipEntry> RegisteredShips
 		=> this.LazyRegisteredShips.Value;
 	
-	// TODO: maybe implement one day
 	public IReadOnlyDictionary<string, IPartTypeEntry> RegisteredPartTypes
-		=> throw new NotImplementedException();
+		=> throw new NotImplementedException(); // TODO: maybe implement
 	
-	// TODO: maybe implement one day
 	public IReadOnlyDictionary<string, IPartEntry> RegisteredParts
-		=> throw new NotImplementedException();
+		=> throw new NotImplementedException(); // TODO: maybe implement
 	
 	public IShipEntry? LookupByUniqueName(string uniqueName)
 		=> shipManagerProvider().LookupByUniqueName(uniqueName);
+
+	public IPartTypeEntry? LookupPartTypeByUniqueName(string uniqueName)
+		=> partManagerProvider().LookupPartTypeByUniqueName(uniqueName);
 
 	public IShipEntry RegisterShip(string name, ShipConfiguration configuration)
 		=> throw new NotSupportedException();

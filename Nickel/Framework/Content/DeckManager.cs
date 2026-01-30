@@ -25,7 +25,7 @@ internal sealed class DeckManager
 	internal CharacterManager Characters { private get; set; } = null!;
 
 	private bool IsDeckOrderUpdateQueued;
-	private List<Deck>? VanillaOrderedDecks;
+	private List<DeckDef>? VanillaOrderedDecks;
 
 	public DeckManager(Func<ModLoadPhaseState> currentModLoadPhaseProvider, EnumCasePool enumCasePool, IModManifest vanillaModManifest)
 	{
@@ -184,20 +184,23 @@ internal sealed class DeckManager
 	{
 		this.VanillaOrderedDecks ??= DB.orderedDecks.ToList();
 
-		var moddedDecksWithCharacters = this.UniqueNameToEntry.Values
-			.Select(e => (Deck: e, Character: this.Characters.LookupByDeckV2(e.Deck)))
+		var characterEntries = this.UniqueNameToEntry.Values
+			.Select(e => (Deck: e, Def: DB.decks.GetValueOrDefault(e.Deck), Character: this.Characters.LookupByDeck(e.Deck)))
+			.Where(e => e.Def is not null)
+			.Select(e => (Deck: e.Deck, Def: e.Def!, Character: e.Character))
 			.ToList();
 
 		DB.orderedDecks = [
-			.. this.VanillaOrderedDecks.Where(deck => NewRunOptions.allChars.Contains(deck)),
-			.. moddedDecksWithCharacters.Where(e => e.Character is not null).Select(e => e.Deck.Deck),
-			.. this.VanillaOrderedDecks.Where(deck => deck != Deck.trash && deck != Deck.corrupted && !NewRunOptions.allChars.Contains(deck)),
-			.. moddedDecksWithCharacters.Where(e => e.Character is null).Select(e => e.Deck.Deck),
-			Deck.corrupted,
-			Deck.trash,
+			.. this.VanillaOrderedDecks.Where(def => def.canStartRunWith),
+			.. characterEntries.Where(e => e.Character is not null).Select(e => e.Def),
+			.. this.VanillaOrderedDecks.Where(def => def.deck != Deck.trash && def.deck != Deck.corrupted && !def.canStartRunWith),
+			.. characterEntries.Where(e => e.Character is null).Select(e => e.Def),
+			DB.decks[Deck.corrupted],
+			DB.decks[Deck.trash],
 		];
 
-		DB.deckOrder = Enumerable.Range(0, DB.orderedDecks.Count).ToDictionary(i => DB.orderedDecks[i], i => i);
+		DB.deckOrder = Enumerable.Range(0, DB.orderedDecks.Count)
+			.ToDictionary(i => DB.orderedDecks[i].deck, i => i);
 
 		this.IsDeckOrderUpdateQueued = false;
 	}

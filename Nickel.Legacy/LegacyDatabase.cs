@@ -206,13 +206,28 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 	{
 		foreach (var (key, methodInfo, intendedOverride, isChoice) in this.ChoiceAndCommands)
 		{
-			var dict = isChoice ? DB.eventChoiceFns : DB.storyCommands;
-			if (dict.TryAdd(key, methodInfo))
-				continue;
-			// TODO: log instead of throwing, it's too late to throw now, this breaks other mods
-			if (!intendedOverride)
-				throw new ArgumentException("Duplicate choice key", nameof(key));
-			dict[key] = methodInfo;
+			if (isChoice)
+			{
+				var dict = DB.eventChoiceFns;
+				var @delegate = methodInfo.CreateDelegate<Func<State, List<Choice>>>();
+				if (dict.TryAdd(key, @delegate))
+					continue;
+				// TODO: log instead of throwing, it's too late to throw now, this breaks other mods
+				if (!intendedOverride)
+					throw new ArgumentException("Duplicate choice key", nameof(key));
+				dict[key] = @delegate;
+			}
+			else
+			{
+				var dict = DB.storyCommands;
+				var @delegate = methodInfo.CreateDelegate<Func<G, bool>>();
+				if (dict.TryAdd(key, @delegate))
+					continue;
+				// TODO: log instead of throwing, it's too late to throw now, this breaks other mods
+				if (!intendedOverride)
+					throw new ArgumentException("Duplicate choice key", nameof(key));
+				dict[key] = @delegate;
+			}
 		}
 	}
 
@@ -353,11 +368,8 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 		{
 			Deck = (Deck)value.Deck.Id!.Value,
 			BorderSprite = (Spr)value.CharPanelSpr.Id!.Value,
-			Starters = new()
-			{
-				cards = value.StarterDeck.Select(t => (Card)Activator.CreateInstance(t)!).ToList(),
-				artifacts = value.StarterArtifacts.Select(t => (Artifact)Activator.CreateInstance(t)!).ToList(),
-			}
+			StarterArtifacts = value.StarterArtifacts.Select(t => (Artifact)Activator.CreateInstance(t)!).ToList(),
+			StarterCards = value.StarterDeck.Select(t => (Card)Activator.CreateInstance(t)!).ToList(),
 		};
 
 		helperProvider(mod).Content.Characters.RegisterPlayableCharacter(value.GlobalName, configuration);

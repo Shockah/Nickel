@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Nickel;
 
@@ -13,12 +14,21 @@ public readonly struct PlayableCharacterConfiguration
 	/// <summary>The border sprite to use for rendering the face of this playable <see cref="Character"/>.</summary>
 	public required Spr BorderSprite { get; init; }
 	
-	/// <summary>The cards and artifacts this playable <see cref="Character"/> starts with.</summary>
-	public required StarterDeck Starters { get; init; }
+	/// <summary>The artifacts this playable <see cref="Character"/> starts with.</summary>
+	public List<Artifact>? StarterArtifacts { get; init; }
 	
-	/// <summary>The cards and artifacts this playable <see cref="Character"/> starts with if the <see cref="DailyJustOneCharacter">Solo Run daily modifier</see> is present.</summary>
-	/// <remarks>If not set, Nickel will pick common cards at random.</remarks>
-	public StarterDeck? SoloStarters { get; init; }
+	/// <summary>The cards this playable <see cref="Character"/> starts with.</summary>
+	public List<Card>? StarterCards { get; init; }
+	
+	/// <summary>The cards this playable <see cref="Character"/> starts with in <see cref="DailyJustOneCharacter">Solo Run dailies</see>.</summary>
+	/// <remarks>If not set, Nickel will pick "sane" defaults.</remarks>
+	public List<Card>? SoloStarterCards { get; init; }
+	
+	/// <summary>One of these cards will be guaranteed to be in your deck for this playable <see cref="Character"/> in <see cref="DailyAdjustedMindset">Adjusted Mindset dailies</see>.</summary>
+	public List<Card>? AdjustedMindsetGuaranteedStarterCards { get; init; }
+	
+	/// <summary>A function that controls the cards this playable <see cref="Character"/> starts with, in case they're dynamic (see CAT).</summary>
+	public Func<State, List<Card>>? StarterCardsFunction { get; init; }
 	
 	/// <summary>The neutral (default) animation for this character.</summary>
 	/// <remarks>Either this property has to be set, or a corresponding call to <see cref="IModCharacters.RegisterCharacterAnimation(CharacterAnimationConfiguration)"/> has to be done prior to registering the character, but <b>not both</b>.</remarks>
@@ -34,8 +44,8 @@ public readonly struct PlayableCharacterConfiguration
 	/// <summary>Describes all aspects of a playable character's <c>Character Is Missing</c> <see cref="Status"/>.</summary>
 	public MissingStatusConfiguration MissingStatus { get; init; }
 	
-	/// <summary>The type of the card that should become this character's EXE card (see <a href="https://cobaltcore.wiki.gg/wiki/CAT">CAT</a>).</summary>
-	public Type? ExeCardType { get; init; }
+	/// <summary>The card that should become this character's EXE card (see <a href="https://cobaltcore.wiki.gg/wiki/CAT">CAT</a>).</summary>
+	public Card? ExeCard { get; init; }
 	
 	/// <summary>A localization provider for the description of the playable <see cref="Character"/>.</summary>
 	public SingleLocalizationProvider? Description { get; init; }
@@ -60,11 +70,23 @@ public readonly struct PlayableCharacterConfiguration
 	/// </summary>
 	public struct Amends
 	{
-		/// <inheritdoc cref="PlayableCharacterConfiguration.SoloStarters" />
-		public ContentConfigurationValueAmend<StarterDeck?>? SoloStarters { get; set; }
+		/// <inheritdoc cref="PlayableCharacterConfiguration.StarterArtifacts" />
+		public ContentConfigurationValueAmend<List<Artifact>?>? StarterArtifacts { get; set; }
 		
-		/// <inheritdoc cref="PlayableCharacterConfiguration.ExeCardType" />
-		public ContentConfigurationValueAmend<Type?>? ExeCardType { get; set; }
+		/// <inheritdoc cref="PlayableCharacterConfiguration.StarterCards" />
+		public ContentConfigurationValueAmend<List<Card>?>? StarterCards { get; set; }
+		
+		/// <inheritdoc cref="PlayableCharacterConfiguration.SoloStarterCards" />
+		public ContentConfigurationValueAmend<List<Card>?>? SoloStarterCards { get; set; }
+		
+		/// <inheritdoc cref="PlayableCharacterConfiguration.AdjustedMindsetGuaranteedStarterCards" />
+		public ContentConfigurationValueAmend<List<Card>?>? AdjustedMindsetGuaranteedStarterCards { get; set; }
+		
+		/// <inheritdoc cref="PlayableCharacterConfiguration.StarterCardsFunction" />
+		public ContentConfigurationValueAmend<Func<State, List<Card>>?>? StarterCardsFunction { get; set; }
+		
+		/// <inheritdoc cref="PlayableCharacterConfiguration.ExeCard" />
+		public ContentConfigurationValueAmend<Card?>? ExeCard { get; set; }
 		
 		/// <inheritdoc cref="PlayableCharacterConfiguration.Babble" />
 		public ContentConfigurationValueAmend<CharacterBabbleConfiguration?>? Babble { get; set; }

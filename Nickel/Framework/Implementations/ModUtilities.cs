@@ -31,8 +31,7 @@ internal sealed class ModUtilities(
 
 internal sealed class VanillaModUtilities(
 	EnumCasePool enumCasePool,
-	IProxyManager<string> proxyManager,
-	DelayedHarmonyManager delayedHarmonyManager
+	IProxyManager<string> proxyManager
 ) : IModUtilities
 {
 	public T ObtainEnumCase<T>() where T : struct, Enum
@@ -53,10 +52,4 @@ internal sealed class VanillaModUtilities(
 
 	public IHarmony Harmony
 		=> throw new NotSupportedException();
-	
-	public IHarmony DelayedHarmony
-		=> throw new NotSupportedException();
-	
-	public void ApplyDelayedHarmonyPatches()
-		=> delayedHarmonyManager.ApplyDelayedPatches();
 }

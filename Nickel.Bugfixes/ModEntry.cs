@@ -37,13 +37,9 @@ public sealed class ModEntry : SimpleMod
 	{
 		var harmony = this.Helper.Utilities.Harmony;
 
-		BlendStateFixes.ApplyPatches(harmony);
 		CardCodexCacheFixes.ApplyPatches(harmony);
 		DebugMenuFixes.ApplyPatches(harmony);
-		EnergyFragmentFixes.ApplyPatches(harmony);
 		IsaacUnlockFixes.ApplyPatches(harmony);
-		RockFactoryFixes.ApplyPatches(harmony);
-		SoloRunFixes.ApplyPatches(harmony);
 		SurviveVulnerabilityFixes.ApplyPatches(harmony);
 		UnimplementedActionFeaturesFixes.ApplyPatches(harmony);
 

@@ -193,12 +193,6 @@ internal sealed class VanillaModCards(
 
 	public void SetCardTraitOverride(State state, Card card, ICardTraitEntry trait, bool? overrideValue, bool permanent)
 		=> throw new NotSupportedException();
-
-	public event EventHandler<GetVolatileCardTraitOverridesEventArgs>? OnGetVolatileCardTraitOverrides
-	{
-		add => throw new NotSupportedException();
-		remove => throw new NotSupportedException();
-	}
 	
 	public event EventHandler<GetDynamicInnateCardTraitOverridesEventArgs>? OnGetDynamicInnateCardTraitOverrides
 	{

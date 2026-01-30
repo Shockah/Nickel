@@ -323,7 +323,6 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		StatePatches.Apply(harmony);
 		StoryVarsPatches.Apply(harmony);
 		TTGlossaryPatches.Apply(harmony);
-		WizardPatches.Apply(harmony);
 
 		GenericKeyPatches.Apply<CardAction>(harmony);
 		GenericKeyPatches.Apply<FightModifier>(harmony);

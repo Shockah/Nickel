@@ -732,7 +732,7 @@ internal sealed class ModManager
 		if (this.VanillaModHelper is { } helper)
 			return helper;
 		
-		var modEvents = new VanillaModEvents();
+		var modEvents = new VanillaModEvents(() => this.CurrentModLoadPhase);
 		helper = new ModHelper(
 			new ModRegistry(
 				manifest,
@@ -757,16 +757,15 @@ internal sealed class ModManager
 				new VanillaModStatuses(() => this.ContentManager!.Statuses),
 				new VanillaModCards(() => this.ContentManager!.Cards, () => this.ContentManager!.CardTraits),
 				new VanillaModArtifacts(() => this.ContentManager!.Artifacts),
-				new VanillaModCharacters(manifest, () => this.ContentManager!.Characters),
-				new VanillaModShips(manifest, () => this.ContentManager!.Ships),
+				new VanillaModCharacters(() => this.ContentManager!.Characters),
+				new VanillaModShips(manifest, () => this.ContentManager!.Ships, () => this.ContentManager!.Parts),
 				new VanillaModEnemies(() => this.ContentManager!.Enemies)
 			),
 			new VanillaModData(this.ModDataHandler),
 			new VanillaModStorage(manifest, this.ModStorageManager),
 			new VanillaModUtilities(
 				this.EnumCasePool,
-				this.ProxyManager,
-				this.DelayedHarmonyManager
+				this.ProxyManager
 			),
 			() => this.CurrentModLoadPhase
 		);

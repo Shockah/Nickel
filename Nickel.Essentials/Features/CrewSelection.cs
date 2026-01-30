@@ -50,7 +50,7 @@ internal static class CrewSelection
 	
 	private static readonly Lazy<int> MaxCharactersOnScreen = new(() =>
 	{
-		var vanillaCharacterCount = ModEntry.Instance.Helper.ModRegistry.GetModHelper(ModEntry.Instance.Helper.ModRegistry.VanillaModManifest).Content.Characters.V2.RegisteredPlayableCharacters.Count;
+		var vanillaCharacterCount = ModEntry.Instance.Helper.ModRegistry.GetModHelper(ModEntry.Instance.Helper.ModRegistry.VanillaModManifest).Content.Characters.RegisteredPlayableCharacters.Count;
 		var charactersPerRow = CharactersPerRow.Value;
 		var characterRows = (int)Math.Ceiling(1.0 * vanillaCharacterCount / charactersPerRow);
 		return characterRows * charactersPerRow;
@@ -191,7 +191,9 @@ internal static class CrewSelection
 		for (var i = 0; i < 3; i++)
 		{
 			Deck? deck = i < orderedSelectedChars.Count ? orderedSelectedChars[i] : null;
-			var altStarters = deck is not null && (ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(MG.inst.g.state, deck.Value) ?? false);
+			// TODO: re-add alt starters support
+			// var altStarters = deck is not null && (ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(MG.inst.g.state, deck.Value) ?? false);
+			var altStarters = false;
 			var charText = deck is null ? ModEntry.Instance.Localizations.Localize(["crewSelection", "emptySlot"]) : $"{Loc.T($"char.{deck.Value.Key()}")}{(altStarters ? "*" : "")}";
 			var charTextColor = deck is null || !DB.decks.TryGetValue(deck.Value, out var deckDef) ? Colors.downside.fadeAlpha(0.4) : deckDef.color;
 			Draw.Text(charText, x, y - 5 + i * 8, font, charTextColor);

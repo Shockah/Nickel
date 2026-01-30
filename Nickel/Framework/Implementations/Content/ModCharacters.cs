@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Nickel;
 
@@ -8,6 +9,10 @@ internal sealed class ModCharacters(
 	Func<CharacterManager> characterManagerProvider
 ) : IModCharacters
 {
+	private readonly Dictionary<string, IPlayableCharacterEntry> RegisteredPlayableCharacterStorage = [];
+	private readonly Dictionary<string, INonPlayableCharacterEntry> RegisteredNonPlayableCharacterStorage = [];
+	private readonly Dictionary<string, ICharacterAnimationEntry> RegisteredCharacterAnimationStorage = [];
+	
 	public IReadOnlyDictionary<string, IPlayableCharacterEntry> RegisteredPlayableCharacters
 		=> this.RegisteredPlayableCharacterStorage;
 	
@@ -16,10 +21,6 @@ internal sealed class ModCharacters(
 	
 	public IReadOnlyDictionary<string, ICharacterAnimationEntry> RegisteredCharacterAnimations
 		=> this.RegisteredCharacterAnimationStorage;
-
-	private readonly Dictionary<string, IPlayableCharacterEntry> RegisteredPlayableCharacterStorage = [];
-	private readonly Dictionary<string, INonPlayableCharacterEntry> RegisteredNonPlayableCharacterStorage = [];
-	private readonly Dictionary<string, ICharacterAnimationEntry> RegisteredCharacterAnimationStorage = [];
 
 	public ICharacterAnimationEntry RegisterCharacterAnimation(CharacterAnimationConfiguration configuration)
 	{
@@ -61,11 +62,24 @@ internal sealed class ModCharacters(
 }
 
 internal sealed class VanillaModCharacters(
-	IModManifest modManifest,
 	Func<CharacterManager> characterManagerProvider
 ) : IModCharacters
 {
-	public IModCharactersV2 V2 { get; } = new VanillaModCharactersV2(modManifest, characterManagerProvider);
+	private readonly Lazy<Dictionary<string, IPlayableCharacterEntry>> RegisteredPlayableCharacterStorage = new(
+		() => characterManagerProvider().VanillaPlayableCharacterDecks.Value.ToDictionary(
+			deck => deck.Key(),
+			deck => characterManagerProvider().LookupByDeck(deck)!
+		)
+	);
+
+	public IReadOnlyDictionary<string, IPlayableCharacterEntry> RegisteredPlayableCharacters
+		=> this.RegisteredPlayableCharacterStorage.Value;
+
+	public IReadOnlyDictionary<string, INonPlayableCharacterEntry> RegisteredNonPlayableCharacters
+		=> throw new NotImplementedException(); // TODO: maybe implement
+	
+	public IReadOnlyDictionary<string, ICharacterAnimationEntry> RegisteredCharacterAnimations
+		=> throw new NotImplementedException(); // TODO: maybe implement
 	
 	public ICharacterAnimationEntry RegisterCharacterAnimation(CharacterAnimationConfiguration configuration)
 		=> throw new NotSupportedException();
@@ -73,12 +87,18 @@ internal sealed class VanillaModCharacters(
 	public ICharacterAnimationEntry RegisterCharacterAnimation(string name, CharacterAnimationConfiguration configuration)
 		=> throw new NotSupportedException();
 
-	public ICharacterEntry? LookupByDeck(Deck deck)
+	public IPlayableCharacterEntry? LookupByDeck(Deck deck)
 		=> characterManagerProvider().LookupByDeck(deck);
+
+	public ICharacterEntry? LookupByCharacterType(string characterType)
+		=> characterManagerProvider().LookupByCharacterType(characterType);
 
 	public ICharacterEntry? LookupByUniqueName(string uniqueName)
 		=> characterManagerProvider().LookupByUniqueName(uniqueName);
 
-	public ICharacterEntry RegisterCharacter(string name, CharacterConfiguration configuration)
+	public IPlayableCharacterEntry RegisterPlayableCharacter(string name, PlayableCharacterConfiguration configuration)
+		=> throw new NotSupportedException();
+
+	public INonPlayableCharacterEntry RegisterNonPlayableCharacter(string name, NonPlayableCharacterConfiguration configuration)
 		=> throw new NotSupportedException();
 }

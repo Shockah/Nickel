@@ -1,5 +1,3 @@
-using System;
-
 namespace Nickel.Essentials;
 
 /// <summary>
@@ -19,28 +17,6 @@ public interface IEssentialsApi
 	/// </summary>
 	/// <param name="hook">The hook.</param>
 	void UnregisterHook(IHook hook);
-	
-	/// <summary>
-	/// Returns the EXE card type (see <a href="https://cobaltcore.wiki.gg/wiki/CAT">CAT</a>) for the given <see cref="Deck"/>.<br/>
-	/// Takes into account EXE cards added by legacy mods, which are not available by reading <see cref="Nickel.PlayableCharacterConfiguration.ExeCardType"/>.
-	/// </summary>
-	/// <param name="deck">The deck.</param>
-	/// <returns>The EXE card type for the given <see cref="Deck"/>, or <c>null</c> if it does not have one assigned.</returns>
-	Type? GetExeCardTypeForDeck(Deck deck);
-	
-	/// <summary>
-	/// Returns the <see cref="Deck"/> for the given EXE card type (see <a href="https://cobaltcore.wiki.gg/wiki/CAT">CAT</a>), if the type represents such a card.
-	/// </summary>
-	/// <param name="type">The EXE card type.</param>
-	/// <returns>The <see cref="Deck"/> for the given EXE card type, or <c>null</c> if the type does not represent such a card.</returns>
-	Deck? GetDeckForExeCardType(Type type);
-	
-	/// <summary>
-	/// Checks whether the given type represents an EXE card type (see <a href="https://cobaltcore.wiki.gg/wiki/CAT">CAT</a>).
-	/// </summary>
-	/// <param name="type">The type.</param>
-	/// <returns>Whether the given type represents an EXE card type.</returns>
-	bool IsExeCardType(Type type);
 
 	/// <summary>
 	/// Checks whether an EXE card for the given deck is currently blacklisted from being chosen as a starter card.
@@ -71,7 +47,7 @@ public interface IEssentialsApi
 	/// <summary>
 	/// A hook related to the features of the <c>Nickel.Essentials</c> built-in mod.
 	/// </summary>
-	public interface IHook
+	interface IHook
 	{
 		/// <summary>
 		/// Allows controlling whether the "Order" sort mode is enabled for the given <see cref="CardBrowse"/>.
@@ -83,7 +59,7 @@ public interface IEssentialsApi
 		/// <summary>
 		/// The arguments for the <see cref="ShouldAllowOrderSortModeInCardBrowse"/> hook method.
 		/// </summary>
-		public interface IShouldAllowOrderSortModeInCardBrowseArgs
+		interface IShouldAllowOrderSortModeInCardBrowseArgs
 		{
 			/// <summary>
 			/// The route the "Order" sort mode should be enabled for or not.

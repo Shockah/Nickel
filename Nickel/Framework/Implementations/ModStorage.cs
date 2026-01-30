@@ -122,6 +122,12 @@ internal sealed class VanillaModStorage(
 	public IWritableFileInfo GetMainPrivateStorageFile(string fileExtension)
 		=> throw new NotSupportedException();
 
+	public IWritableDirectoryInfo ProfileStorageDirectory
+		=> throw new NotSupportedException();
+
+	public IWritableFileInfo GetMainProfileStorageFile(string fileExtension)
+		=> throw new NotSupportedException();
+
 	public void ApplyGlobalJsonSerializerSettings(Action<JsonSerializerSettings> function, double priority = 0)
 		=> throw new NotSupportedException();
 

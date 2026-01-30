@@ -1,5 +1,3 @@
-using System;
-
 namespace Nickel.Essentials;
 
 public sealed class ApiImplementation : IEssentialsApi
@@ -9,15 +7,6 @@ public sealed class ApiImplementation : IEssentialsApi
 
 	public void UnregisterHook(IEssentialsApi.IHook hook)
 		=> ModEntry.Instance.Hooks.Unregister(hook);
-
-	public Type? GetExeCardTypeForDeck(Deck deck)
-		=> ModEntry.Instance.GetExeCardTypeForDeck(deck);
-
-	public Deck? GetDeckForExeCardType(Type type)
-		=> ModEntry.Instance.GetDeckForExeCardType(type);
-
-	public bool IsExeCardType(Type type)
-		=> this.GetDeckForExeCardType(type) is not null;
 
 	public bool IsBlacklistedExeStarter(Deck deck)
 		=> ModEntry.Instance.Settings.ProfileBased.Current.BlacklistedExeStarters.Contains(deck);
