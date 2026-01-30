@@ -23,7 +23,7 @@ public sealed class SetFromList<T>(List<T> list) : ISet<T>, IReadOnlySet<T>
 	public bool Remove(T item)
 		=> list.Remove(item);
 
-	/// <inheritdoc cref="ISet{T}.Count"/>
+	/// <inheritdoc cref="P:ISet{T}.Count"/>
 	public int Count
 		=> list.Count;
 
@@ -64,7 +64,7 @@ public sealed class SetFromList<T>(List<T> list) : ISet<T>, IReadOnlySet<T>
 	public void Clear()
 		=> list.Clear();
 
-	/// <inheritdoc cref="ISet{T}.Contains"/>
+	/// <inheritdoc cref="M:ISet{T}.Contains"/>
 	public bool Contains(T item)
 		=> list.Contains(item);
 
