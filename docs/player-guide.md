@@ -43,7 +43,12 @@ Note: Nickel requires macOS 10.15+ (Catalina or newer).
 2. Extract the `.zip` file in the place where you would like to store Nickel.
 	* While the actual place you extract to does not matter for playing mods, it is recommended to move the extracted `Nickel.app` to your `Applications` folder. This will help when debugging any potential issues, and will also help when creating mods of your own.
 3. Double-click `Nickel.app` to start Nickel to let it do its initial setup.
-	* If you get shown a prompt saying "Apple could not verify Nickel.app is free of malware that may harm your Mac or compromise your privacy.", follow these instructions: https://support.apple.com/en-us/102445#openanyway.
+	* If you get shown a prompt saying "Apple could not verify Nickel.app is free of malware that may harm your Mac or compromise your privacy.":
+		1.Follow these instructions: https://support.apple.com/en-us/102445#openanyway.
+	* If you get shown a prompt saying `"Nickel.app" is damaged and can't be opened. You should move it to the Trash.`, assuming you moved `Nickel.app` to your `Applications` folder:
+		1. Open the Terminal app.
+    	2. Enter this command: `xattr -dr com.apple.quarantine /Applications/Nickel.app`
+		3. Double-click `Nickel.app` again.
 
 ## `NickelLauncher.exe` vs `Nickel.exe`
 
