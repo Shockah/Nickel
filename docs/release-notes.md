@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed a crash when either Nickel or mods want to read an optional version number from a .json file, but encounter a `null`.
+
 ## 1.21.0
 Released 26 January 2026.
 
