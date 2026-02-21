@@ -25,7 +25,7 @@ public static class NickelConstants
 	public static SemanticVersion? MinimumGameVersion { get; } = new SemanticVersion(1, 2, 5);
 
 	/// <summary>A fallback version that is used if the game's version could not be parsed.</summary>
-	public static SemanticVersion FallbackGameVersion { get; } = new SemanticVersion(1, 2, 8);
+	public static SemanticVersion FallbackGameVersion { get; } = new SemanticVersion(1, 2, 9);
 
 	/// <summary>The app ID of the game on the Steam platform.</summary>
 	public static string GameSteamAppId { get; } = "2179850";
