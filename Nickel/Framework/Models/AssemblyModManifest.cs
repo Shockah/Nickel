@@ -1,46 +1,60 @@
 using Newtonsoft.Json;
 using Nickel.Common;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Nickel;
 
 internal sealed class AssemblyModManifest : IAssemblyModManifest
 {
-	public string UniqueName
-		=> this.ModManifest.UniqueName;
+	#region IModManifest
+	
+	[JsonProperty]
+	[JsonRequired]
+	public string UniqueName { get; internal set; } = null!;
 
-	public SemanticVersion Version
-		=> this.ModManifest.Version;
+	[JsonProperty]
+	[JsonRequired]
+	[JsonConverter(typeof(SemanticVersionConverter))]
+	public SemanticVersion Version { get; internal set; }
 
-	public IReadOnlySet<ModDependency> Dependencies
-		=> this.ModManifest.Dependencies;
+	[JsonProperty]
+	public IReadOnlySet<ModDependency> Dependencies { get; internal set; } = new HashSet<ModDependency>();
 
-	public SemanticVersion? MinimumGameVersion
-		=> this.ModManifest.MinimumGameVersion;
+	[JsonProperty]
+	[JsonConverter(typeof(SemanticVersionConverter))]
+	public SemanticVersion? MinimumGameVersion { get; internal set; }
 
-	public SemanticVersion? UnsupportedGameVersion
-		=> this.ModManifest.UnsupportedGameVersion;
+	[JsonProperty]
+	[JsonConverter(typeof(SemanticVersionConverter))]
+	public SemanticVersion? UnsupportedGameVersion { get; internal set; }
 
-	public string? DisplayName
-		=> this.ModManifest.DisplayName;
+	[JsonProperty]
+	public string? DisplayName { get; internal set; }
 
-	public string? Description
-		=> this.ModManifest.Description;
+	[JsonProperty]
+	public string? Description { get; internal set; }
 
-	public string? Author
-		=> this.ModManifest.Author;
+	[JsonProperty]
+	public string? Author { get; internal set; }
 
-	public string ModType
-		=> this.ModManifest.ModType;
+	[JsonProperty]
+	public string ModType { get; internal set; } = NickelConstants.ModType;
 
-	public ModLoadPhase LoadPhase
-		=> this.ModManifest.LoadPhase;
+	[JsonProperty]
+	public ModLoadPhase LoadPhase { get; internal set; } = ModLoadPhase.AfterGameAssembly;
 
-	public IReadOnlyList<ISubmodEntry> Submods
-		=> this.ModManifest.Submods;
+	[JsonProperty]
+	[JsonConverter(typeof(ConcreteTypeConverter<IReadOnlyList<SubmodEntry>>))]
+	public IReadOnlyList<ISubmodEntry> Submods { get; internal set; } = new List<ISubmodEntry>();
 
-	public IReadOnlyDictionary<string, object> ExtensionData
-		=> this.ModManifest.ExtensionData;
+	[JsonExtensionData]
+	public IDictionary<string, object> ExtensionData { get; set; } = new Dictionary<string, object>();
+
+	IReadOnlyDictionary<string, object> IModManifest.ExtensionData
+		=> (IReadOnlyDictionary<string, object>)this.ExtensionData;
+	
+	#endregion
 
 	public string EntryPointAssembly { get; internal set; } = null!;
 
@@ -54,10 +68,31 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 	
 	public IReadOnlyList<StopInliningDefinition> MethodsToStopInlining { get; internal set; } = [];
 
-	private IModManifest ModManifest { get; }
-
-	public AssemblyModManifest(IModManifest modManifest)
-	{
-		this.ModManifest = modManifest;
-	}
+	public static AssemblyModManifest From(IModManifest modManifest)
+		=> new()
+		{
+			UniqueName = modManifest.UniqueName,
+			Version = modManifest.Version,
+			Dependencies = modManifest.Dependencies,
+			MinimumGameVersion = modManifest.MinimumGameVersion,
+			UnsupportedGameVersion = modManifest.UnsupportedGameVersion,
+			DisplayName = modManifest.DisplayName,
+			Description = modManifest.Description,
+			Author = modManifest.Author,
+			ModType = modManifest.ModType,
+			LoadPhase = modManifest.LoadPhase,
+			Submods = modManifest.Submods,
+			
+			EntryPointAssembly = (modManifest as IAssemblyModManifest)?.EntryPointAssembly!,
+			EntryPointType = (modManifest as IAssemblyModManifest)?.EntryPointType,
+			AssemblyReferences = (modManifest as IAssemblyModManifest)?.AssemblyReferences ?? [],
+			MethodsToStopInlining = (modManifest as IAssemblyModManifest)?.MethodsToStopInlining ?? [],
+			
+			ExtensionData = modManifest.ExtensionData
+				.Where(kvp => kvp.Key != nameof(EntryPointAssembly))
+				.Where(kvp => kvp.Key != nameof(EntryPointType))
+				.Where(kvp => kvp.Key != nameof(AssemblyReferences))
+				.Where(kvp => kvp.Key != nameof(MethodsToStopInlining))
+				.ToDictionary()
+		};
 }

@@ -27,13 +27,12 @@ public static class ManifestExt
 		if (!TryParseMethodsToStopInlining(out var methodsToStopInlining))
 			return new Error<string>($"`{nameof(IAssemblyModManifest.MethodsToStopInlining)}` value is invalid.");
 
-		return new AssemblyModManifest(manifest)
-		{
-			EntryPointAssembly = entryPointAssembly,
-			EntryPointType = entryPointType,
-			AssemblyReferences = assemblyReferences ?? [],
-			MethodsToStopInlining = methodsToStopInlining ?? [],
-		};
+		var result = AssemblyModManifest.From(manifest);
+		result.EntryPointAssembly = entryPointAssembly;
+		result.EntryPointType = entryPointType;
+		result.AssemblyReferences = assemblyReferences ?? [];
+		result.MethodsToStopInlining = methodsToStopInlining ?? [];
+		return result;
 
 		bool TryParseEntryPointAssemblyFileName([MaybeNullWhen(false)] out string result)
 		{
