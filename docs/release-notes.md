@@ -2,7 +2,8 @@
 
 # Release notes
 
-## Upcoming release
+## 1.21.2
+Released 23 February 2026.
 
 * Potentially fixed a crash when a mod attempts to serialize a mod manifest (which is generally an invalid operation anyway).
 
