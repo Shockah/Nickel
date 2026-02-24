@@ -2,7 +2,7 @@
 
 # Release notes
 
-## Upcoming release
+## 1.21.3
 
 * Fixed Nickel's info screens feature serializing a mod manifest (ironic, isn't it).
 
