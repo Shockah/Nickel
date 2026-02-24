@@ -1,7 +1,9 @@
 ﻿using daisyowl.text;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace Nickel.InfoScreens;
 
@@ -9,17 +11,26 @@ public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScre
 {
 	private static readonly UK ActionKey = ModEntry.Instance.Helper.Utilities.ObtainEnumCase<UK>();
 	
+	[JsonIgnore]
 	public Route AsRoute
 		=> this;
 
 	public Route? RouteOverride { get; set; }
 
+	[JsonIgnore]
 	public IList<IInfoScreensApi.IBasicInfoScreenRoute.IParagraph> Paragraphs { get; set; } = [];
 
+	[JsonIgnore]
 	public IList<IInfoScreensApi.IBasicInfoScreenRoute.IAction> Actions { get; set; } = [];
 
 	private int? ConfirmingActionIndex;
 	private double ConfirmingTime;
+
+	private bool Deserialized;
+
+	[OnDeserialized]
+	private void OnDeserialized(StreamingContext context)
+		=> this.Deserialized = true;
 	
 	public override bool TryCloseSubRoute(G g, Route r, object? arg)
 	{
@@ -38,6 +49,11 @@ public sealed class BasicInfoScreenRoute : Route, IInfoScreensApi.IBasicInfoScre
 
 	public override void Render(G g)
 	{
+		if (this.Deserialized)
+		{
+			g.CloseRoute(this);
+			return;
+		}
 		if (this.RouteOverride is not null)
 		{
 			this.RouteOverride.Render(g);

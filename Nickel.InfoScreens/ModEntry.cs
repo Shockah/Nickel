@@ -127,15 +127,16 @@ public sealed class ModEntry : SimpleMod
 			Instance.RequestedInfoScreens.Remove(infoScreen);
 
 			if (__instance.state.route is Combat combat2)
-				combat2.routeOverride = new InfoScreenReplacementRoute(infoScreen, infoScreen.Route, combat2.routeOverride);
+				combat2.routeOverride = new InfoScreenReplacementRoute { Entry = infoScreen, Route = infoScreen.Route, OriginalRoute = combat2.routeOverride };
 			else
-				__instance.state.route = new InfoScreenReplacementRoute(infoScreen, infoScreen.Route, __instance.state.route);
+				__instance.state.route = new InfoScreenReplacementRoute { Entry = infoScreen, Route = infoScreen.Route, OriginalRoute = __instance.state.route };
 			infoScreen.State = IInfoScreensApi.IInfoScreenState.Visible;
 			Instance.CurrentInfoScreen = infoScreen;
 		}
 		else
 		{
-			replacementRoute.Entry.State = IInfoScreensApi.IInfoScreenState.Visible;
+			if (replacementRoute.Entry is { } entry)
+				entry.State = IInfoScreensApi.IInfoScreenState.Visible;
 			Instance.CurrentInfoScreen = replacementRoute.Entry;
 		}
 	}

@@ -2,6 +2,10 @@
 
 # Release notes
 
+## Upcoming release
+
+* Fixed Nickel's info screens feature serializing a mod manifest (ironic, isn't it).
+
 ## 1.21.2
 Released 23 February 2026.
 
