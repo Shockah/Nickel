@@ -1,7 +1,5 @@
-using daisyowl.text;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using Microsoft.Xna.Framework.Graphics;
 using Nanoray.Shrike;
 using Nanoray.Shrike.Harmony;
 using Newtonsoft.Json;
@@ -153,20 +151,7 @@ internal static class CrewSelection
 		try
 		{
 			return new SequenceBlockMatcher<CodeInstruction>(instructions)
-				// hijack vanilla "Crew" text for all our rendering
-				.Find(ILMatches.Ldstr("newRunOptions.crew"))
-				.Find(ILMatches.Call("Text"))
-				.Replace(
-					new CodeInstruction(OpCodes.Ldarg_2),
-					new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(CrewSelection), nameof(NewRunOptions_CharSelect_Transpiler_HijackDrawCrewText)))
-				)
-
-				// hijack vanilla "X of 3" text and stop it from rendering altogether
-				.Find(ILMatches.Ldstr("newRunOptions.crewCount"))
-				.Find(ILMatches.Call("Text"))
-				.Replace(new CodeInstruction(OpCodes.Call, AccessTools.DeclaredMethod(typeof(CrewSelection), nameof(NewRunOptions_CharSelect_Transpiler_HijackDrawCrewCountText))))
-
-				// modify character list to only show the currently scrolled to 8 characters
+				// modify character list to only show the currently scrolled to characters
 				.Find(ILMatches.Ldsfld("allChars"))
 				.Insert(
 					SequenceMatcherPastBoundsDirection.After, SequenceMatcherInsertionResultingBounds.IncludingInsertion,
@@ -180,32 +165,6 @@ internal static class CrewSelection
 			ModEntry.Instance.Logger.LogError("Could not patch method {DeclaringType}::{Method} - {Mod} probably won't work.\nReason: {Exception}", originalMethod.DeclaringType, originalMethod, ModEntry.Instance.Package.Manifest.UniqueName, ex);
 			return instructions;
 		}
-	}
-
-	private static Rect NewRunOptions_CharSelect_Transpiler_HijackDrawCrewText(string str, double x, double y, Font? font, Color? color, Color? colorForce, double? progress, double? maxWidth, TAlign? align, bool dontDraw, int? lineHeight, Color? outline, BlendState? blend, SamplerState? samplerState, Effect? effect, bool dontSubstituteLocFont, double letterSpacing, double extraScale, RunConfig runConfig)
-	{
-		if (!ModEntry.Instance.Settings.ProfileBased.Current.DetailedCrewInfo)
-			return Draw.Text(str, x, y, font, color, colorForce, progress, maxWidth, align, dontDraw, lineHeight, outline, blend, samplerState, effect, dontSubstituteLocFont, letterSpacing, extraScale);
-
-		var orderedSelectedChars = runConfig.selectedChars.OrderBy(NewRunOptions.allChars.IndexOf).ToList();
-		for (var i = 0; i < 3; i++)
-		{
-			Deck? deck = i < orderedSelectedChars.Count ? orderedSelectedChars[i] : null;
-			// TODO: re-add alt starters support
-			// var altStarters = deck is not null && (ModEntry.Instance.MoreDifficultiesApi?.AreAltStartersEnabled(MG.inst.g.state, deck.Value) ?? false);
-			var altStarters = false;
-			var charText = deck is null ? ModEntry.Instance.Localizations.Localize(["crewSelection", "emptySlot"]) : $"{Loc.T($"char.{deck.Value.Key()}")}{(altStarters ? "*" : "")}";
-			var charTextColor = deck is null || !DB.decks.TryGetValue(deck.Value, out var deckDef) ? Colors.downside.fadeAlpha(0.4) : deckDef.color;
-			Draw.Text(charText, x, y - 5 + i * 8, font, charTextColor);
-		}
-		return new();
-	}
-
-	private static Rect NewRunOptions_CharSelect_Transpiler_HijackDrawCrewCountText(string str, double x, double y, Font? font, Color? color, Color? colorForce, double? progress, double? maxWidth, TAlign? align, bool dontDraw, int? lineHeight, Color? outline, BlendState? blend, SamplerState? samplerState, Effect? effect, bool dontSubstituteLocFont, double letterSpacing, double extraScale)
-	{
-		if (ModEntry.Instance.Settings.ProfileBased.Current.DetailedCrewInfo)
-			return new();
-		return Draw.Text(str, x, y, font, color, colorForce, progress, maxWidth, align, dontDraw, lineHeight, outline, blend, samplerState, effect, dontSubstituteLocFont, letterSpacing, extraScale);
 	}
 
 	private static List<Deck> NewRunOptions_CharSelect_Transpiler_ModifyAllChars(List<Deck> allChars)

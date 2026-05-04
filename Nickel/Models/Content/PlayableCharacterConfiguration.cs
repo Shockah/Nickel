@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace Nickel;
@@ -26,9 +25,6 @@ public readonly struct PlayableCharacterConfiguration
 	
 	/// <summary>One of these cards will be guaranteed to be in your deck for this playable <see cref="Character"/> in <see cref="DailyAdjustedMindset">Adjusted Mindset dailies</see>.</summary>
 	public List<Card>? AdjustedMindsetGuaranteedStarterCards { get; init; }
-	
-	/// <summary>A function that controls the cards this playable <see cref="Character"/> starts with, in case they're dynamic (see CAT).</summary>
-	public Func<State, List<Card>>? StarterCardsFunction { get; init; }
 	
 	/// <summary>The neutral (default) animation for this character.</summary>
 	/// <remarks>Either this property has to be set, or a corresponding call to <see cref="IModCharacters.RegisterCharacterAnimation(CharacterAnimationConfiguration)"/> has to be done prior to registering the character, but <b>not both</b>.</remarks>
@@ -81,9 +77,6 @@ public readonly struct PlayableCharacterConfiguration
 		
 		/// <inheritdoc cref="PlayableCharacterConfiguration.AdjustedMindsetGuaranteedStarterCards" />
 		public ContentConfigurationValueAmend<List<Card>?>? AdjustedMindsetGuaranteedStarterCards { get; set; }
-		
-		/// <inheritdoc cref="PlayableCharacterConfiguration.StarterCardsFunction" />
-		public ContentConfigurationValueAmend<Func<State, List<Card>>?>? StarterCardsFunction { get; set; }
 		
 		/// <inheritdoc cref="PlayableCharacterConfiguration.ExeCard" />
 		public ContentConfigurationValueAmend<Card?>? ExeCard { get; set; }

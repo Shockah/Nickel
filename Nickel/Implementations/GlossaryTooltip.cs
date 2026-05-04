@@ -38,18 +38,13 @@ public sealed class GlossaryTooltip(string key) : TTGlossary(key)
 	public bool UppercaseTitle = true;
 
 	/// <inheritdoc/>
-	public override Rect Render(G g, bool dontDraw)
+	public override Rect Render(G g, bool dontDraw, double maxWidth)
 	{
 		var sb = new StringBuilder();
 		if (!string.IsNullOrEmpty(this.Title))
 		{
 			if (this.Icon is not null)
-			{
-				sb.Append(GetIndent());
-				if (this.IsWideIcon)
-					sb.Append(GetIndent());
-			}
-
+				sb.Append(GetIndent(this.IsWideIcon));
 			if (this.TitleColor is not null)
 				sb.Append($"<c={this.TitleColor.Value.ToString()}>");
 			sb.Append(this.UppercaseTitle ? this.Title.ToUpper() : this.Title);
@@ -65,13 +60,13 @@ public sealed class GlossaryTooltip(string key) : TTGlossary(key)
 			sb.Append(string.Format(this.Description, args));
 		}
 
-		var rect = Draw.Text(sb.ToString(), 0, 0, color: Colors.textMain, maxWidth: 100, dontDraw: true);
+		var rect = Draw.Text(sb.ToString(), 0, 0, color: Colors.textMain, maxWidth: maxWidth, dontDraw: true);
 		if (!dontDraw)
 		{
 			var xy = g.Push(null, rect).rect.xy;
 			if (this.Icon is { } icon)
 				Draw.Sprite(icon, xy.x - 1, xy.y + 2, this.FlipIconX, flipY: this.FlipIconY, color: this.IconColor);
-			Draw.Text(sb.ToString(), xy.x, xy.y + 4, color: Colors.textMain, maxWidth: 100);
+			Draw.Text(sb.ToString(), xy.x, xy.y + 4, color: Colors.textMain, maxWidth: maxWidth);
 			g.Pop();
 		}
 		return rect;

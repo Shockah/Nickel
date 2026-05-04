@@ -111,7 +111,6 @@ internal sealed class CharacterManager
 				StarterCards = def.starterCards,
 				SoloStarterCards = def.starterSoloCards,
 				AdjustedMindsetGuaranteedStarterCards = def.starterAMDailyGuaranteedCards,
-				StarterCardsFunction = def.starterCardsFunction,
 				NeutralAnimation = new()
 				{
 					CharacterType = alias,
@@ -351,7 +350,7 @@ internal sealed class CharacterManager
 	private void UpdateDeckOrder()
 	{
 		this.Decks.QueueDeckOrderUpdate();
-		NewRunOptions.allChars = NewRunOptions.GetAvailableChars();
+		NewRunOptions.allChars = RunConfig.GetAvailableCharacters();
 	}
 
 	private static void Inject(AnimationEntry entry)
@@ -393,7 +392,6 @@ internal sealed class CharacterManager
 		deckDef.starterCards = entry.Configuration.StarterCards ?? [];
 		deckDef.starterSoloCards = entry.Configuration.SoloStarterCards ?? [];
 		deckDef.starterAMDailyGuaranteedCards = entry.Configuration.AdjustedMindsetGuaranteedStarterCards ?? [];
-		deckDef.starterCardsFunction = entry.Configuration.StarterCardsFunction;
 		
 		StatusMeta.deckToMissingStatus[entry.Configuration.Deck] = entry.MissingStatus.Status;
 
@@ -432,11 +430,6 @@ internal sealed class CharacterManager
 		{
 			entry.Configuration = entry.Configuration with { AdjustedMindsetGuaranteedStarterCards = adjustedMindsetGuaranteedStarterCards.Value };
 			def?.starterAMDailyGuaranteedCards = adjustedMindsetGuaranteedStarterCards.Value ?? [];
-		}
-		if (amends.StarterCardsFunction is { } starterCardsFunction)
-		{
-			entry.Configuration = entry.Configuration with { StarterCardsFunction = starterCardsFunction.Value };
-			def?.starterCardsFunction = starterCardsFunction.Value;
 		}
 		if (amends.ExeCard is { } exeCard)
 		{

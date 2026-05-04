@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 
 namespace Nickel;

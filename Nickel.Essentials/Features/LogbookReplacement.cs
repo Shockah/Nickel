@@ -234,7 +234,7 @@ internal static class LogbookReplacement
 				.Where(card => card is not null)
 				.Select(card => card!)
 				.OrderBy(card => NewRunOptions.allChars.IndexOf(card.GetMeta().deck))
-				.ThenBy(card => card.GetFullDisplayName())
+				.ThenBy(card => card.GetFullDisplayName(g.state))
 				.Chunk(perRow)
 				.ToList();
 			
