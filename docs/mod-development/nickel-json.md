@@ -123,6 +123,92 @@ The minimum version of the dependency that needs to be present. This field is op
 > [!NOTE]
 > This field also applies to optional dependencies. If a version for an optional dependency is specified, this mod will only load either if the dependency is not present, or if it's present *and* at the correct version.
 
+## `UpdateChecks`
+
+Specifies additional information that will let Nickel check for updates for this mod. This field is optional.
+
+Nickel can check multiple update providers for the same mod.
+
+This capability is provided by the built-in `Nickel.UpdateChecks` mod. If disabled, this field will be ignored.
+
+This entry consists of several fields.
+
+### `NexusMods`
+
+If the mod is available for download on [NexusMods](https://www.nexusmods.com/games/cobaltcore/mods), this field can be used to allow automatic update checks for it. This field is optional.
+
+Nickel considers the mod version visible on the main page of the mod on NexusMods as the latest.
+
+This capability is provided by the built-in `Nickel.UpdateChecks.NexusMods` mod. If disabled, this field will be ignored.
+
+This entry consists of one field.
+
+#### `ID`
+
+The NexusMods page ID of the mod. This field is **required**.
+
+This ID can be retrieved either after publishing a mod page, or after the first step of mod page creation. The ID is present in the URL.
+
+### `GitHub`
+
+If the mod is available for download on [GitHub](https://github.com/), this field can be used to allow automatic update checks for it. This field is optional.
+
+Nickel considers the latest release matching the configured release filters on GitHub as the latest.
+
+This capability is provided by the built-in `Nickel.UpdateChecks.GitHub` mod. If disabled, this field will be ignored.
+
+This entry consists of several fields.
+
+#### `Repository`
+
+The full name of the repository hosting releases for the mod - for example: `Shockah/Nickel`. This field is **required**.
+
+#### `ReleaseTagRegex`
+
+A [regex](https://en.wikipedia.org/wiki/Regular_expression) matching release tags for the mod. This field is optional.
+
+This field may be useful if your repository hosts multiple mods, and you need to disambiguate releases between them.
+
+#### `ReleaseNameRegex`
+
+A [regex](https://en.wikipedia.org/wiki/Regular_expression) matching release names for the mod. This field is optional.
+
+This field may be useful if your repository hosts multiple mods, and you need to disambiguate releases between them.
+
+> [!NOTE]
+> If `ReleaseTagRegex` is specified, Nickel first attempts to match it against the release tag. If that does not match, `ReleaseNameRegex` is checked instead.
+
+### `ModNameForUpdatePurposes`
+
+A custom display name used by update check UIs instead of the mod's normal `DisplayName`. For example, this is used internally by the `Nickel.UpdateChecks` mod to appear as just "Nickel", and provide update checks for it. This field is optional.
+
+### Examples
+
+```json
+{
+	"UpdateChecks": {
+		"ModNameForUpdatePurposes": "Nickel",
+		"NexusMods": {
+			"ID": 1
+		},
+		"GitHub": {
+			"Repository": "Shockah/Nickel"
+		}
+	}
+}
+```
+
+```json
+{
+	"UpdateChecks": {
+		"GitHub": {
+			"Repository": "rft50/cc-dave",
+			"ReleaseTagRegex": "^jester\\-(.*)"
+		}
+	}
+}
+```
+
 # Fields for `Nickel` type mods
 
 See the `ModType` field for more details on mod types.
