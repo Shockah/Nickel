@@ -124,7 +124,7 @@ public sealed class ModEntry : SimpleMod
 
 			var fakeState = Mutil.DeepCopy(DB.fakeState);
 			fakeState.slot = null;
-			this.Helper.ModData.SetModData(fakeState, "RunningDataCollectingPopulateRun", true);
+			this.Helper.ModData.Set(fakeState, "RunningDataCollectingPopulateRun", true);
 
 			foreach (var deck in NewRunOptions.allChars)
 			{

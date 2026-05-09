@@ -106,7 +106,7 @@ internal static class SaveImport
 	{
 		if (__instance is SaveImportRoute)
 			return true;
-		if (ModEntry.Instance.Helper.ModData.GetOptionalModData<Route>(__instance, "Subroute") is not { } subroute)
+		if (ModEntry.Instance.Helper.ModData.GetOptional<Route>(__instance, "Subroute") is not { } subroute)
 			return true;
 		if (subroute is not OnMouseDown handler)
 			return true;
@@ -119,7 +119,7 @@ internal static class SaveImport
 	{
 		if (__instance is SaveImportRoute)
 			return true;
-		if (ModEntry.Instance.Helper.ModData.GetOptionalModData<Route>(__instance, "Subroute") is not { } subroute)
+		if (ModEntry.Instance.Helper.ModData.GetOptional<Route>(__instance, "Subroute") is not { } subroute)
 			return true;
 		
 		subroute.Render(g);
@@ -194,7 +194,7 @@ internal static class SaveImport
 			SharedArt.ButtonText(g, pos, actionKey, ModEntry.Instance.Localizations.Localize(["saveImport", "button"]), onMouseDown: new MouseDownHandler(() =>
 			{
 				Audio.Play(Event.Click);
-				ModEntry.Instance.Helper.ModData.SetOptionalModData(__instance, "Subroute", new SaveImportRoute { ToExport = null, TargetSlot = actionKey.v });
+				ModEntry.Instance.Helper.ModData.SetOptional(__instance, "Subroute", new SaveImportRoute { ToExport = null, TargetSlot = actionKey.v });
 			}));
 		}
 		else if (actionKey.k == ExportProfileKey)
@@ -208,7 +208,7 @@ internal static class SaveImport
 				}
 				
 				Audio.Play(Event.Click);
-				ModEntry.Instance.Helper.ModData.SetOptionalModData(__instance, "Subroute", new SaveImportRoute { ToExport = state, TargetSlot = actionKey.v });
+				ModEntry.Instance.Helper.ModData.SetOptional(__instance, "Subroute", new SaveImportRoute { ToExport = state, TargetSlot = actionKey.v });
 			}));
 		}
 	}
@@ -220,10 +220,10 @@ internal static class SaveImport
 		if (route is SaveImportRoute)
 			return true;
 
-		if (ModEntry.Instance.Helper.ModData.GetOptionalModData<Route>(route, "Subroute") is null)
+		if (ModEntry.Instance.Helper.ModData.GetOptional<Route>(route, "Subroute") is null)
 			return true;
 
-		ModEntry.Instance.Helper.ModData.RemoveModData(route, "Subroute");
+		ModEntry.Instance.Helper.ModData.Remove(route, "Subroute");
 		__result = true;
 		return false;
 	}
@@ -538,7 +538,7 @@ internal static class SaveImport
 			}
 			else
 			{
-				ModEntry.Instance.Helper.ModData.RemoveAllModData(o);
+				ModEntry.Instance.Helper.ModData.RemoveAll(o);
 
 				foreach (var field in oType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
 					if (field.GetValue(o) is { } fieldValue)

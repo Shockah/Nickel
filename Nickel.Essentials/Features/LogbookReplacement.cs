@@ -51,14 +51,14 @@ internal static class LogbookReplacement
 		if (NewRunOptions.allChars.All(deck => ModEntry.Instance.Helper.Content.Decks.LookupByDeck(deck)?.ModOwner == ModEntry.Instance.Helper.ModRegistry.VanillaModManifest))
 			return true;
 		
-		var selectedCharacters = ModEntry.Instance.Helper.ModData.ObtainModData<List<Deck>>(__instance, "SelectedCharacters");
-		var runCounts = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<DeckCombo, int>>(__instance, "RunCounts");
-		var winCounts = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<DeckCombo, int>>(__instance, "WinCounts");
-		var highestWins = ModEntry.Instance.Helper.ModData.ObtainModData<Dictionary<DeckCombo, int?>>(__instance, "HighestWins");
-		var allCombos = ModEntry.Instance.Helper.ModData.ObtainModData<List<DeckCombo>>(__instance, "AllCombos");
-		var currentCombos = ModEntry.Instance.Helper.ModData.GetOptionalModData<List<DeckCombo>>(__instance, "CurrentCombos");
-		var lastGpKey = ModEntry.Instance.Helper.ModData.GetModDataOrDefault<UIKey?>(__instance, "LastGpKey");
-		var subroute = ModEntry.Instance.Helper.ModData.GetOptionalModData<Route>(__instance, "Subroute");
+		var selectedCharacters = ModEntry.Instance.Helper.ModData.Obtain<List<Deck>>(__instance, "SelectedCharacters");
+		var runCounts = ModEntry.Instance.Helper.ModData.Obtain<Dictionary<DeckCombo, int>>(__instance, "RunCounts");
+		var winCounts = ModEntry.Instance.Helper.ModData.Obtain<Dictionary<DeckCombo, int>>(__instance, "WinCounts");
+		var highestWins = ModEntry.Instance.Helper.ModData.Obtain<Dictionary<DeckCombo, int?>>(__instance, "HighestWins");
+		var allCombos = ModEntry.Instance.Helper.ModData.Obtain<List<DeckCombo>>(__instance, "AllCombos");
+		var currentCombos = ModEntry.Instance.Helper.ModData.GetOptional<List<DeckCombo>>(__instance, "CurrentCombos");
+		var lastGpKey = ModEntry.Instance.Helper.ModData.GetOrDefault<UIKey?>(__instance, "LastGpKey");
+		var subroute = ModEntry.Instance.Helper.ModData.GetOptional<Route>(__instance, "Subroute");
 		var unlockedChars = g.state.storyVars.GetUnlockedChars();
 		
 		if (subroute is not null)
@@ -108,7 +108,7 @@ internal static class LogbookReplacement
 				__instance.scrollTarget = target.y + (int)__instance.scroll - scrolled.y;
 				__instance.scrollTarget = Math.Clamp(__instance.scrollTarget, -__instance.maxY, 0);
 			}
-			ModEntry.Instance.Helper.ModData.SetModData(__instance, "LastGpKey", g.hoverKey);
+			ModEntry.Instance.Helper.ModData.Set(__instance, "LastGpKey", g.hoverKey);
 		}
 		
 		return false;
@@ -192,7 +192,7 @@ internal static class LogbookReplacement
 						}
 
 						currentCombos = null;
-						ModEntry.Instance.Helper.ModData.RemoveModData(__instance, "CurrentCombos");
+						ModEntry.Instance.Helper.ModData.Remove(__instance, "CurrentCombos");
 					}), overrideKey: characterUiKey);
 				}
 			}
@@ -251,7 +251,7 @@ internal static class LogbookReplacement
 						if (!hasIt)
 							return;
 						
-						ModEntry.Instance.Helper.ModData.SetOptionalModData<Route>(__instance, "Subroute", new CardUpgrade
+						ModEntry.Instance.Helper.ModData.SetOptional<Route>(__instance, "Subroute", new CardUpgrade
 						{
 							cardCopy = Mutil.DeepCopy(card),
 							isPreview = true
@@ -354,7 +354,7 @@ internal static class LogbookReplacement
 					return combo.Values.Count == 3 && selectedCharacters.All(combo.Values.Contains);
 				})
 				.ToList();
-			ModEntry.Instance.Helper.ModData.SetOptionalModData(__instance, "CurrentCombos", currentCombos);
+			ModEntry.Instance.Helper.ModData.SetOptional(__instance, "CurrentCombos", currentCombos);
 
 			return currentCombos;
 		}
@@ -369,13 +369,13 @@ internal static class LogbookReplacement
 		if (NewRunOptions.allChars.All(deck => ModEntry.Instance.Helper.Content.Decks.LookupByDeck(deck)?.ModOwner == ModEntry.Instance.Helper.ModRegistry.VanillaModManifest))
 			return;
 		
-		var subroute = ModEntry.Instance.Helper.ModData.GetOptionalModData<Route>(__instance, "Subroute");
+		var subroute = ModEntry.Instance.Helper.ModData.GetOptional<Route>(__instance, "Subroute");
 		if (r == subroute)
 		{
-			ModEntry.Instance.Helper.ModData.SetOptionalModData<Route>(__instance, "Subroute", null);
+			ModEntry.Instance.Helper.ModData.SetOptional<Route>(__instance, "Subroute", null);
 			__result = true;
 			
-			var lastGpKey = ModEntry.Instance.Helper.ModData.GetModDataOrDefault<UIKey?>(__instance, "LastGpKey");
+			var lastGpKey = ModEntry.Instance.Helper.ModData.GetOrDefault<UIKey?>(__instance, "LastGpKey");
 			Input.currentGpKey = lastGpKey;
 		}
 	}

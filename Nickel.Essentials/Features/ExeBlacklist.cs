@@ -165,7 +165,7 @@ internal static class ExeBlacklist
 	{
 		if (LastState is not { } state)
 			return;
-		if (ModEntry.Instance.Helper.ModData.TryGetModData(state, "RunningDataCollectingPopulateRun", out bool isRunningDataCollectingPopulateRun) && isRunningDataCollectingPopulateRun)
+		if (ModEntry.Instance.Helper.ModData.TryGet(state, "RunningDataCollectingPopulateRun", out bool isRunningDataCollectingPopulateRun) && isRunningDataCollectingPopulateRun)
 			return;
 
 		for (var i = cards.Count - 1; i >= 0; i--)

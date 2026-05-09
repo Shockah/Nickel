@@ -6,34 +6,34 @@ namespace Nickel;
 
 internal sealed class ModData(IModManifest modManifest, IModDataHandler modDataHandler) : IModData
 {
-	public T GetModData<T>(object o, string key)
+	public T Get<T>(object o, string key)
 		=> modDataHandler.GetModData<T>(modManifest.UniqueName, o, key);
 
-	public bool TryGetModData<T>(object o, string key, [MaybeNullWhen(false)] out T data)
+	public bool TryGet<T>(object o, string key, [MaybeNullWhen(false)] out T data)
 		=> modDataHandler.TryGetModData(modManifest.UniqueName, o, key, out data);
 
-	public T GetModDataOrDefault<T>(object o, string key, T defaultValue)
+	public T GetOrDefault<T>(object o, string key, T defaultValue)
 		=> modDataHandler.GetModDataOrDefault(modManifest.UniqueName, o, key, defaultValue);
 
-	public T GetModDataOrDefault<T>(object o, string key) where T : new()
+	public T GetOrDefault<T>(object o, string key) where T : new()
 		=> modDataHandler.GetModDataOrDefault<T>(modManifest.UniqueName, o, key);
 
-	public T ObtainModData<T>(object o, string key, Func<T> factory)
+	public T Obtain<T>(object o, string key, Func<T> factory)
 		=> modDataHandler.ObtainModData(modManifest.UniqueName, o, key, factory);
 
-	public T ObtainModData<T>(object o, string key) where T : new()
+	public T Obtain<T>(object o, string key) where T : new()
 		=> modDataHandler.ObtainModData<T>(modManifest.UniqueName, o, key);
 
-	public bool ContainsModData(object o, string key)
+	public bool Contains(object o, string key)
 		=> modDataHandler.ContainsModData(modManifest.UniqueName, o, key);
 
-	public void SetModData<T>(object o, string key, T data)
+	public void Set<T>(object o, string key, T data)
 		=> modDataHandler.SetModData(modManifest.UniqueName, o, key, data);
 
-	public void RemoveModData(object o, string key)
+	public void Remove(object o, string key)
 		=> modDataHandler.RemoveModData(modManifest.UniqueName, o, key);
 
-	public void CopyOwnedModData(object from, object to)
+	public void CopyOwned(object from, object to)
 	{
 		if (modDataHandler.GetUnderlyingHandler(from) == modDataHandler.GetUnderlyingHandler(to) && modDataHandler.TryCopyOwnedModDataDirectly(modManifest.UniqueName, from, to))
 			return;
@@ -41,7 +41,7 @@ internal sealed class ModData(IModManifest modManifest, IModDataHandler modDataH
 			modDataHandler.SetModData(modManifest.UniqueName, to, key, value);
 	}
 
-	public void CopyAllModData(object from, object to)
+	public void CopyAll(object from, object to)
 	{
 		if (modDataHandler.GetUnderlyingHandler(from) == modDataHandler.GetUnderlyingHandler(to) && modDataHandler.TryCopyAllModDataDirectly(from, to))
 			return;
@@ -50,7 +50,7 @@ internal sealed class ModData(IModManifest modManifest, IModDataHandler modDataH
 				modDataHandler.SetModData(modUniqueName, to, key, value);
 	}
 
-	public void RemoveOwnedModData(object o)
+	public void RemoveOwned(object o)
 	{
 		if (modDataHandler.TryRemoveOwnedModDataDirectly(modManifest.UniqueName, o))
 			return;
@@ -58,7 +58,7 @@ internal sealed class ModData(IModManifest modManifest, IModDataHandler modDataH
 			modDataHandler.RemoveModData(modManifest.UniqueName, o, key);
 	}
 
-	public void RemoveAllModData(object o)
+	public void RemoveAll(object o)
 	{
 		if (modDataHandler.TryRemoveAllModDataDirectly(o))
 			return;
