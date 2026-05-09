@@ -25,6 +25,7 @@ internal sealed class ModDataFieldDefinitionEditor : IAssemblyDefinitionEditor
 		nameof(RunConfig),
 		nameof(StoryNode),
 		nameof(MapBase),
+		nameof(AI),
 	];
 	
 	public byte[] AssemblyEditorDescriptor

@@ -155,4 +155,7 @@ public static class ModDataExtensions
 	
 	public static ModDataWrapper<MapBase> ModData(this MapBase map)
 		=> ModDataWrapper<MapBase>.Make(map);
+	
+	public static ModDataWrapper<AI> ModData(this AI ai)
+		=> ModDataWrapper<AI>.Make(ai);
 }
