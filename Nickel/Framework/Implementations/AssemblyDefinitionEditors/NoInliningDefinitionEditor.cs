@@ -11,7 +11,7 @@ namespace Nickel;
 
 internal sealed class NoInliningDefinitionEditor(
 	Func<IModManifest> modLoaderManifestProvider,
-	Func<IEnumerable<IAssemblyModManifest>> manifestProvider
+	Func<IEnumerable<IModManifest>> manifestProvider
 ) : IAssemblyDefinitionEditor
 {
 	private record StopInliningCompiledDefinition(
@@ -47,7 +47,7 @@ internal sealed class NoInliningDefinitionEditor(
 			.ToList();
 
 		List<(IModManifest Manifest, StopInliningDefinition Definition)> modDefinitionsOnBehalfOf = manifestProvider()
-			.SelectMany(m => m.MethodsToStopInlining.Select(d => ((IModManifest)m, d)))
+			.SelectMany(m => m.MethodsToStopInlining.Select(d => (m, d)))
 			.ToList();
 
 		return modLoaderDefinitionsOnBehalfOf.Concat(modDefinitionsOnBehalfOf)

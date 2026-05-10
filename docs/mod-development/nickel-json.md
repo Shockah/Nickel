@@ -186,6 +186,7 @@ A custom display name used by update check UIs instead of the mod's normal `Disp
 
 ```json
 {
+	// ...
 	"UpdateChecks": {
 		"ModNameForUpdatePurposes": "Nickel",
 		"NexusMods": {
@@ -200,12 +201,57 @@ A custom display name used by update check UIs instead of the mod's normal `Disp
 
 ```json
 {
+	// ...
 	"UpdateChecks": {
 		"GitHub": {
 			"Repository": "rft50/cc-dave",
 			"ReleaseTagRegex": "^jester\\-(.*)"
 		}
 	}
+}
+```
+
+## `MethodsToStopInlining`
+
+A list of .NET methods that Nickel should prevent from being inlined when this mod is installed. This field is optional.
+
+This is an advanced compatibility feature primarily intended for mods which patch or modify existing game methods at runtime. Preventing inlining ensures those methods remain patchable. See the [code patching [TODO]](TODO) page for more details.
+
+This field may also be useful for non-`Nickel` mods implemented through other runtimes (such as Lua or Python) if they rely on runtime patching infrastructure provided by another mod.
+
+Each entry consists of several fields.
+
+### `AssemblyName`
+
+A [regex](https://en.wikipedia.org/wiki/Regular_expression) matching the name of the assembly containing the method to stop from inlining. This field is optional. Defaults to the game's assembly name.
+
+### `TypeName`
+
+A [regex](https://en.wikipedia.org/wiki/Regular_expression) matching the name of the type containing the method to stop from inlining. This field is **required**.
+
+### `MethodName`
+
+A [regex](https://en.wikipedia.org/wiki/Regular_expression) matching the name of the method to stop from inlining. This field is **required**.
+
+### `ArgumentCount`
+
+The number of arguments the method to stop from inlining has. This field is optional.
+
+### `IgnoreNoMatches`
+
+Whether Nickel should ignore if this entry didn't match any methods. If not ignored, a warning will be produced. This field is optional. Defaults to `false`.
+
+### Example
+
+```json
+{
+    // ...
+    "MethodsToStopInlining": [
+        {
+            "TypeName": "Combat",
+            "MethodName": "IsVisible"
+        }
+    ]
 }
 ```
 
@@ -257,48 +303,6 @@ Whether the assembly should be shared between all mods (if `true`), or loaded in
         {
             "Name": "System.Memory.Data",
             "IsShared": true
-        }
-    ]
-}
-```
-
-## `MethodsToStopInlining`
-
-A list of .NET methods that Nickel should prevent from being inlined when this mod is installed. This field is optional.
-
-This is an advanced feature primarily intended for compatibility with runtime patching techniques. See the [code patching [TODO]](TODO) page for more details.
-
-Each entry consists of several fields.
-
-### `AssemblyName`
-
-A [regex](https://en.wikipedia.org/wiki/Regular_expression) matching the name of the assembly containing the method to stop from inlining. This field is optional. Defaults to the game's assembly name.
-
-### `TypeName`
-
-A [regex](https://en.wikipedia.org/wiki/Regular_expression) matching the name of the type containing the method to stop from inlining. This field is **required**.
-
-### `MethodName`
-
-A [regex](https://en.wikipedia.org/wiki/Regular_expression) matching the name of the method to stop from inlining. This field is **required**.
-
-### `ArgumentCount`
-
-The number of arguments the method to stop from inlining has. This field is optional.
-
-### `IgnoreNoMatches`
-
-Whether Nickel should ignore if this entry didn't match any methods. If not ignored, a warning will be produced. This field is optional. Defaults to `false`.
-
-### Example
-
-```json
-{
-    // ...
-    "MethodsToStopInlining": [
-        {
-            "TypeName": "Combat",
-            "MethodName": "IsVisible"
         }
     ]
 }

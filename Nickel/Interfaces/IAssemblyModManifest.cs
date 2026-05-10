@@ -21,10 +21,4 @@ public interface IAssemblyModManifest : IModManifest
 
 	/// <summary>The mod's assembly (DLL) references.</summary>
 	IReadOnlyList<ModAssemblyReference> AssemblyReferences { get; }
-	
-	/// <summary>
-	/// Describes methods that Nickel should attempt to stop from getting inlined.<br/>
-	/// https://harmony.pardeike.net/articles/patching-edgecases.html#inlining
-	/// </summary>
-	IReadOnlyList<StopInliningDefinition> MethodsToStopInlining { get; }
 }

@@ -45,6 +45,12 @@ public interface IModManifest
 
 	/// <summary>Additional mods to load as part of this mod.</summary>
 	IReadOnlyList<ISubmodEntry> Submods { get; }
+	
+	/// <summary>
+	/// Describes methods that Nickel should attempt to stop from getting inlined.<br/>
+	/// https://harmony.pardeike.net/articles/patching-edgecases.html#inlining
+	/// </summary>
+	IReadOnlyList<StopInliningDefinition> MethodsToStopInlining { get; }
 
 	/// <summary>Additional manifest data that couldn't be mapped.</summary>
 	IReadOnlyDictionary<string, object> ExtensionData { get; }

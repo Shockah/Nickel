@@ -117,9 +117,7 @@ internal sealed partial class Nickel(ProgramRunInfo info)
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new NoInliningDefinitionEditor(
 			() => instance.ModManager.ModLoaderPackage.Manifest,
 			() => instance.ModManager.ResolvedMods
-				.Select(p => p.Manifest.AsAssemblyModManifest())
-				.Where(m => m.IsT0)
-				.Select(m => m.AsT0)
+				.Select(p => p.Manifest)
 		));
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new GamePublicizerDefinitionEditor());
 		extendableAssemblyDefinitionEditor.RegisterDefinitionEditor(new CardDataExtraTraitsFieldDefinitionEditor());

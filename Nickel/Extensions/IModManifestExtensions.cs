@@ -27,14 +27,11 @@ public static class IModManifestExtensions
 				return new Error<string>($"`{nameof(IAssemblyModManifest.EntryPointType)}` value is invalid.");
 			if (!TryParseAssemblyReferences(out var assemblyReferences))
 				return new Error<string>($"`{nameof(IAssemblyModManifest.AssemblyReferences)}` value is invalid.");
-			if (!TryParseMethodsToStopInlining(out var methodsToStopInlining))
-				return new Error<string>($"`{nameof(IAssemblyModManifest.MethodsToStopInlining)}` value is invalid.");
 
 			var result = AssemblyModManifest.From(manifest);
 			result.EntryPointAssembly = entryPointAssembly;
 			result.EntryPointType = entryPointType;
 			result.AssemblyReferences = assemblyReferences ?? [];
-			result.MethodsToStopInlining = methodsToStopInlining ?? [];
 			return result;
 
 			bool TryParseEntryPointAssemblyFileName([MaybeNullWhen(false)] out string result)
@@ -69,22 +66,6 @@ public static class IModManifestExtensions
 				if (!manifest.ExtensionData.TryGetValue(nameof(IAssemblyModManifest.AssemblyReferences), out var raw))
 					return true;
 				var nullableResult = JsonConvert.DeserializeObject<List<ModAssemblyReference>>(JsonConvert.SerializeObject(raw, settings), settings);
-				if (nullableResult is null)
-					return false;
-				result = nullableResult;
-				return true;
-			}
-
-			bool TryParseMethodsToStopInlining(out IReadOnlyList<StopInliningDefinition>? result)
-			{
-				var settings = new JsonSerializerSettings
-				{
-					ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
-				};
-				result = null;
-				if (!manifest.ExtensionData.TryGetValue(nameof(IAssemblyModManifest.MethodsToStopInlining), out var raw))
-					return true;
-				var nullableResult = JsonConvert.DeserializeObject<List<StopInliningDefinition>>(JsonConvert.SerializeObject(raw, settings), settings);
 				if (nullableResult is null)
 					return false;
 				result = nullableResult;

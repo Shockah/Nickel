@@ -43,6 +43,9 @@ internal sealed class ModManifest : IModManifest
 	[JsonProperty]
 	[JsonConverter(typeof(ConcreteTypeConverter<IReadOnlyList<SubmodEntry>>))]
 	public IReadOnlyList<ISubmodEntry> Submods { get; internal set; } = new List<ISubmodEntry>();
+	
+	[JsonProperty]
+	public IReadOnlyList<StopInliningDefinition> MethodsToStopInlining { get; internal set; } = [];
 
 	[JsonExtensionData]
 	public IDictionary<string, object> ExtensionData { get; set; } = new Dictionary<string, object>();

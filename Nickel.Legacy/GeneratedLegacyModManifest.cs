@@ -55,10 +55,10 @@ internal sealed class GeneratedLegacyModManifest : IAssemblyModManifest
 	public IReadOnlyList<ModAssemblyReference> AssemblyReferences { get; } = [];
 
 	[JsonIgnore]
-	public IReadOnlyList<StopInliningDefinition> MethodsToStopInlining { get; } = [];
+	public IReadOnlyList<ISubmodEntry> Submods { get; } = [];
 
 	[JsonIgnore]
-	public IReadOnlyList<ISubmodEntry> Submods { get; } = [];
+	public IReadOnlyList<StopInliningDefinition> MethodsToStopInlining { get; } = [];
 
 	[JsonExtensionData]
 	public IDictionary<string, object> ExtensionData { get; } = new Dictionary<string, object>();

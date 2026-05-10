@@ -46,6 +46,9 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 	[JsonProperty]
 	[JsonConverter(typeof(ConcreteTypeConverter<IReadOnlyList<SubmodEntry>>))]
 	public IReadOnlyList<ISubmodEntry> Submods { get; internal set; } = new List<ISubmodEntry>();
+	
+	[JsonProperty]
+	public IReadOnlyList<StopInliningDefinition> MethodsToStopInlining { get; internal set; } = [];
 
 	[JsonExtensionData]
 	public IDictionary<string, object> ExtensionData { get; set; } = new Dictionary<string, object>();
@@ -64,8 +67,6 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 	public SemanticVersion? RequiredApiVersion { get; internal set; }
 
 	public IReadOnlyList<ModAssemblyReference> AssemblyReferences { get; internal set; } = [];
-	
-	public IReadOnlyList<StopInliningDefinition> MethodsToStopInlining { get; internal set; } = [];
 
 	public static AssemblyModManifest From(IModManifest modManifest)
 		=> new()
@@ -81,17 +82,13 @@ internal sealed class AssemblyModManifest : IAssemblyModManifest
 			ModType = modManifest.ModType,
 			LoadPhase = modManifest.LoadPhase,
 			Submods = modManifest.Submods,
-			
-			EntryPointAssembly = (modManifest as IAssemblyModManifest)?.EntryPointAssembly!,
-			EntryPointType = (modManifest as IAssemblyModManifest)?.EntryPointType,
-			AssemblyReferences = (modManifest as IAssemblyModManifest)?.AssemblyReferences ?? [],
-			MethodsToStopInlining = (modManifest as IAssemblyModManifest)?.MethodsToStopInlining ?? [],
+			MethodsToStopInlining = modManifest.MethodsToStopInlining,
 			
 			ExtensionData = modManifest.ExtensionData
 				.Where(kvp => kvp.Key != nameof(EntryPointAssembly))
 				.Where(kvp => kvp.Key != nameof(EntryPointType))
+				.Where(kvp => kvp.Key != nameof(RequiredApiVersion))
 				.Where(kvp => kvp.Key != nameof(AssemblyReferences))
-				.Where(kvp => kvp.Key != nameof(MethodsToStopInlining))
 				.ToDictionary()
 		};
 }
