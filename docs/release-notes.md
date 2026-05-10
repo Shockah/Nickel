@@ -8,6 +8,7 @@
 * Combined Nickel, NickelLauncher and NickelMacLauncher into a single application.
 * Renamed all commandline arguments from --camelCase to --kebab-case.
 * All of the commandline arguments now have their equivalents in the Nickel's settings file. Passing in commandline arguments overrides the settings values.
+* Fixed the behavior of `AwaitApi` and `AwaitApiOrNull` methods, causing problems with cross-mod integrations.
 
 ### For developers:
 * Removed deprecated code.

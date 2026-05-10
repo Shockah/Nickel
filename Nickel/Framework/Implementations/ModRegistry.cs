@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Nanoray.Pintail;
 using Nanoray.PluginManager;
-using Nanoray.Shrike;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -30,6 +29,9 @@ internal sealed class ModRegistry(
 	public DirectoryInfo ModsDirectory { get; } = modsDirectory;
 
 	private readonly Dictionary<string, object?> ApiCache = [];
+	private readonly List<(string UniqueName, SemanticVersion? MinimumVersion, Func<object?> ApiGetter, Action<object?> Callback)> ApiAwaiters = [];
+
+	private bool DidSetupAwaitApi;
 	
 	public IModManifest VanillaModManifest
 	{
@@ -96,32 +98,12 @@ internal sealed class ModRegistry(
 		if (currentModLoadPhaseProvider() is { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
 			return;
 
-		var onModLoadedDelegate = new NullableObjectRef<EventHandler<IModManifest>>();
-		var onModLoadPhaseFinishedDelegate = new NullableObjectRef<EventHandler<ModLoadPhase>>();
-
-		onModLoadedDelegate.Value = (_, mod) =>
+		this.SetupAwaitApiIfNeeded();
+		this.ApiAwaiters.Add((uniqueName, minimumVersion, () => this.GetApi<TApi>(uniqueName, minimumVersion), rawApi =>
 		{
-			if (mod.UniqueName != uniqueName)
-				return;
-
-			onModLoadedDelegate -= onModLoadedDelegate.Value;
-			onModLoadPhaseFinishedDelegate -= onModLoadPhaseFinishedDelegate.Value;
-
-			if (this.GetApi<TApi>(uniqueName, minimumVersion) is { } api)
+			if (rawApi is TApi api)
 				callback(api);
-		};
-		
-		onModLoadPhaseFinishedDelegate.Value = (_, _) =>
-		{
-			if (currentModLoadPhaseProvider() is not { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
-				return;
-
-			onModLoadedDelegate -= onModLoadedDelegate.Value;
-			onModLoadPhaseFinishedDelegate -= onModLoadPhaseFinishedDelegate.Value;
-		};
-
-		modEvents.OnModLoaded += onModLoadedDelegate.Value;
-		modEvents.OnModLoadPhaseFinished += onModLoadPhaseFinishedDelegate.Value;
+		}));
 	}
 
 	public void AwaitApiOrNull<TApi>(string uniqueName, Action<TApi?> callback) where TApi : class
@@ -136,33 +118,13 @@ internal sealed class ModRegistry(
 		}
 
 		if (currentModLoadPhaseProvider() is { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
-			return;
-
-		var onModLoadedDelegate = new NullableObjectRef<EventHandler<IModManifest>>();
-		var onModLoadPhaseFinishedDelegate = new NullableObjectRef<EventHandler<ModLoadPhase>>();
-
-		onModLoadedDelegate.Value = (_, mod) =>
 		{
-			if (mod.UniqueName != uniqueName)
-				return;
-
-			onModLoadedDelegate -= onModLoadedDelegate.Value;
-			onModLoadPhaseFinishedDelegate -= onModLoadPhaseFinishedDelegate.Value;
-			callback(this.GetApi<TApi>(uniqueName, minimumVersion));
-		};
-		
-		onModLoadPhaseFinishedDelegate.Value = (_, _) =>
-		{
-			if (currentModLoadPhaseProvider() is not { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
-				return;
-
-			onModLoadedDelegate -= onModLoadedDelegate.Value;
-			onModLoadPhaseFinishedDelegate -= onModLoadPhaseFinishedDelegate.Value;
 			callback(null);
-		};
+			return;
+		}
 
-		modEvents.OnModLoaded += onModLoadedDelegate.Value;
-		modEvents.OnModLoadPhaseFinished += onModLoadPhaseFinishedDelegate.Value;
+		this.SetupAwaitApiIfNeeded();
+		this.ApiAwaiters.Add((uniqueName, minimumVersion, () => this.GetApi<TApi>(uniqueName, minimumVersion), rawApi => callback(rawApi as TApi)));
 	}
 
 	public IModHelper GetModHelper(IModManifest mod)
@@ -173,4 +135,46 @@ internal sealed class ModRegistry(
 
 	public IPluginPackage<IModManifest> GetPackage(IModManifest mod)
 		=> packageProvider(mod);
+
+	private void SetupAwaitApiIfNeeded()
+	{
+		if (this.DidSetupAwaitApi)
+			return;
+
+		modEvents.OnModLoaded += this.OnModLoaded;
+		modEvents.OnModLoadPhaseFinished += this.OnModLoadPhaseFinished;
+		this.DidSetupAwaitApi = true;
+	}
+
+	private void OnModLoaded(object? sender, IModManifest mod)
+	{
+		for (var i = 0; i < this.ApiAwaiters.Count; i++)
+		{
+			var entry = this.ApiAwaiters[i];
+			if (entry.UniqueName != mod.UniqueName)
+				continue;
+
+			if ((entry.MinimumVersion is { } minimumVersion && mod.Version < minimumVersion) || entry.ApiGetter() is not { } api)
+			{
+				entry.Callback(null);
+				this.ApiAwaiters.RemoveAt(i--);
+				continue;
+			}
+
+			entry.Callback(api);
+			this.ApiAwaiters.RemoveAt(i--);
+		}
+	}
+
+	private void OnModLoadPhaseFinished(object? sender, ModLoadPhase phase)
+	{
+		if (currentModLoadPhaseProvider() is not { Phase: ModLoadPhase.AfterDbInit, IsDone: true })
+			return;
+
+		var awaiters = this.ApiAwaiters.ToList();
+		this.ApiAwaiters.Clear();
+
+		foreach (var awaiter in awaiters)
+			awaiter.Callback(null);
+	}
 }
