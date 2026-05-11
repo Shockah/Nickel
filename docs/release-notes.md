@@ -13,6 +13,7 @@
 ### For developers:
 * Removed deprecated code.
 * Removed `IHasCustomTraits` in favor of the new `CardData.ExtraTraits` extension property.
+* `IModEvents.OnModLoaded` now passes in the mod package, not just the manifest.
 * Added `IModStorage.ProfileStorageDirectory` and `IModStorage.GetMainProfileStorageFile`.
 * Changed namespaces of some classes that were mistakenly put in wrong ones.
 

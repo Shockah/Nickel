@@ -1,4 +1,5 @@
 using HarmonyLib;
+using Nanoray.PluginManager;
 using System;
 using System.Reflection;
 
@@ -19,7 +20,7 @@ internal sealed class ModEvents(
 		remove => eventManager.OnModLoadPhaseFinishedEvent.Remove(value, modManifest);
 	}
 	
-	public event EventHandler<IModManifest> OnModLoaded
+	public event EventHandler<IPluginPackage<IModManifest>> OnModLoaded
 	{
 		add => eventManager.OnModLoadedEvent.Add(value, modManifest);
 		remove => eventManager.OnModLoadedEvent.Remove(value, modManifest);

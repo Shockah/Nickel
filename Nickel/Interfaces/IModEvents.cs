@@ -1,3 +1,4 @@
+using Nanoray.PluginManager;
 using System;
 using System.Reflection;
 
@@ -16,7 +17,7 @@ public interface IModEvents
 	event EventHandler<ModLoadPhase> OnModLoadPhaseFinished;
 	
 	/// <summary>An event fired whenever any mod gets loaded.</summary>
-	event EventHandler<IModManifest> OnModLoaded;
+	event EventHandler<IPluginPackage<IModManifest>> OnModLoaded;
 
 	/// <summary>An event fired whenever the save state gets loaded/changed.</summary>
 	event EventHandler<State> OnSaveLoaded;

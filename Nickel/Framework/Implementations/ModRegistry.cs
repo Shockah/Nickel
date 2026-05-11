@@ -146,15 +146,15 @@ internal sealed class ModRegistry(
 		this.DidSetupAwaitApi = true;
 	}
 
-	private void OnModLoaded(object? sender, IModManifest mod)
+	private void OnModLoaded(object? sender, IPluginPackage<IModManifest> mod)
 	{
 		for (var i = 0; i < this.ApiAwaiters.Count; i++)
 		{
 			var entry = this.ApiAwaiters[i];
-			if (entry.UniqueName != mod.UniqueName)
+			if (entry.UniqueName != mod.Manifest.UniqueName)
 				continue;
 
-			if ((entry.MinimumVersion is { } minimumVersion && mod.Version < minimumVersion) || entry.ApiGetter() is not { } api)
+			if ((entry.MinimumVersion is { } minimumVersion && mod.Manifest.Version < minimumVersion) || entry.ApiGetter() is not { } api)
 			{
 				entry.Callback(null);
 				this.ApiAwaiters.RemoveAt(i--);

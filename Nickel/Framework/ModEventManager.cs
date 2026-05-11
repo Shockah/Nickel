@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Nanoray.PluginManager;
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -9,7 +10,7 @@ internal sealed class ModEventManager
 {
 	private readonly IModManifest ModLoaderModManifest;
 	public readonly ManagedEvent<ModLoadPhase> OnModLoadPhaseFinishedEvent;
-	public readonly ManagedEvent<IModManifest> OnModLoadedEvent;
+	public readonly ManagedEvent<IPluginPackage<IModManifest>> OnModLoadedEvent;
 	public readonly ManagedEvent<LoadStringsForLocaleEventArgs> OnLoadStringsForLocaleEvent;
 	public readonly ManagedEvent<Exception?> OnGameClosingEvent;
 
