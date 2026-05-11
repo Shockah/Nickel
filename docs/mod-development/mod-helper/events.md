@@ -81,4 +81,4 @@ helper.Events.OnGameClosing += (_, ex) =>
 
 ## Artifact hook registration
 
-The events helper also contains methods related to [Artifact hooks](tools/artifact-hooks.md).
+The events helper also contains methods related to [Artifact hooks](events/artifact-hooks.md).
