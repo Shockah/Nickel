@@ -1,115 +1,126 @@
-[← back to readme](README.md)
+# Player guide
 
-# Nickel setup
+## Nickel setup
 
-## Windows
+### Windows
 
 Note: Nickel requires Windows 10+.
 
-1. Download the latest version of Nickel from [GitHub](https://github.com/Shockah/Nickel/releases/latest) or [NexusMods](https://www.nexusmods.com/cobaltcore/mods/1). Make sure you get the Windows version.
-2. Extract the `.zip` file in the place where you would like to store Nickel (and by default also the mods and logs).
-	* While the actual place you extract to does not matter for playing mods, it is recommended to extract to the game's Steam folder (`C:\Program Files\Steam\steamapps\common\Cobalt Core` by default). This will help when debugging any potential issues, and will also help when creating mods of your own. Additionally, this is the path where the [Vortex mod manager for NexusMods](https://www.nexusmods.com/about/vortex/) will look for Nickel to be installed. Alternatively, if you are not interested in using Vortex, the game's application data folder (`%appdata%\CobaltCore`) is also a good spot for installing Nickel.
-3. Open the extracted Nickel folder.
-4. Double-click `NickelLauncher.exe` to start Nickel to let it do its initial setup.
-	* While it is unlikely, if `NickelLauncher.exe` happens not to work, you can alternatively try running `Nickel.exe` instead, but doing so will reduce some of Nickel's logging capabilities.
+1. Download the latest version of Nickel from GitHub or NexusMods. Make sure you get the Windows version.
+2. Extract the ".zip" file to a folder where you want Nickel to be installed.
+	* The recommended location is your Cobalt Core Steam folder (`C:\Program Files\Steam\steamapps\common\Cobalt Core` by default). This is the most convenient location for debugging, and also the best location if you plan to create mods of your own.
+3. Double-click "Nickel.exe" in the extracted folder to let Nickel perform its initial setup.
+4. (Optional) Add Nickel to Steam as a non-Steam game.
+	* Open Steam
+	* Click "Add a Game" -> "Add a Non-Steam Game..."
+	* Click "Browse" and select "Nickel.exe"
+	* Click "Add Selected Programs"
+	* This is optional, but useful for quick launching and keeping everything organized in your Steam library
 
-## Steam Deck / Linux (Proton)
+### Steam Deck / Linux (Proton)
 
-This guide assumes you are already familiar with the Desktop mode of a Steam Deck, or some other environment you may be using on your Linux machine.
-
-1. [Steam Deck only] Switch from Gaming mode to Desktop mode, if you are not in it already.
-2. Download the latest version of Nickel from [GitHub](https://github.com/Shockah/Nickel/releases/latest) or [NexusMods](https://www.nexusmods.com/cobaltcore/mods/1). Make sure you get the Windows version. Yes, Windows.
-3. Extract the `.zip` file in the place where you would like to store Nickel (and by default also the mods and logs).
-4. Click on the Steam icon in your taskbar and choose "Library".
-5. In the bottom-left corner, click "Add a Game", then choose "Add a Non-Steam Game...".
-6. Click the "Browse" button. Navigate to the folder where you extracted Nickel to. Choose `NickelLauncher.exe`, then click "Open".
-	* While it is unlikely, if `NickelLauncher.exe` happens not to work, you can alternatively try running `Nickel.exe` instead, but doing so will reduce some of Nickel's logging capabilities.
+1. (Steam Deck only) Switch to Desktop Mode.
+	* Press the Steam button, go to "Power", then select "Switch to Desktop".
+2. Download the latest version of Nickel from GitHub or NexusMods. Make sure you get the Windows version.
+3. Extract the ".zip" file to a folder where you want Nickel to be installed.
+4. Open Steam.
+5. Click "Add a Game" -> "Add a Non-Steam Game..."
+6. Click "Browse" and select "Nickel.exe" from your extracted folder.
 7. Click "Add Selected Programs".
-8. Right-click the new `NickelLauncher.exe` entry, then choose "Properties".
-9. Paste the below line into the "Launch Options" field:  
-	`STEAM_COMPAT_DATA_PATH=~/.steam/steam/steamapps/compatdata/2179850/ %command%`
-	* While you are on this screen, you can also change the `NickelLauncher.exe` name in the top field to your liking.
-10. Click on the "Compatibility" tab on the left.
-11. Tick the "Force the use of a specific Steam Play compatibility tool" checkbox setting.
-12. From the list that appeared below the previous setting, choose the highest non-experimental version of Proton. At the moment of writing this guide, that was `Proton 9.0-2`, which was confirmed to work.
-13. Close the properties window.
-14. [Steam Deck only] Go back into Gaming mode.
+8. Right-click "Nickel.exe" in your Steam library and select "Properties".
+9. In "Launch Options", paste:
+	```bash
+	STEAM_COMPAT_DATA_PATH=~/.steam/steam/steamapps/compatdata/2179850/ %command%
+	```
+10. Launch "Nickel.exe" once to let Nickel perform its initial setup.
+11. (Steam Deck only) Return to Gaming Mode.
 
-## Mac
+### macOS
 
 Note: Nickel requires macOS 10.15+ (Catalina or newer).
 
-1. Download the latest version of Nickel from [GitHub](https://github.com/Shockah/Nickel/releases/latest) or [NexusMods](https://www.nexusmods.com/cobaltcore/mods/1). Make sure you get the Mac version.
-2. Extract the `.zip` file in the place where you would like to store Nickel.
-	* While the actual place you extract to does not matter for playing mods, it is recommended to move the extracted `Nickel.app` to your `Applications` folder. This will help when debugging any potential issues, and will also help when creating mods of your own.
-3. Double-click `Nickel.app` to start Nickel to let it do its initial setup.
-	* If you get shown a prompt saying "Apple could not verify Nickel.app is free of malware that may harm your Mac or compromise your privacy.", follow these instructions: https://support.apple.com/en-us/102445#openanyway.
-	* If you get shown a prompt saying `"Nickel.app" is damaged and can't be opened. You should move it to the Trash.`, assuming you moved `Nickel.app` to your `Applications` folder:
-		1. Open the Terminal app.
-    	2. Enter this command: `xattr -dr com.apple.quarantine /Applications/Nickel.app`
-		3. Double-click `Nickel.app` again.
+1. Download the latest version of Nickel from GitHub or NexusMods. Make sure you get the Mac version.
+2. Extract the ".zip" file to a folder where you want Nickel to be installed.
+	* It is recommended to move "Nickel.app" into your "Applications" folder for easier access and troubleshooting.
+3. Double-click "Nickel.app" to start Nickel and let it perform its initial setup.
+	* If macOS shows a security warning, you may need to allow the app manually:
+		1. Open System Settings -> Privacy & Security
+		2. Click "Open Anyway" next to Nickel
+	* If macOS says the app is "damaged", it is usually caused by quarantine restrictions. Open Terminal and run:
+		```bash
+		xattr -dr com.apple.quarantine /Applications/Nickel.app
+		```
+		Then try opening the app again.
 
-## `NickelLauncher.exe` vs `Nickel.exe`
+## Getting mods
 
-Nickel comes with two EXE files. The core of the mod loader is `Nickel.exe` and it provides all of the functionality. It is perfectly fine to use `Nickel.exe`. However, due to some technical problems, `Nickel.exe` is not capable of logging any "fatal" issues that could occur when modding the game.
-
-`NickelLauncher.exe` is a wrapper around `Nickel.exe`, which detects fatal errors coming from `Nickel.exe`, and logs them correctly.
-
-# Getting mods
-
-The two great places to find Cobalt Core mods are:
+The two main places to find Cobalt Core mods are:
 * The [Cobalt Core section on NexusMods](https://www.nexusmods.com/cobaltcore).
 * The [#cc-mod-showcase forum](https://discord.com/channels/806989214133780521/1171363893474508870) on the [Rocket Rat Games' (developers') Discord server](https://discord.gg/cncV5znGwA).
 	* This Discord server is also *the* place to talk about mods - be it making them, playing them, or getting support.
 	* Hop into the [#cc-mod-discussion channel](https://discord.com/channels/806989214133780521/1210710707717275658) if you want to talk about mods, or need any kind of help with the mods or Nickel.
 	* Hop into the [#cc-mod-dev channel](https://discord.com/channels/806989214133780521/1138540954761035827) if you want to make some mods, or just see what other modders are talking about.
 
-# Installing mods
+## Installing mods
 
-After setting up Nickel, you can start adding mods. By default, Nickel comes with a `ModLibrary` folder and several pre-installed mods.
+Mods are installed by placing them into the `ModLibrary` folder.
+* `.zip` files are the simplest option: just download and drop them into `ModLibrary`.
+* Extracted folders are also supported and are mainly useful for mod development or troubleshooting.
 
-To install a mod, put it into the `ModLibrary` folder. It is recommended to extract the mod and remove the `.zip` file, but mods *should* also work while still in `.zip` files.
+Nickel scans the `ModLibrary` folder recursively, so mods can be organized into subfolders if desired.
 
-## Windows; Steam Deck / Linux (Proton)
+### Default locations
 
-The default `ModLibrary` folder is contained in Nickel's folder.
+#### Windows / Steam Deck (Proton) / Linux
+The `ModLibrary` folder is located inside the Nickel installation directory.
 
-## Mac
+#### macOS
+The `ModLibrary` folder is located at: `~/Library/Application Support/Nickel/ModLibrary`
 
-The default `ModLibrary` folder can be found at `~/Library/Application Support/Nickel/ModLibrary`.
+### Notes
 
-# Updating mods
+* You can mix `.zip` files and extracted folders freely.
+* If both a `.zip` and an extracted folder for the same mod exist, Nickel will prefer the extracted version.
+* Folders or archives starting with `.` (for example `.disabled`) are ignored.
+
+## Updating mods
 
 Nickel comes with pre-installed mods which do automatic update checks for your mods (including Nickel itself), but to make these work (correctly, or even at all, depending on the update source), they need to be configured.
 
 [Update checks configuration](update-checks.md)
 
-# Troubleshooting
+## Troubleshooting
 
 Nickel keeps two log files, by default stored in the `Logs` folder:
 * `Nickel.log` is the log file for your currently ongoing or the last session.
 * `Nickel.prev.log` is the log file for your previous session. It is useful if the game crashed and you ran Nickel again by mistake without examining/sharing your log file first.
 
-If you are having any issues with the modded game, **always** include your log file. The file contains detailed information about your mod setup and anything that is going on. **Copy-pasting the text from the console that appears when running the game is *not* the same as sharing the log file.** The log file contains much more information than the console does.
+If you are having any issues with the modded game, **always** include your **log file**. The file contains detailed information about your mod setup and anything that is going on. **Copy-pasting the text from the console that appears when running the game is *not* the same as sharing the log file.** The log file contains much more information than the console does.
 
 If you need help with your log file, you can jump into the [#cc-mod-discussion channel](https://discord.com/channels/806989214133780521/1210710707717275658) on the [Rocket Rat Games' (developers') Discord server](https://discord.gg/cncV5znGwA).
 
-## Windows; Steam Deck / Linux (Proton)
+### Windows; Steam Deck / Linux (Proton)
 
 The default `Logs` folder is contained in Nickel's folder.
 
-## Mac
+### Mac
 
 The default `Logs` folder can be found at `~/Library/Application Support/Nickel/Logs`.
 
-# Organizing the `ModLibrary`
+## Organizing the `ModLibrary`
 
-Nickel loads mods recursively from the `ModLibrary` folder. This means you can put mods in as many different subfolders as you wish within the root `ModLibrary` folder.
+Nickel searches for mods recursively inside the `ModLibrary` folder. This means you can put mods in as many different subfolders as you wish within the root `ModLibrary` folder.
 
 If you want a folder or a `.zip` file to be ignored by Nickel, prepend its name with a `.` - for example, a folder called `.disabled` will not be looked into by Nickel.
 
-# Legacy mods
+## Legacy mods
 
-Before Nickel was created, there existed a [much simpler, wildly different mod loader](https://github.com/Ewanderer/CobaltCoreModLoader). In the Nickel world, mods for that mod loader are called "legacy" mods. Nickel comes with a pre-installed `Nickel.Legacy` mod which handles loading of legacy mods, as if they were proper Nickel mods. Nickel and legacy mods can co-exist and even communicate with each other.
+Before Nickel was created, there existed a [much simpler, wildly different mod loader](https://github.com/Ewanderer/CobaltCoreModLoader). Mods made for that system are called "legacy" mods.
 
-If a legacy mod is old enough, it is likely that its author did not include a `nickel.json` file with the mod yet. `nickel.json` files are how Nickel can tell that a given folder or a `.zip` file contains a mod it should try loading, and how it can figure out the mod load order. If a mod does not come with that file, Nickel will not be able to load that mod. Fortunately, after all other mods are loaded, `Nickel.Legacy` will look at such mods missing their `nickel.json` files and will try to create these files. Unfortunately, mods which just had their `nickel.json` files created cannot be loaded in retroactively, so they will only be loaded on subsequent launches of Nickel.
+Nickel includes a built-in `Nickel.Legacy` mod which can load these legacy mods as if they were normal Nickel mods. Legacy mods can coexist with Nickel mods and may also interact with them.
+
+Legacy mods are identified differently from modern mods. If a legacy mod does not contain a `nickel.json` file, Nickel cannot recognize it during the initial mod discovery phase and therefore cannot load it.
+
+After all mods have been discovered and the game has started, `Nickel.Legacy` will detect such legacy mods and generate `nickel.json` files for them automatically. However, mod discovery only happens once per launch. This means newly generated `nickel.json` files are not taken into account until the next time Nickel is started.
+
+In short: legacy mods without `nickel.json` will be detected automatically, but they require a restart before they can be loaded.
