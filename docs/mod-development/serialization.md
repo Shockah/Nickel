@@ -23,6 +23,19 @@ At the same time, if a field or property only affects visual effects or is just 
 > [!WARNING]
 > Some types are not serializable at all. Common types that can't be serialized are [`Type`](https://learn.microsoft.com/en-us/dotnet/api/system.type), as well as all [`Delegate`](https://learn.microsoft.com/en-us/dotnet/api/system.delegate) objects (like [`Action`](https://learn.microsoft.com/en-us/dotnet/api/system.action) and [`Func<TResult>`](https://learn.microsoft.com/en-us/dotnet/api/system.func-1)). Attempting to serialize such values may cause errors and render the serialized data unusable.
 
+### JSON serialization system
+
+Nickel and the game use **Newtonsoft.Json** as the only supported JSON serialization system for save data.
+
+Other serializers (such as `System.Text.Json`) are not used by the game and will not participate in save/load behavior. Using them for game state data will result in data not being saved or restored correctly.
+
+Make sure you are using the correct namespace:
+
+```diff
+- using System.Text.Json; // this won't work
++ using Newtonsoft.Json; // correct!
+```
+
 ## Storing additional data
 
 Sometimes mods need to associate extra information with game state objects (for example, tracking per-card state, or storing custom effects across saves).
