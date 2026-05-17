@@ -8,7 +8,7 @@ using ILegacyManifest = CobaltCoreModding.Definitions.ModManifests.IManifest;
 
 namespace Nickel.Legacy;
 
-internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvider)
+internal sealed class LegacyDatabase(IModHelper helper)
 {
 	internal readonly List<LegacyModWrapper> LegacyMods = [];
 	internal readonly Dictionary<ILegacyManifest, LegacyModWrapper> LegacyManifestToMod = [];
@@ -218,8 +218,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 
 	public void RegisterSprite(IModManifest mod, ExternalSprite value)
 	{
-
-		var entry = helperProvider(mod).Content.Sprites.RegisterSprite(value.GlobalName, GetStreamProvider());
+		var entry = helper.ModRegistry.GetModHelper(mod).Content.Sprites.RegisterSprite(value.GlobalName, GetStreamProvider());
 		value.Id = (int)entry.Sprite;
 		this.GlobalNameToSprite[value.GlobalName] = value;
 
@@ -255,7 +254,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 				return null;
 			}
 		};
-		var entry = helperProvider(mod).Content.Decks.RegisterDeck(value.GlobalName, configuration);
+		var entry = helper.ModRegistry.GetModHelper(mod).Content.Decks.RegisterDeck(value.GlobalName, configuration);
 		value.Id = (int)entry.Deck;
 		this.GlobalNameToDeck[value.GlobalName] = value;
 
@@ -285,7 +284,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 				return localized;
 			}
 		};
-		var entry = helperProvider(mod).Content.Statuses.RegisterStatus(value.GlobalName, configuration);
+		var entry = helper.ModRegistry.GetModHelper(mod).Content.Statuses.RegisterStatus(value.GlobalName, configuration);
 		value.Id = (int)entry.Status;
 		this.GlobalNameToStatus[value.GlobalName] = value;
 	}
@@ -308,7 +307,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 			}
 		};
 
-		var entry = helperProvider(mod).Content.Cards.RegisterCard(value.GlobalName, configuration);
+		var entry = helper.ModRegistry.GetModHelper(mod).Content.Cards.RegisterCard(value.GlobalName, configuration);
 		this.GlobalNameToCard[value.GlobalName] = value;
 		this.GlobalNameToCardEntry[value.GlobalName] = entry;
 	}
@@ -328,7 +327,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 			Description = locale => value.GetLocalisation(locale, out _, out var localized) ? localized : null,
 		};
 
-		helperProvider(mod).Content.Artifacts.RegisterArtifact(value.GlobalName, configuration);
+		helper.ModRegistry.GetModHelper(mod).Content.Artifacts.RegisterArtifact(value.GlobalName, configuration);
 		this.GlobalNameToArtifact[value.GlobalName] = value;
 	}
 
@@ -342,7 +341,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 		};
 
 #pragma warning disable CS0618 // Type or member is obsolete
-		helperProvider(mod).Content.Characters.RegisterCharacterAnimation(value.GlobalName, configuration);
+		helper.ModRegistry.GetModHelper(mod).Content.Characters.RegisterCharacterAnimation(value.GlobalName, configuration);
 #pragma warning restore CS0618 // Type or member is obsolete
 		this.GlobalNameToAnimation[value.GlobalName] = value;
 	}
@@ -360,7 +359,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 			}
 		};
 
-		helperProvider(mod).Content.Characters.RegisterPlayableCharacter(value.GlobalName, configuration);
+		helper.ModRegistry.GetModHelper(mod).Content.Characters.RegisterPlayableCharacter(value.GlobalName, configuration);
 		this.GlobalNameToCharacter[value.GlobalName] = value;
 	}
 
@@ -374,7 +373,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 				.ToHashSet()
 		};
 
-		helperProvider(mod).Content.Ships.RegisterPartType(value.GlobalName, configuration);
+		helper.ModRegistry.GetModHelper(mod).Content.Ships.RegisterPartType(value.GlobalName, configuration);
 		this.GlobalNameToPartType[value.GlobalName] = value;
 	}
 
@@ -386,7 +385,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 			DisabledSprite = value.PartOffSprite is { } partOff ? (Spr)partOff.Id!.Value : null
 		};
 
-		var entry = helperProvider(mod).Content.Ships.RegisterPart(value.GlobalName, configuration);
+		var entry = helper.ModRegistry.GetModHelper(mod).Content.Ships.RegisterPart(value.GlobalName, configuration);
 		this.GlobalNameToPart[value.GlobalName] = value;
 		this.GlobalNameToPartEntry[value.GlobalName] = entry;
 	}
@@ -399,7 +398,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 			DisabledSprite = disabledSpriteId is null ? null : (Spr)disabledSpriteId.Value
 		};
 
-		var entry = helperProvider(mod).Content.Ships.RegisterPart(globalName, configuration);
+		var entry = helper.ModRegistry.GetModHelper(mod).Content.Ships.RegisterPart(globalName, configuration);
 		// do not add to `GlobalNameToPart` dictionary - legacy modloader did not, you can't look up these
 		this.GlobalNameToPartEntry[globalName] = entry;
 	}
@@ -433,7 +432,7 @@ internal sealed class LegacyDatabase(Func<IModManifest, IModHelper> helperProvid
 			}
 		};
 
-		var entry = helperProvider(mod).Content.Ships.RegisterShip(value.GlobalName, configuration);
+		var entry = helper.ModRegistry.GetModHelper(mod).Content.Ships.RegisterShip(value.GlobalName, configuration);
 		this.GlobalNameToStarterShip[value.GlobalName] = value;
 		this.GlobalNameToShipEntry[value.GlobalName] = entry;
 	}

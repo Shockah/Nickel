@@ -165,17 +165,7 @@ internal sealed class ModManager
 			)
 		);
 		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
-			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, Func<IModManifest, ILogger>>(
-				this.ObtainLogger
-			)
-		);
-		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
 			new DelegateAssemblyPluginLoaderParameterInjector<IModManifest, IModHelper>(
-				this.ObtainModHelper
-			)
-		);
-		assemblyPluginLoaderParameterInjector.RegisterParameterInjector(
-			new ValueAssemblyPluginLoaderParameterInjector<IModManifest, Func<IModManifest, IModHelper>>(
 				this.ObtainModHelper
 			)
 		);

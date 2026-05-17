@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using Nanoray.PluginManager;
 using OneOf;
 using OneOf.Types;
@@ -9,23 +8,11 @@ using ILegacyManifest = CobaltCoreModding.Definitions.ModManifests.IManifest;
 
 namespace Nickel.Legacy;
 
-internal sealed class LegacyAssemblyPluginLoaderPartAssembler : IAssemblyPluginLoaderPartAssembler<IAssemblyModManifest, ILegacyManifest, Mod>
+internal sealed class LegacyAssemblyPluginLoaderPartAssembler(
+	IModHelper helper,
+	LegacyDatabase database
+) : IAssemblyPluginLoaderPartAssembler<IAssemblyModManifest, ILegacyManifest, Mod>
 {
-	private readonly Func<IPluginPackage<IModManifest>, IModHelper> HelperProvider;
-	private readonly Func<IModManifest, ILogger> LoggerProvider;
-	private readonly LegacyDatabase Database;
-
-	public LegacyAssemblyPluginLoaderPartAssembler(
-		Func<IPluginPackage<IModManifest>, IModHelper> helperProvider,
-		Func<IModManifest, ILogger> loggerProvider,
-		LegacyDatabase database
-	)
-	{
-		this.HelperProvider = helperProvider;
-		this.LoggerProvider = loggerProvider;
-		this.Database = database;
-	}
-
 	public Error<string>? ValidatePluginParts(IPluginPackage<IAssemblyModManifest> _, Assembly assembly, IReadOnlySet<Type> partTypes)
 	{
 		if (partTypes.Count <= 0)
@@ -37,9 +24,9 @@ internal sealed class LegacyAssemblyPluginLoaderPartAssembler : IAssemblyPluginL
 	{
 		if (parts.Count <= 0)
 			return new Error<string>($"The assembly {assembly} does not include any {typeof(ILegacyManifest)} subclasses.");
-		var helper = this.HelperProvider(package);
-		var logger = this.LoggerProvider(package.Manifest);
-		var registry = new LegacyRegistry(package.Manifest, helper, logger, this.Database);
-		return new LegacyModWrapper(package, parts, registry, helper, logger);
+		var modHelper = helper.ModRegistry.GetModHelper(package.Manifest);
+		var modLogger = helper.ModRegistry.GetLogger(package.Manifest);
+		var registry = new LegacyRegistry(package.Manifest, modHelper, modLogger, database);
+		return new LegacyModWrapper(package, parts, registry, modHelper, modLogger);
 	}
 }

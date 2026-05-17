@@ -29,14 +29,11 @@ public sealed class ModEntry : Mod
 		IModHelper helper,
 		ILogger logger,
 		ExtendablePluginLoader<IModManifest, Mod> extendablePluginLoader,
-		Func<IPluginPackage<IModManifest>, IModHelper> byPackageHelperProvider,
-		Func<IModManifest, IModHelper> byManifestHelperProvider,
-		Func<IModManifest, ILogger> loggerProvider,
 		IAssemblyPluginLoaderLoadContextProvider<IAssemblyModManifest> loadContextProvider,
 		IAssemblyPluginLoaderParameterInjector<IModManifest> assemblyPluginLoaderParameterInjector
 	)
 	{
-		this.Database = new(byManifestHelperProvider);
+		this.Database = new(helper);
 		this.Logger = logger;
 		this.Helper = helper;
 		this.Manifest = package.Manifest;
@@ -67,8 +64,7 @@ public sealed class ModEntry : Mod
 									},
 								loadContextProvider: loadContextProvider,
 								partAssembler: new LegacyAssemblyPluginLoaderPartAssembler(
-									helperProvider: byPackageHelperProvider,
-									loggerProvider: loggerProvider,
+									helper,
 									this.Database
 								),
 								parameterInjector: assemblyPluginLoaderParameterInjector
