@@ -15,7 +15,7 @@ Mod data is kept separate between mods. Modders are recommended to expose method
 Mod data participates in `Mutil.DeepCopy<T>`. When a game state object is cloned, its mod data is cloned as well. Mutable objects stored as mod data are deep-copied. Because of this, mod data should generally contain properly serializable data structures.
 
 > [!CAUTION]
-> While technically Nickel lets you store data of any type as mod data, it is advised to only ever store data that is properly serializable (see the [Serialization pitfalls [TODO]](TODO) page). If any non-serializable mod data is present, it may render the save file unusable, making the player lose data.
+> While technically Nickel lets you store data of any type as mod data, it is advised to only ever store data that is properly serializable (see the [Serialization](../serialization.md) page). If any non-serializable mod data is present, it may render the save file unusable, making the player lose data.
 
 # Accessing mod data
 
