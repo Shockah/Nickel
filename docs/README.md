@@ -32,7 +32,7 @@ Get the latest version from:
 ### For developers
 
 * [`nickel.json`](mod-development/nickel-json.md)
+* [`Mod` subclass](mod-development/mod-subclass.md)
+* [Mod helper](mod-development/mod-helper.md)
 * [Serialization](mod-development/serialization.md)
-* [Mod helper events](mod-development/mod-helper/events.md)
-* [Mod data](mod-development/mod-helper/mod-data.md)
 * [`ModBuildConfig` release notes](release-notes/mod-build-config.md)

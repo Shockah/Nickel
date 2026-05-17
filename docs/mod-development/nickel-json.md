@@ -269,6 +269,8 @@ The namespace-qualified name of the type that is the entry point for the mod (a 
 
 If this field is not provided, Nickel will automatically attempt to find the entry point. This can fail if there are multiple candidates.
 
+See [`Mod` subclass](mod-subclass.md) for more details.
+
 ## `RequiredApiVersion`
 
 The minimum version of Nickel required to correctly load this mod. This field is optional.

@@ -2,7 +2,7 @@
 
 Nickel provides several events that mods can subscribe to.
 
-These are accessed via your mod's [mod helper instance [TODO]](TODO):
+These are accessed via your mod's [mod helper](../mod-helper.md) instance:
 ```
 helper.Events.[...]
 ```

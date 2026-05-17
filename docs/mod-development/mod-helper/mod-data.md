@@ -19,7 +19,7 @@ Mod data participates in `Mutil.DeepCopy<T>`. When a game state object is cloned
 
 # Accessing mod data
 
-The main way to access mod data is via your mod's [mod helper instance [TODO]](TODO):
+The main way to access mod data is via your mod's [mod helper](../mod-helper.md) instance:
 ```
 helper.ModData.[...]
 ```
